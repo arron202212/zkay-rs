@@ -4,8 +4,9 @@ pub mod algorithms;
 pub mod bigint;
 pub mod field_utils;
 pub mod fp_aux;
-// pub mod arithmetic;
 
+// pub mod arithmetic;
+use crate::BigInt;
 use crate::algebra::UniformRand;
 use crate::{
     algebra::bits::{BitIteratorBE, BitIteratorLE},

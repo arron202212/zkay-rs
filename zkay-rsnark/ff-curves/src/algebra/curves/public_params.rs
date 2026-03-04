@@ -61,7 +61,7 @@ use ffec::algebra::scalar_multiplication::multiexp;
 use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
 use std::ops::Mul;
-pub trait FpmConfig:Default+Clone {
+pub trait FpmConfig: Default + Clone {
     type Fr: FieldTConfig;
     fn c0(&self) -> Self::Fr {
         Default::default()
@@ -69,7 +69,7 @@ pub trait FpmConfig:Default+Clone {
     fn c1(&self) -> Self::Fr {
         Default::default()
     }
-fn X(&self) -> Self::Fr {
+    fn X(&self) -> Self::Fr {
         Default::default()
     }
     fn Y(&self) -> Self::Fr {
@@ -80,7 +80,7 @@ fn X(&self) -> Self::Fr {
     }
 }
 
-pub trait Fq2mConfig:Default+Clone {
+pub trait Fq2mConfig: Default + Clone {
     type Fr: FpmConfig;
     fn X(&self) -> Self::Fr {
         Default::default()
@@ -136,6 +136,7 @@ pub trait PublicParamsType: Default + Clone {
 //where <Self as PublicParamsType>::G1_type: Mul<<Self as PublicParams>::G2,Output=<Self as PublicParams>::G2>,<Self as PublicParamsType>::G2_type: Mul<<Self as PublicParams>::G1,Output=<Self as PublicParams>::G1>
 // +Mul<Self::G2,Output=Self::G1>+Mul<Self::Fr,Output=Self::G1>
 // +Mul<Self::G1,Output=Self::G2>
+
 pub trait PublicParams: PublicParamsType {
     type Fr: FieldTConfig; //+ Mul<Self::G1,Output=Self::G1>+ Mul<Self::G2,Output=Self::G2> 
     type G1: PpConfig + FpmConfig<Fr = Self::Fr> + Mul<Self::Fr, Output = Self::G1>;

@@ -35,7 +35,7 @@ pub trait PpConfig:
 {
     type TT: AsRef<[u64]>;
 
-    const num_limbs: usize = 1;
+    const num_limbs: usize = 4;
     const coeff_a: i64 = 1;
     const coeff_b: i64 = 1;
 

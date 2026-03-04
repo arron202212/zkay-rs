@@ -1,5 +1,3 @@
-// use crate::algebra::curves::alt_bn128::alt_bn128_g1;
-// use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 use crate::CoeffsConfig;
 use crate::affine_ate_G_precomp_typeConfig;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
@@ -18,29 +16,9 @@ use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
 };
 use crate::algebra::curves::public_params;
 
-
-
 // impl<EC_ppT:PublicParamsType> PublicParams<EC_ppT> for alt_bn128_pp{
 
-//     const has_affine_pairing:bool = false;
-
-//     static pub fn  init_public_params();
-//     static alt_bn128_GT final_exponentiation(elt:&alt_bn128_Fq12);
-//     static alt_bn128_G1_precomp precompute_G1(P:&alt_bn128_G1);
-//     static alt_bn128_G2_precomp precompute_G2(Q:&alt_bn128_G2);
-//     static alt_bn128_Fq12 miller_loop(prec_P:&alt_bn128_G1_precomp,
-//                                       prec_Q:&alt_bn128_G2_precomp);
-//     static alt_bn128_Fq12 double_miller_loop(prec_P1:&alt_bn128_G1_precomp,
-//                                              prec_Q1:&alt_bn128_G2_precomp,
-//                                              prec_P2:&alt_bn128_G1_precomp,
-//                                              prec_Q2:&alt_bn128_G2_precomp);
-//     static alt_bn128_Fq12 pairing(P:&alt_bn128_G1,
-//                                   Q:&alt_bn128_G2);
-//     static alt_bn128_Fq12 reduced_pairing(P:&alt_bn128_G1,
-//                                           Q:&alt_bn128_G2);
 // }
-
-
 
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
 

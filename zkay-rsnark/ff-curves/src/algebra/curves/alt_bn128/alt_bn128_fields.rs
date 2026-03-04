@@ -1,32 +1,32 @@
-use ffec::Fp_modelConfig;
-use ffec::field_utils::bigint::GMP_NUMB_BITS;
-use ffec::field_utils::field_utils::batch_invert;
-use ffec::{
-    Fp_model, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model, Fp6_modelConfig,
-    Fp12_2over3over2_model, Fp12_modelConfig,
+use ffec::field_utils::{
+    bigint::{GMP_NUMB_BITS, bigint},
+    field_utils::batch_invert,
 };
-use ffec::{One, Zero};
+use ffec::{
+    Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model,
+    Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig, Zero,
+};
+
 use std::borrow::Borrow;
 use std::ops::{Add, Mul, Neg, Sub};
-// use ffec::algebra::fields::prime_base::fp;
-// use ffec::algebra::fields::prime_extension::fp12_2over3over2;
-// use ffec::algebra::fields::prime_extension::fp2;
-// use ffec::algebra::fields::prime_extension::fp6_3over2;
+
 use super::fields::{fq::Fq, fq2::Fq2, fq6::Fq6, fq12::Fq12, fr::Fr};
 use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
 use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
-use ffec::PpConfig;
-use ffec::field_utils::bigint::bigint;
-//  use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G2,alt_bn128_G1};
 
-const alt_bn128_r_bitcount: usize = 254;
-const alt_bn128_q_bitcount: usize = 254;
+pub const alt_bn128_r_bitcount: usize = 254;
+pub const alt_bn128_q_bitcount: usize = 254;
 
-const alt_bn128_r_limbs: usize = (alt_bn128_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-const alt_bn128_q_limbs: usize = (alt_bn128_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+pub const alt_bn128_r_limbs: usize = (alt_bn128_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+pub const alt_bn128_q_limbs: usize = (alt_bn128_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 
-// extern bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
-// extern bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
+pub type alt_bn128_Fr = Fp_model<alt_bn128_q_limbs, Backend>;
+pub type alt_bn128_Fq = Fp_model<alt_bn128_q_limbs, Backend>;
+pub type alt_bn128_Fq2 = Fp2_model<alt_bn128_q_limbs, Backend>;
+pub type alt_bn128_Fq6 = Fp6_3over2_model<alt_bn128_q_limbs, Backend>;
+pub type alt_bn128_Fq12 = Fp12_2over3over2_model<alt_bn128_q_limbs, Backend>;
+pub type alt_bn128_GT = alt_bn128_Fq12;
+
 #[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
 pub struct Backend;
 
@@ -111,47 +111,29 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
-    type TT = bigint<1>;
+    type TT = bigint<alt_bn128_q_limbs>;
     // type Fr=Self;
 }
-impl Fp_modelConfig<1> for Backend {}
-impl Fp2_modelConfig<1> for Backend {
+impl Fp_modelConfig<alt_bn128_q_limbs> for Backend {}
+impl Fp2_modelConfig<alt_bn128_q_limbs> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp3_modelConfig<1> for Backend {
+impl Fp3_modelConfig<alt_bn128_q_limbs> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp6_modelConfig<1> for Backend {
+impl Fp6_modelConfig<alt_bn128_q_limbs> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
 }
-impl Fp12_modelConfig<1> for Backend {
+impl Fp12_modelConfig<alt_bn128_q_limbs> for Backend {
     type Fp_modelConfig = Self;
     type Fp6_modelConfig = Self;
 }
 
-pub type alt_bn128_Fr = Fp_model<1, Backend>;
-
-pub type alt_bn128_Fq = Fp_model<1, Backend>;
-
-pub type alt_bn128_Fq2 = Fp2_model<1, Backend>;
-
-pub type alt_bn128_Fq6 = Fp6_3over2_model<1, Backend>;
-
-pub type alt_bn128_Fq12 = Fp12_2over3over2_model<1, Backend>;
-
-pub type alt_bn128_GT = alt_bn128_Fq12;
-
-// pub fn  init_alt_bn128_fields();
-
-// use crate::algebra::curves::alt_bn128::alt_bn128_fields;
-
-// bigint<alt_bn128_r_limbs> alt_bn128_modulus_r;
-// bigint<alt_bn128_q_limbs> alt_bn128_modulus_q;
+type bigint_r = bigint<alt_bn128_r_limbs>;
+type bigint_q = bigint<alt_bn128_q_limbs>;
 
 pub fn init_alt_bn128_fields() {
-    // using bigint_r = bigint<alt_bn128_r_limbs>;
-    // using bigint_q = bigint<alt_bn128_q_limbs>;
 
     // assert!(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
 
@@ -277,5 +259,3 @@ pub fn init_alt_bn128_fields() {
     //     alt_bn128_Fq12::Frobenius_coeffs_c1[10] = alt_bn128_Fq2(alt_bn128_Fq("2203960485148121921418603742825762020974279258880205651967"),alt_bn128_Fq("0"));
     //     alt_bn128_Fq12::Frobenius_coeffs_c1[11] = alt_bn128_Fq2(alt_bn128_Fq("18566938241244942414004596690298913868373833782006617400804628704885040364344"),alt_bn128_Fq("16165975933942742336466353786298926857552937457188450663314217659523851788715"));
 }
-
-

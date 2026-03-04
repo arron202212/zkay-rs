@@ -1,97 +1,172 @@
+use ffec::field_utils::{
+    bigint::{GMP_NUMB_BITS, bigint},
+    field_utils::batch_invert,
+};
+use ffec::{
+    Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model,
+    Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig, Zero,
+};
 
+use ffec::{BigInt, MontFp};
+use std::borrow::Borrow;
+use std::ops::{Add, Mul, Neg, Sub};
 
+const bn128_r_bitcount: usize = 254;
+const bn128_q_bitcount: usize = 254;
 
+const bn128_r_limbs: usize = (bn128_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+const bn128_q_limbs: usize = (bn128_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 
-// #define BN128_FIELDS_HPP_
-#include "depends/ate-pairing/include/bn.h"
-use ffec::algebra::fields::prime_base::fp;
+pub type bn128_Fr = Fp_model<bn128_r_limbs, Backend>;
+pub type bn128_Fq = Fp_model<bn128_q_limbs, Backend>;
+pub type bn128_Fq2 = Fp2_model<bn128_q_limbs, Backend>;
+pub type bn128_Fq6 = Fp6_3over2_model<bn128_q_limbs, Backend>;
+pub type bn128_Fq12 = Fp12_2over3over2_model<bn128_q_limbs, Backend>;
 
+pub type Fp = bn128_Fq;
+pub type Fp2 = bn128_Fq2;
+pub type Fp6 = bn128_Fq6;
+pub type Fp12 = bn128_Fq12;
 
+#[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
+pub struct Backend;
 
-let bn128_r_bitcount= 254;
-let bn128_q_bitcount= 254;
+impl<O: Borrow<Self>> Add<O> for Backend {
+    type Output = Backend;
 
-let bn128_r_limbs= (bn128_r_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-let bn128_q_limbs= (bn128_q_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-
-extern bigint<bn128_r_limbs> bn128_modulus_r;
-extern bigint<bn128_q_limbs> bn128_modulus_q;
-
-type bn128_Fr=Fp_model<bn128_r_limbs, bn128_modulus_r>;
-type bn128_Fq=Fp_model<bn128_q_limbs, bn128_modulus_q>;
-
-pub fn  init_bn128_fields();
-
-
-
-
-
-
-use crate::algebra::curves::bn128::bn128_fields;
-
-
-
-bigint<bn128_r_limbs> bn128_modulus_r;
-bigint<bn128_q_limbs> bn128_modulus_q;
-
-pub fn  init_bn128_fields()
-{
-    bn::Param::init(); // init ate-pairing library
-
-    using  bigint_r = bigint<bn128_r_limbs>;
-    using  bigint_q = bigint<bn128_q_limbs>;
-
-    assert!(sizeof(mp_limb_t) == 8 || sizeof(mp_limb_t) == 4); // Montgomery assumes this
-
-    /* parameters for scalar field Fr */
-    bn128_modulus_r = bigint_r("21888242871839275222246405745257275088548364400416034343698204186575808495617");
-    assert!(bn128_Fr::modulus_is_valid());
-    if sizeof(mp_limb_t) == 8
-    {
-        bn128_Fr::Rsquared = bigint_r("944936681149208446651664254269745548490766851729442924617792859073125903783");
-        bn128_Fr::Rcubed = bigint_r("5866548545943845227489894872040244720403868105578784105281690076696998248512");
-        bn128_Fr::inv = 0xc2e1f593efffffff;
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
     }
-    if sizeof(mp_limb_t) == 4
-    {
-        bn128_Fr::Rsquared = bigint_r("944936681149208446651664254269745548490766851729442924617792859073125903783");
-        bn128_Fr::Rcubed = bigint_r("5866548545943845227489894872040244720403868105578784105281690076696998248512");
-        bn128_Fr::inv = 0xefffffff;
-    }
-    bn128_Fr::num_bits = 254;
-    bn128_Fr::euler = bigint_r("10944121435919637611123202872628637544274182200208017171849102093287904247808");
-    bn128_Fr::s = 28;
-    bn128_Fr::t = bigint_r("81540058820840996586704275553141814055101440848469862132140264610111");
-    bn128_Fr::t_minus_1_over_2 = bigint_r("40770029410420498293352137776570907027550720424234931066070132305055");
-    bn128_Fr::multiplicative_generator = bn128_Fr("5");
-    bn128_Fr::root_of_unity = bn128_Fr("19103219067921713944291392827692070036145651957329286315305642004821462161904");
-    bn128_Fr::nqr = bn128_Fr("5");
-    bn128_Fr::nqr_to_t = bn128_Fr("19103219067921713944291392827692070036145651957329286315305642004821462161904");
-
-    /* parameters for base field Fq */
-    bn128_modulus_q = bigint_q("21888242871839275222246405745257275088696311157297823662689037894645226208583");
-    assert!(bn128_Fq::modulus_is_valid());
-    if sizeof(mp_limb_t) == 8
-    {
-        bn128_Fq::Rsquared = bigint_q("3096616502983703923843567936837374451735540968419076528771170197431451843209");
-        bn128_Fq::Rcubed = bigint_q("14921786541159648185948152738563080959093619838510245177710943249661917737183");
-        bn128_Fq::inv = 0x87d20782e4866389;
-    }
-    if sizeof(mp_limb_t) == 4
-    {
-        bn128_Fq::Rsquared = bigint_q("3096616502983703923843567936837374451735540968419076528771170197431451843209");
-        bn128_Fq::Rcubed = bigint_q("14921786541159648185948152738563080959093619838510245177710943249661917737183");
-        bn128_Fq::inv = 0xe4866389;
-    }
-    bn128_Fq::num_bits = 254;
-    bn128_Fq::euler = bigint_q("10944121435919637611123202872628637544348155578648911831344518947322613104291");
-    bn128_Fq::s = 1;
-    bn128_Fq::t = bigint_q("10944121435919637611123202872628637544348155578648911831344518947322613104291");
-    bn128_Fq::t_minus_1_over_2 = bigint_q("5472060717959818805561601436314318772174077789324455915672259473661306552145");
-    bn128_Fq::multiplicative_generator = bn128_Fq("3");
-    bn128_Fq::root_of_unity = bn128_Fq("21888242871839275222246405745257275088696311157297823662689037894645226208582");
-    bn128_Fq::nqr = bn128_Fq("3");
-    bn128_Fq::nqr_to_t = bn128_Fq("21888242871839275222246405745257275088696311157297823662689037894645226208582");
 }
 
+impl Sub for Backend {
+    type Output = Self;
 
+    fn sub(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+
+impl<const N: usize> Mul<bigint<N>> for Backend {
+    type Output = Backend;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for Backend {
+    type Output = Backend;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<O: Borrow<Self>> Mul<O> for Backend {
+    type Output = Backend;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Neg for Backend {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self
+    }
+}
+
+use std::fmt;
+impl fmt::Display for Backend {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Self::one())
+    }
+}
+
+impl One for Backend {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl Zero for Backend {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
+
+impl PpConfig for Backend {
+    type TT = bigint<bn128_q_limbs>;
+    // type Fr=Self;
+}
+impl Fp_modelConfig<bn128_q_limbs> for Backend {}
+impl Fp2_modelConfig<bn128_q_limbs> for Backend {
+    type Fp_modelConfig = Self;
+}
+impl Fp3_modelConfig<bn128_q_limbs> for Backend {
+    type Fp_modelConfig = Self;
+}
+impl Fp6_modelConfig<bn128_q_limbs> for Backend {
+    type Fp_modelConfig = Self;
+    type Fp2_modelConfig = Self;
+}
+impl Fp12_modelConfig<bn128_q_limbs> for Backend {
+    type Fp_modelConfig = Self;
+    type Fp6_modelConfig = Self;
+}
+
+pub fn init_bn128_fields() {}
+
+// use ark_ff::{BigInteger, MontConfig, field_new};
+
+// pub struct FrConfig;
+// impl MontConfig<4> for FrConfig {
+
+//     const MODULUS: BigInt<4> = field_new!(
+//         Fr,
+//         "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+//     );
+
+//     const INVERSE: u64 = 0xc2e1f593efffffff;
+
+//     const TWO_ADICITY: u32 = 28;
+//     const GENERATOR: BigInt<4> = field_new!(Fr, "5");
+
+//     const ROOT_OF_UNITY: BigInt<4> = field_new!(
+//         Fr,
+//         "19103219067921713944291392827692070036145651957329286315305642004821462161904"
+//     );
+// }
+
+// pub struct FqConfig;
+// impl MontConfig<4> for FqConfig {
+
+//     const MODULUS: BigInt<4> = field_new!(
+//         Fq,
+//         "21888242871839275222246405745257275088696311157297823662689037894645226208583"
+//     );
+
+//     const INVERSE: u64 = 0x87d20782e4866389;
+
+//     const TWO_ADICITY: u32 = 1;
+//     const TRACE_MINUS_ONE_DIV_TWO: BigInt<4> = field_new!(
+//         Fq,
+//         "5472060717959818805561601436314318772174077789324455915672259473661306552145"
+//     );
+// }

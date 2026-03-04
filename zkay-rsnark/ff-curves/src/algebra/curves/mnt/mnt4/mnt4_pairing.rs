@@ -1,881 +1,828 @@
-
-
 //  Declaration of interfaces for pairing operations on MNT4.
 
+use crate::algebra::curves::mnt::mnt4::mnt4_fields::{
+    mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT,
+};
+use crate::algebra::curves::mnt::mnt4::mnt4_g1::mnt4_G1;
+use crate::algebra::curves::mnt::mnt4::mnt4_g2::mnt4_G2;
+use crate::algebra::curves::mnt::mnt4::mnt4_init::{
+    mnt4_ate_is_loop_count_neg, mnt4_ate_loop_count, mnt4_final_exponent_last_chunk_abs_of_w0,
+    mnt4_final_exponent_last_chunk_is_w0_neg, mnt4_final_exponent_last_chunk_w1, mnt4_twist,
+    mnt4_twist_coeff_a,
+};
+use crate::{CoeffsConfig, affine_ate_G_precomp_typeConfig};
+use ffec::common::profiling::{enter_block, leave_block};
+use ffec::field_utils::bigint::bigint;
+use ffec::scalar_multiplication::wnaf::find_wnaf;
 
+/* affine ate miller loop */
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_affine_ate_G1_precomputation {
+    pub PX: mnt4_Fq,
+    pub PY: mnt4_Fq,
+    pub PY_twist_squared: mnt4_Fq2,
+}
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_affine_ate_coeffs {
+    // TODO: trim (not all of them are needed)
+    pub old_RX: mnt4_Fq2,
+    pub old_RY: mnt4_Fq2,
+    pub gamma: mnt4_Fq2,
+    pub gamma_twist: mnt4_Fq2,
+    pub gamma_X: mnt4_Fq2,
+}
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_affine_ate_G2_precomputation {
+    pub QX: mnt4_Fq2,
+    pub QY: mnt4_Fq2,
+    pub coeffs: Vec<mnt4_affine_ate_coeffs>,
+}
 
-// 
-// // #define MNT4_PAIRING_HPP_
+/* ate pairing */
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_ate_G1_precomp {
+    pub PX: mnt4_Fq,
+    pub PY: mnt4_Fq,
+    pub PX_twist: mnt4_Fq2,
+    pub PY_twist: mnt4_Fq2,
+}
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_ate_dbl_coeffs {
+    pub c_H: mnt4_Fq2,
+    pub c_4C: mnt4_Fq2,
+    pub c_J: mnt4_Fq2,
+    pub c_L: mnt4_Fq2,
+}
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_ate_add_coeffs {
+    pub c_L1: mnt4_Fq2,
+    pub c_RZ: mnt4_Fq2,
+}
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt4_ate_G2_precomp {
+    pub QX: mnt4_Fq2,
+    pub QY: mnt4_Fq2,
+    pub QY2: mnt4_Fq2,
+    pub QX_over_twist: mnt4_Fq2,
+    pub QY_over_twist: mnt4_Fq2,
+    pub dbl_coeffs: Vec<mnt4_ate_dbl_coeffs>,
+    pub add_coeffs: Vec<mnt4_ate_add_coeffs>,
+}
 
-// //#include <vector>
+/* choice of pairing */
 
-// use crate::algebra::curves::mnt::mnt4::mnt4_init;
+pub type mnt4_G1_precomp = mnt4_ate_G1_precomp;
+pub type mnt4_G2_precomp = mnt4_ate_G2_precomp;
 
+impl affine_ate_G_precomp_typeConfig for mnt4_affine_ate_G1_precomputation {
+    type CC = mnt4_ate_add_coeffs;
+}
+impl CoeffsConfig for mnt4_ate_add_coeffs {}
+impl affine_ate_G_precomp_typeConfig for mnt4_affine_ate_G2_precomputation {
+    type CC = mnt4_ate_add_coeffs;
+}
 
+use std::fmt;
+impl fmt::Display for mnt4_affine_ate_G1_precomputation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
+impl fmt::Display for mnt4_affine_ate_coeffs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 
-// /* final exponentiation */
+impl fmt::Display for mnt4_affine_ate_G2_precomputation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
+impl fmt::Display for mnt4_ate_G1_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 
-// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(elt:&mnt4_Fq4,
-//                                               elt_inv:&mnt4_Fq4);
-// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(elt:&mnt4_Fq4,
-//                                                elt_inv:&mnt4_Fq4);
-// mnt4_GT mnt4_final_exponentiation(elt:&mnt4_Fq4);
+impl fmt::Display for mnt4_ate_dbl_coeffs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
+impl fmt::Display for mnt4_ate_add_coeffs {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
 
-// /* affine ate miller loop */
+impl fmt::Display for mnt4_ate_G2_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
+    }
+}
+/* final exponentiations */
 
-// struct mnt4_affine_ate_G1_precomputation {
-//     mnt4_Fq PX;
-//     mnt4_Fq PY;
-//     mnt4_Fq2 PY_twist_squared;
-// };
+pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_final_exponentiation_last_chunk", false);
+    let elt_q = elt.Frobenius_map(1);
+    let w1_part = elt_q.cyclotomic_exp(mnt4_final_exponent_last_chunk_w1);
+    let mut w0_part = if mnt4_final_exponent_last_chunk_is_w0_neg {
+        elt_inv.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0)
+    } else {
+        elt.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0)
+    };
+    let result = w1_part * w0_part;
+    leave_block("Call to mnt4_final_exponentiation_last_chunk", false);
 
-// struct mnt4_affine_ate_coeffs {
-//     // TODO: trim (not all of them are needed)
-//     mnt4_Fq2 old_RX;
-//     mnt4_Fq2 old_RY;
-//     mnt4_Fq2 gamma;
-//     mnt4_Fq2 gamma_twist;
-//     mnt4_Fq2 gamma_X;
-// };
+    result
+}
 
-// struct mnt4_affine_ate_G2_precomputation {
-//     mnt4_Fq2 QX;
-//     mnt4_Fq2 QY;
-//     Vec<mnt4_affine_ate_coeffs> coeffs;
-// };
+pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_final_exponentiation_first_chunk", false);
 
-// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(P:&mnt4_G1);
-// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(Q:&mnt4_G2);
+    /* (q^2-1) */
 
-// mnt4_Fq4 mnt4_affine_ate_miller_loop(prec_P:&mnt4_affine_ate_G1_precomputation,
-//                                      prec_Q:&mnt4_affine_ate_G2_precomputation);
+    /* elt_q2 = elt^(q^2) */
+    let elt_q2 = elt.Frobenius_map(2);
+    /* elt_q3_over_elt = elt^(q^2-1) */
+    let elt_q2_over_elt = elt_q2 * elt_inv;
 
-// /* ate pairing */
+    leave_block("Call to mnt4_final_exponentiation_first_chunk", false);
+    elt_q2_over_elt
+}
 
-// struct mnt4_ate_G1_precomp {
-//     mnt4_Fq PX;
-//     mnt4_Fq PY;
-//     mnt4_Fq2 PX_twist;
-//     mnt4_Fq2 PY_twist;
+pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
+    enter_block("Call to mnt4_final_exponentiation", false);
+    let elt_inv = elt.inverse();
+    let elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, elt_inv);
+    let elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt_inv, elt);
+    let result = mnt4_final_exponentiation_last_chunk(elt_to_first_chunk, elt_inv_to_first_chunk);
+    leave_block("Call to mnt4_final_exponentiation", false);
 
-//     bool operator==(other:&mnt4_ate_G1_precomp) const;
-//     friend std::ostream& operator<<(std::ostream &out, prec_P:&mnt4_ate_G1_precomp);
-//     friend std::istream& operator>>(std::istream &in, mnt4_ate_G1_precomp &prec_P);
-// };
+    result
+}
 
-// struct mnt4_ate_dbl_coeffs {
-//     mnt4_Fq2 c_H;
-//     mnt4_Fq2 c_4C;
-//     mnt4_Fq2 c_J;
-//     mnt4_Fq2 c_L;
+/* affine ate miller loop */
 
-//     bool operator==(other:&mnt4_ate_dbl_coeffs) const;
-//     friend std::ostream& operator<<(std::ostream &out, dc:&mnt4_ate_dbl_coeffs);
-//     friend std::istream& operator>>(std::istream &in, mnt4_ate_dbl_coeffs &dc);
-// };
+pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precomputation {
+    enter_block("Call to mnt4_affine_ate_precompute_G1", false);
 
-// struct mnt4_ate_add_coeffs {
-//     mnt4_Fq2 c_L1;
-//     mnt4_Fq2 c_RZ;
+    let mut Pcopy = P;
+    Pcopy.to_affine_coordinates();
 
-//     bool operator==(other:&mnt4_ate_add_coeffs) const;
-//     friend std::ostream& operator<<(std::ostream &out, ac:&mnt4_ate_add_coeffs);
-//     friend std::istream& operator>>(std::istream &in, mnt4_ate_add_coeffs &ac);
-// };
+    let mut result = mnt4_affine_ate_G1_precomputation::default();
+    result.PX = Pcopy.X;
+    result.PY = Pcopy.Y;
+    result.PY_twist_squared = Pcopy.Y * mnt4_twist.squared();
 
-// struct mnt4_ate_G2_precomp {
-//     mnt4_Fq2 QX;
-//     mnt4_Fq2 QY;
-//     mnt4_Fq2 QY2;
-//     mnt4_Fq2 QX_over_twist;
-//     mnt4_Fq2 QY_over_twist;
-//     Vec<mnt4_ate_dbl_coeffs> dbl_coeffs;
-//     Vec<mnt4_ate_add_coeffs> add_coeffs;
+    leave_block("Call to mnt4_affine_ate_precompute_G1", false);
+    result
+}
 
-//     bool operator==(other:&mnt4_ate_G2_precomp) const;
-//     friend std::ostream& operator<<(std::ostream &out, prec_Q:&mnt4_ate_G2_precomp);
-//     friend std::istream& operator>>(std::istream &in, mnt4_ate_G2_precomp &prec_Q);
-// };
+pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precomputation {
+    enter_block("Call to mnt4_affine_ate_precompute_G2", false);
 
-// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(P:&mnt4_G1);
-// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(Q:&mnt4_G2);
+    let mut Qcopy = Q.clone();
+    Qcopy.to_affine_coordinates();
 
-// mnt4_Fq4 mnt4_ate_miller_loop(prec_P:&mnt4_ate_G1_precomp,
-//                                     prec_Q:&mnt4_ate_G2_precomp);
-// mnt4_Fq4 mnt4_ate_double_miller_loop(prec_P1:&mnt4_ate_G1_precomp,
-//                                            prec_Q1:&mnt4_ate_G2_precomp,
-//                                            prec_P2:&mnt4_ate_G1_precomp,
-//                                            prec_Q2:&mnt4_ate_G2_precomp);
+    let mut result = mnt4_affine_ate_G2_precomputation::default();
+    result.QX = Qcopy.X;
+    result.QY = Qcopy.Y;
 
-// mnt4_Fq4 mnt4_ate_pairing(P:mnt4_G1&,
-//                           Q:&mnt4_G2);
-// mnt4_GT mnt4_ate_reduced_pairing(P:&mnt4_G1,
-//                                  Q:&mnt4_G2);
+    let mut RX = Qcopy.X;
+    let mut RY = Qcopy.Y;
 
-// /* choice of pairing */
+    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let mut found_nonzero = false;
 
-// type mnt4_G1_precomp=mnt4_ate_G1_precomp;
-// type mnt4_G2_precomp=mnt4_ate_G2_precomp;
+    let NAF = find_wnaf(1, loop_count);
+    for i in (0..=NAF.len() - 1).rev() {
+        if !found_nonzero {
+            /* this skips the MSB itself */
+            found_nonzero |= (NAF[i] != 0);
+            continue;
+        }
 
-// mnt4_G1_precomp mnt4_precompute_G1(P:&mnt4_G1);
+        let mut c = mnt4_affine_ate_coeffs::default();
+        c.old_RX = RX;
+        c.old_RY = RY;
+        let old_RX_2 = c.old_RX.squared();
+        c.gamma =
+            (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_twist_coeff_a) * (c.old_RY + c.old_RY).inverse();
+        c.gamma_twist = c.gamma * mnt4_twist;
+        c.gamma_X = c.gamma * c.old_RX;
+        result.coeffs.push(c);
 
-// mnt4_G2_precomp mnt4_precompute_G2(Q:&mnt4_G2);
+        RX = c.gamma.squared() - (c.old_RX + c.old_RX);
+        RY = c.gamma * (c.old_RX - RX) - c.old_RY;
 
-// mnt4_Fq4 mnt4_miller_loop(prec_P:&mnt4_G1_precomp,
-//                           prec_Q:&mnt4_G2_precomp);
+        if NAF[i] != 0 {
+            let mut c = mnt4_affine_ate_coeffs::default();
+            c.old_RX = RX;
+            c.old_RY = RY;
+            if NAF[i] > 0 {
+                c.gamma = (c.old_RY - result.QY) * (c.old_RX - result.QX).inverse();
+            } else {
+                c.gamma = (c.old_RY + result.QY) * (c.old_RX - result.QX).inverse();
+            }
+            c.gamma_twist = c.gamma * mnt4_twist;
+            c.gamma_X = c.gamma * result.QX;
+            result.coeffs.push(c);
 
-// mnt4_Fq4 mnt4_double_miller_loop(prec_P1:&mnt4_G1_precomp,
-//                                  prec_Q1:&mnt4_G2_precomp,
-//                                  prec_P2:&mnt4_G1_precomp,
-//                                  prec_Q2:&mnt4_G2_precomp);
+            RX = c.gamma.squared() - (c.old_RX + result.QX);
+            RY = c.gamma * (c.old_RX - RX) - c.old_RY;
+        }
+    }
 
-// mnt4_Fq4 mnt4_pairing(P:mnt4_G1&,
-//                       Q:&mnt4_G2);
+    /* TODO: maybe handle neg
+       if mnt4_ate_is_loop_count_neg
+       {
+       ac:mnt4_ate_add_coeffs,
+       c:mnt4_affine_ate_dbl_coeffs,
+       c.old_RX = RX;
+       c.old_RY = -RY;
+       old_RX_2 = c.old_RY.squared();
+       c.gamma = (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_coeff_a) * (c.old_RY + c.old_RY).inverse();
+       c.gamma_twist = c.gamma * mnt4_twist;
+       c.gamma_X = c.gamma * c.old_RX;
+       result.coeffs.push(c);
+       }
+    */
 
-// mnt4_GT mnt4_reduced_pairing(P:&mnt4_G1,
-//                              Q:&mnt4_G2);
+    leave_block("Call to mnt4_affine_ate_precompute_G2", false);
+    result
+}
 
-// mnt4_GT mnt4_affine_reduced_pairing(P:&mnt4_G1,
-//                                     Q:&mnt4_G2);
+pub fn mnt4_affine_ate_miller_loop(
+    prec_P: &mnt4_affine_ate_G1_precomputation,
+    prec_Q: &mnt4_affine_ate_G2_precomputation,
+) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_affine_ate_miller_loop", false);
 
-// 
+    let mut f = mnt4_Fq4::one();
 
-// 
+    let mut found_nonzero = false;
+    let mut idx = 0;
+    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
 
+    let NAF = find_wnaf(1, loop_count);
+    for i in (0..=NAF.len() - 1).rev() {
+        if !found_nonzero {
+            /* this skips the MSB itself */
+            found_nonzero |= (NAF[i] != 0);
+            continue;
+        }
 
-//  Implementation of interfaces for pairing operations on MNT4.
+        /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        mnt4_param_p (skipping leading zeros) in MSB to LSB
+        order */
+        let c = prec_Q.coeffs[idx];
+        idx += 1;
+        let g_RR_at_P = mnt4_Fq4(
+            prec_P.PY_twist_squared,
+            -prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY,
+        );
+        f = f.squared().mul_by_023(g_RR_at_P);
 
-//  See mnt4_pairing.hpp .
+        if NAF[i] != 0 {
+            let c = prec_Q.coeffs[idx];
+            idx += 1;
+            let g_RQ_at_P = if NAF[i] > 0 {
+                mnt4_Fq4(
+                    prec_P.PY_twist_squared,
+                    -prec_P.PX * c.gamma_twist + c.gamma_X - prec_Q.QY,
+                )
+            } else {
+                mnt4_Fq4(
+                    prec_P.PY_twist_squared,
+                    -prec_P.PX * c.gamma_twist + c.gamma_X + prec_Q.QY,
+                )
+            };
+            f = f.mul_by_023(g_RQ_at_P);
+        }
+    }
 
+    /* TODO: maybe handle neg
+       if mnt4_ate_is_loop_count_neg
+       {
+       // TODO:
+       mnt4_affine_ate_coeffs ac = prec_Q.coeffs[idx];idx+=1;
+       mnt4_Fq4 g_RnegR_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
+       - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
+       f = (f * g_RnegR_at_P).inverse();
+       }
+    */
 
+    leave_block("Call to mnt4_affine_ate_miller_loop", false);
 
-// //#include <cassert>
+    f
+}
 
-// use crate::algebra::curves::mnt::mnt4::mnt4_g1;
-// use crate::algebra::curves::mnt::mnt4::mnt4_g2;
-// use crate::algebra::curves::mnt::mnt4::mnt4_init;
-// use crate::algebra::curves::mnt::mnt4::mnt4_pairing;
-// use ffec::algebra::scalar_multiplication::wnaf;
-// use crate::common::profiling;
+/* ate pairing */
 
+pub struct extended_mnt4_G2_projective {
+    X: mnt4_Fq2,
+    Y: mnt4_Fq2,
+    Z: mnt4_Fq2,
+    T: mnt4_Fq2,
+}
+impl extended_mnt4_G2_projective {
+    pub fn print(&self) {
+        print!("extended mnt4_G2 projective X/Y/Z/T:\n");
+        self.X.print();
+        self.Y.print();
+        self.Z.print();
+        self.T.print();
+    }
 
+    pub fn test_invariant(&self) {
+        assert!(self.T == self.Z.squared());
+    }
+}
 
-// using std::usize;
+pub fn doubling_step_for_flipped_miller_loop(
+    current: extended_mnt4_G2_projective,
+    dc: mnt4_ate_dbl_coeffs,
+) {
+    let X = current.X;
+    let Y = current.Y;
+    let Z = current.Z;
+    let T = current.T;
 
-// bool mnt4_ate_G1_precomp::operator==(other:&mnt4_ate_G1_precomp) const
-// {
-//     return (this->PX == other.PX &&
-//             this->PY == other.PY &&
-//             this->PX_twist == other.PX_twist &&
-//             this->PY_twist == other.PY_twist);
+    let A = T.squared(); // A = T1^2
+    let B = X.squared(); // B = X1^2
+    let C = Y.squared(); // C = Y1^2
+    let D = C.squared(); // D = C^2
+    let E = (X + C).squared() - B - D; // E = (X1+C)^2-B-D
+    let F = (B + B + B) + mnt4_twist_coeff_a * A; // F = 3*B +  a  *A
+    let G = F.squared(); // G = F^2
+
+    current.X = -(E + E + E + E) + G; // X3 = -4*E+G
+    current.Y = -mnt4_Fq("8") * D + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
+    current.Z = (Y + Z).squared() - C - Z.squared(); // Z3 = (Y1+Z1)^2-C-Z1^2
+    current.T = current.Z.squared(); // T3 = Z3^2
+
+    dc.c_H = (current.Z + T).squared() - current.T - A; // H = (Z3+T1)^2-T3-A
+    dc.c_4C = C + C + C + C; // fourC = 4*C
+    dc.c_J = (F + T).squared() - G - A; // J = (F+T1)^2-G-A
+    dc.c_L = (F + X).squared() - G - B; // L = (F+X1)^2-G-B
+
+    current.test_invariant();
+}
+
+pub fn mixed_addition_step_for_flipped_miller_loop(
+    base_X: mnt4_Fq2,
+    base_Y: mnt4_Fq2,
+    base_Y_squared: mnt4_Fq2,
+    mut current: extended_mnt4_G2_projective,
+    mut ac: mnt4_ate_add_coeffs,
+) {
+    let X1 = current.X.clone();
+    let Y1 = current.Y.clone();
+    let Z1 = current.Z.clone();
+    let T1 = current.T;
+    let x2: mnt4_Fq2 = base_X.clone();
+    let y2 = base_Y.clone();
+    let y2_squared = base_Y_squared;
+
+    let B = x2 * T1; // B = x2 * T1
+    let D = ((y2 + Z1).squared() - y2_squared - T1) * T1; // D = ((y2 + Z1)^2 - y2squared - T1) * T1
+    let H = B - X1; // H = B - X1
+    let I = H.squared(); // I = H^2
+    let E = I + I + I + I; // E = 4*I
+    let J = H * E; // J = H * E
+    let V = X1 * E; // V = X1 * E
+    let L1 = D - (Y1 + Y1); // L1 = D - 2 * Y1
+
+    current.X = L1.squared() - J - (V + V); // X3 = L1^2 - J - 2*V
+    current.Y = L1 * (V - current.X) - (Y1 + Y1) * J; // Y3 = L1 * (V-X3) - 2*Y1 * J
+    current.Z = (Z1 + H).squared() - T1 - I; // Z3 = (Z1 + H)^2 - T1 - I
+    current.T = current.Z.squared(); // T3 = Z3^2
+
+    ac.c_L1 = L1;
+    ac.c_RZ = current.Z;
+    // #ifdef DEBUG
+    current.test_invariant();
+}
+
+pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
+    enter_block("Call to mnt4_ate_precompute_G1", false);
+
+    let mut Pcopy = P.clone();
+    Pcopy.to_affine_coordinates();
+
+    let mut result = mnt4_ate_G1_precomp::default();
+    result.PX = Pcopy.X;
+    result.PY = Pcopy.Y;
+    result.PX_twist = Pcopy.X * mnt4_twist;
+    result.PY_twist = Pcopy.Y * mnt4_twist;
+
+    leave_block("Call to mnt4_ate_precompute_G1", false);
+    result
+}
+
+pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
+    enter_block("Call to mnt4_ate_precompute_G2", false);
+
+    let mut Qcopy = (Q.clone());
+    Qcopy.to_affine_coordinates();
+
+    let mut result = mnt4_ate_G2_precomp::default();
+    result.QX = Qcopy.X;
+    result.QY = Qcopy.Y;
+    result.QY2 = Qcopy.Y.squared();
+    result.QX_over_twist = Qcopy.X * mnt4_twist.inverse();
+    result.QY_over_twist = Qcopy.Y * mnt4_twist.inverse();
+
+    let mut R = extended_mnt4_G2_projective::default();
+    R.X = Qcopy.X;
+    R.Y = Qcopy.Y;
+    R.Z = mnt4_Fq2::one();
+    R.T = mnt4_Fq2::one();
+
+    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let mut found_one = false;
+
+    for i in (0..=loop_count.max_bits() as i64 - 1).rev() {
+        let mut bit = loop_count.test_bit(i);
+        if !found_one {
+            /* this skips the MSB itself */
+            found_one |= bit;
+            continue;
+        }
+
+        let mut dc = mnt4_ate_dbl_coeffs::default();
+        doubling_step_for_flipped_miller_loop(R, dc);
+        result.dbl_coeffs.push(dc);
+        if bit != 0 {
+            let mut ac = mnt4_ate_add_coeffs::default();
+            mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2, R, ac);
+            result.add_coeffs.push(ac);
+        }
+    }
+
+    if mnt4_ate_is_loop_count_neg {
+        let mut RZ_inv = R.Z.inverse();
+        let mut RZ2_inv = RZ_inv.squared();
+        let mut RZ3_inv = RZ2_inv * RZ_inv;
+        let mut minus_R_affine_X = R.X * RZ2_inv;
+        let mut minus_R_affine_Y = -R.Y * RZ3_inv;
+        let mut minus_R_affine_Y2 = minus_R_affine_Y.squared();
+        let ac = mnt4_ate_add_coeffs::default();
+        mixed_addition_step_for_flipped_miller_loop(
+            minus_R_affine_X,
+            minus_R_affine_Y,
+            minus_R_affine_Y2,
+            R,
+            ac,
+        );
+        result.add_coeffs.push(ac);
+    }
+
+    leave_block("Call to mnt4_ate_precompute_G2", false);
+    result
+}
+
+pub fn mnt4_ate_miller_loop(
+    prec_P: &mnt4_ate_G1_precomp,
+    prec_Q: &mnt4_ate_G2_precomp,
+) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_ate_miller_loop", false);
+
+    let L1_coeff = mnt4_Fq2::new(prec_P.PX, mnt4_Fq::zero()) - prec_Q.QX_over_twist;
+
+    let f = mnt4_Fq4::one();
+
+    let mut found_one = false;
+    let dbl_idx = 0;
+    let add_idx = 0;
+
+    let mut loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    for i in (0..=loop_count.max_bits() as i64 - 1).rev() {
+        let mut bit = loop_count.test_bit(i);
+
+        if !found_one {
+            /* this skips the MSB itself */
+            found_one |= bit;
+            continue;
+        }
+
+        /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        mnt4_param_p (skipping leading zeros) in MSB to LSB
+        order */
+        let dc = prec_Q.dbl_coeffs[dbl_idx];
+        dbl_idx += 1;
+        let g_RR_at_P = mnt4_Fq4(
+            -dc.c_4C - dc.c_J * prec_P.PX_twist + dc.c_L,
+            dc.c_H * prec_P.PY_twist,
+        );
+        f = f.squared() * g_RR_at_P;
+        if bit != 0 {
+            let ac = prec_Q.add_coeffs[add_idx];
+            add_idx += 1;
+            let g_RQ_at_P = mnt4_Fq4(
+                ac.c_RZ * prec_P.PY_twist,
+                -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1),
+            );
+            f = f * g_RQ_at_P;
+        }
+    }
+
+    if mnt4_ate_is_loop_count_neg {
+        let ac = prec_Q.add_coeffs[add_idx];
+        add_idx += 1;
+        let g_RnegR_at_P = mnt4_Fq4(
+            ac.c_RZ * prec_P.PY_twist,
+            -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1),
+        );
+        f = (f * g_RnegR_at_P).inverse();
+    }
+
+    leave_block("Call to mnt4_ate_miller_loop", false);
+
+    f
+}
+
+pub fn mnt4_ate_double_miller_loop(
+    prec_P1: &mnt4_ate_G1_precomp,
+    prec_Q1: &mnt4_ate_G2_precomp,
+    prec_P2: &mnt4_ate_G1_precomp,
+    prec_Q2: &mnt4_ate_G2_precomp,
+) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_ate_double_miller_loop", false);
+
+    let L1_coeff1 = mnt4_Fq2(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
+    let L1_coeff2 = mnt4_Fq2(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
+
+    let f = mnt4_Fq4::one();
+
+    let mut found_one = false;
+    let mut dbl_idx = 0;
+    let mut add_idx = 0;
+
+    let mut loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    for i in (0..=loop_count.max_bits() - 1).rev() {
+        let mut bit = loop_count.test_bit(i);
+
+        if !found_one {
+            /* this skips the MSB itself */
+            found_one |= bit;
+            continue;
+        }
+
+        /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        mnt4_param_p (skipping leading zeros) in MSB to LSB
+        order */
+        let mut dc1 = prec_Q1.dbl_coeffs[dbl_idx];
+        let mut dc2 = prec_Q2.dbl_coeffs[dbl_idx];
+        dbl_idx += 1;
+
+        let mut g_RR_at_P1 = mnt4_Fq4(
+            -dc1.c_4C - dc1.c_J * prec_P1.PX_twist + dc1.c_L,
+            dc1.c_H * prec_P1.PY_twist,
+        );
+
+        let mut g_RR_at_P2 = mnt4_Fq4(
+            -dc2.c_4C - dc2.c_J * prec_P2.PX_twist + dc2.c_L,
+            dc2.c_H * prec_P2.PY_twist,
+        );
+
+        f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
+
+        if bit != 0 {
+            let mut ac1 = prec_Q1.add_coeffs[add_idx];
+            let mut ac2 = prec_Q2.add_coeffs[add_idx];
+            add_idx += 1;
+
+            let mut g_RQ_at_P1 = mnt4_Fq4(
+                ac1.c_RZ * prec_P1.PY_twist,
+                -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1),
+            );
+            let mut g_RQ_at_P2 = mnt4_Fq4(
+                ac2.c_RZ * prec_P2.PY_twist,
+                -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1),
+            );
+
+            f = f * g_RQ_at_P1 * g_RQ_at_P2;
+        }
+    }
+
+    if mnt4_ate_is_loop_count_neg {
+        let mut ac1 = prec_Q1.add_coeffs[add_idx];
+        let mut ac2 = prec_Q2.add_coeffs[add_idx];
+        add_idx += 1;
+        let mut g_RnegR_at_P1 = mnt4_Fq4(
+            ac1.c_RZ * prec_P1.PY_twist,
+            -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1),
+        );
+        let mut g_RnegR_at_P2 = mnt4_Fq4(
+            ac2.c_RZ * prec_P2.PY_twist,
+            -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1),
+        );
+
+        f = (f * g_RnegR_at_P1 * g_RnegR_at_P2).inverse();
+    }
+
+    leave_block("Call to mnt4_ate_double_miller_loop", false);
+
+    f
+}
+
+pub fn mnt4_ate_pairing(Q: &mnt4_G1, P: &mnt4_G2) -> mnt4_Fq4 {
+    enter_block("Call to mnt4_ate_pairing", false);
+    let mut prec_P = mnt4_ate_precompute_G1(P);
+    let mut prec_Q = mnt4_ate_precompute_G2(Q);
+    let mut result = mnt4_ate_miller_loop(prec_P, prec_Q);
+    leave_block("Call to mnt4_ate_pairing", false);
+    result
+}
+
+pub fn mnt4_ate_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
+    enter_block("Call to mnt4_ate_reduced_pairing", false);
+    let f = mnt4_ate_pairing(P, Q);
+    let result = mnt4_final_exponentiation(f);
+    leave_block("Call to mnt4_ate_reduced_pairing", false);
+    result
+}
+
+pub fn mnt4_precompute_G1(P: &mnt4_G1) -> mnt4_G1_precomp {
+    mnt4_ate_precompute_G1(P)
+}
+
+pub fn mnt4_precompute_G2(Q: &mnt4_G2) -> mnt4_G2_precomp {
+    mnt4_ate_precompute_G2(Q)
+}
+
+pub fn mnt4_miller_loop(prec_P: &mnt4_G1_precomp, prec_Q: &mnt4_G2_precomp) -> mnt4_Fq4 {
+    mnt4_ate_miller_loop(prec_P, prec_Q)
+}
+
+pub fn mnt4_double_miller_loop(
+    prec_P1: &mnt4_G1_precomp,
+    prec_Q1: &mnt4_G2_precomp,
+    prec_P2: &mnt4_G1_precomp,
+    prec_Q2: &mnt4_G2_precomp,
+) -> mnt4_Fq4 {
+    mnt4_ate_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2)
+}
+
+pub fn mnt4_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_Fq4 {
+    mnt4_ate_pairing(P, Q)
+}
+
+pub fn mnt4_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
+    mnt4_ate_reduced_pairing(P, Q)
+}
+
+pub fn mnt4_affine_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
+    let prec_P = mnt4_affine_ate_precompute_G1(P);
+    let prec_Q = mnt4_affine_ate_precompute_G2(Q);
+    let f = mnt4_affine_ate_miller_loop(prec_P, prec_Q);
+    let result = mnt4_final_exponentiation(f);
+    result
+}
+
+// use std::fmt;
+// use std::io::{self, Read, Write};
+
+// #[derive(Clone, Debug, PartialEq)]
+// pub struct Mnt4AteG1Precomp {
+//     pub px: Fq,
+//     pub py: Fq,
+//     pub px_twist: Fq,
+//     pub py_twist: Fq,
 // }
 
-// std::ostream& operator<<(std::ostream &out, prec_P:&mnt4_ate_G1_precomp)
-// {
-//     out << prec_P.PX << OUTPUT_SEPARATOR << prec_P.PY << OUTPUT_SEPARATOR << prec_P.PX_twist << OUTPUT_SEPARATOR << prec_P.PY_twist;
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, mnt4_ate_G1_precomp &prec_P)
-// {
-//     in >> prec_P.PX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_P.PY;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_P.PX_twist;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_P.PY_twist;
-
-//     return in;
-// }
-
-// bool mnt4_ate_dbl_coeffs::operator==(other:&mnt4_ate_dbl_coeffs) const
-// {
-//     return (this->c_H == other.c_H &&
-//             this->c_4C == other.c_4C &&
-//             this->c_J == other.c_J &&
-//             this->c_L == other.c_L);
-// }
-
-// std::ostream& operator<<(std::ostream &out, dc:&mnt4_ate_dbl_coeffs)
-// {
-//     out << dc.c_H << OUTPUT_SEPARATOR << dc.c_4C << OUTPUT_SEPARATOR << dc.c_J << OUTPUT_SEPARATOR << dc.c_L;
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, mnt4_ate_dbl_coeffs &dc)
-// {
-//     in >> dc.c_H;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> dc.c_4C;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> dc.c_J;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> dc.c_L;
-
-//     return in;
-// }
-
-// bool mnt4_ate_add_coeffs::operator==(other:&mnt4_ate_add_coeffs) const
-// {
-//     return (this->c_L1 == other.c_L1 &&
-//             this->c_RZ == other.c_RZ);
-// }
-
-// std::ostream& operator<<(std::ostream &out, ac:&mnt4_ate_add_coeffs)
-// {
-//     out << ac.c_L1 << OUTPUT_SEPARATOR << ac.c_RZ;
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, mnt4_ate_add_coeffs &ac)
-// {
-//     in >> ac.c_L1;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> ac.c_RZ;
-//     return in;
-// }
-
-// bool mnt4_ate_G2_precomp::operator==(other:&mnt4_ate_G2_precomp) const
-// {
-//     return (this->QX == other.QX &&
-//             this->QY == other.QY &&
-//             this->QY2 == other.QY2 &&
-//             this->QX_over_twist == other.QX_over_twist &&
-//             this->QY_over_twist == other.QY_over_twist &&
-//             this->dbl_coeffs == other.dbl_coeffs &&
-//             this->add_coeffs == other.add_coeffs);
-// }
-
-// std::ostream& operator<<(std::ostream& out, prec_Q:&mnt4_ate_G2_precomp)
-// {
-//     out << prec_Q.QX << OUTPUT_SEPARATOR
-//         << prec_Q.QY << OUTPUT_SEPARATOR
-//         << prec_Q.QY2  << OUTPUT_SEPARATOR
-//         << prec_Q.QX_over_twist << OUTPUT_SEPARATOR
-//         << prec_Q.QY_over_twist << "\n";
-//     out << prec_Q.dbl_coeffs.len() << "\n";
-//     for dc in &prec_Q.dbl_coeffs
-//     {
-//         out << dc << OUTPUT_NEWLINE;
+// impl fmt::Display for Mnt4AteG1Precomp {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}{}{}{}{}{}{}",
+//             self.px,
+//             OUTPUT_SEPARATOR,
+//             self.py,
+//             OUTPUT_SEPARATOR,
+//             self.px_twist,
+//             OUTPUT_SEPARATOR,
+//             self.py_twist
+//         )
 //     }
-//     out << prec_Q.add_coeffs.len() << "\n";
-//     for ac in &prec_Q.add_coeffs
-//     {
-//         out << ac << OUTPUT_NEWLINE;
+// }
+
+// #[derive(Clone, Debug, PartialEq)]
+// pub struct Mnt4AteDblCoeffs {
+//     pub c_h: Fq,
+//     pub c_4c: Fq,
+//     pub c_j: Fq,
+//     pub c_l: Fq,
+// }
+
+// impl fmt::Display for Mnt4AteDblCoeffs {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(
+//             f,
+//             "{}{}{}{}{}{}{}",
+//             self.c_h,
+//             OUTPUT_SEPARATOR,
+//             self.c_4c,
+//             OUTPUT_SEPARATOR,
+//             self.c_j,
+//             OUTPUT_SEPARATOR,
+//             self.c_l
+//         )
 //     }
-
-//     return out;
 // }
 
-// std::istream& operator>>(std::istream& in, mnt4_ate_G2_precomp &prec_Q)
-// {
-//     in >> prec_Q.QX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_Q.QY;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_Q.QY2;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_Q.QX_over_twist;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_Q.QY_over_twist;
-//     consume_newline(in);
+// #[derive(Clone, Debug, PartialEq)]
+// pub struct Mnt4AteAddCoeffs {
+//     pub c_l1: Fq,
+//     pub c_rz: Fq,
+// }
 
-//     prec_Q.dbl_coeffs.clear();
-//     usize dbl_s;
-//     in >> dbl_s;
-//     consume_newline(in);
-
-//     prec_Q.dbl_coeffs.reserve(dbl_s);
-
-//     for i in 0..dbl_s
-//     {
-//         mnt4_ate_dbl_coeffs dc;
-//         in >> dc;
-//         consume_OUTPUT_NEWLINE(in);
-//         prec_Q.dbl_coeffs.emplace_back(dc);
+// impl fmt::Display for Mnt4AteAddCoeffs {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "{}{}{}", self.c_l1, OUTPUT_SEPARATOR, self.c_rz)
 //     }
-
-//     prec_Q.add_coeffs.clear();
-//     usize add_s;
-//     in >> add_s;
-//     consume_newline(in);
-
-//     prec_Q.add_coeffs.reserve(add_s);
-
-//     for i in 0..add_s
-//     {
-//         mnt4_ate_add_coeffs ac;
-//         in >> ac;
-//         consume_OUTPUT_NEWLINE(in);
-//         prec_Q.add_coeffs.emplace_back(ac);
-//     }
-
-//     return in;
 // }
 
-// /* final exponentiations */
-
-// mnt4_Fq4 mnt4_final_exponentiation_last_chunk(elt:&mnt4_Fq4, elt_inv:&mnt4_Fq4)
-// {
-//     enter_block("Call to mnt4_final_exponentiation_last_chunk");
-//     let elt_q= elt.Frobenius_map(1);
-//     mnt4_Fq4 w1_part = elt_q.cyclotomic_exp(mnt4_final_exponent_last_chunk_w1);
-//     mnt4_Fq4 w0_part;
-//     if mnt4_final_exponent_last_chunk_is_w0_neg
-//     {
-//     	w0_part = elt_inv.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0);
-//     } else {
-//     	w0_part = elt.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0);
-//     }
-//     mnt4_Fq4 result = w1_part * w0_part;
-//     leave_block("Call to mnt4_final_exponentiation_last_chunk");
-
-//     return result;
+// #[derive(Clone, Debug, PartialEq)]
+// pub struct Mnt4AteG2Precomp {
+//     pub qx: Fq,
+//     pub qy: Fq,
+//     pub qy2: Fq,
+//     pub qx_over_twist: Fq,
+//     pub qy_over_twist: Fq,
+//     pub dbl_coeffs: Vec<Mnt4AteDblCoeffs>,
+//     pub add_coeffs: Vec<Mnt4AteAddCoeffs>,
 // }
 
-// mnt4_Fq4 mnt4_final_exponentiation_first_chunk(elt:&mnt4_Fq4, elt_inv:&mnt4_Fq4)
-// {
-//     enter_block("Call to mnt4_final_exponentiation_first_chunk");
+// impl Mnt4AteG2Precomp {
+//     pub fn write<W: Write>(&self, mut writer: W) -> io::Result<()> {
+//         writeln!(
+//             writer,
+//             "{}{}{}{}{}{}{}{}{}",
+//             self.qx,
+//             OUTPUT_SEPARATOR,
+//             self.qy,
+//             OUTPUT_SEPARATOR,
+//             self.qy2,
+//             OUTPUT_SEPARATOR,
+//             self.qx_over_twist,
+//             OUTPUT_SEPARATOR,
+//             self.qy_over_twist
+//         )?;
 
-//     /* (q^2-1) */
-
-//     /* elt_q2 = elt^(q^2) */
-//     let elt_q2= elt.Frobenius_map(2);
-//     /* elt_q3_over_elt = elt^(q^2-1) */
-//     let elt_q2_over_elt= elt_q2 * elt_inv;
-
-//     leave_block("Call to mnt4_final_exponentiation_first_chunk");
-//     return elt_q2_over_elt;
-// }
-
-// mnt4_GT mnt4_final_exponentiation(elt:&mnt4_Fq4)
-// {
-//     enter_block("Call to mnt4_final_exponentiation");
-//     let elt_inv= elt.inverse();
-//     let elt_to_first_chunk= mnt4_final_exponentiation_first_chunk(elt, elt_inv);
-//     let elt_inv_to_first_chunk= mnt4_final_exponentiation_first_chunk(elt_inv, elt);
-//     mnt4_GT result = mnt4_final_exponentiation_last_chunk(elt_to_first_chunk, elt_inv_to_first_chunk);
-//     leave_block("Call to mnt4_final_exponentiation");
-
-//     return result;
-// }
-
-// /* affine ate miller loop */
-
-// mnt4_affine_ate_G1_precomputation mnt4_affine_ate_precompute_G1(P:&mnt4_G1)
-// {
-//     enter_block("Call to mnt4_affine_ate_precompute_G1");
-
-//     mnt4_G1 Pcopy = P;
-//     Pcopy.to_affine_coordinates();
-
-//     mnt4_affine_ate_G1_precomputation result;
-//     result.PX = Pcopy.X;
-//     result.PY = Pcopy.Y;
-//     result.PY_twist_squared = Pcopy.Y * mnt4_twist.squared();
-
-//     leave_block("Call to mnt4_affine_ate_precompute_G1");
-//     return result;
-// }
-
-// mnt4_affine_ate_G2_precomputation mnt4_affine_ate_precompute_G2(Q:&mnt4_G2)
-// {
-//     enter_block("Call to mnt4_affine_ate_precompute_G2");
-
-//     mnt4_G2 Qcopy(Q);
-//     Qcopy.to_affine_coordinates();
-
-//     mnt4_affine_ate_G2_precomputation result;
-//     result.QX = Qcopy.X;
-//     result.QY = Qcopy.Y;
-
-//     mnt4_Fq2 RX = Qcopy.X;
-//     mnt4_Fq2 RY = Qcopy.Y;
-
-//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-//     bool found_nonzero = false;
-
-//     Vec<long> NAF = find_wnaf(1, loop_count);
-//     for i in ( 0..=(long) NAF.len() - 1).rev()
-//     {
-//         if !found_nonzero
-//         {
-//             /* this skips the MSB itself */
-//             found_nonzero |= (NAF[i] != 0);
-//             continue;
+//         writeln!(writer, "{}", self.dbl_coeffs.len())?;
+//         for dc in &self.dbl_coeffs {
+//             write!(writer, "{}{}", dc, OUTPUT_NEWLINE)?;
 //         }
 
-//         mnt4_affine_ate_coeffs c;
-//         c.old_RX = RX;
-//         c.old_RY = RY;
-//         mnt4_Fq2 old_RX_2 = c.old_RX.squared();
-//         c.gamma = (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_twist_coeff_a) * (c.old_RY + c.old_RY).inverse();
-//         c.gamma_twist = c.gamma * mnt4_twist;
-//         c.gamma_X = c.gamma * c.old_RX;
-//         result.coeffs.push_back(c);
-
-//         RX = c.gamma.squared() - (c.old_RX+c.old_RX);
-//         RY = c.gamma * (c.old_RX - RX) - c.old_RY;
-
-//         if NAF[i] != 0
-//         {
-//             mnt4_affine_ate_coeffs c;
-//             c.old_RX = RX;
-//             c.old_RY = RY;
-//             if NAF[i] > 0
-//             {
-//                 c.gamma = (c.old_RY - result.QY) * (c.old_RX - result.QX).inverse();
-//             }
-//             else
-//             {
-//                 c.gamma = (c.old_RY + result.QY) * (c.old_RX - result.QX).inverse();
-//             }
-//             c.gamma_twist = c.gamma * mnt4_twist;
-//             c.gamma_X = c.gamma * result.QX;
-//             result.coeffs.push_back(c);
-
-//             RX = c.gamma.squared() - (c.old_RX+result.QX);
-//             RY = c.gamma * (c.old_RX - RX) - c.old_RY;
+//         writeln!(writer, "{}", self.add_coeffs.len())?;
+//         for ac in &self.add_coeffs {
+//             write!(writer, "{}{}", ac, OUTPUT_NEWLINE)?;
 //         }
+//         Ok(())
 //     }
 
-//     /* TODO: maybe handle neg
-//        if mnt4_ate_is_loop_count_neg
-//        {
-//        mnt4_ate_add_coeffs ac;
-//        mnt4_affine_ate_dbl_coeffs c;
-//        c.old_RX = RX;
-//        c.old_RY = -RY;
-//        old_RX_2 = c.old_RY.squared();
-//        c.gamma = (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_coeff_a) * (c.old_RY + c.old_RY).inverse();
-//        c.gamma_twist = c.gamma * mnt4_twist;
-//        c.gamma_X = c.gamma * c.old_RX;
-//        result.coeffs.push_back(c);
-//        }
-//     */
+//     pub fn read<R: Read>(mut reader: R) -> io::Result<Self> {
+//         let qx = read_fq(&mut reader)?;
+//         consume_output_separator(&mut reader)?;
+//         let qy = read_fq(&mut reader)?;
+//         consume_output_separator(&mut reader)?;
+//         let qy2 = read_fq(&mut reader)?;
+//         consume_output_separator(&mut reader)?;
+//         let qx_over_twist = read_fq(&mut reader)?;
+//         consume_output_separator(&mut reader)?;
+//         let qy_over_twist = read_fq(&mut reader)?;
+//         consume_newline(&mut reader)?;
 
-//     leave_block("Call to mnt4_affine_ate_precompute_G2");
-//     return result;
-// }
-
-// mnt4_Fq4 mnt4_affine_ate_miller_loop(prec_P:&mnt4_affine_ate_G1_precomputation,
-//                                      prec_Q:&mnt4_affine_ate_G2_precomputation)
-// {
-//     enter_block("Call to mnt4_affine_ate_miller_loop");
-
-//     mnt4_Fq4 f = mnt4_Fq4::one();
-
-//     bool found_nonzero = false;
-//     usize idx = 0;
-//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-
-//     Vec<long> NAF = find_wnaf(1, loop_count);
-//     for i in ( 0..=(long) NAF.len() - 1).rev()
-//     {
-//         if !found_nonzero
-//         {
-//             /* this skips the MSB itself */
-//             found_nonzero |= (NAF[i] != 0);
-//             continue;
+//         let dbl_s: usize = read_usize(&mut reader)?;
+//         consume_newline(&mut reader)?;
+//         let mut dbl_coeffs = Vec::with_capacity(dbl_s);
+//         for _ in 0..dbl_s {
+//             let dc = Mnt4AteDblCoeffs::read(&mut reader)?;
+//             consume_output_newline(&mut reader)?;
+//             dbl_coeffs.push(dc);
 //         }
 
-//         /* code below gets executed for all bits (EXCEPT the MSB itself) of
-//            mnt4_param_p (skipping leading zeros) in MSB to LSB
-//            order */
-//         mnt4_affine_ate_coeffs c = prec_Q.coeffs[idx++];
-
-//         mnt4_Fq4 g_RR_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
-//                                       - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
-//         f = f.squared().mul_by_023(g_RR_at_P);
-
-//         if NAF[i] != 0
-//         {
-//             mnt4_affine_ate_coeffs c = prec_Q.coeffs[idx++];
-//             mnt4_Fq4 g_RQ_at_P;
-//             if NAF[i] > 0
-//             {
-//                 g_RQ_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
-//                                      - prec_P.PX * c.gamma_twist + c.gamma_X - prec_Q.QY);
-//             }
-//             else
-//             {
-//                 g_RQ_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
-//                                      - prec_P.PX * c.gamma_twist + c.gamma_X + prec_Q.QY);
-//             }
-//             f = f.mul_by_023(g_RQ_at_P);
-//         }
-//     }
-
-//     /* TODO: maybe handle neg
-//        if mnt4_ate_is_loop_count_neg
-//        {
-//        // TODO:
-//        mnt4_affine_ate_coeffs ac = prec_Q.coeffs[idx++];
-//        mnt4_Fq4 g_RnegR_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
-//        - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
-//        f = (f * g_RnegR_at_P).inverse();
-//        }
-//     */
-
-//     leave_block("Call to mnt4_affine_ate_miller_loop");
-
-//     return f;
-// }
-
-// /* ate pairing */
-
-// struct extended_mnt4_G2_projective {
-//     mnt4_Fq2 X;
-//     mnt4_Fq2 Y;
-//     mnt4_Fq2 Z;
-//     mnt4_Fq2 T;
-
-//     pub fn  print() const
-//     {
-//         print!("extended mnt4_G2 projective X/Y/Z/T:\n");
-//         X.print();
-//         Y.print();
-//         Z.print();
-//         T.print();
-//     }
-
-//     static pub fn  test_invariant()
-//     {
-//         assert!(T == Z.squared());
-//     }
-// };
-
-// pub fn  doubling_step_for_flipped_miller_loop(extended_mnt4_G2_projective &current,
-//                                            mnt4_ate_dbl_coeffs &dc)
-// {
-//     let X= current.X, Y = current.Y, Z = current.Z, T = current.T;
-
-//     let A= T.squared(); // A = T1^2
-//     let B= X.squared(); // B = X1^2
-//     let C= Y.squared(); // C = Y1^2
-//     let D= C.squared(); // D = C^2
-//     let E= (X+C).squared() - B - D; // E = (X1+C)^2-B-D
-//     let F= (B+B+B) + mnt4_twist_coeff_a * A; // F = 3*B +  a  *A
-//     let G= F.squared(); // G = F^2
-
-//     current.X = -(E+E+E+E) + G; // X3 = -4*E+G
-//     current.Y = -mnt4_Fq("8")*D + F*(E+E-current.X); // Y3 = -8*D+F*(2*E-X3)
-//     current.Z = (Y+Z).squared() - C - Z.squared(); // Z3 = (Y1+Z1)^2-C-Z1^2
-//     current.T = current.Z.squared(); // T3 = Z3^2
-
-//     dc.c_H = (current.Z + T).squared() - current.T - A; // H = (Z3+T1)^2-T3-A
-//     dc.c_4C = C+C+C+C; // fourC = 4*C
-//     dc.c_J = (F+T).squared() - G - A; // J = (F+T1)^2-G-A
-//     dc.c_L = (F+X).squared() - G - B; // L = (F+X1)^2-G-B
-
-// // #ifdef DEBUG
-//     current.test_invariant();
-// 
-// }
-
-// pub fn  mixed_addition_step_for_flipped_miller_loop(base_X:mnt4_Fq2, base_Y:mnt4_Fq2, base_Y_squared:mnt4_Fq2,
-//                                                  extended_mnt4_G2_projective &current,
-//                                                  mnt4_ate_add_coeffs &ac)
-// {
-//     let X1= current.X, Y1 = current.Y, Z1 = current.Z, T1 = current.T;
-//     x2:&mnt4_Fq2 = base_X,    &y2 =  base_Y, &y2_squared = base_Y_squared;
-
-//     let B= x2 * T1; // B = x2 * T1
-//     let D= ((y2 + Z1).squared() - y2_squared - T1) * T1; // D = ((y2 + Z1)^2 - y2squared - T1) * T1
-//     let H= B - X1; // H = B - X1
-//     let I= H.squared(); // I = H^2
-//     let E= I + I + I + I; // E = 4*I
-//     let J= H * E; // J = H * E
-//     let V= X1 * E; // V = X1 * E
-//     let L1= D - (Y1 + Y1); // L1 = D - 2 * Y1
-
-//     current.X = L1.squared() - J - (V+V); // X3 = L1^2 - J - 2*V
-//     current.Y = L1 * (V-current.X) - (Y1+Y1) * J; // Y3 = L1 * (V-X3) - 2*Y1 * J
-//     current.Z = (Z1+H).squared() - T1 - I; // Z3 = (Z1 + H)^2 - T1 - I
-//     current.T = current.Z.squared(); // T3 = Z3^2
-
-//     ac.c_L1 = L1;
-//     ac.c_RZ = current.Z;
-// // #ifdef DEBUG
-//     current.test_invariant();
-// 
-// }
-
-// mnt4_ate_G1_precomp mnt4_ate_precompute_G1(P:&mnt4_G1)
-// {
-//     enter_block("Call to mnt4_ate_precompute_G1");
-
-//     mnt4_G1 Pcopy = P;
-//     Pcopy.to_affine_coordinates();
-
-//     mnt4_ate_G1_precomp result;
-//     result.PX = Pcopy.X;
-//     result.PY = Pcopy.Y;
-//     result.PX_twist = Pcopy.X * mnt4_twist;
-//     result.PY_twist = Pcopy.Y * mnt4_twist;
-
-//     leave_block("Call to mnt4_ate_precompute_G1");
-//     return result;
-// }
-
-// mnt4_ate_G2_precomp mnt4_ate_precompute_G2(Q:&mnt4_G2)
-// {
-//     enter_block("Call to mnt4_ate_precompute_G2");
-
-//     mnt4_G2 Qcopy(Q);
-//     Qcopy.to_affine_coordinates();
-
-//     mnt4_ate_G2_precomp result;
-//     result.QX = Qcopy.X;
-//     result.QY = Qcopy.Y;
-//     result.QY2 = Qcopy.Y.squared();
-//     result.QX_over_twist = Qcopy.X * mnt4_twist.inverse();
-//     result.QY_over_twist = Qcopy.Y * mnt4_twist.inverse();
-
-//     extended_mnt4_G2_projective R;
-//     R.X = Qcopy.X;
-//     R.Y = Qcopy.Y;
-//     R.Z = mnt4_Fq2::one();
-//     R.T = mnt4_Fq2::one();
-
-//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-//     bool found_one = false;
-
-//     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
-//     {
-//         let mut bit = loop_count.test_bit(i);
-//         if !found_one
-//         {
-//             /* this skips the MSB itself */
-//             found_one |= bit;
-//             continue;
+//         let add_s: usize = read_usize(&mut reader)?;
+//         consume_newline(&mut reader)?;
+//         let mut add_coeffs = Vec::with_capacity(add_s);
+//         for _ in 0..add_s {
+//             let ac = Mnt4AteAddCoeffs::read(&mut reader)?;
+//             consume_output_newline(&mut reader)?;
+//             add_coeffs.push(ac);
 //         }
 
-//         mnt4_ate_dbl_coeffs dc;
-//         doubling_step_for_flipped_miller_loop(R, dc);
-//         result.dbl_coeffs.push_back(dc);
-//         if bit
-//         {
-//             mnt4_ate_add_coeffs ac;
-//             mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2, R, ac);
-//             result.add_coeffs.push_back(ac);
-//         }
+//         Ok(Self {
+//             qx,
+//             qy,
+//             qy2,
+//             qx_over_twist,
+//             qy_over_twist,
+//             dbl_coeffs,
+//             add_coeffs,
+//         })
 //     }
-
-//     if mnt4_ate_is_loop_count_neg
-//     {
-//     	mnt4_Fq2 RZ_inv = R.Z.inverse();
-//     	mnt4_Fq2 RZ2_inv = RZ_inv.squared();
-//     	mnt4_Fq2 RZ3_inv = RZ2_inv * RZ_inv;
-//     	mnt4_Fq2 minus_R_affine_X = R.X * RZ2_inv;
-//     	mnt4_Fq2 minus_R_affine_Y = - R.Y * RZ3_inv;
-//     	mnt4_Fq2 minus_R_affine_Y2 = minus_R_affine_Y.squared();
-//     	mnt4_ate_add_coeffs ac;
-//         mixed_addition_step_for_flipped_miller_loop(minus_R_affine_X, minus_R_affine_Y, minus_R_affine_Y2, R, ac);
-//         result.add_coeffs.push_back(ac);
-//     }
-
-//     leave_block("Call to mnt4_ate_precompute_G2");
-//     return result;
 // }
-
-// mnt4_Fq4 mnt4_ate_miller_loop(prec_P:&mnt4_ate_G1_precomp,
-//                               prec_Q:&mnt4_ate_G2_precomp)
-// {
-//     enter_block("Call to mnt4_ate_miller_loop");
-
-//     mnt4_Fq2 L1_coeff = mnt4_Fq2(prec_P.PX, mnt4_Fq::zero()) - prec_Q.QX_over_twist;
-
-//     mnt4_Fq4 f = mnt4_Fq4::one();
-
-//     bool found_one = false;
-//     usize dbl_idx = 0;
-//     usize add_idx = 0;
-
-//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-//     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
-//     {
-//         let mut bit = loop_count.test_bit(i);
-
-//         if !found_one
-//         {
-//             /* this skips the MSB itself */
-//             found_one |= bit;
-//             continue;
-//         }
-
-//         /* code below gets executed for all bits (EXCEPT the MSB itself) of
-//            mnt4_param_p (skipping leading zeros) in MSB to LSB
-//            order */
-//         mnt4_ate_dbl_coeffs dc = prec_Q.dbl_coeffs[dbl_idx++];
-
-//         mnt4_Fq4 g_RR_at_P = mnt4_Fq4(- dc.c_4C - dc.c_J * prec_P.PX_twist + dc.c_L,
-//                                       dc.c_H * prec_P.PY_twist);
-//         f = f.squared() * g_RR_at_P;
-//         if bit
-//         {
-//             mnt4_ate_add_coeffs ac = prec_Q.add_coeffs[add_idx++];
-
-//             mnt4_Fq4 g_RQ_at_P = mnt4_Fq4(ac.c_RZ * prec_P.PY_twist,
-//                                           -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1));
-//             f = f * g_RQ_at_P;
-//         }
-//     }
-
-//     if mnt4_ate_is_loop_count_neg
-//     {
-//     	mnt4_ate_add_coeffs ac = prec_Q.add_coeffs[add_idx++];
-//     	mnt4_Fq4 g_RnegR_at_P = mnt4_Fq4(ac.c_RZ * prec_P.PY_twist,
-//                                          -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1));
-//     	f = (f * g_RnegR_at_P).inverse();
-//     }
-
-//     leave_block("Call to mnt4_ate_miller_loop");
-
-//     return f;
-// }
-
-// mnt4_Fq4 mnt4_ate_double_miller_loop(prec_P1:&mnt4_ate_G1_precomp,
-//                                      prec_Q1:&mnt4_ate_G2_precomp,
-//                                      prec_P2:&mnt4_ate_G1_precomp,
-//                                      prec_Q2:&mnt4_ate_G2_precomp)
-// {
-//     enter_block("Call to mnt4_ate_double_miller_loop");
-
-//     mnt4_Fq2 L1_coeff1 = mnt4_Fq2(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
-//     mnt4_Fq2 L1_coeff2 = mnt4_Fq2(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
-
-//     mnt4_Fq4 f = mnt4_Fq4::one();
-
-//     bool found_one = false;
-//     usize dbl_idx = 0;
-//     usize add_idx = 0;
-
-//     loop_count:&bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-//     for i in ( 0..=(long) loop_count.max_bits() - 1).rev()
-//     {
-//         let mut bit = loop_count.test_bit(i);
-
-//         if !found_one
-//         {
-//             /* this skips the MSB itself */
-//             found_one |= bit;
-//             continue;
-//         }
-
-//         /* code below gets executed for all bits (EXCEPT the MSB itself) of
-//            mnt4_param_p (skipping leading zeros) in MSB to LSB
-//            order */
-//         mnt4_ate_dbl_coeffs dc1 = prec_Q1.dbl_coeffs[dbl_idx];
-//         mnt4_ate_dbl_coeffs dc2 = prec_Q2.dbl_coeffs[dbl_idx];
-//         ++dbl_idx;
-
-//         mnt4_Fq4 g_RR_at_P1 = mnt4_Fq4(- dc1.c_4C - dc1.c_J * prec_P1.PX_twist + dc1.c_L,
-//                                        dc1.c_H * prec_P1.PY_twist);
-
-//         mnt4_Fq4 g_RR_at_P2 = mnt4_Fq4(- dc2.c_4C - dc2.c_J * prec_P2.PX_twist + dc2.c_L,
-//                                        dc2.c_H * prec_P2.PY_twist);
-
-//         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
-
-//         if bit
-//         {
-//             mnt4_ate_add_coeffs ac1 = prec_Q1.add_coeffs[add_idx];
-//             mnt4_ate_add_coeffs ac2 = prec_Q2.add_coeffs[add_idx];
-//             ++add_idx;
-
-//             mnt4_Fq4 g_RQ_at_P1 = mnt4_Fq4(ac1.c_RZ * prec_P1.PY_twist,
-//                                            -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1));
-//             mnt4_Fq4 g_RQ_at_P2 = mnt4_Fq4(ac2.c_RZ * prec_P2.PY_twist,
-//                                            -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1));
-
-//             f = f * g_RQ_at_P1 * g_RQ_at_P2;
-//         }
-//     }
-
-//     if mnt4_ate_is_loop_count_neg
-//     {
-//     	mnt4_ate_add_coeffs ac1 = prec_Q1.add_coeffs[add_idx];
-//         mnt4_ate_add_coeffs ac2 = prec_Q2.add_coeffs[add_idx];
-//     	++add_idx;
-//     	mnt4_Fq4 g_RnegR_at_P1 = mnt4_Fq4(ac1.c_RZ * prec_P1.PY_twist,
-//                                           -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1));
-//     	mnt4_Fq4 g_RnegR_at_P2 = mnt4_Fq4(ac2.c_RZ * prec_P2.PY_twist,
-//                                           -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1));
-
-//     	f = (f * g_RnegR_at_P1 * g_RnegR_at_P2).inverse();
-//     }
-
-//     leave_block("Call to mnt4_ate_double_miller_loop");
-
-//     return f;
-// }
-
-// mnt4_Fq4 mnt4_ate_pairing(Q:&mnt4_G1& P, const mnt4_G2)
-// {
-//     enter_block("Call to mnt4_ate_pairing");
-//     mnt4_ate_G1_precomp prec_P = mnt4_ate_precompute_G1(P);
-//     mnt4_ate_G2_precomp prec_Q = mnt4_ate_precompute_G2(Q);
-//     mnt4_Fq4 result = mnt4_ate_miller_loop(prec_P, prec_Q);
-//     leave_block("Call to mnt4_ate_pairing");
-//     return result;
-// }
-
-// mnt4_GT mnt4_ate_reduced_pairing(P:&mnt4_G1, Q:&mnt4_G2)
-// {
-//     enter_block("Call to mnt4_ate_reduced_pairing");
-//     let f= mnt4_ate_pairing(P, Q);
-//     let result= mnt4_final_exponentiation(f);
-//     leave_block("Call to mnt4_ate_reduced_pairing");
-//     return result;
-// }
-
-// mnt4_G1_precomp mnt4_precompute_G1(P:&mnt4_G1)
-// {
-//     return mnt4_ate_precompute_G1(P);
-// }
-
-// mnt4_G2_precomp mnt4_precompute_G2(Q:&mnt4_G2)
-// {
-//     return mnt4_ate_precompute_G2(Q);
-// }
-
-// mnt4_Fq4 mnt4_miller_loop(prec_P:&mnt4_G1_precomp,
-//                           prec_Q:&mnt4_G2_precomp)
-// {
-//     return mnt4_ate_miller_loop(prec_P, prec_Q);
-// }
-
-// mnt4_Fq4 mnt4_double_miller_loop(prec_P1:&mnt4_G1_precomp,
-//                                  prec_Q1:&mnt4_G2_precomp,
-//                                  prec_P2:&mnt4_G1_precomp,
-//                                  prec_Q2:&mnt4_G2_precomp)
-// {
-//     return mnt4_ate_double_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
-// }
-
-// mnt4_Fq4 mnt4_pairing(P:mnt4_G1&,
-//                       Q:&mnt4_G2)
-// {
-//     return mnt4_ate_pairing(P, Q);
-// }
-
-// mnt4_GT mnt4_reduced_pairing(P:&mnt4_G1,
-//                              Q:&mnt4_G2)
-// {
-//     return mnt4_ate_reduced_pairing(P, Q);
-// }
-
-// mnt4_GT mnt4_affine_reduced_pairing(P:&mnt4_G1,
-//                                     Q:&mnt4_G2)
-// {
-//     let prec_P= mnt4_affine_ate_precompute_G1(P);
-//     let prec_Q= mnt4_affine_ate_precompute_G2(Q);
-//     let f= mnt4_affine_ate_miller_loop(prec_P, prec_Q);
-//     let result= mnt4_final_exponentiation(f);
-//     return result;
-// }
-
-// 

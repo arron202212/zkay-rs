@@ -1,40 +1,13 @@
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::init_alt_bn128_fields;
-
-// use crate::algebra::curves::public_params;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
+    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT, init_alt_bn128_fields,
 };
-// use crate::algebra::curves::alt_bn128::alt_bn128_init::{alt_bn128_G1,alt_bn128_G2};
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
     alt_bn128_G1_precomp, alt_bn128_G2_precomp,
 };
 
-// // parameters for Barreto--Naehrig curve E/Fq : y^2 = x^3 + b
-// extern alt_bn128_Fq alt_bn128_coeff_b;
-// // parameters for twisted Barreto--Naehrig curve E'/Fq2 : y^2 = x^3 + b/xi
-// extern alt_bn128_Fq2 alt_bn128_twist;
-// extern alt_bn128_Fq2 alt_bn128_twist_coeff_b;
-// extern alt_bn128_Fq alt_bn128_twist_mul_by_b_c0;
-// extern alt_bn128_Fq alt_bn128_twist_mul_by_b_c1;
-// extern alt_bn128_Fq2 alt_bn128_twist_mul_by_q_X;
-// extern alt_bn128_Fq2 alt_bn128_twist_mul_by_q_Y;
-
-// // parameters for pairing
-// extern bigint<alt_bn128_q_limbs> alt_bn128_ate_loop_count;
-// extern bool alt_bn128_ate_is_loop_count_neg;
-// extern bigint<alt_bn128_q_limbs> alt_bn128_final_exponent_z;
-// extern bool alt_bn128_final_exponent_is_z_neg;
-
-// pub fn  init_alt_bn128_params();
-
-// pub struct alt_bn128_G1;
-// pub struct alt_bn128_G2;
-
-// use crate::algebra::curves::alt_bn128::alt_bn128_g1;
-// use crate::algebra::curves::alt_bn128::alt_bn128_g2;
 use crate::algebra::curves::alt_bn128::alt_bn128_init;
-use ffec::BigInt;
-use ffec::MontFp;
+use ffec::{BigInt, MontFp};
+
 pub const alt_bn128_coeff_b: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
 pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::new(
     alt_bn128_Fq::const_new(BigInt!("3")),
@@ -54,11 +27,6 @@ pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::new(
     alt_bn128_Fq::const_new(BigInt!("3")),
     alt_bn128_Fq::const_new(BigInt!("3")),
 );
-
-// bigint<alt_bn128_q_limbs> alt_bn128_ate_loop_count;
-// bool alt_bn128_ate_is_loop_count_neg;
-// bigint<alt_bn128_q_limbs> alt_bn128_final_exponent_z;
-// bool alt_bn128_final_exponent_is_z_neg;
 
 pub fn init_alt_bn128_params() {
     init_alt_bn128_fields();

@@ -1,8 +1,8 @@
-//  pub mod mnt6_fields;
+pub mod mnt6_fields;
 pub mod mnt6_g1;
 pub mod mnt6_g2;
 pub mod mnt6_init;
-//  pub mod mnt6_pairing;
+pub mod mnt6_pairing;
 pub mod mnt6_pp;
 
 use crate::algebra::curves::{
@@ -168,7 +168,7 @@ impl<P: MNT6Config> MNT6<P> {
 
             f = f.square() * &g_rr_at_p;
 
-            // Compute l_{R,Q}(P) if bit == 1, and l_{R,-Q}(P) if bit == -1
+            // Compute l_{R,Q}(P) if bit!=0 == 1, and l_{R,-Q}(P) if bit!=0 == -1
             let g_rq_at_p = if *bit == 1 {
                 let ac = &q.addition_coefficients[add_idx];
                 add_idx += 1;

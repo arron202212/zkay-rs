@@ -17,7 +17,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
-use crate::const_new_fp_model;
+
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -38,30 +38,30 @@ pub trait Fp3_modelConfig<const N: usize>:
 {
     type Fp_modelConfig: FpmConfig<N>;
     const non_residue: my_Fp<N, Fp_modelConfig<N, Self>> =
-        const_new_fp_model::<N, Self::Fp_modelConfig>();
+        Fp_model::<N, Self::Fp_modelConfig>::const_default();
 
     const nqr: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
     ) = (
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     );
     const nqr_to_t: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
     ) = (
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     );
     /// T::non_residue^((modulus^i-1)/2)
     const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2] = [
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     ];
     const Frobenius_coeffs_c2: [my_Fp<N, Fp_modelConfig<N, Self>>; 2] = [
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     ];
 }
 

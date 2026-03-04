@@ -24,7 +24,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
-use crate::const_new_fp_model;
+
 use crate::scalar_multiplication::wnaf::find_wnaf;
 use num_traits::{One, Zero};
 use std::borrow::Borrow;
@@ -38,26 +38,26 @@ pub trait Fp4_modelConfig<const N: usize>:
     type Fp2_modelConfig: Fp2_modelConfig<N>;
 
     const non_residue: my_Fp<N, Fp_modelConfig<N, Self>> =
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>();
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default();
 
     const nqr: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
     ) = (
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
     );
     const nqr_to_t: (
         my_Fp<N, Fp_modelConfig<N, Self>>,
         my_Fp<N, Fp_modelConfig<N, Self>>,
     ) = (
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
     );
     /// T::non_residue^((modulus^i-1)/2)
     const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2] = [
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
-        const_new_fp_model::<N, Fp_modelConfig<N, Self>>(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
+        Fp_model::<N, Fp_modelConfig<N, Self>>::const_default(),
     ];
 }
 type my_Fp<const N: usize, T> = Fp_model<N, T>;

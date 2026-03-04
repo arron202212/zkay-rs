@@ -1,211 +1,193 @@
-
-//  Implements functions for computing Ate pairings over the bn128 curves, split into a
+//  Declares functions for computing Ate pairings over the bn128 curves, split into a
 //  offline and online stages.
 
+use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, bn128_Fq12};
+use crate::algebra::curves::bn128::bn128_g1::bn128_G1;
+use crate::algebra::curves::bn128::bn128_g2::bn128_G2;
+use crate::algebra::curves::bn128::bn128_gt::bn128_GT;
+use ffec::common::profiling::{enter_block, leave_block};
 
-use crate::algebra::curves::bn128::bn128_g1;
-use crate::algebra::curves::bn128::bn128_g2;
-use crate::algebra::curves::bn128::bn128_gt;
-use crate::algebra::curves::bn128::bn128_init;
-use crate::algebra::curves::bn128::bn128_pairing;
-use crate::common::profiling;
-
-
-
-using std::usize;
-
-bool bn128_ate_G1_precomp::operator==(other:&bn128_ate_G1_precomp) const
-{
-    return (this->P[0] == other.P[0] &&
-            this->P[1] == other.P[1] &&
-            this->P[2] == other.P[2]);
+#[derive(PartialEq, Clone, Default)]
+pub struct bn128_ate_G1_precomp {
+    pub P: [Fp; 3],
 }
 
-std::ostream& operator<<(std::ostream &out, prec_P:&bn128_ate_G1_precomp)
-{
-    for p in &prec_P.P
-    {
+pub type bn128_ate_ell_coeffs = Fp6;
 
-        out << p << "\n";
-#else
-        out.write((char*) &p, sizeof(p));
+#[derive(PartialEq, Clone, Default)]
+pub struct bn128_ate_G2_precomp {
+    pub Q: [Fp2; 3],
+    pub coeffs: Vec<bn128_ate_ell_coeffs>,
+}
 
+use std::fmt;
+impl fmt::Display for bn128_ate_G1_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
     }
-    return out;
 }
 
-std::istream& operator>>(std::istream &in, bn128_ate_G1_precomp &prec_P)
-{
-    for p in &prec_P.P
-    {
-
-        in >> p;
-        consume_newline(in);
-#else
-        in.read((char*) &p, sizeof(p));
-
+impl fmt::Display for bn128_ate_G2_precomp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", 1)
     }
-    return in;
 }
 
-bool bn128_ate_G2_precomp::operator==(other:&bn128_ate_G2_precomp) const
-{
-    if (!(this->Q[0] == other.Q[0] &&
-          this->Q[1] == other.Q[1] &&
-          this->Q[2] == other.Q[2] &&
-          this->coeffs.len() == other.coeffs.len()))
-    {
-        return false;
-    }
+pub fn bn128_ate_precompute_G1(P: &bn128_G1) -> bn128_ate_G1_precomp {
+    enter_block("Call to bn128_ate_precompute_G1", false);
 
-    /* work around for upstream serialization bug */
-    for i in 0..this->coeffs.len()
-    {
-        std::stringstream this_ss, other_ss;
-        this_ss << this->coeffs[i];
-        other_ss << other.coeffs[i];
-        if this_ss.str() != other_ss.str()
-        {
-            return false;
-        }
-    }
+    let mut result = bn128_ate_G1_precomp::default();
+    let mut P_coord = [Fp::default(); 3];
+    P.fill_coord(&mut P_coord);
+    // ecop::NormalizeJac(result.P, P_coord);
 
-    return true;
+    leave_block("Call to bn128_ate_precompute_G1", false);
+    result
 }
 
-std::ostream& operator<<(std::ostream &out, prec_Q:&bn128_ate_G2_precomp)
-{
-    for q in &prec_Q.Q
-    {
+pub fn bn128_ate_precompute_G2(Q: &bn128_G2) -> bn128_ate_G2_precomp {
+    enter_block("Call to bn128_ate_precompute_G2", false);
 
-        out << q.a_ << "\n";
-        out << q.b_ << "\n";
-#else
-        out.write((char*) &q.a_, sizeof(q.a_));
-        out.write((char*) &q.b_, sizeof(q.b_));
+    let mut result = bn128_ate_G2_precomp::default();
+    let mut Q_coord = [Fp2::default(); 3];
+    Q.fill_coord(&mut Q_coord);
+    // components::precomputeG2(result.coeffs, result.Q, Q_coord);
 
-    }
-
-    out << prec_Q.coeffs.len() << "\n";
-
-    for c in &prec_Q.coeffs
-    {
-
-        out << c.a_.a_ << "\n";
-        out << c.a_.b_ << "\n";
-        out << c.b_.a_ << "\n";
-        out << c.b_.b_ << "\n";
-        out << c.c_.a_ << "\n";
-        out << c.c_.b_ << "\n";
-#else
-        out.write((char*) &c.a_.a_, sizeof(c.a_.a_));
-        out.write((char*) &c.a_.b_, sizeof(c.a_.b_));
-        out.write((char*) &c.b_.a_, sizeof(c.b_.a_));
-        out.write((char*) &c.b_.b_, sizeof(c.b_.b_));
-        out.write((char*) &c.c_.a_, sizeof(c.c_.a_));
-        out.write((char*) &c.c_.b_, sizeof(c.c_.b_));
-
-    }
-
-    return out;
+    leave_block("Call to bn128_ate_precompute_G2", false);
+    result
 }
 
-std::istream& operator>>(std::istream &in, bn128_ate_G2_precomp &prec_Q)
-{
-    for q in &prec_Q.Q
-    {
-
-        in >> q.a_;
-        consume_newline(in);
-        in >> q.b_;
-        consume_newline(in);
-#else
-        in.read((char*) &q.a_, sizeof(q.a_));
-        in.read((char*) &q.b_, sizeof(q.b_));
-
-    }
-
-    usize count;
-    in >> count;
-    consume_newline(in);
-    prec_Q.coeffs.resize(count);
-    for i in 0..count
-    {
-
-        in >> prec_Q.coeffs[i].a_.a_;
-        consume_newline(in);
-        in >> prec_Q.coeffs[i].a_.b_;
-        consume_newline(in);
-        in >> prec_Q.coeffs[i].b_.a_;
-        consume_newline(in);
-        in >> prec_Q.coeffs[i].b_.b_;
-        consume_newline(in);
-        in >> prec_Q.coeffs[i].c_.a_;
-        consume_newline(in);
-        in >> prec_Q.coeffs[i].c_.b_;
-        consume_newline(in);
-#else
-        in.read((char*) &prec_Q.coeffs[i].a_.a_, sizeof(prec_Q.coeffs[i].a_.a_));
-        in.read((char*) &prec_Q.coeffs[i].a_.b_, sizeof(prec_Q.coeffs[i].a_.b_));
-        in.read((char*) &prec_Q.coeffs[i].b_.a_, sizeof(prec_Q.coeffs[i].b_.a_));
-        in.read((char*) &prec_Q.coeffs[i].b_.b_, sizeof(prec_Q.coeffs[i].b_.b_));
-        in.read((char*) &prec_Q.coeffs[i].c_.a_, sizeof(prec_Q.coeffs[i].c_.a_));
-        in.read((char*) &prec_Q.coeffs[i].c_.b_, sizeof(prec_Q.coeffs[i].c_.b_));
-
-    }
-    return in;
+pub fn bn128_ate_miller_loop(
+    prec_P: &bn128_ate_G1_precomp,
+    prec_Q: &bn128_ate_G2_precomp,
+) -> bn128_Fq12 {
+    let mut f = bn128_Fq12::default();
+    // components::millerLoop(f.elem, prec_Q.coeffs, prec_P.P);
+    f
 }
 
-bn128_ate_G1_precomp bn128_ate_precompute_G1(P:&bn128_G1)
-{
-    enter_block("Call to bn128_ate_precompute_G1");
-
-    bn128_ate_G1_precomp result;
-    bn::Fp P_coord[3];
-    P.fill_coord(P_coord);
-    bn::ecop::NormalizeJac(result.P, P_coord);
-
-    leave_block("Call to bn128_ate_precompute_G1");
-    return result;
+pub fn bn128_double_ate_miller_loop(
+    prec_P1: &bn128_ate_G1_precomp,
+    prec_Q1: &bn128_ate_G2_precomp,
+    prec_P2: &bn128_ate_G1_precomp,
+    prec_Q2: &bn128_ate_G2_precomp,
+) -> bn128_Fq12 {
+    let f = bn128_Fq12::default();
+    // components::millerLoop2(f.elem, prec_Q1.coeffs, prec_P1.P, prec_Q2.coeffs, prec_P2.P);
+    f
 }
 
-bn128_ate_G2_precomp bn128_ate_precompute_G2(Q:&bn128_G2)
-{
-    enter_block("Call to bn128_ate_precompute_G2");
-
-    bn128_ate_G2_precomp result;
-    bn::Fp2 Q_coord[3];
-    Q.fill_coord(Q_coord);
-    bn::components::precomputeG2(result.coeffs, result.Q, Q_coord);
-
-    leave_block("Call to bn128_ate_precompute_G2");
-    return result;
-}
-
-bn128_Fq12 bn128_ate_miller_loop(prec_P:&bn128_ate_G1_precomp,
-                                 prec_Q:&bn128_ate_G2_precomp)
-{
-    bn128_Fq12 f;
-    bn::components::millerLoop(f.elem, prec_Q.coeffs, prec_P.P);
-    return f;
-}
-
-bn128_Fq12 bn128_double_ate_miller_loop(prec_P1:&bn128_ate_G1_precomp,
-                                        prec_Q1:&bn128_ate_G2_precomp,
-                                        prec_P2:&bn128_ate_G1_precomp,
-                                        prec_Q2:&bn128_ate_G2_precomp)
-{
-    bn128_Fq12 f;
-    bn::components::millerLoop2(f.elem, prec_Q1.coeffs, prec_P1.P, prec_Q2.coeffs, prec_P2.P);
-    return f;
-}
-
-bn128_GT bn128_final_exponentiation(elt:&bn128_Fq12)
-{
-    enter_block("Call to bn128_final_exponentiation");
-    bn128_GT eltcopy = elt;
+pub fn bn128_final_exponentiation(elt: &bn128_Fq12) -> bn128_GT {
+    enter_block("Call to bn128_final_exponentiation", false);
+    let mut eltcopy: bn128_GT = elt.clone().into();
     eltcopy.elem.final_exp();
-    leave_block("Call to bn128_final_exponentiation");
+    leave_block("Call to bn128_final_exponentiation", false);
     return eltcopy;
 }
 
+// use std::io::{self, Read, Write};
+
+// #[derive(Clone, Debug, PartialEq, Eq)]
+// pub struct Bn128AteG1Precomp {
+//     pub p: [Fp; 3],
+// }
+
+// impl Bn128AteG1Precomp {
+//     pub fn serialize<W: Write>(&self, mut writer: W) -> io::Result<()> {
+//         for coord in &self.p {
+//             writer.write_all(&coord.to_bytes())?;
+//             writer.write_all(b"\n")?;
+//         }
+//         Ok(())
+//     }
+
+//     pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
+//         let mut p = [Fp::zero(); 3];
+//         for i in 0..3 {
+//             p[i] = Fp::read(&mut reader)?;
+//         }
+//         Ok(Self { p })
+//     }
+// }
+
+// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// pub struct Bn128AteEllCoeffs {
+//     pub a: Fp2,
+//     pub b: Fp2,
+//     pub c: Fp2,
+// }
+
+// #[derive(Clone, Debug)]
+// pub struct Bn128AteG2Precomp {
+//     pub q: [Fp2; 3],
+//     pub coeffs: Vec<Bn128AteEllCoeffs>,
+// }
+
+// impl PartialEq for Bn128AteG2Precomp {
+//     fn eq(&self, other: &Self) -> bool {
+//         if self.q != other.q || self.coeffs.len() != other.coeffs.len() {
+//             return false;
+//         }
+
+//         self.coeffs
+//             .iter()
+//             .zip(other.coeffs.iter())
+//             .all(|(c1, c2)| c1 == c2)
+//     }
+// }
+
+// impl Eq for Bn128AteG2Precomp {}
+
+// impl Bn128AteG2Precomp {
+//     pub fn serialize<W: Write>(&self, mut writer: W) -> io::Result<()> {
+//         for coord in &self.q {
+//             writer.write_all(&coord.a.to_bytes())?;
+//             writer.write_all(b"\n")?;
+//             writer.write_all(&coord.b.to_bytes())?;
+//             writer.write_all(b"\n")?;
+//         }
+
+//         writer.write_all(self.coeffs.len().to_string().as_bytes())?;
+//         writer.write_all(b"\n")?;
+
+//         for c in &self.coeffs {
+//             let components = [&c.a.a, &c.a.b, &c.b.a, &c.b.b, &c.c.a, &c.c.b];
+//             for comp in components {
+//                 writer.write_all(&comp.to_bytes())?;
+//                 writer.write_all(b"\n")?;
+//             }
+//         }
+//         Ok(())
+//     }
+
+//     pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
+//         let mut q = [Fp2::zero(); 3];
+//         for i in 0..3 {
+//             q[i] = Fp2 {
+//                 a: Fp::read(&mut reader)?,
+//                 b: Fp::read(&mut reader)?,
+//             };
+//         }
+
+//         let count: usize = 68;
+//         let mut coeffs = Vec::with_capacity(count);
+//         for _ in 0..count {
+//             coeffs.push(Bn128AteEllCoeffs {
+//                 a: Fp2 {
+//                     a: Fp::read(&mut reader)?,
+//                     b: Fp::read(&mut reader)?,
+//                 },
+//                 b: Fp2 {
+//                     a: Fp::read(&mut reader)?,
+//                     b: Fp::read(&mut reader)?,
+//                 },
+//                 c: Fp2 {
+//                     a: Fp::read(&mut reader)?,
+//                     b: Fp::read(&mut reader)?,
+//                 },
+//             });
+//         }
+
+//         Ok(Self { q, coeffs })
+//     }
+// }

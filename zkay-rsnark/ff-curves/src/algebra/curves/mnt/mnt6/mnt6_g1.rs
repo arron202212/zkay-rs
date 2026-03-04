@@ -1,605 +1,582 @@
-
-
 //  Declaration of interfaces for the MNT6 G1 group.
 
+use crate::FpmConfig;
+use crate::algebra::curves::mnt::mnt6::mnt6_fields::{mnt6_Fq, mnt6_Fr};
+use ffec::field_utils::field_utils::batch_invert;
+use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+use num_bigint::BigUint;
+use std::borrow::Borrow;
+use std::fmt::Debug;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-// 
-// // #define MNT6_G1_HPP_
+type base_field = mnt6_Fq;
+type scalar_field = mnt6_Fr;
 
-// //#include <vector>
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct mnt6_G1 {
+    pub X: mnt6_Fq,
+    pub Y: mnt6_Fq,
+    pub Z: mnt6_Fq,
+}
+impl PpConfig for mnt6_G1 {
+    type TT = bigint<1>;
+    // type Fr=Self;
+}
+impl FpmConfig for mnt6_G1 {
+    type Fr = mnt6_Fq;
+}
+impl mnt6_G1 {
+    pub fn size_in_bits() -> usize {
+        return base_field::ceil_size_in_bits() + 1;
+    }
+    pub fn field_char() -> bigint<{ base_field::num_limbs }> {
+        return base_field::field_char();
+    }
+    pub fn order() -> bigint<{ scalar_field::num_limbs }> {
+        return scalar_field::field_char();
+    }
+}
 
-// use crate::algebra::curves::curve_utils;
-// use crate::algebra::curves::mnt::mnt6::mnt6_init;
+impl mnt6_G1 {
+    pub fn new() -> Self {
+        Self::G1_zero()
+    }
 
+    pub fn print(&self) {
+        if self.is_zero() {
+            print!("O\n");
+        } else {
+            let copy = self.clone();
+            copy.to_affine_coordinates();
+            print!(
+                "({:N$} , {:N$})\n",
+                copy.X.as_bigint().0.0,
+                copy.Y.as_bigint().0.0,
+                N = mnt6_Fq::num_limbs
+            );
+        }
+    }
 
+    pub fn print_coordinates(&self) {
+        if self.is_zero() {
+            print!("O\n");
+        } else {
+            print!(
+                "({:N$} : {:N$} : {:N$})\n",
+                self.X.as_bigint().0.0,
+                self.Y.as_bigint().0.0,
+                self.Z.as_bigint().0.0,
+                N = mnt6_Fq::num_limbs
+            );
+        }
+    }
 
-// // pub struct mnt6_G1;
-// // std::ostream& operator<<(std::ostream &, const mnt6_G1&);
-// // std::istream& operator>>(std::istream &, mnt6_G1&);
+    pub fn to_affine_coordinates(&mut self) {
+        if self.is_zero() {
+            self.X = mnt6_Fq::zero();
+            self.Y = mnt6_Fq::one();
+            self.Z = mnt6_Fq::zero();
+        } else {
+            let Z_inv = self.Z.inverse();
+            self.X = self.X * Z_inv;
+            self.Y = self.Y * Z_inv;
+            self.Z = mnt6_Fq::one();
+        }
+    }
 
-// pub struct mnt6_G1 {
+    pub fn to_special(&mut self) {
+        self.to_affine_coordinates();
+    }
 
-// // #ifdef PROFILE_OP_COUNTS
-//     static i64 add_cnt;
-//     static i64 dbl_cnt;
-// 
-//     static Vec<std::usize> wnaf_window_table;
-//     static Vec<std::usize> fixed_base_exp_window_table;
-//     static mnt6_G1 G1_zero;
-//     static mnt6_G1 G1_one;
-//     static bool initialized;
-//     static mnt6_Fq coeff_a;
-//     static mnt6_Fq coeff_b;
+    pub fn is_special(&self) -> bool {
+        return (self.is_zero() || self.Z == mnt6_Fq::one());
+    }
 
-//     type base_field=mnt6_Fq;
-//     type scalar_field=mnt6_Fr;
+    pub fn is_zero(&self) -> bool {
+        return (self.X.is_zero() && self.Z.is_zero());
+    }
 
-//     // Cofactor
-//     static let h_bitcount= 1;
-//     static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-//     static bigint<h_limbs> h;
+    pub fn add(&self, other: &mnt6_G1) -> mnt6_G1 {
+        // handle special cases having to do with O
+        if self.is_zero() {
+            return other;
+        }
 
-//     mnt6_Fq X, Y, Z;
+        if other.is_zero() {
+            return self.clone();
+        }
 
-//     // using projective coordinates
-//     mnt6_G1();
-//     mnt6_G1(X:mnt6_Fq&, Y:&mnt6_Fq)->SelfX,Y, Z(base_field::one()) {}
-//     mnt6_G1(X:mnt6_Fq&, Y:mnt6_Fq&, Z:&mnt6_Fq)->SelfX,Y,Z {}
+        // no need to handle points of order 2,4
+        // (they cannot exist in a prime-order subgroup)
 
-//     pub fn  print() const;
-//     pub fn  print_coordinates() const;
+        // handle double case
+        if self.operator == (other) {
+            return self.dbl();
+        }
 
-//     pub fn  to_affine_coordinates();
-//     pub fn  to_special();
-//     bool is_special() const;
+        // #ifdef PROFILE_OP_COUNTS
+        self.add_cnt += 1;
 
-//     bool is_zero() const;
+        // NOTE: does not handle O and pts of order 2,4
+        // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
 
-//     bool operator==(other:&mnt6_G1) const;
-//     bool operator!=(other:&mnt6_G1) const;
+        let Y1Z2 = (self.Y) * (other.Z); // Y1Z2 = Y1*Z2
+        let X1Z2 = (self.X) * (other.Z); // X1Z2 = X1*Z2
+        let Z1Z2 = (self.Z) * (other.Z); // Z1Z2 = Z1*Z2
+        let u = (other.Y) * (self.Z) - Y1Z2; // u    = Y2*Z1-Y1Z2
+        let uu = u.squared(); // uu   = u^2
+        let v = (other.X) * (self.Z) - X1Z2; // v    = X2*Z1-X1Z2
+        let vv = v.squared(); // vv   = v^2
+        let vvv = v * vv; // vvv  = v*vv
+        let R = vv * X1Z2; // R    = vv*X1Z2
+        let A = uu * Z1Z2 - (vvv + R + R); // A    = uu*Z1Z2 - vvv - 2*R
+        let X3 = v * A; // X3   = v*A
+        let Y3 = u * (R - A) - vvv * Y1Z2; // Y3   = u*(R-A) - vvv*Y1Z2
+        let Z3 = vvv * Z1Z2; // Z3   = vvv*Z1Z2
 
-//     mnt6_G1 operator+(other:&mnt6_G1) const;
-//     mnt6_G1 operator-() const;
-//     mnt6_G1 operator-(other:&mnt6_G1) const;
+        return mnt6_G1(X3, Y3, Z3);
+    }
 
-//     mnt6_G1 add(other:&mnt6_G1) const;
-//     mnt6_G1 mixed_add(other:&mnt6_G1) const;
-//     mnt6_G1 dbl() const;
-//     mnt6_G1 mul_by_cofactor() const;
+    pub fn mixed_add(&self, other: &mnt6_G1) -> mnt6_G1 {
+        // #ifdef PROFILE_OP_COUNTS
+        self.add_cnt += 1;
 
-//     bool is_well_formed() const;
+        // NOTE: does not handle O and pts of order 2,4
+        // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
+        //assert!(other.Z == mnt6_Fq::one());
 
-//     static mnt6_G1 zero();
-//     static mnt6_G1 one();
-//     static mnt6_G1 random_element();
+        if self.is_zero() {
+            return other;
+        }
 
-//     static std::usize size_in_bits() { return base_field::ceil_size_in_bits() + 1; }
-//     static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
-//     static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
+        if other.is_zero() {
+            return self.clone();
+        }
 
-//     friend std::ostream& operator<<(std::ostream &out, g:&mnt6_G1);
-//     friend std::istream& operator>>(std::istream &in, mnt6_G1 &g);
+        // #ifdef DEBUG
+        assert!(other.is_special());
 
-//     static pub fn  batch_to_special_all_non_zeros(Vec<mnt6_G1> &vec);
-// };
+        let X1Z2: mnt6_Fq = (self.X); // X1Z2 = X1*Z2 (but other is special and not zero)
+        let X2Z1 = (self.Z) * (other.X); // X2Z1 = X2*Z1
 
-// mnt6_G1 operator*(lhs:&bigint<m>, rhs:&mnt6_G1)
-// {
-//     return scalar_mul<mnt6_G1, m>(rhs, lhs);
+        // (used both in add and double checks)
+
+        let Y1Z2: &mnt6_Fq = (self.Y); // Y1Z2 = Y1*Z2 (but other is special and not zero)
+        let Y2Z1 = (self.Z) * (other.Y); // Y2Z1 = Y2*Z1
+
+        if X1Z2 == X2Z1 && Y1Z2 == Y2Z1 {
+            return self.dbl();
+        }
+
+        let u = Y2Z1 - self.Y; // u = Y2*Z1-Y1
+        let uu = u.squared(); // uu = u2
+        let v = X2Z1 - self.X; // v = X2*Z1-X1
+        let vv = v.squared(); // vv = v2
+        let vvv = v * vv; // vvv = v*vv
+        let R = vv * self.X; // R = vv*X1
+        let A = uu * self.Z - vvv - R - R; // A = uu*Z1-vvv-2*R
+        let X3 = v * A; // X3 = v*A
+        let Y3 = u * (R - A) - vvv * self.Y; // Y3 = u*(R-A)-vvv*Y1
+        let Z3 = vvv * self.Z; // Z3 = vvv*Z1
+
+        return mnt6_G1(X3, Y3, Z3);
+    }
+
+    pub fn dbl(&self) -> mnt6_G1 {
+        // #ifdef PROFILE_OP_COUNTS
+        self.dbl_cnt += 1;
+
+        if self.is_zero() {
+            return self.clone();
+        }
+        // NOTE: does not handle O and pts of order 2,4
+        // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#doubling-dbl-2007-bl
+
+        let XX = (self.X).squared(); // XX  = X1^2
+        let ZZ = (self.Z).squared(); // ZZ  = Z1^2
+        let w = mnt6_G1::coeff_a * ZZ + (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let Y1Z1 = (self.Y) * (self.Z);
+        let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
+        let ss = s.squared(); // ss  = s^2
+        let sss = s * ss; // sss = s*ss
+        let R = (self.Y) * s; // R   = Y1*s
+        let RR = R.squared(); // RR  = R^2
+        let B = ((self.X) + R).squared() - XX - RR; // B   = (X1+R)^2 - XX - RR
+        let h = w.squared() - (B + B); // h   = w^2 - 2*B
+        let X3 = h * s; // X3  = h*s
+        let Y3 = w * (B - h) - (RR + RR); // Y3  = w*(B-h) - 2*RR
+        let Z3 = sss; // Z3  = sss
+
+        return mnt6_G1(X3, Y3, Z3);
+    }
+
+    pub fn mul_by_cofactor(&self) -> mnt6_G1 {
+        // Cofactor = 1
+        return self.clone();
+    }
+
+    pub fn is_well_formed(&self) -> bool {
+        if self.is_zero() {
+            return true;
+        }
+        /*
+            y^2 = x^3 + ax + b
+
+            We are using projective, so equation we need to check is actually
+
+            (y/z)^2 = (x/z)^3 + a (x/z) + b
+            z y^2 = x^3  + a z^2 x + b z^3
+
+            z (y^2 - b z^2) = x ( x^2 + a z^2)
+        */
+        let X2 = self.X.squared();
+        let Y2 = self.Y.squared();
+        let Z2 = self.Z.squared();
+
+        return (self.Z * (Y2 - mnt6_G1::coeff_b * Z2) == self.X * (X2 + mnt6_G1::coeff_a * Z2));
+    }
+
+    pub fn zero() -> Self {
+        return Self::G1_zero();
+    }
+
+    pub fn one() -> Self {
+        return Self::G1_one();
+    }
+    pub fn G1_zero() -> Self {
+        Self::default()
+    }
+
+    pub fn G1_one() -> Self {
+        Self::default()
+    }
+    pub fn random_element() -> Self {
+        return (scalar_field::random_element().as_bigint()) * Self::G1_one();
+    }
+
+    pub fn batch_to_special_all_non_zeros(vec: &Vec<mnt6_G1>) {
+        let mut Z_vec = Vec::with_capacity(vec.len());
+
+        for el in vec {
+            Z_vec.push(el.Z.clone());
+        }
+        batch_invert::<mnt6_Fq>(Z_vec);
+
+        let one = mnt6_Fq::one();
+
+        for i in 0..vec.len() {
+            vec[i] = mnt6_G1(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
+        }
+    }
+}
+
+impl Add<i32> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn add(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl<O: Borrow<Self>> Add<O> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl Sub for mnt6_G1 {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+
+impl<const N: usize> Mul<bigint<N>> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Mul<i32> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn mul(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+impl<O: Borrow<Self>> Mul<O> for mnt6_G1 {
+    type Output = mnt6_G1;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Neg for mnt6_G1 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self
+    }
+}
+
+use std::fmt;
+impl fmt::Display for mnt6_G1 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Self::one())
+    }
+}
+impl One for mnt6_G1 {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl Zero for mnt6_G1 {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
+// use std::io::{self, Read, Write};
+// use std::ops::{Add, Mul, Neg, Sub};
+
+// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// pub struct Mnt6G1 {
+//     pub x: Fq,
+//     pub y: Fq,
+//     pub z: Fq,
 // }
 
-// mnt6_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&mnt6_G1)
-// {
-//     return scalar_mul<mnt6_G1, m>(rhs, lhs.as_bigint());
-// }
-
-// std::ostream& operator<<(std::ostream& out, v:&Vec<mnt6_G1>);
-// std::istream& operator>>(std::istream& in, Vec<mnt6_G1> &v);
-
-// 
-
-// 
-
-
-//  Implementation of interfaces for the MNT6 G1 group.
-
-//  See mnt6_g1.hpp .
-
-
-// use crate::algebra::curves::mnt::mnt6::mnt6_g1;
-
-
-
-// using std::usize;
-
-// // #ifdef PROFILE_OP_COUNTS
-// i64 mnt6_G1::add_cnt = 0;
-// i64 mnt6_G1::dbl_cnt = 0;
-// 
-
-// Vec<usize> mnt6_G1::wnaf_window_table;
-// Vec<usize> mnt6_G1::fixed_base_exp_window_table;
-// mnt6_G1 mnt6_G1::G1_zero = {};
-// mnt6_G1 mnt6_G1::G1_one = {};
-// bool mnt6_G1::initialized = false;
-// mnt6_Fq mnt6_G1::coeff_a;
-// mnt6_Fq mnt6_G1::coeff_b;
-// bigint<mnt6_G1::h_limbs> mnt6_G1::h;
-
-// pub fn new()
-// {
-//     if mnt6_G1::initialized
-//     {
-//         this->X = G1_zero.X;
-//         this->Y = G1_zero.Y;
-//         this->Z = G1_zero.Z;
-//     }
-// }
-
-// pub fn print() const
-// {
-//     if this->is_zero()
-//     {
-//         print!("O\n");
-//     }
-//     else
-//     {
-//         mnt6_G1 copy(*this);
-//         copy.to_affine_coordinates();
-//         print!("(%Nd , %Nd)\n",
-//                    copy.X.as_bigint().0.0, mnt6_Fq::num_limbs,
-//                    copy.Y.as_bigint().0.0, mnt6_Fq::num_limbs);
-//     }
-// }
-
-// pub fn print_coordinates() const
-// {
-//     if this->is_zero()
-//     {
-//         print!("O\n");
-//     }
-//     else
-//     {
-//         print!("(%Nd : %Nd : %Nd)\n",
-//                    this->X.as_bigint().0.0, mnt6_Fq::num_limbs,
-//                    this->Y.as_bigint().0.0, mnt6_Fq::num_limbs,
-//                    this->Z.as_bigint().0.0, mnt6_Fq::num_limbs);
-//     }
-// }
-
-// pub fn to_affine_coordinates()
-// {
-//     if this->is_zero()
-//     {
-//         this->X = mnt6_Fq::zero();
-//         this->Y = mnt6_Fq::one();
-//         this->Z = mnt6_Fq::zero();
-//     }
-//     else
-//     {
-//         let Z_inv= Z.inverse();
-//         this->X = this->X * Z_inv;
-//         this->Y = this->Y * Z_inv;
-//         this->Z = mnt6_Fq::one();
-//     }
-// }
-
-// pub fn to_special()
-// {
-//     this->to_affine_coordinates();
-// }
-
-// pub fn is_special()->bool
-// {
-//     return (this->is_zero() || this->Z == mnt6_Fq::one());
-// }
-
-// pub fn is_zero()->bool
-// {
-//     return (this->X.is_zero() && this->Z.is_zero());
-// }
-
-// bool mnt6_G1::operator==(other:&mnt6_G1) const
-// {
-//     if this->is_zero()
-//     {
-//         return other.is_zero();
-//     }
-
-//     if other.is_zero()
-//     {
-//         return false;
-//     }
-
-//     /* now neither is O */
-//     // X1/Z1 = X2/Z2 <=> X1*Z2 = X2*Z1
-//     if (this->X * other.Z) != (other.X * this->Z)
-//     {
-//         return false;
-//     }
-
-//     // Y1/Z1 = Y2/Z2 <=> Y1*Z2 = Y2*Z1
-//     if (this->Y * other.Z) != (other.Y * this->Z)
-//     {
-//         return false;
-//     }
-
-//     return true;
-// }
-
-// bool mnt6_G1::operator!=(other:&mnt6_G1) const
-// {
-//     return !(operator==(other));
-// }
-
-// mnt6_G1 mnt6_G1::operator+(other:&mnt6_G1) const
-// {
-//     // handle special cases having to do with O
-//     if this->is_zero()
-//     {
-//         return other;
-//     }
-
-//     if other.is_zero()
-//     {
-//         return *this;
-//     }
-
-//     // no need to handle points of order 2,4
-//     // (they cannot exist in a prime-order subgroup)
-
-//     // handle double case, and then all the rest
-//     /*
-//       The code below is equivalent to (but faster than) the snippet below:
-
-//       if this->operator==(other)
-//       {
-//       return this->dbl();
-//       }
-//       else
-//       {
-//       return this->add(other);
-//       }
-//     */
-//     let X1Z2= (this->X) * (other.Z);        // X1Z2 = X1*Z2
-//     let X2Z1= (this->Z) * (other.X);        // X2Z1 = X2*Z1
-
-//     // (used both in add and double checks)
-
-//     let Y1Z2= (this->Y) * (other.Z);        // Y1Z2 = Y1*Z2
-//     let Y2Z1= (this->Z) * (other.Y);        // Y2Z1 = Y2*Z1
-
-//     if X1Z2 == X2Z1 && Y1Z2 == Y2Z1
-//     {
-//         // perform dbl case
-//         let XX= (this->X).squared();                   // XX  = X1^2
-//         let ZZ= (this->Z).squared();                   // ZZ  = Z1^2
-//         let w= mnt6_G1::coeff_a * ZZ + (XX + XX + XX); // w   = a*ZZ + 3*XX
-//         let Y1Z1= (this->Y) * (this->Z);
-//         let s= Y1Z1 + Y1Z1;                            // s   = 2*Y1*Z1
-//         let ss= s.squared();                            // ss  = s^2
-//         let sss= s * ss;                                 // sss = s*ss
-//         let R= (this->Y) * s;                         // R   = Y1*s
-//         let RR= R.squared();                            // RR  = R^2
-//         let B= ((this->X)+R).squared()-XX-RR;         // B   = (X1+R)^2 - XX - RR
-//         let h= w.squared() - (B+B);                    // h   = w^2 - 2*B
-//         let X3= h * s;                                  // X3  = h*s
-//         let Y3= w * (B-h)-(RR+RR);                      // Y3  = w*(B-h) - 2*RR
-//         let Z3= sss;                                    // Z3  = sss
-
-//         return mnt6_G1(X3, Y3, Z3);
-//     }
-
-//     // if we have arrived here we are in the add case
-//     let Z1Z2= (this->Z) * (other.Z);      // Z1Z2 = Z1*Z2
-//     let u= Y2Z1 - Y1Z2;                  // u    = Y2*Z1-Y1Z2
-//     let uu= u.squared();                  // uu   = u^2
-//     let v= X2Z1 - X1Z2;                  // v    = X2*Z1-X1Z2
-//     let vv= v.squared();                  // vv   = v^2
-//     let vvv= v * vv;                       // vvv  = v*vv
-//     let R= vv * X1Z2;                    // R    = vv*X1Z2
-//     let A= uu * Z1Z2 - (vvv + R + R);    // A    = uu*Z1Z2 - vvv - 2*R
-//     let X3= v * A;                        // X3   = v*A
-//     let Y3= u * (R-A) - vvv * Y1Z2;       // Y3   = u*(R-A) - vvv*Y1Z2
-//     let Z3= vvv * Z1Z2;                   // Z3   = vvv*Z1Z2
-
-//     return mnt6_G1(X3, Y3, Z3);
-// }
-
-// mnt6_G1 mnt6_G1::operator-() const
-// {
-//     return mnt6_G1(this->X, -(this->Y), this->Z);
-// }
-
-// mnt6_G1 mnt6_G1::operator-(other:&mnt6_G1) const
-// {
-//     return (*this) + (-other);
-// }
-
-// pub fn add(other:&mnt6_G1)->mnt6_G1
-// {
-//     // handle special cases having to do with O
-//     if this->is_zero()
-//     {
-//         return other;
-//     }
-
-//     if other.is_zero()
-//     {
-//         return (*this);
-//     }
-
-//     // no need to handle points of order 2,4
-//     // (they cannot exist in a prime-order subgroup)
-
-//     // handle double case
-//     if this->operator==(other)
-//     {
-//         return this->dbl();
-//     }
-
-// // #ifdef PROFILE_OP_COUNTS
-//     this->add_cnt++;
-// 
-//     // NOTE: does not handle O and pts of order 2,4
-//     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
-
-//     let Y1Z2= (this->Y) * (other.Z);        // Y1Z2 = Y1*Z2
-//     let X1Z2= (this->X) * (other.Z);        // X1Z2 = X1*Z2
-//     let Z1Z2= (this->Z) * (other.Z);        // Z1Z2 = Z1*Z2
-//     let u= (other.Y) * (this->Z) - Y1Z2; // u    = Y2*Z1-Y1Z2
-//     let uu= u.squared();                    // uu   = u^2
-//     let v= (other.X) * (this->Z) - X1Z2; // v    = X2*Z1-X1Z2
-//     let vv= v.squared();                    // vv   = v^2
-//     let vvv= v * vv;                         // vvv  = v*vv
-//     let R= vv * X1Z2;                      // R    = vv*X1Z2
-//     let A= uu * Z1Z2 - (vvv + R + R);      // A    = uu*Z1Z2 - vvv - 2*R
-//     let X3= v * A;                          // X3   = v*A
-//     let Y3= u * (R-A) - vvv * Y1Z2;         // Y3   = u*(R-A) - vvv*Y1Z2
-//     let Z3= vvv * Z1Z2;                     // Z3   = vvv*Z1Z2
-
-//     return mnt6_G1(X3, Y3, Z3);
-// }
-
-// pub fn mixed_add(other:&mnt6_G1)->mnt6_G1
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     this->add_cnt++;
-// 
-//     // NOTE: does not handle O and pts of order 2,4
-//     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
-//     //assert!(other.Z == mnt6_Fq::one());
-
-//     if this->is_zero()
-//     {
-//         return other;
-//     }
-
-//     if other.is_zero()
-//     {
-//         return (*this);
-//     }
-
-// // #ifdef DEBUG
-//     assert!(other.is_special());
-// 
-
-//     X1Z2:&mnt6_Fq = (this->X);                    // X1Z2 = X1*Z2 (but other is special and not zero)
-//     let X2Z1= (this->Z) * (other.X);        // X2Z1 = X2*Z1
-
-//     // (used both in add and double checks)
-
-//     Y1Z2:&mnt6_Fq = (this->Y);                    // Y1Z2 = Y1*Z2 (but other is special and not zero)
-//     let Y2Z1= (this->Z) * (other.Y);        // Y2Z1 = Y2*Z1
-
-//     if X1Z2 == X2Z1 && Y1Z2 == Y2Z1
-//     {
-//         return this->dbl();
-//     }
-
-//     mnt6_Fq u = Y2Z1 - this->Y;             // u = Y2*Z1-Y1
-//     mnt6_Fq uu = u.squared();                // uu = u2
-//     mnt6_Fq v = X2Z1 - this->X;             // v = X2*Z1-X1
-//     mnt6_Fq vv = v.squared();                // vv = v2
-//     mnt6_Fq vvv = v*vv;                      // vvv = v*vv
-//     mnt6_Fq R = vv * this->X;               // R = vv*X1
-//     mnt6_Fq A = uu * this->Z - vvv - R - R; // A = uu*Z1-vvv-2*R
-//     mnt6_Fq X3 = v * A;                      // X3 = v*A
-//     mnt6_Fq Y3 = u*(R-A) - vvv * this->Y;   // Y3 = u*(R-A)-vvv*Y1
-//     mnt6_Fq Z3 = vvv * this->Z;             // Z3 = vvv*Z1
-
-//     return mnt6_G1(X3, Y3, Z3);
-// }
-
-// pub fn dbl()->mnt6_G1
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     this->dbl_cnt++;
-// 
-//     if this->is_zero()
-//     {
-//         return (*this);
-//     }
-//     // NOTE: does not handle O and pts of order 2,4
-//     // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#doubling-dbl-2007-bl
-
-//     let XX= (this->X).squared();                   // XX  = X1^2
-//     let ZZ= (this->Z).squared();                   // ZZ  = Z1^2
-//     let w= mnt6_G1::coeff_a * ZZ + (XX + XX + XX); // w   = a*ZZ + 3*XX
-//     let Y1Z1= (this->Y) * (this->Z);
-//     let s= Y1Z1 + Y1Z1;                            // s   = 2*Y1*Z1
-//     let ss= s.squared();                            // ss  = s^2
-//     let sss= s * ss;                                 // sss = s*ss
-//     let R= (this->Y) * s;                         // R   = Y1*s
-//     let RR= R.squared();                            // RR  = R^2
-//     let B= ((this->X)+R).squared()-XX-RR;         // B   = (X1+R)^2 - XX - RR
-//     let h= w.squared() - (B+B);                    // h   = w^2 - 2*B
-//     let X3= h * s;                                  // X3  = h*s
-//     let Y3= w * (B-h)-(RR+RR);                      // Y3  = w*(B-h) - 2*RR
-//     let Z3= sss;                                    // Z3  = sss
-
-//     return mnt6_G1(X3, Y3, Z3);
-// }
-
-// pub fn mul_by_cofactor()->mnt6_G1
-// {
-//     // Cofactor = 1
-//     return (*this);
-// }
-
-// pub fn is_well_formed()->bool
-// {
-//     if this->is_zero()
-//     {
-//         return true;
-//     }
-//     /*
-//         y^2 = x^3 + ax + b
-
-//         We are using projective, so equation we need to check is actually
-
-//         (y/z)^2 = (x/z)^3 + a (x/z) + b
-//         z y^2 = x^3  + a z^2 x + b z^3
-
-//         z (y^2 - b z^2) = x ( x^2 + a z^2)
-//     */
-//     let X2= this->X.squared();
-//     let Y2= this->Y.squared();
-//     let Z2= this->Z.squared();
-
-//     return (this->Z * (Y2 - mnt6_G1::coeff_b * Z2) == this->X * (X2 + mnt6_G1::coeff_a * Z2));
-// }
-
-// mnt6_G1 mnt6_G1::zero()
-// {
-//     return G1_zero;
-// }
-
-// mnt6_G1 mnt6_G1::one()
-// {
-//     return G1_one;
-// }
-
-// mnt6_G1 mnt6_G1::random_element()
-// {
-//     return (scalar_field::random_element().as_bigint()) * G1_one;
-// }
-
-// std::ostream& operator<<(std::ostream &out, g:&mnt6_G1)
-// {
-//     mnt6_G1 copy(g);
-//     copy.to_affine_coordinates();
-
-//     out << if copy.is_zero() {1} else{0} << OUTPUT_SEPARATOR;
-// // #ifdef NO_PT_COMPRESSION
-//     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
-// #else
-//     /* storing LSB of Y */
-//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
-// 
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, mnt6_G1 &g)
-// {
-//     char is_zero;
-//     mnt6_Fq tX, tY;
-
-// // #ifdef NO_PT_COMPRESSION
-//     in >> is_zero >> tX >> tY;
-//     is_zero -= '0';
-// #else
-//     in.read((char*)&is_zero, 1); // this reads is_zero;
-//     is_zero -= '0';
-//     consume_OUTPUT_SEPARATOR(in);
-
-//     unsigned char Y_lsb;
-//     in >> tX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in.read((char*)&Y_lsb, 1);
-//     Y_lsb -= '0';
-
-//     // y = +/- sqrt(x^3 + a*x + b)
-//     if is_zero == 0
-//     {
-//         mnt6_Fq tX2 = tX.squared();
-//         mnt6_Fq tY2 = (tX2 + mnt6_G1::coeff_a) * tX + mnt6_G1::coeff_b;
-//         tY = tY2.sqrt();
-
-//         if (tY.as_bigint().0.0[0] & 1) != Y_lsb
-//         {
-//             tY = -tY;
+// impl Mnt6G1 {
+//     pub fn zero() -> Self {
+//         Self {
+//             x: Fq::zero(),
+//             y: Fq::one(),
+//             z: Fq::zero(),
 //         }
 //     }
-// 
-//     // using projective coordinates
-//     if is_zero == 0
-//     {
-//         g.X = tX;
-//         g.Y = tY;
-//         g.Z = mnt6_Fq::one();
-//     }
-//     else
-//     {
-//         g = mnt6_G1::zero();
+
+//     pub fn is_zero(&self) -> bool {
+//         self.z.is_zero()
 //     }
 
-//     return in;
-// }
-
-// std::ostream& operator<<(std::ostream& out, v:&Vec<mnt6_G1>)
-// {
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
+//     pub fn to_affine(&self) -> (Fq, Fq, bool) {
+//         if self.is_zero() {
+//             return (Fq::zero(), Fq::zero(), true);
+//         }
+//         let z_inv = self.z.inverse().expect("Division by zero");
+//         (self.x * &z_inv, self.y * &z_inv, false)
 //     }
 
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream& in, Vec<mnt6_G1> &v)
-// {
-//     v.clear();
-
-//     usize s;
-//     in >> s;
-//     consume_newline(in);
-
-//     v.reserve(s);
-
-//     for i in 0..s
-//     {
-//         mnt6_G1 g;
-//         in >> g;
-//         consume_OUTPUT_NEWLINE(in);
-//         v.emplace_back(g);
-//     }
-
-//     return in;
-// }
-
-// pub fn batch_to_special_all_non_zeros(Vec<mnt6_G1> &vec)
-// {
-//     Vec<mnt6_Fq> Z_vec;
-//     Z_vec.reserve(vec.len());
-
-//     for el in &vec
-//     {
-//         Z_vec.emplace_back(el.Z);
-//     }
-//     batch_invert<mnt6_Fq>(Z_vec);
-
-//     let one= mnt6_Fq::one();
-
-//     for i in 0..vec.len()
-//     {
-//         vec[i] = mnt6_G1(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
+//     pub fn scalar_mul(&self, scalar: &BigInt) -> Self {
+//         todo!()
 //     }
 // }
 
-// 
+// impl<'a> Mul<&'a Mnt6G1> for &'a BigInt {
+//     type Output = Mnt6G1;
+//     fn mul(self, rhs: &'a Mnt6G1) -> Mnt6G1 {
+//         rhs.scalar_mul(self)
+//     }
+// }
+
+// impl Neg for Mnt6G1 {
+//     type Output = Self;
+//     fn neg(mut self) -> Self {
+//         self.y = -self.y;
+//         self
+//     }
+// }
+
+// impl<'a> Sub<&'a Mnt6G1> for &'a Mnt6G1 {
+//     type Output = Mnt6G1;
+//     fn sub(self, other: &'a Mnt6G1) -> Mnt6G1 {
+//         self + &(-*other)
+//     }
+// }
+
+// impl Mnt6G1 {
+//     pub fn serialize<W: Write>(&self, mut writer: W, compress: bool) -> io::Result<()> {
+//         let (x, y, is_zero) = self.to_affine();
+
+//         writer.write_all(if is_zero { b"1" } else { b"0" })?;
+//         writer.write_all(b" ")?; // SEPARATOR
+
+//         writer.write_all(&x.to_bytes())?;
+//         writer.write_all(b" ")?;
+
+//         if compress {
+//             let y_lsb = if y.to_bigint().is_odd() { b"1" } else { b"0" };
+//             writer.write_all(y_lsb)?;
+//         } else {
+//             writer.write_all(&y.to_bytes())?;
+//         }
+//         Ok(())
+//     }
+
+//     pub fn deserialize<R: Read>(mut reader: R, compress: bool) -> io::Result<Self> {
+//         let mut zero_buf = [0u8; 1];
+//         reader.read_exact(&mut zero_buf)?;
+//         let is_zero = zero_buf == b'1';
+
+//         if is_zero {
+//             return Ok(Self::zero());
+//         }
+
+//         let t_x = Fq::read(&mut reader)?;
+
+//         let t_y = if !compress {
+//             Fq::read(&mut reader)?
+//         } else {
+//             let mut lsb_buf = [0u8; 1];
+//             reader.read_exact(&mut lsb_buf)?;
+//             let y_lsb = lsb_buf == b'1';
+
+//             let x2 = t_x.square();
+//             let y2 = (x2 + &MNT6_COEFF_A) * &t_x + &MNT6_COEFF_B;
+//             let mut y = y2
+//                 .sqrt()
+//                 .ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
+
+//             if y.to_bigint().is_odd() != y_lsb {
+//                 y = -y;
+//             }
+//             y
+//         };
+
+//         Ok(Self {
+//             x: t_x,
+//             y: t_y,
+//             z: Fq::one(),
+//         })
+//     }
+// }
+
+// pub fn serialize_vec<W: Write>(writer: &mut W, v: &Vec<Mnt6G1>, compress: bool) -> io::Result<()> {
+//     writer.write_all(v.len().to_string().as_bytes())?;
+//     writer.write_all(b"\n")?;
+//     for item in v {
+//         item.serialize(&mut *writer, compress)?;
+//         writer.write_all(b"\n")?;
+//     }
+//     Ok(())
+// }
+
+// impl Mnt6G1 {
+//     const COEFF_A: Fq = Fq::default();
+
+//     pub fn new(x: Fq, y: Fq, z: Fq) -> Self {
+//         Self { x, y, z }
+//     }
+
+//     pub fn is_zero(&self) -> bool {
+//         self.z.is_zero()
+//     }
+// }
+
+// impl PartialEq for Mnt6G1 {
+//     fn eq(&self, other: &Self) -> bool {
+//         if self.is_zero() {
+//             return other.is_zero();
+//         }
+//         if other.is_zero() {
+//             return false;
+//         }
+
+//         // X1/Z1 = X2/Z2 => X1*Z2 == X2*Z1
+//         let x1z2 = &self.x * &other.z;
+//         let x2z1 = &other.x * &self.z;
+//         if x1z2 != x2z1 {
+//             return false;
+//         }
+
+//         // Y1/Z1 = Y2/Z2 => Y1*Z2 == Y2*Z1
+//         let y1z2 = &self.y * &other.z;
+//         let y2z1 = &other.y * &self.z;
+
+//         y1z2 == y2z1
+//     }
+// }
+
+// impl Add for &Mnt6G1 {
+//     type Output = Mnt6G1;
+
+//     fn add(self, other: Self) -> Mnt6G1 {
+//         if self.is_zero() {
+//             return other.clone();
+//         }
+//         if other.is_zero() {
+//             return self.clone();
+//         }
+
+//         let x1z2 = &self.x * &other.z;
+//         let x2z1 = &self.z * &other.x;
+//         let y1z2 = &self.y * &other.z;
+//         let y2z1 = &self.z * &other.y;
+
+//         if x1z2 == x2z1 && y1z2 == y2z1 {
+//             let xx = self.x.squared();
+//             let zz = self.z.squared();
+//             let w = &Self::COEFF_A * &zz + (&xx + &xx + &xx);
+//             let y1z1 = &self.y * &self.z;
+//             let s = &y1z1 + &y1z1;
+//             let ss = s.squared();
+//             let sss = &s * &ss;
+//             let r = &self.y * &s;
+//             let rr = r.squared();
+//             let b = (&self.x + &r).squared() - &xx - &rr;
+//             let h = w.squared() - (&b + &b);
+
+//             return Mnt6G1::new(&h * &s, &w * (&b - &h) - (&rr + &rr), sss);
+//         }
+
+//         let z1z2 = &self.z * &other.z;
+//         let u = y2z1 - y1z2;
+//         let uu = u.squared();
+//         let v = x2z1 - x1z2;
+//         let vv = v.squared();
+//         let vvv = &v * &vv;
+//         let r = &vv * &x1z2;
+//         let a = &uu * &z1z2 - (&vvv + &r + &r);
+
+//         Mnt6G1::new(
+//             &v * &a,
+//             &u * (&r - &a) - (&vvv * &self.y) * &other.z,
+//             &vvv * &z1z2,
+//         )
+//     }
+// }
 
 use crate::algebra::curves::{
     AffineRepr, CurveGroup,

@@ -1,119 +1,194 @@
+use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12};
+use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+use num_bigint::BigUint;
+use std::borrow::Borrow;
+use std::fmt::Debug;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-
-
-
-// #define BN128_GT_HPP_
-//#include <iostream>
-
-#include "depends/ate-pairing/include/bn.h"
-
-use ffec::algebra::field_utils::field_utils;
-use ffec::algebra::fields::prime_base::fp;
-
-
-
-pub struct bn128_GT;
-std::ostream& operator<<(std::ostream &, const bn128_GT&);
-std::istream& operator>>(std::istream &, bn128_GT&);
-
+#[derive(Clone, Debug, PartialEq)]
 pub struct bn128_GT {
-
-    static bn128_GT GT_one;
-    bn::Fp12 elem;
-
-    bn128_GT();
-    bool operator==(other:&bn128_GT) const;
-    bool operator!=(other:&bn128_GT) const;
-
-    bn128_GT operator*(other:&bn128_GT) const;
-    bn128_GT unitary_inverse() const;
-
-    static bn128_GT one();
-
-    pub fn cout << this->elem << "\n"; };
-
-    friend std::ostream& operator<<(std::ostream &out, g:&bn128_GT);
-    friend std::istream& operator>>(std::istream &in, bn128_GT &g);
-};
-
-
-bn128_GT operator^(rhs:&bn128_GT, lhs:&bigint<m>)
-{
-    return power<bn128_GT, m>(rhs, lhs);
+    pub elem: Fp12,
+}
+impl PpConfig for bn128_GT {
+    type TT = bigint<1>;
+    // type Fr=Self;
+}
+impl Default for bn128_GT {
+    fn default() -> Self {
+        Self {
+            elem: Fp12::default(),
+        }
+    }
+}
+impl bn128_GT {
+    pub fn unitary_inverse(&self) -> bn128_GT {
+        let result = self.clone();
+        // result.elem.b_=-result.elem.b_.clone();
+        result
+    }
+    pub fn GT_zero() -> bn128_GT {
+        Self {
+            elem: Fp12::default(),
+        }
+    }
+    pub fn GT_one() -> bn128_GT {
+        Self {
+            elem: Fp12::default(),
+        }
+    }
+    pub fn one() -> bn128_GT {
+        return Self::GT_one();
+    }
 }
 
+impl Add<i32> for bn128_GT {
+    type Output = bn128_GT;
 
-
-bn128_GT operator^(rhs:&bn128_GT, lhs:&Fp_model<m,modulus_p>)
-{
-    return power<bn128_GT, m>(rhs, lhs.as_bigint());
+    fn add(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
 }
 
+impl<O: Borrow<Self>> Add<O> for bn128_GT {
+    type Output = bn128_GT;
 
-
-
-
-
-use crate::algebra::curves::bn128::bn128_gt;
-
-
-
-bn128_GT bn128_GT::GT_one;
-pub fn new()
-{
-    this->elem.clear();
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
 }
 
-bool bn128_GT::operator==(other:&bn128_GT) const
-{
-    return (this->elem == other.elem);
+impl Sub for bn128_GT {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
 }
 
-bool bn128_GT::operator!=(other:&bn128_GT) const
-{
-    return !(operator==(other));
+impl<const N: usize> Mul<bigint<N>> for bn128_GT {
+    type Output = bn128_GT;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
 }
 
-bn128_GT bn128_GT::operator*(other:&bn128_GT) const
-{
-    bn128_GT result;
-    bn::Fp12::mul(result.elem, this->elem, other.elem);
-    return result;
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for bn128_GT {
+    type Output = bn128_GT;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
 }
 
-pub fn unitary_inverse()->bn128_GT
-{
-    bn128_GT result(*this);
-    bn::Fp6::neg(result.elem.b_, result.elem.b_);
-    return result;
+impl Mul<i32> for bn128_GT {
+    type Output = bn128_GT;
+
+    fn mul(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+impl<O: Borrow<Self>> Mul<O> for bn128_GT {
+    type Output = bn128_GT;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
 }
 
-bn128_GT bn128_GT::one()
-{
-    return GT_one;
+impl Neg for bn128_GT {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self
+    }
 }
 
-std::ostream& operator<<(std::ostream &out, g:&bn128_GT)
-{
-
-    out << g.elem.a_ << OUTPUT_SEPARATOR << g.elem.b_;
-#else
-    out.write((char*) &g.elem.a_, sizeof(g.elem.a_));
-    out.write((char*) &g.elem.b_, sizeof(g.elem.b_));
-
-    return out;
+use std::fmt;
+impl fmt::Display for bn128_GT {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Self::one())
+    }
+}
+impl One for bn128_GT {
+    fn one() -> Self {
+        Self::one()
+    }
 }
 
-std::istream& operator>>(std::istream &in, bn128_GT &g)
-{
-
-    in >> g.elem.a_;
-    consume_OUTPUT_SEPARATOR(in);
-    in >> g.elem.b_;
-#else
-    in.read((char*) &g.elem.a_, sizeof(g.elem.a_));
-    in.read((char*) &g.elem.b_, sizeof(g.elem.b_));
-
-    return in;
+impl Zero for bn128_GT {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
 }
+// use std::io::{self, Read, Write};
+// use std::ops::{Mul, MulAssign};
 
+// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// pub struct Bn128GT {
+//     pub elem: Fp12,
+// }
+
+// impl Bn128GT {
+//     pub fn one() -> Self {
+//         Self { elem: Fp12::one() }
+//     }
+
+//     pub fn pow<S: AsRef<[u64]>>(&self, exp: S) -> Self {
+//         Self {
+//             elem: self.elem.pow(exp),
+//         }
+//     }
+// }
+
+// impl<'a> Mul<&'a Bn128GT> for &'a Bn128GT {
+//     type Output = Bn128GT;
+//     fn mul(self, other: &'a Bn128GT) -> Bn128GT {
+//         Bn128GT {
+//             elem: self.elem * &other.elem,
+//         }
+//     }
+// }
+
+// impl<'a> Mul<&'a BigInt> for &'a Bn128GT {
+//     type Output = Bn128GT;
+//     fn mul(self, rhs: &'a BigInt) -> Bn128GT {
+//         self.pow(rhs.to_u64_slice())
+//     }
+// }
+
+// impl Bn128GT {
+//     pub fn serialize<W: Write>(&self, mut writer: W) -> io::Result<()> {
+//         writer.write_all(&self.elem.a.to_bytes())?;
+//         writer.write_all(b" ")?;
+//         writer.write_all(&self.elem.b.to_bytes())?;
+//         Ok(())
+//     }
+
+//     pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
+//         let a = Fp6::read(&mut reader)?;
+
+//         let b = Fp6::read(&mut reader)?;
+//         Ok(Self {
+//             elem: Fp12 { a, b },
+//         })
+//     }
+// }

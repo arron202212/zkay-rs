@@ -1,23 +1,7 @@
-
-
 use ffec::algebra::field_utils::bigint::bigint;
-
-
 
 //
 // GroupT scalar_mul(base:&GroupT, scalar:&bigint<m>);
-
-
-// use crate::algebra::curves::curve_utils.tcc;
-
-
-
-
-
-
-// #define CURVE_UTILS_TCC_
-
-
 
 //
 pub fn scalar_mul<GroupT: num_traits::Zero, const M: usize>(
@@ -40,8 +24,5 @@ pub fn scalar_mul<GroupT: num_traits::Zero, const M: usize>(
         // }
     }
 
-    return result;
+    result
 }
-
-
-

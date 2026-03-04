@@ -19,7 +19,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
-use crate::const_new_fp_model;
+
 use ark_std::iterable::Iterable;
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -47,26 +47,26 @@ pub trait Fp12_modelConfig<const N: usize>:
     type Fp6_modelConfig: Fp6_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
 
     const non_residue: my_Fp<N, Self::Fp_modelConfig> =
-        const_new_fp_model::<N, Self::Fp_modelConfig>();
+        Fp_model::<N, Self::Fp_modelConfig>::const_default();
 
     const nqr: (
         my_Fp<N, Self::Fp_modelConfig>,
         my_Fp<N, Self::Fp_modelConfig>,
     ) = (
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     );
     const nqr_to_t: (
         my_Fp<N, Self::Fp_modelConfig>,
         my_Fp<N, Self::Fp_modelConfig>,
     ) = (
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     );
     /// T::non_residue^((modulus^i-1)/2)
     const Frobenius_coeffs_c1: [my_Fp<N, Self::Fp_modelConfig>; 2] = [
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
-        const_new_fp_model::<N, Self::Fp_modelConfig>(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
+        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
     ];
 }
 type my_Fp<const N: usize, T> = Fp_model<N, T>;

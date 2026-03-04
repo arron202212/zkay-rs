@@ -1,564 +1,431 @@
-
-
-
-
-// #define BLS12_381_G1_HPP_
-//#include <vector>
-
-use crate::algebra::curves::bls12_381/bls12_381_init;
-use crate::algebra::curves::curve_utils;
-
-
-
-pub struct bls12_381_G1;
-std::ostream& operator<<(std::ostream &, const bls12_381_G1&);
-std::istream& operator>>(std::istream &, bls12_381_G1&);
-
-pub struct bls12_381_G1 {
-
-// #ifdef PROFILE_OP_COUNTS
-    static i64 add_cnt;
-    static i64 dbl_cnt;
-
-    static Vec<std::usize> wnaf_window_table;
-    static Vec<std::usize> fixed_base_exp_window_table;
-    static bls12_381_G1 G1_zero;
-    static bls12_381_G1 G1_one;
-    // Cofactor
-    static let h_bitcount= 126;
-    static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-    static bigint<h_limbs> h;
-
-    type base_field=bls12_381_Fq;
-    type scalar_field=bls12_381_Fr;
-
-    bls12_381_Fq X, Y, Z;
-
-    // using Jacobian coordinates
-    bls12_381_G1();
-    bls12_381_G1(X:bls12_381_Fq&, Y:bls12_381_Fq&, Z:&bls12_381_Fq)->SelfX,Y,Z {};
-
-    pub fn  print() const;
-    pub fn  print_coordinates() const;
-
-    pub fn  to_affine_coordinates();
-    pub fn  to_special();
-    bool is_special() const;
-
-    bool is_zero() const;
-
-    bool operator==(other:&bls12_381_G1) const;
-    bool operator!=(other:&bls12_381_G1) const;
-
-    bls12_381_G1 operator+(other:&bls12_381_G1) const;
-    bls12_381_G1 operator-() const;
-    bls12_381_G1 operator-(other:&bls12_381_G1) const;
-
-    bls12_381_G1 add(other:&bls12_381_G1) const;
-    bls12_381_G1 mixed_add(other:&bls12_381_G1) const;
-    bls12_381_G1 dbl() const;
-    bls12_381_G1 mul_by_cofactor() const;
-
-    bool is_well_formed() const;
-
-    static bls12_381_G1 zero();
-    static bls12_381_G1 one();
-    static bls12_381_G1 random_element();
-
-    static std::usize size_in_bits() { return base_field::ceil_size_in_bits() + 1; }
-    static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
-    static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
-
-    friend std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1);
-    friend std::istream& operator>>(std::istream &in, bls12_381_G1 &g);
-
-    static pub fn  batch_to_special_all_non_zeros(Vec<bls12_381_G1> &vec);
+use ffec::field_utils::{bigint::{GMP_NUMB_BITS,bigint},field_utils::batch_invert};
+use ffec::{Fp_modelConfig,PpConfig,
+    Fp_model, Fp2_model, Fp2_modelConfig, Fp3_modelConfig, Fp6_3over2_model, Fp6_modelConfig,
+    Fp12_2over3over2_model, Fp12_modelConfig,One, Zero
 };
 
+use std::borrow::Borrow;
+use std::ops::{Add, Mul, Neg, Sub};
 
-bls12_381_G1 operator*(lhs:&bigint<m>, rhs:&bls12_381_G1)
-{
-    return scalar_mul<bls12_381_G1, m>(rhs, lhs);
+type base_field = bls12_381_Fq;
+type scalar_field = bls12_381_Fr;
+
+pub struct bls12_381_G1 {
+    X: bls12_381_Fq,
+    Y: bls12_381_Fq,
+    Z: bls12_381_Fq,
 }
 
-
-bls12_381_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&bls12_381_G1)
-{
-    return scalar_mul<bls12_381_G1, m>(rhs, lhs.as_bigint());
-}
-
-std::ostream& operator<<(std::ostream& out, v:&Vec<bls12_381_G1>);
-std::istream& operator>>(std::istream& in, Vec<bls12_381_G1> &v);
-
-
-
-use crate::algebra::curves::bls12_381/bls12_381_g1;
-
-
-
-using std::usize;
-
-// #ifdef PROFILE_OP_COUNTS
-i64 bls12_381_G1::add_cnt = 0;
-i64 bls12_381_G1::dbl_cnt = 0;
-
-
-Vec<usize> bls12_381_G1::wnaf_window_table;
-Vec<usize> bls12_381_G1::fixed_base_exp_window_table;
-bls12_381_G1 bls12_381_G1::G1_zero;
-bls12_381_G1 bls12_381_G1::G1_one;
-bigint<bls12_381_G1::h_limbs> bls12_381_G1::h;
-
-pub fn new()
-{
-    this->X = G1_zero.X;
-    this->Y = G1_zero.Y;
-    this->Z = G1_zero.Z;
-}
-
-pub fn print() const
-{
-    if this->is_zero()
-    {
-        print!("O\n");
+impl bls12_381_G1 {
+    pub fn new(X: bls12_381_Fq, Y: bls12_381_Fq, Z: bls12_381_Fq) -> Self {
+        Self { X, Y, Z }
     }
-    else
-    {
-        bls12_381_G1 copy(*this);
-        copy.to_affine_coordinates();
-        print!("(%Nd , %Nd)\n",
-                   copy.X.as_bigint().0.0, bls12_381_Fq::num_limbs,
-                   copy.Y.as_bigint().0.0, bls12_381_Fq::num_limbs);
+
+    pub fn size_in_bits() -> usize {
+        return base_field::ceil_size_in_bits() + 1;
+    }
+    pub fn field_char() -> bigint<{ base_field::num_limbs }> {
+        return base_field::field_char();
+    }
+    pub fn order() -> bigint<{ scalar_field::num_limbs }> {
+        return scalar_field::field_char();
     }
 }
 
-pub fn print_coordinates() const
-{
-    if this->is_zero()
-    {
-        print!("O\n");
-    }
-    else
-    {
-        print!("(%Nd : %Nd : %Nd)\n",
-                   this->X.as_bigint().0.0, bls12_381_Fq::num_limbs,
-                   this->Y.as_bigint().0.0, bls12_381_Fq::num_limbs,
-                   this->Z.as_bigint().0.0, bls12_381_Fq::num_limbs);
-    }
-}
-
-pub fn to_affine_coordinates()
-{
-    if this->is_zero()
-    {
-        this->X = bls12_381_Fq::zero();
-        this->Y = bls12_381_Fq::one();
-        this->Z = bls12_381_Fq::zero();
-    }
-    else
-    {
-        bls12_381_Fq Z_inv = Z.inverse();
-        bls12_381_Fq Z2_inv = Z_inv.squared();
-        bls12_381_Fq Z3_inv = Z2_inv * Z_inv;
-        this->X = this->X * Z2_inv;
-        this->Y = this->Y * Z3_inv;
-        this->Z = bls12_381_Fq::one();
-    }
-}
-
-pub fn to_special()
-{
-    this->to_affine_coordinates();
-}
-
-pub fn is_special()->bool
-{
-    return (this->is_zero() || this->Z == bls12_381_Fq::one());
-}
-
-pub fn is_zero()->bool
-{
-    return (this->Z.is_zero());
-}
-
-bool bls12_381_G1::operator==(other:&bls12_381_G1) const
-{
-    if this->is_zero()
-    {
-        return other.is_zero();
+impl bls12_381_G1 {
+    pub fn new() {
+        self.X = G1_zero.X;
+        self.Y = G1_zero.Y;
+        self.Z = G1_zero.Z;
     }
 
-    if other.is_zero()
-    {
-        return false;
-    }
-
-    /* now neither is O */
-
-    // using Jacobian coordinates so:
-    // (X1:Y1:Z1) = (X2:Y2:Z2)
-    // iff
-    // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
-    // iff
-    // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
-
-    bls12_381_Fq Z1_squared = (this->Z).squared();
-    bls12_381_Fq Z2_squared = (other.Z).squared();
-
-    if (this->X * Z2_squared) != (other.X * Z1_squared)
-    {
-        return false;
-    }
-
-    bls12_381_Fq Z1_cubed = (this->Z) * Z1_squared;
-    bls12_381_Fq Z2_cubed = (other.Z) * Z2_squared;
-
-    return !((this->Y * Z2_cubed) != (other.Y * Z1_cubed));
-}
-
-bool bls12_381_G1::operator!=(other:&bls12_381_G1) const
-{
-    return !(operator==(other));
-}
-
-bls12_381_G1 bls12_381_G1::operator+(other:&bls12_381_G1) const
-{
-    // handle special cases having to do with O
-    if this->is_zero()
-    {
-        return other;
-    }
-
-    if other.is_zero()
-    {
-        return *this;
-    }
-
-    // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
-    // no need to handle points of order 2,4
-    // (they cannot exist in a prime-order subgroup)
-
-    // check for doubling case
-
-    // using Jacobian coordinates so:
-    // (X1:Y1:Z1) = (X2:Y2:Z2)
-    // iff
-    // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
-    // iff
-    // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
-
-    bls12_381_Fq Z1Z1 = (this->Z).squared();
-    bls12_381_Fq Z2Z2 = (other.Z).squared();
-
-    bls12_381_Fq U1 = this->X * Z2Z2;
-    bls12_381_Fq U2 = other.X * Z1Z1;
-
-    bls12_381_Fq Z1_cubed = (this->Z) * Z1Z1;
-    bls12_381_Fq Z2_cubed = (other.Z) * Z2Z2;
-
-    bls12_381_Fq S1 = (this->Y) * Z2_cubed;      // S1 = Y1 * Z2 * Z2Z2
-    bls12_381_Fq S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
-
-    if U1 == U2 && S1 == S2
-    {
-        // dbl case; nothing of above can be reused
-        return this->dbl();
-    }
-
-    // rest of add case
-    bls12_381_Fq H = U2 - U1;                            // H = U2-U1
-    bls12_381_Fq S2_minus_S1 = S2-S1;
-    bls12_381_Fq I = (H+H).squared();                    // I = (2 * H)^2
-    bls12_381_Fq J = H * I;                              // J = H * I
-    bls12_381_Fq r = S2_minus_S1 + S2_minus_S1;          // r = 2 * (S2-S1)
-    bls12_381_Fq V = U1 * I;                             // V = U1 * I
-    bls12_381_Fq X3 = r.squared() - J - (V+V);           // X3 = r^2 - J - 2 * V
-    bls12_381_Fq S1_J = S1 * J;
-    bls12_381_Fq Y3 = r * (V-X3) - (S1_J+S1_J);          // Y3 = r * (V-X3)-2 S1 J
-    bls12_381_Fq Z3 = ((this->Z+other.Z).squared()-Z1Z1-Z2Z2) * H; // Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2) * H
-
-    return bls12_381_G1(X3, Y3, Z3);
-}
-
-bls12_381_G1 bls12_381_G1::operator-() const
-{
-    return bls12_381_G1(this->X, -(this->Y), this->Z);
-}
-
-
-bls12_381_G1 bls12_381_G1::operator-(other:&bls12_381_G1) const
-{
-    return (*this) + (-other);
-}
-
-pub fn add(other:&bls12_381_G1)->bls12_381_G1
-{
-  return (*this) + other;
-}
-
-pub fn mixed_add(other:&bls12_381_G1)->bls12_381_G1
-{
-// #ifdef DEBUG
-    assert!(other.is_special());
-
-
-    // handle special cases having to do with O
-    if this->is_zero()
-    {
-        return other;
-    }
-
-    if other.is_zero()
-    {
-        return *this;
-    }
-
-    // no need to handle points of order 2,4
-    // (they cannot exist in a prime-order subgroup)
-
-    // check for doubling case
-
-    // using Jacobian coordinates so:
-    // (X1:Y1:Z1) = (X2:Y2:Z2)
-    // iff
-    // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
-    // iff
-    // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
-
-    // we know that Z2 = 1
-
-    let Z1Z1= (this->Z).squared();
-
-    U1:&bls12_381_Fq = this->X;
-    let U2= other.X * Z1Z1;
-
-    let Z1_cubed= (this->Z) * Z1Z1;
-
-    S1:&bls12_381_Fq = (this->Y);                // S1 = Y1 * Z2 * Z2Z2
-    let S2= (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
-
-    if U1 == U2 && S1 == S2
-    {
-        // dbl case; nothing of above can be reused
-        return this->dbl();
-    }
-
-// #ifdef PROFILE_OP_COUNTS
-    this->add_cnt++;
-
-
-    // NOTE: does not handle O and pts of order 2,4
-    // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
-    bls12_381_Fq H = U2-(this->X);                         // H = U2-X1
-    bls12_381_Fq HH = H.squared() ;                        // HH = H^2
-    bls12_381_Fq I = HH+HH;                                // I = 4*HH
-    I = I + I;
-    bls12_381_Fq J = H*I;                                  // J = H*I
-    bls12_381_Fq r = S2-(this->Y);                         // r = 2*(S2-Y1)
-    r = r + r;
-    bls12_381_Fq V = (this->X) * I ;                       // V = X1*I
-    bls12_381_Fq X3 = r.squared()-J-V-V;                   // X3 = r^2-J-2*V
-    bls12_381_Fq Y3 = (this->Y)*J;                         // Y3 = r*(V-X3)-2*Y1*J
-    Y3 = r*(V-X3) - Y3 - Y3;
-    bls12_381_Fq Z3 = ((this->Z)+H).squared() - Z1Z1 - HH; // Z3 = (Z1+H)^2-Z1Z1-HH
-
-    return bls12_381_G1(X3, Y3, Z3);
-}
-
-pub fn dbl()->bls12_381_G1
-{
-// #ifdef PROFILE_OP_COUNTS
-    this->dbl_cnt++;
-
-    // handle point at infinity
-    if this->is_zero()
-    {
-        return (*this);
-    }
-
-    // no need to handle points of order 2,4
-    // (they cannot exist in a prime-order subgroup)
-
-    // NOTE: does not handle O and pts of order 2,4
-    // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
-
-    bls12_381_Fq A = (this->X).squared();         // A = X1^2
-    bls12_381_Fq B = (this->Y).squared();        // B = Y1^2
-    bls12_381_Fq C = B.squared();                // C = B^2
-    bls12_381_Fq D = (this->X + B).squared() - A - C;
-    D = D+D;                        // D = 2 * ((X1 + B)^2 - A - C)
-    bls12_381_Fq E = A + A + A;                  // E = 3 * A
-    bls12_381_Fq F = E.squared();                // F = E^2
-    bls12_381_Fq X3 = F - (D+D);                 // X3 = F - 2 D
-    bls12_381_Fq eightC = C+C;
-    eightC = eightC + eightC;
-    eightC = eightC + eightC;
-    bls12_381_Fq Y3 = E * (D - X3) - eightC;     // Y3 = E * (D - X3) - 8 * C
-    bls12_381_Fq Y1Z1 = (this->Y)*(this->Z);
-    bls12_381_Fq Z3 = Y1Z1 + Y1Z1;               // Z3 = 2 * Y1 * Z1
-
-    return bls12_381_G1(X3, Y3, Z3);
-}
-
-pub fn mul_by_cofactor()->bls12_381_G1
-{
-    return bls12_381_G1::h * (*this);
-}
-
-pub fn is_well_formed()->bool
-{
-    if this->is_zero()
-    {
-        return true;
-    }
-    // y^2 = x^3 + b
-    // We are using Jacobian coordinates, so equation we need to check is actually
-    // (y/z^3)^2 = (x/z^2)^3 + b
-    // y^2 / z^6 = x^3 / z^6 + b
-    // y^2 = x^3 + b z^6
-    bls12_381_Fq X2 = this->X.squared();
-    bls12_381_Fq Y2 = this->Y.squared();
-    bls12_381_Fq Z2 = this->Z.squared();
-
-    bls12_381_Fq X3 = this->X * X2;
-    bls12_381_Fq Z3 = this->Z * Z2;
-    bls12_381_Fq Z6 = Z3.squared();
-
-    return (Y2 == X3 + bls12_381_coeff_b * Z6);
-}
-
-bls12_381_G1 bls12_381_G1::zero()
-{
-    return G1_zero;
-}
-
-bls12_381_G1 bls12_381_G1::one()
-{
-    return G1_one;
-}
-
-bls12_381_G1 bls12_381_G1::random_element()
-{
-    return (scalar_field::random_element().as_bigint()) * G1_one;
-}
-
-std::ostream& operator<<(std::ostream &out, g:&bls12_381_G1)
-{
-    bls12_381_G1 copy(g);
-    copy.to_affine_coordinates();
-
-    out << if copy.is_zero() {1} else{0} << OUTPUT_SEPARATOR;
-// #ifdef NO_PT_COMPRESSION
-    out << copy.X << OUTPUT_SEPARATOR << copy.Y;
-#else
-    /* storing LSB of Y */
-    out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
-
-
-    return out;
-}
-
-std::istream& operator>>(std::istream &in, bls12_381_G1 &g)
-{
-    char is_zero;
-    bls12_381_Fq tX, tY;
-
-// #ifdef NO_PT_COMPRESSION
-    in >> is_zero >> tX >> tY;
-    is_zero -= '0';
-#else
-    in.read((char*)&is_zero, 1); // this reads is_zero;
-    is_zero -= '0';
-    consume_OUTPUT_SEPARATOR(in);
-
-    unsigned char Y_lsb;
-    in >> tX;
-    consume_OUTPUT_SEPARATOR(in);
-    in.read((char*)&Y_lsb, 1);
-    Y_lsb -= '0';
-
-    // y = +/- sqrt(x^3 + b)
-    if is_zero == 0
-    {
-        bls12_381_Fq tX2 = tX.squared();
-        bls12_381_Fq tY2 = tX2*tX + bls12_381_coeff_b;
-        tY = tY2.sqrt();
-
-        if (tY.as_bigint().0.0[0] & 1) != Y_lsb
-        {
-            tY = -tY;
+    pub fn print() {
+        if self.is_zero() {
+            print!("O\n");
+        } else {
+            let mut copy = self.clone();
+            copy.to_affine_coordinates();
+            print!(
+                "(%Nd , %Nd)\n",
+                copy.X.as_bigint().0.0,
+                bls12_381_Fq::num_limbs,
+                copy.Y.as_bigint().0.0,
+                bls12_381_Fq::num_limbs
+            );
         }
     }
 
-    // using Jacobian coordinates
-    if is_zero == 0
-    {
-        g.X = tX;
-        g.Y = tY;
-        g.Z = bls12_381_Fq::one();
-    }
-    else
-    {
-        g = bls12_381_G1::zero();
+    pub fn print_coordinates() {
+        if self.is_zero() {
+            print!("O\n");
+        } else {
+            print!(
+                "(%Nd : %Nd : %Nd)\n",
+                self.X.as_bigint().0.0,
+                bls12_381_Fq::num_limbs,
+                self.Y.as_bigint().0.0,
+                bls12_381_Fq::num_limbs,
+                self.Z.as_bigint().0.0,
+                bls12_381_Fq::num_limbs
+            );
+        }
     }
 
-    return in;
+    pub fn to_affine_coordinates() {
+        if self.is_zero() {
+            self.X = bls12_381_Fq::zero();
+            self.Y = bls12_381_Fq::one();
+            self.Z = bls12_381_Fq::zero();
+        } else {
+            let Z_inv = Z.inverse();
+            let Z2_inv = Z_inv.squared();
+            let Z3_inv = Z2_inv * Z_inv;
+            self.X = self.X * Z2_inv;
+            self.Y = self.Y * Z3_inv;
+            self.Z = bls12_381_Fq::one();
+        }
+    }
+
+    pub fn to_special() {
+        self.to_affine_coordinates();
+    }
+
+    pub fn is_special() -> bool {
+        return (self.is_zero() || self.Z == bls12_381_Fq::one());
+    }
+
+    pub fn is_zero() -> bool {
+        return (self.Z.is_zero());
+    }
+
+    pub fn add(other: &bls12_381_G1) -> bls12_381_G1 {
+        return self.clone() + other;
+    }
+
+    pub fn mixed_add(other: &bls12_381_G1) -> bls12_381_G1 {
+        // #ifdef DEBUG
+        assert!(other.is_special());
+
+        // handle special cases having to do with O
+        if self.is_zero() {
+            return other;
+        }
+
+        if other.is_zero() {
+            return self.clone();
+        }
+
+        // no need to handle points of order 2,4
+        // (they cannot exist in a prime-order subgroup)
+
+        // check for doubling case
+
+        // using Jacobian coordinates so:
+        // (X1:Y1:Z1) = (X2:Y2:Z2)
+        // iff
+        // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
+        // iff
+        // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
+
+        // we know that Z2 = 1
+
+        let Z1Z1 = (self.Z).squared();
+
+        let U1: bls12_381_Fq = self.X;
+        let U2 = other.X * Z1Z1;
+
+        let Z1_cubed = (self.Z) * Z1Z1;
+
+        let S1: bls12_381_Fq = (self.Y); // S1 = Y1 * Z2 * Z2Z2
+        let S2 = (other.Y) * Z1_cubed; // S2 = Y2 * Z1 * Z1Z1
+
+        if U1 == U2 && S1 == S2 {
+            // dbl case; nothing of above can be reused
+            return self.dbl();
+        }
+
+        // #ifdef PROFILE_OP_COUNTS
+        self.add_cnt += 1;
+
+        // NOTE: does not handle O and pts of order 2,4
+        // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-madd-2007-bl
+        let mut H = U2 - (self.X); // H = U2-X1
+        let mut HH = H.squared(); // HH = H^2
+        let mut I = HH + HH; // I = 4*HH
+        I = I + I;
+        let mut J = H * I; // J = H*I
+        let mut r = S2 - (self.Y); // r = 2*(S2-Y1)
+        r = r + r;
+        let mut V = (self.X) * I; // V = X1*I
+        let mut X3 = r.squared() - J - V - V; // X3 = r^2-J-2*V
+        let mut Y3 = (self.Y) * J; // Y3 = r*(V-X3)-2*Y1*J
+        Y3 = r * (V - X3) - Y3 - Y3;
+        let mut Z3 = ((self.Z) + H).squared() - Z1Z1 - HH; // Z3 = (Z1+H)^2-Z1Z1-HH
+
+        return bls12_381_G1(X3, Y3, Z3);
+    }
+
+    pub fn dbl() -> bls12_381_G1 {
+        // #ifdef PROFILE_OP_COUNTS
+        self.dbl_cnt += 1;
+
+        // handle point at infinity
+        if self.is_zero() {
+            return self.clone();
+        }
+
+        // no need to handle points of order 2,4
+        // (they cannot exist in a prime-order subgroup)
+
+        // NOTE: does not handle O and pts of order 2,4
+        // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
+
+        let mut A = (self.X).squared(); // A = X1^2
+        let mut B = (self.Y).squared(); // B = Y1^2
+        let mut C = B.squared(); // C = B^2
+        let mut D = (self.X + B).squared() - A - C;
+        D = D + D; // D = 2 * ((X1 + B)^2 - A - C)
+        let mut E = A + A + A; // E = 3 * A
+        let mut F = E.squared(); // F = E^2
+        let mut X3 = F - (D + D); // X3 = F - 2 D
+        let mut eightC = C + C;
+        eightC = eightC + eightC;
+        eightC = eightC + eightC;
+        let mut Y3 = E * (D - X3) - eightC; // Y3 = E * (D - X3) - 8 * C
+        let mut Y1Z1 = (self.Y) * (self.Z);
+        let mut Z3 = Y1Z1 + Y1Z1; // Z3 = 2 * Y1 * Z1
+
+        return bls12_381_G1(X3, Y3, Z3);
+    }
+
+    pub fn mul_by_cofactor() -> bls12_381_G1 {
+        return bls12_381_G1::h * self.clone();
+    }
+
+    pub fn is_well_formed() -> bool {
+        if self.is_zero() {
+            return true;
+        }
+        // y^2 = x^3 + b
+        // We are using Jacobian coordinates, so equation we need to check is actually
+        // (y/z^3)^2 = (x/z^2)^3 + b
+        // y^2 / z^6 = x^3 / z^6 + b
+        // y^2 = x^3 + b z^6
+        let X2 = self.X.squared();
+        let Y2 = self.Y.squared();
+        let Z2 = self.Z.squared();
+
+        let X3 = self.X * X2;
+        let Z3 = self.Z * Z2;
+        let Z6 = Z3.squared();
+
+        return (Y2 == X3 + bls12_381_coeff_b * Z6);
+    }
+
+    pub fn zero() -> Self {
+        return G1_zero;
+    }
+
+    pub fn one() -> Self {
+        return G1_one;
+    }
+
+    pub fn random_element() -> Self {
+        return (scalar_field::random_element().as_bigint()) * G1_one;
+    }
+
+    pub fn batch_to_special_all_non_zeros(vec: &Vec<bls12_381_G1>) {
+        let mut Z_vec = Vec::with_capacity(vec.len());
+
+        for el in vec {
+            Z_vec.push(el.Z.clone());
+        }
+        batch_invert::<bls12_381_Fq>(Z_vec);
+
+        let one = bls12_381_Fq::one();
+
+        for i in 0..vec.len() {
+            let Z2 = Z_vec[i].squared();
+            let Z3 = Z_vec[i] * Z2;
+
+            vec[i].X = vec[i].X * Z2;
+            vec[i].Y = vec[i].Y * Z3;
+            vec[i].Z = one;
+        }
+    }
 }
 
-std::ostream& operator<<(std::ostream& out, v:&Vec<bls12_381_G1>)
-{
-    out << v.len() << "\n";
-    for t in &v
-    {
-        out << t << OUTPUT_NEWLINE;
-    }
+use std::io::{self, Read, Write};
+use std::ops::{Add, Mul, Neg, Sub};
 
-    return out;
+// 假设已经定义了底层的 Fq (Base Field) 和 BigInt
+// 这里映射代码中的 bls12_381_G1 结构
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct G1Projective {
+    pub x: Fq,
+    pub y: Fq,
+    pub z: Fq,
 }
 
-std::istream& operator>>(std::istream& in, Vec<bls12_381_G1> &v)
-{
-    v.clear();
-
-    usize s;
-    in >> s;
-    consume_newline(in);
-
-    v.reserve(s);
-
-    for i in 0..s
-    {
-        bls12_381_G1 g;
-        in >> g;
-        consume_OUTPUT_NEWLINE(in);
-        v.emplace_back(g);
+impl G1Projective {
+    pub fn zero() -> Self { /* ... */
+    }
+    pub fn is_zero(&self) -> bool {
+        self.z.is_zero()
     }
 
-    return in;
-}
-
-pub fn batch_to_special_all_non_zeros(Vec<bls12_381_G1> &vec)
-{
-    Vec<bls12_381_Fq> Z_vec;
-    Z_vec.reserve(vec.len());
-
-    for el in &vec
-    {
-        Z_vec.emplace_back(el.Z);
+    pub fn dbl(&self) -> Self {
+        // 实现倍点逻辑
+        // ...
     }
-    batch_invert<bls12_381_Fq>(Z_vec);
 
-    let one= bls12_381_Fq::one();
-
-    for i in 0..vec.len()
-    {
-        bls12_381_Fq Z2 = Z_vec[i].squared();
-        bls12_381_Fq Z3 = Z_vec[i] * Z2;
-
-        vec[i].X = vec[i].X * Z2;
-        vec[i].Y = vec[i].Y * Z3;
-        vec[i].Z = one;
+    // 对应代码中的 to_affine_coordinates 逻辑
+    pub fn to_affine(&self) -> (Fq, Fq, bool) {
+        if self.is_zero() {
+            return (Fq::zero(), Fq::zero(), true);
+        }
+        let z_inv = self.z.inverse().unwrap();
+        let z_inv2 = z_inv.square();
+        let z_inv3 = z_inv2 * &z_inv;
+        (self.x * &z_inv2, self.y * &z_inv3, false)
     }
 }
 
+// 1. 标量乘法 (lhs: &BigInt * rhs: &G1)
+impl<'a> Mul<&'a G1Projective> for &'a BigInt {
+    type Output = G1Projective;
+    fn mul(self, rhs: &'a G1Projective) -> G1Projective {
+        // 调用底层的标量乘法实现 (如二进制展开法)
+        rhs.scalar_mul(self)
+    }
+}
 
+// 2. 相等性判断 (Jacobian 比较)
+impl PartialEq for G1Projective {
+    fn eq(&self, other: &Self) -> bool {
+        if self.is_zero() {
+            return other.is_zero();
+        }
+        if other.is_zero() {
+            return false;
+        }
+
+        let z1_2 = self.z.square();
+        let z2_2 = other.z.square();
+
+        // X1 * Z2^2 == X2 * Z1^2
+        if self.x * &z2_2 != other.x * &z1_2 {
+            return false;
+        }
+
+        let z1_3 = z1_2 * &self.z;
+        let z2_3 = z2_2 * &other.z;
+
+        // Y1 * Z2^3 == Y2 * Z1^3
+        self.y * &z2_3 == other.y * &z1_3
+    }
+}
+
+// 3. 点加 (Jacobian Addition)
+impl<'a> Add<&'a G1Projective> for &'a G1Projective {
+    type Output = G1Projective;
+    fn add(self, other: &'a G1Projective) -> G1Projective {
+        if self.is_zero() {
+            return *other;
+        }
+        if other.is_zero() {
+            return *self;
+        }
+
+        let z1z1 = self.z.square();
+        let z2z2 = other.z.square();
+
+        let u1 = self.x * &z2z2;
+        let u2 = other.x * &z1z1;
+
+        let s1 = self.y * &(z2z2 * &other.z);
+        let s2 = other.y * &(z1z1 * &self.z);
+
+        if u1 == u2 {
+            if s1 == s2 {
+                return self.dbl();
+            } else {
+                return G1Projective::zero();
+            }
+        }
+
+        let h = u2 - &u1;
+        let r = (s2 - &s1).double();
+        let i = h.double().square();
+        let j = h * &i;
+        let v = u1 * &i;
+
+        let x3 = r.square() - &j - &v.double();
+        let y3 = r * &(v - &x3) - &(s1 * &j).double();
+        let z3 = ((self.z + &other.z).square() - &z1z1 - &z2z2) * &h;
+
+        G1Projective {
+            x: x3,
+            y: y3,
+            z: z3,
+        }
+    }
+}
+
+// 4. 取负与减法
+impl Neg for G1Projective {
+    type Output = Self;
+    fn neg(self) -> Self {
+        G1Projective {
+            x: self.x,
+            y: -self.y,
+            z: self.z,
+        }
+    }
+}
+
+impl<'a> Sub<&'a G1Projective> for &'a G1Projective {
+    type Output = G1Projective;
+    fn sub(self, other: &'a G1Projective) -> G1Projective {
+        self + &(-*other)
+    }
+}
+
+// 5. 序列化 (带有压缩逻辑)
+impl G1Projective {
+    pub fn serialize<W: Write>(&self, mut writer: W, compress: bool) -> io::Result<()> {
+        let (x, y, is_zero) = self.to_affine();
+        writer.write_all(if is_zero { b"1" } else { b"0" })?;
+
+        if compress {
+            // 写入 X 和 Y 的最低有效位
+            writer.write_all(&x.to_bytes())?;
+            let y_lsb = if y.to_bigint().is_odd() { b"1" } else { b"0" };
+            writer.write_all(y_lsb)?;
+        } else {
+            writer.write_all(&x.to_bytes())?;
+            writer.write_all(&y.to_bytes())?;
+        }
+        Ok(())
+    }
+
+    pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
+        let mut buf = [0u8; 1];
+        reader.read_exact(&mut buf)?;
+        let is_zero = buf[0] == b'1';
+
+        if is_zero {
+            return Ok(Self::zero());
+        }
+
+        // 解析 X 和根据 LSB 恢复 Y 的逻辑...
+        // let x = Fq::read(&mut reader)?;
+        // ... sqrt 恢复 ...
+
+        Ok(Self {
+            x: todo!(),
+            y: todo!(),
+            z: Fq::one(),
+        })
+    }
+}

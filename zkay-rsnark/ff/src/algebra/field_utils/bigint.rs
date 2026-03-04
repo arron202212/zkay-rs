@@ -48,36 +48,7 @@ pub const GMP_NUMB_BITS: usize = 64;
 
 #[derive(Copy, Clone, Debug, PartialOrd, Ord,PartialEq, Eq, Hash, Zeroize)]
 pub struct bigint<const N: usize>(pub BigInt<N>);
-// // impl<const N:usize> bigint<N>{
-//     // n: N:usize =,
 
-//     // bigint() = default;
-//     // bigint(const u64 x); /// Initalize from a small integer
-//     // bigint(const char* s); /// Initialize from a string containing an integer in decimal notation
-//     // bigint(const mpz_t r); /// Initialize from MPZ element
-
-//     // static bigint one();
-
-//     // pub fn  print() const;
-//     // pub fn  print_hex() const;
-//     // bool operator==(const:bigint<n>& other),
-//     // bool operator!=(const:bigint<n>& other),
-//     // bool operator<(const:bigint<n>& other),
-//     // pub fn  clear();
-//     // bool is_zero() const;
-//     // bool is_even() const;
-//     // usize max_bits() GMP_NUMB_BITS:{ return n *, } /// Returns the number of bits representable by this bigint type
-//     // usize num_bits() const; /// Returns the number of bits in this specific bigint value, i.e., position of the most-significant 1
-
-//     // u64 as_ulong() const; /// Return the last limb of the integer
-//     // pub fn  to_mpz(mpz_t r) const;
-//     // bool test_bit(bitno:usize) const;
-
-//     // bigint& randomize();
-
-//     // friend std::ostream& operator<< <n>(std::ostream &out, b:&bigint<n>);
-//     // friend std::istream& operator>> <n>(std::istream &in, bigint<n> &b);
-// // }
 
 impl<const N: usize> From<u128> for bigint<N> {
     fn from(rhs: u128) -> Self {
@@ -95,7 +66,13 @@ impl<const N: usize> AsRef<[u64]> for bigint<N> {
         &self.0.0
     }
 }
-
+#[macro_export]
+macro_rules! BigInte {
+    ($c0:expr) => {{
+        bigint($crate::BigInt!(c0))
+    }};
+}
+const SS:bigint<100>=bigint::<100>(BigInt!("1"));
 // // using usize;
 use std::mem;
 impl<const N: usize> bigint<N> {
@@ -113,11 +90,15 @@ impl<const N: usize> bigint<N> {
             .map(|v| Self(v))
             .map_err(|v| eyre::eyre!(format!("{v:?}")))
     }
-
+    // pub const fn const_str(s:&str)->Self{
+    //     Self(BigInt!(s))
+    // }
     pub const fn one() -> Self {
         Self(BigInt::<N>::one())
     }
-
+    pub const fn zero() -> Self {
+        Self(BigInt::<N>::zero())
+    }
     pub fn print(&self) {
         print!("{:N$?}\n", self.0);
     }

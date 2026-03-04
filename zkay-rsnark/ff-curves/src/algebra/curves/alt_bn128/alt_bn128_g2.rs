@@ -41,7 +41,7 @@ impl PpConfig for alt_bn128_G2 {
 }
 impl Fq2mConfig for alt_bn128_G2 {
     // type TT = bigint<1>;
-    type Fr=Self;
+    type Fr = Self;
 }
 
 impl Add<i32> for alt_bn128_G2 {
@@ -146,66 +146,21 @@ impl Zero for alt_bn128_G2 {
 // pub type alt_bn128_G2 = <Bn254 as Pairing>::G2;
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct alt_bn128_G2 {
-    // #ifdef PROFILE_OP_COUNTS
-    // static i64 add_cnt;
-    // static i64 dbl_cnt;
-    
-    // static Vec<std::usize> wnaf_window_table;
-    // static Vec<std::usize> fixed_base_exp_window_table;
-    // static alt_bn128_G2 G2_zero;
-    // static alt_bn128_G2 G2_one;
-    // static bool initialized;
-
-    // // Cofactor
-    // static let h_bitcount= 256;
-    // static let h_limbs= (h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-    // static bigint<h_limbs> h;
-   pub X: alt_bn128_Fq2,
-   pub Y: alt_bn128_Fq2,
-   pub Z: alt_bn128_Fq2,
-    // using Jacobian coordinates
-    // alt_bn128_G2();
-    //
-
-    // static alt_bn128_Fq2 mul_by_b(elt:&alt_bn128_Fq2);
-
-    // pub fn  print();
-    // pub fn  print_coordinates();
-
-    // pub fn  to_affine_coordinates();
-    // pub fn  to_special();
-    // bool is_special();
-
-    // bool is_zero();
-
-    // bool operator==(other:&alt_bn128_G2);
-    // bool operator!=(other:&alt_bn128_G2);
-
-    // alt_bn128_G2 operator+(other:&alt_bn128_G2);
-    // alt_bn128_G2 operator-();
-    // alt_bn128_G2 operator-(other:&alt_bn128_G2);
-
-    // alt_bn128_G2 add(other:&alt_bn128_G2);
-    // alt_bn128_G2 mixed_add(other:&alt_bn128_G2);
-    // alt_bn128_G2 dbl();
-    // alt_bn128_G2 mul_by_q();
-    // alt_bn128_G2 mul_by_cofactor();
-
-    // bool is_well_formed();
-
-    // static alt_bn128_G2 zero();
-    // static alt_bn128_G2 one();
-    // static alt_bn128_G2 random_element();
-
-    // static std::usize size_in_bits() { return twist_field::ceil_size_in_bits() + 1; }
-    // static bigint<base_field::num_limbs> field_char() { return base_field::field_char(); }
-    // static bigint<scalar_field::num_limbs> order() { return scalar_field::field_char(); }
-
-    // friend std::ostream& operator<<(std::ostream &out, g:&alt_bn128_G2);
-    // friend std::istream& operator>>(std::istream &in, alt_bn128_G2 &g);
-
-    // static pub fn  batch_to_special_all_non_zeros(Vec<alt_bn128_G2> &vec);
+    pub X: alt_bn128_Fq2,
+    pub Y: alt_bn128_Fq2,
+    pub Z: alt_bn128_Fq2,
 }
+// impl alt_bn128_G2 {
+//     pub fn size_in_bits() -> usize {
+//         return base_field::ceil_size_in_bits() + 1;
+//     }
+//     pub fn field_char() -> bigint<{ base_field::num_limbs }> {
+//         return base_field::field_char();
+//     }
+//     pub fn order() -> bigint<{ scalar_field::num_limbs }> {
+//         return scalar_field::field_char();
+//     }
+// }
 
 // alt_bn128_G2 operator*(lhs:&bigint<m>, rhs:&alt_bn128_G2)
 // {
@@ -222,7 +177,7 @@ pub struct alt_bn128_G2 {
 // // #ifdef PROFILE_OP_COUNTS
 // i64 alt_bn128_G2::add_cnt = 0;
 // i64 alt_bn128_G2::dbl_cnt = 0;
-// 
+//
 pub trait alt_bn128_G2Config: Send + Sync + Sized + 'static {
     const wnaf_window_table: &'static [usize];
     const fixed_base_exp_window_table: &'static [usize];
@@ -354,7 +309,6 @@ impl alt_bn128_G2 {
     pub fn mixed_add(&self, other: &alt_bn128_G2) -> Self {
         // #ifdef DEBUG
         assert!(other.is_special());
-        
 
         // handle special cases having to do with O
         if self.is_zero() {
@@ -394,8 +348,7 @@ impl alt_bn128_G2 {
         }
 
         // #ifdef PROFILE_OP_COUNTS
-        // self.add_cnt++;
-        
+        // self.add_cnt+=1;
 
         let H = U2 - (self.X); // H = U2-X1
         let HH = H.squared(); // HH = H^2
@@ -415,8 +368,8 @@ impl alt_bn128_G2 {
 
     pub fn dbl(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
-        // self.dbl_cnt++;
-        
+        // self.dbl_cnt+=1;
+
         // handle point at infinity
         if self.is_zero() {
             return self.clone();
@@ -566,7 +519,7 @@ impl FpmConfig for alt_bn128_G2 {
 
 //     if other.is_zero()
 //     {
-//         return *this;
+//         return self.clone()
 //     }
 
 //     // no need to handle points of order 2,4
@@ -600,8 +553,8 @@ impl FpmConfig for alt_bn128_G2 {
 //     }
 
 // // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-// 
+//     self.add_cnt+=1;
+//
 
 //     // rest of add case
 //     alt_bn128_Fq2 H = U2 - U1;                            // H = U2-U1
@@ -638,7 +591,7 @@ impl FpmConfig for alt_bn128_G2 {
 // #else
 //     /* storing LSB of Y */
 //     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().0.0[0] & 1);
-// 
+//
 
 //     return out;
 // }
@@ -674,7 +627,7 @@ impl FpmConfig for alt_bn128_G2 {
 //             tY = -tY;
 //         }
 //     }
-// 
+//
 //     // using projective coordinates
 //     if is_zero == 0
 //     {
