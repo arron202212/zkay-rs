@@ -144,13 +144,13 @@ pub fn kc_batch_exp_internal<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
                     scalar_size,
                     T1_window,
                     T1_table,
-                    &(v[pos].clone() * T1_coeff),
+                    &(v[pos].clone() * T1_coeff.clone()),
                 ),
                 windowed_exp::<T2, FieldT>(
                     scalar_size,
                     T2_window,
                     T2_table,
-                    &(v[pos].clone() * T2_coeff),
+                    &(v[pos].clone() * T2_coeff.clone()),
                 ),
             ));
             res.indices.push(pos);

@@ -74,7 +74,7 @@ forge-verify = { workspace=true }
 # forge-script-sequence = { path = "crates/script-sequence" }
 # foundry-cheatcodes = { path = "crates/cheatcodes" }
 # foundry-cheatcodes-spec = { path = "crates/cheatcodes/spec" }
-foundry-cli = { workspace=true }
+# foundry-cli = { workspace=true }
 foundry-common = { workspace=true }
 # foundry-common-fmt = { path = "crates/common/fmt" }
 foundry-config = { workspace=true }
