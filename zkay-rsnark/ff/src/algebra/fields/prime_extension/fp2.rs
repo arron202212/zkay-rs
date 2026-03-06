@@ -171,6 +171,13 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
             _t: PhantomData,
         }
     }
+ pub const fn const_default() -> Self {
+        Self {
+            c0:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            c1:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            _t: PhantomData,
+        }
+    }
     pub fn zero() -> Self {
         Self::new(
             my_Fp::<N, T::Fp_modelConfig>::zero(),

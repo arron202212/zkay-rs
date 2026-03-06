@@ -30,7 +30,7 @@ impl PublicParamsType for edwards_pp {
 }
 
 #[derive(Default, Clone)]
-struct Dummy;
+pub struct Dummy;
 impl affine_ate_G_precomp_typeConfig for Dummy {
     type CC = Self;
 }

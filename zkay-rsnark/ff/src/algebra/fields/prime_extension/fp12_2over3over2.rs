@@ -278,7 +278,7 @@ impl<const N: usize, T: Fp12_modelConfig<N>> Fp12_2over3over2_model<N, T> {
             &self.c1.Frobenius_map(power) * &T::Frobenius_coeffs_c1[power % 12],
         )
     }
-
+    pub fn final_exp(&self){}
     pub fn unitary_inverse(&self) -> Self {
         Self::new(self.c0, -self.c1)
     }
@@ -825,7 +825,7 @@ impl<const N: usize, T12: Fp12_modelConfig<N>, T: Fp_modelConfig<N>> Mul<Fp_mode
     type Output = Fp12_2over3over2_model<N, T12>;
 
     fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
-        let mut r = self;
+        let mut r = self.clone();
         // r *= *rhs.borrow();
         r
     }

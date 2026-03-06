@@ -3,6 +3,7 @@
 use crate::algebra::curves::mnt::mnt4::mnt4_fields::{
     mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT,
 };
+use ffec::PpConfig;
 use crate::algebra::curves::mnt::mnt4::mnt4_g1::mnt4_G1;
 use crate::algebra::curves::mnt::mnt4::mnt4_g2::mnt4_G2;
 use crate::algebra::curves::mnt::mnt4::mnt4_init::{
@@ -126,11 +127,11 @@ impl fmt::Display for mnt4_ate_G2_precomp {
 pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
     enter_block("Call to mnt4_final_exponentiation_last_chunk", false);
     let elt_q = elt.Frobenius_map(1);
-    let w1_part = elt_q.cyclotomic_exp(mnt4_final_exponent_last_chunk_w1);
+    let w1_part = elt_q.cyclotomic_exp(&mnt4_final_exponent_last_chunk_w1);
     let mut w0_part = if mnt4_final_exponent_last_chunk_is_w0_neg {
-        elt_inv.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0)
+        elt_inv.cyclotomic_exp(&mnt4_final_exponent_last_chunk_abs_of_w0)
     } else {
-        elt.cyclotomic_exp(mnt4_final_exponent_last_chunk_abs_of_w0)
+        elt.cyclotomic_exp(&mnt4_final_exponent_last_chunk_abs_of_w0)
     };
     let result = w1_part * w0_part;
     leave_block("Call to mnt4_final_exponentiation_last_chunk", false);
@@ -155,9 +156,9 @@ pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4)
 pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
     enter_block("Call to mnt4_final_exponentiation", false);
     let elt_inv = elt.inverse();
-    let elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, elt_inv);
-    let elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt_inv, elt);
-    let result = mnt4_final_exponentiation_last_chunk(elt_to_first_chunk, elt_inv_to_first_chunk);
+    let elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, &elt_inv);
+    let elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(&elt_inv, elt);
+    let result = mnt4_final_exponentiation_last_chunk(&elt_to_first_chunk,& elt_inv_to_first_chunk);
     leave_block("Call to mnt4_final_exponentiation", false);
 
     result
@@ -168,13 +169,13 @@ pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
 pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precomputation {
     enter_block("Call to mnt4_affine_ate_precompute_G1", false);
 
-    let mut Pcopy = P;
+    let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
 
     let mut result = mnt4_affine_ate_G1_precomputation::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PY_twist_squared = Pcopy.Y * mnt4_twist.squared();
+    result.PY_twist_squared = &mnt4_twist.squared()*&Pcopy.Y ;
 
     leave_block("Call to mnt4_affine_ate_precompute_G1", false);
     result
@@ -193,7 +194,7 @@ pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precompu
     let mut RX = Qcopy.X;
     let mut RY = Qcopy.Y;
 
-    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let loop_count: bigint<{mnt4_Fr::num_limbs}> = mnt4_ate_loop_count;
     let mut found_nonzero = false;
 
     let NAF = find_wnaf(1, loop_count);
@@ -212,7 +213,7 @@ pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precompu
             (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_twist_coeff_a) * (c.old_RY + c.old_RY).inverse();
         c.gamma_twist = c.gamma * mnt4_twist;
         c.gamma_X = c.gamma * c.old_RX;
-        result.coeffs.push(c);
+        result.coeffs.push(c.clone());
 
         RX = c.gamma.squared() - (c.old_RX + c.old_RX);
         RY = c.gamma * (c.old_RX - RX) - c.old_RY;
@@ -228,7 +229,7 @@ pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precompu
             }
             c.gamma_twist = c.gamma * mnt4_twist;
             c.gamma_X = c.gamma * result.QX;
-            result.coeffs.push(c);
+            result.coeffs.push(c.clone());
 
             RX = c.gamma.squared() - (c.old_RX + result.QX);
             RY = c.gamma * (c.old_RX - RX) - c.old_RY;
@@ -264,7 +265,7 @@ pub fn mnt4_affine_ate_miller_loop(
 
     let mut found_nonzero = false;
     let mut idx = 0;
-    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let loop_count: bigint<{mnt4_Fr::num_limbs}> = mnt4_ate_loop_count;
 
     let NAF = find_wnaf(1, loop_count);
     for i in (0..=NAF.len() - 1).rev() {
@@ -277,29 +278,29 @@ pub fn mnt4_affine_ate_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         mnt4_param_p (skipping leading zeros) in MSB to LSB
         order */
-        let c = prec_Q.coeffs[idx];
+        let mut c = prec_Q.coeffs[idx].clone();
         idx += 1;
-        let g_RR_at_P = mnt4_Fq4(
+        let g_RR_at_P = mnt4_Fq4::new(
             prec_P.PY_twist_squared,
-            -prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY,
+            &c.gamma_twist*&(-prec_P.PX ) + c.gamma_X - c.old_RY,
         );
-        f = f.squared().mul_by_023(g_RR_at_P);
+        f = f.squared().mul_by_023(&g_RR_at_P);
 
         if NAF[i] != 0 {
-            let c = prec_Q.coeffs[idx];
+            let c = prec_Q.coeffs[idx].clone();
             idx += 1;
             let g_RQ_at_P = if NAF[i] > 0 {
-                mnt4_Fq4(
+                mnt4_Fq4::new(
                     prec_P.PY_twist_squared,
-                    -prec_P.PX * c.gamma_twist + c.gamma_X - prec_Q.QY,
+                    &c.gamma_twist*&(-prec_P.PX)   + c.gamma_X - prec_Q.QY,
                 )
             } else {
-                mnt4_Fq4(
+                mnt4_Fq4::new(
                     prec_P.PY_twist_squared,
-                    -prec_P.PX * c.gamma_twist + c.gamma_X + prec_Q.QY,
+                     &c.gamma_twist*&(-prec_P.PX) + c.gamma_X + prec_Q.QY,
                 )
             };
-            f = f.mul_by_023(g_RQ_at_P);
+            f = f.mul_by_023(&g_RQ_at_P);
         }
     }
 
@@ -320,12 +321,12 @@ pub fn mnt4_affine_ate_miller_loop(
 }
 
 /* ate pairing */
-
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_mnt4_G2_projective {
-    X: mnt4_Fq2,
-    Y: mnt4_Fq2,
-    Z: mnt4_Fq2,
-    T: mnt4_Fq2,
+pub  X: mnt4_Fq2,
+pub  Y: mnt4_Fq2,
+pub  Z: mnt4_Fq2,
+pub  T: mnt4_Fq2,
 }
 impl extended_mnt4_G2_projective {
     pub fn print(&self) {
@@ -342,8 +343,8 @@ impl extended_mnt4_G2_projective {
 }
 
 pub fn doubling_step_for_flipped_miller_loop(
-    current: extended_mnt4_G2_projective,
-    dc: mnt4_ate_dbl_coeffs,
+    current:&mut  extended_mnt4_G2_projective,
+    dc:&mut  mnt4_ate_dbl_coeffs,
 ) {
     let X = current.X;
     let Y = current.Y;
@@ -359,7 +360,7 @@ pub fn doubling_step_for_flipped_miller_loop(
     let G = F.squared(); // G = F^2
 
     current.X = -(E + E + E + E) + G; // X3 = -4*E+G
-    current.Y = -mnt4_Fq("8") * D + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
+    current.Y = &D*&(-mnt4_Fq::from("8")) + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
     current.Z = (Y + Z).squared() - C - Z.squared(); // Z3 = (Y1+Z1)^2-C-Z1^2
     current.T = current.Z.squared(); // T3 = Z3^2
 
@@ -375,8 +376,8 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
     base_X: mnt4_Fq2,
     base_Y: mnt4_Fq2,
     base_Y_squared: mnt4_Fq2,
-    mut current: extended_mnt4_G2_projective,
-    mut ac: mnt4_ate_add_coeffs,
+     current:&mut  extended_mnt4_G2_projective,
+     ac: &mut mnt4_ate_add_coeffs,
 ) {
     let X1 = current.X.clone();
     let Y1 = current.Y.clone();
@@ -415,8 +416,8 @@ pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
     let mut result = mnt4_ate_G1_precomp::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PX_twist = Pcopy.X * mnt4_twist;
-    result.PY_twist = Pcopy.Y * mnt4_twist;
+    result.PX_twist = &mnt4_twist*&Pcopy.X  ;
+    result.PY_twist = &mnt4_twist*&Pcopy.Y ;
 
     leave_block("Call to mnt4_ate_precompute_G1", false);
     result
@@ -441,10 +442,10 @@ pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
     R.Z = mnt4_Fq2::one();
     R.T = mnt4_Fq2::one();
 
-    let loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let loop_count: bigint<{mnt4_Fr::num_limbs}> = mnt4_ate_loop_count;
     let mut found_one = false;
 
-    for i in (0..=loop_count.max_bits() as i64 - 1).rev() {
+    for i in (0..=loop_count.max_bits() as usize - 1).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
             /* this skips the MSB itself */
@@ -453,11 +454,11 @@ pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
         }
 
         let mut dc = mnt4_ate_dbl_coeffs::default();
-        doubling_step_for_flipped_miller_loop(R, dc);
+        doubling_step_for_flipped_miller_loop(&mut R,&mut dc);
         result.dbl_coeffs.push(dc);
-        if bit != 0 {
+        if bit {
             let mut ac = mnt4_ate_add_coeffs::default();
-            mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2, R, ac);
+            mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2,&mut  R,&mut  ac);
             result.add_coeffs.push(ac);
         }
     }
@@ -469,13 +470,13 @@ pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
         let mut minus_R_affine_X = R.X * RZ2_inv;
         let mut minus_R_affine_Y = -R.Y * RZ3_inv;
         let mut minus_R_affine_Y2 = minus_R_affine_Y.squared();
-        let ac = mnt4_ate_add_coeffs::default();
+        let mut ac = mnt4_ate_add_coeffs::default();
         mixed_addition_step_for_flipped_miller_loop(
             minus_R_affine_X,
             minus_R_affine_Y,
             minus_R_affine_Y2,
-            R,
-            ac,
+           &mut  R,
+            &mut ac,
         );
         result.add_coeffs.push(ac);
     }
@@ -492,14 +493,14 @@ pub fn mnt4_ate_miller_loop(
 
     let L1_coeff = mnt4_Fq2::new(prec_P.PX, mnt4_Fq::zero()) - prec_Q.QX_over_twist;
 
-    let f = mnt4_Fq4::one();
+    let mut f = mnt4_Fq4::one();
 
     let mut found_one = false;
-    let dbl_idx = 0;
-    let add_idx = 0;
+    let mut dbl_idx = 0;
+    let mut add_idx = 0;
 
-    let mut loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
-    for i in (0..=loop_count.max_bits() as i64 - 1).rev() {
+    let mut loop_count: bigint<{mnt4_Fr::num_limbs}> = mnt4_ate_loop_count;
+    for i in (0..=loop_count.max_bits() as usize - 1).rev() {
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
@@ -511,17 +512,17 @@ pub fn mnt4_ate_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         mnt4_param_p (skipping leading zeros) in MSB to LSB
         order */
-        let dc = prec_Q.dbl_coeffs[dbl_idx];
+        let dc = prec_Q.dbl_coeffs[dbl_idx].clone();
         dbl_idx += 1;
-        let g_RR_at_P = mnt4_Fq4(
+        let g_RR_at_P = mnt4_Fq4::new(
             -dc.c_4C - dc.c_J * prec_P.PX_twist + dc.c_L,
             dc.c_H * prec_P.PY_twist,
         );
         f = f.squared() * g_RR_at_P;
-        if bit != 0 {
-            let ac = prec_Q.add_coeffs[add_idx];
+        if bit {
+            let ac = prec_Q.add_coeffs[add_idx].clone();
             add_idx += 1;
-            let g_RQ_at_P = mnt4_Fq4(
+            let g_RQ_at_P = mnt4_Fq4::new(
                 ac.c_RZ * prec_P.PY_twist,
                 -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1),
             );
@@ -530,9 +531,9 @@ pub fn mnt4_ate_miller_loop(
     }
 
     if mnt4_ate_is_loop_count_neg {
-        let ac = prec_Q.add_coeffs[add_idx];
+        let ac = prec_Q.add_coeffs[add_idx].clone();
         add_idx += 1;
-        let g_RnegR_at_P = mnt4_Fq4(
+        let g_RnegR_at_P = mnt4_Fq4::new(
             ac.c_RZ * prec_P.PY_twist,
             -(prec_Q.QY_over_twist * ac.c_RZ + L1_coeff * ac.c_L1),
         );
@@ -552,16 +553,16 @@ pub fn mnt4_ate_double_miller_loop(
 ) -> mnt4_Fq4 {
     enter_block("Call to mnt4_ate_double_miller_loop", false);
 
-    let L1_coeff1 = mnt4_Fq2(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
-    let L1_coeff2 = mnt4_Fq2(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
+    let L1_coeff1 = mnt4_Fq2::new(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
+    let L1_coeff2 = mnt4_Fq2::new(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
 
-    let f = mnt4_Fq4::one();
+    let mut f = mnt4_Fq4::one();
 
     let mut found_one = false;
     let mut dbl_idx = 0;
     let mut add_idx = 0;
 
-    let mut loop_count: bigint<mnt4_Fr::num_limbs> = mnt4_ate_loop_count;
+    let mut loop_count: bigint<{mnt4_Fr::num_limbs}> = mnt4_ate_loop_count;
     for i in (0..=loop_count.max_bits() - 1).rev() {
         let mut bit = loop_count.test_bit(i);
 
@@ -574,32 +575,32 @@ pub fn mnt4_ate_double_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         mnt4_param_p (skipping leading zeros) in MSB to LSB
         order */
-        let mut dc1 = prec_Q1.dbl_coeffs[dbl_idx];
-        let mut dc2 = prec_Q2.dbl_coeffs[dbl_idx];
+        let mut dc1 = prec_Q1.dbl_coeffs[dbl_idx].clone();
+        let mut dc2 = prec_Q2.dbl_coeffs[dbl_idx].clone();
         dbl_idx += 1;
 
-        let mut g_RR_at_P1 = mnt4_Fq4(
+        let mut g_RR_at_P1 = mnt4_Fq4::new(
             -dc1.c_4C - dc1.c_J * prec_P1.PX_twist + dc1.c_L,
             dc1.c_H * prec_P1.PY_twist,
         );
 
-        let mut g_RR_at_P2 = mnt4_Fq4(
+        let mut g_RR_at_P2 = mnt4_Fq4::new(
             -dc2.c_4C - dc2.c_J * prec_P2.PX_twist + dc2.c_L,
             dc2.c_H * prec_P2.PY_twist,
         );
 
         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
 
-        if bit != 0 {
-            let mut ac1 = prec_Q1.add_coeffs[add_idx];
-            let mut ac2 = prec_Q2.add_coeffs[add_idx];
+        if bit {
+            let mut ac1 = prec_Q1.add_coeffs[add_idx].clone();
+            let mut ac2 = prec_Q2.add_coeffs[add_idx].clone();
             add_idx += 1;
 
-            let mut g_RQ_at_P1 = mnt4_Fq4(
+            let mut g_RQ_at_P1 = mnt4_Fq4::new(
                 ac1.c_RZ * prec_P1.PY_twist,
                 -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1),
             );
-            let mut g_RQ_at_P2 = mnt4_Fq4(
+            let mut g_RQ_at_P2 = mnt4_Fq4::new(
                 ac2.c_RZ * prec_P2.PY_twist,
                 -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1),
             );
@@ -609,14 +610,14 @@ pub fn mnt4_ate_double_miller_loop(
     }
 
     if mnt4_ate_is_loop_count_neg {
-        let mut ac1 = prec_Q1.add_coeffs[add_idx];
-        let mut ac2 = prec_Q2.add_coeffs[add_idx];
+        let mut ac1 = prec_Q1.add_coeffs[add_idx].clone();
+        let mut ac2 = prec_Q2.add_coeffs[add_idx].clone();
         add_idx += 1;
-        let mut g_RnegR_at_P1 = mnt4_Fq4(
+        let mut g_RnegR_at_P1 = mnt4_Fq4::new(
             ac1.c_RZ * prec_P1.PY_twist,
             -(prec_Q1.QY_over_twist * ac1.c_RZ + L1_coeff1 * ac1.c_L1),
         );
-        let mut g_RnegR_at_P2 = mnt4_Fq4(
+        let mut g_RnegR_at_P2 = mnt4_Fq4::new(
             ac2.c_RZ * prec_P2.PY_twist,
             -(prec_Q2.QY_over_twist * ac2.c_RZ + L1_coeff2 * ac2.c_L1),
         );
@@ -629,11 +630,11 @@ pub fn mnt4_ate_double_miller_loop(
     f
 }
 
-pub fn mnt4_ate_pairing(Q: &mnt4_G1, P: &mnt4_G2) -> mnt4_Fq4 {
+pub fn mnt4_ate_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_Fq4 {
     enter_block("Call to mnt4_ate_pairing", false);
     let mut prec_P = mnt4_ate_precompute_G1(P);
     let mut prec_Q = mnt4_ate_precompute_G2(Q);
-    let mut result = mnt4_ate_miller_loop(prec_P, prec_Q);
+    let mut result = mnt4_ate_miller_loop(&prec_P, &prec_Q);
     leave_block("Call to mnt4_ate_pairing", false);
     result
 }
@@ -641,7 +642,7 @@ pub fn mnt4_ate_pairing(Q: &mnt4_G1, P: &mnt4_G2) -> mnt4_Fq4 {
 pub fn mnt4_ate_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
     enter_block("Call to mnt4_ate_reduced_pairing", false);
     let f = mnt4_ate_pairing(P, Q);
-    let result = mnt4_final_exponentiation(f);
+    let result = mnt4_final_exponentiation(&f);
     leave_block("Call to mnt4_ate_reduced_pairing", false);
     result
 }
@@ -678,8 +679,8 @@ pub fn mnt4_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
 pub fn mnt4_affine_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
     let prec_P = mnt4_affine_ate_precompute_G1(P);
     let prec_Q = mnt4_affine_ate_precompute_G2(Q);
-    let f = mnt4_affine_ate_miller_loop(prec_P, prec_Q);
-    let result = mnt4_final_exponentiation(f);
+    let f = mnt4_affine_ate_miller_loop(&prec_P, &prec_Q);
+    let result = mnt4_final_exponentiation(&f);
     result
 }
 

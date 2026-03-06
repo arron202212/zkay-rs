@@ -10,11 +10,11 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init::{
 };
 
 use crate::algebra::curves::{alt_bn128::curves::Bn254, pairing::Pairing};
-use ffec::field_utils::{
+use ffec::field_utils::{BigInt,
     bigint::{GMP_NUMB_BITS, bigint},
     field_utils::batch_invert,
 };
-use ffec::{Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+use ffec::{BigInt,Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -195,6 +195,7 @@ type scalar_field = alt_bn128_Fr;
 impl alt_bn128_G2 {
     const h_bitcount: usize = 256;
     const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+ const  h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
     pub fn size_in_bits() -> usize {
         twist_field::ceil_size_in_bits() + 1
     }
@@ -205,9 +206,6 @@ impl alt_bn128_G2 {
         scalar_field::field_char().as_ref().to_vec()
     }
 
-    pub fn h<const N: usize>() -> bigint<N> {
-        bigint::<N>::default()
-    }
     pub fn new(X: alt_bn128_Fq2, Y: alt_bn128_Fq2, Z: alt_bn128_Fq2) -> Self {
         Self { X, Y, Z }
     }
@@ -408,7 +406,7 @@ impl alt_bn128_G2 {
     }
 
     pub fn mul_by_cofactor(&self) -> Self {
-        self.clone() * Self::h::<4>()
+        self.clone() * Self::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -514,7 +512,7 @@ impl FpmConfig for alt_bn128_G2 {
 //     // handle special cases having to do with O
 //     if self.is_zero()
 //     {
-//         return other;
+//         return other.clone()
 //     }
 
 //     if other.is_zero()

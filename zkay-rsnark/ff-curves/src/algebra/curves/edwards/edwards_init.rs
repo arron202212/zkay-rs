@@ -9,9 +9,9 @@ pub const edwards_modulus_q: bigint<edwards_q_limbs> = bigint::<edwards_q_limbs>
 
 pub const edwards_coeff_a: edwards_Fq = edwards_Fq::const_default();
 pub const edwards_coeff_d: edwards_Fq = edwards_Fq::const_default();
-pub const edwards_twist: edwards_Fq3 = edwards_Fq::const_default();
-pub const edwards_twist_coeff_a: edwards_Fq3 = edwards_Fq::const_default();
-pub const edwards_twist_coeff_d: edwards_Fq3 = edwards_Fq::const_default();
+pub const edwards_twist: edwards_Fq3 = edwards_Fq3::const_default();
+pub const edwards_twist_coeff_a: edwards_Fq3 = edwards_Fq3::const_default();
+pub const edwards_twist_coeff_d: edwards_Fq3 = edwards_Fq3::const_default();
 pub const edwards_twist_mul_by_a_c0: edwards_Fq = edwards_Fq::const_default();
 pub const edwards_twist_mul_by_a_c1: edwards_Fq = edwards_Fq::const_default();
 pub const edwards_twist_mul_by_a_c2: edwards_Fq = edwards_Fq::const_default();

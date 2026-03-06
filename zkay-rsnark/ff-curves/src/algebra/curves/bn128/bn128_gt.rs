@@ -21,6 +21,13 @@ impl Default for bn128_GT {
         }
     }
 }
+impl From<Fp12> for bn128_GT {
+    fn from(elem:Fp12) -> Self {
+        Self {
+            elem
+        }
+    }
+}
 impl bn128_GT {
     pub fn unitary_inverse(&self) -> bn128_GT {
         let result = self.clone();

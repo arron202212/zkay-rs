@@ -151,6 +151,22 @@ pub struct Fp3_model<const N: usize, T: Fp3_modelConfig<N>> {
 
 // use crate::algebra::field_utils::field_utils;
 impl<const N: usize, T: Fp3_modelConfig<N>> Fp3_model<N, T> {
+    pub const fn const_new(b: BigInt<N>) -> Self {
+        Self {
+            c0:my_Fp::<N, T::Fp_modelConfig>::const_new(b),
+            c1:my_Fp::<N, T::Fp_modelConfig>::const_new(b),
+            c2:my_Fp::<N, T::Fp_modelConfig>::const_new(b),
+            _t: PhantomData,
+        }
+    }
+    pub const fn const_default() -> Self {
+        Self {
+            c0:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            c1:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            c2:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            _t: PhantomData,
+        }
+    }
     pub fn ceil_size_in_bits() -> usize {
         3 * my_Fp::<N, T::Fp_modelConfig>::ceil_size_in_bits()
     }
@@ -434,14 +450,14 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Sub for Fp3_model<N, T> {
 //                                 lhs*rhs.c2);
 // }
 
-impl<const N: usize, T: Fp3_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
-    for &Fp3_model<N, T>
+impl<const N: usize, T3: Fp3_modelConfig<N>,T:FpmConfig<N>> Mul<Fp_model<N, T>>
+    for Fp3_model<N, T3>
 {
-    type Output = Fp3_model<N, T>;
+    type Output = Fp3_model<N, T3>;
 
-    fn mul(self, rhs: &Fp_model<N, T::Fp_modelConfig>) -> Self::Output {
-        let rhs = *rhs;
-        Fp3_model::<N, T>::new(self.c0 * rhs, self.c1 * rhs, self.c2 * rhs)
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        // let rhs = *rhs;
+        Fp3_model::<N, T3>::new(self.c0.clone() * rhs.clone(), self.c1.clone() * rhs.clone(), self.c2.clone() * rhs.clone())
     }
 }
 

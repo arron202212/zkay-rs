@@ -1,5 +1,5 @@
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT, init_alt_bn128_fields,
+    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT, init_alt_bn128_fields,alt_bn128_q_limbs
 };
 use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
     alt_bn128_G1_precomp, alt_bn128_G2_precomp,
@@ -7,7 +7,7 @@ use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
 
 use crate::algebra::curves::alt_bn128::alt_bn128_init;
 use ffec::{BigInt, MontFp};
-
+use ffec::field_utils::bigint::bigint;
 pub const alt_bn128_coeff_b: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
 pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::new(
     alt_bn128_Fq::const_new(BigInt!("3")),
@@ -27,6 +27,11 @@ pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::new(
     alt_bn128_Fq::const_new(BigInt!("3")),
     alt_bn128_Fq::const_new(BigInt!("3")),
 );
+
+ pub const alt_bn128_ate_loop_count: bigint<alt_bn128_q_limbs> = bigint::<alt_bn128_q_limbs>(BigInt!("29793968203157093288"));
+ pub const    alt_bn128_ate_is_loop_count_neg:bool = false;
+ pub const   alt_bn128_final_exponent_z: bigint<alt_bn128_q_limbs> = bigint::<alt_bn128_q_limbs>(BigInt!("4965661367192848881"));
+  pub const   alt_bn128_final_exponent_is_z_neg:bool = false;
 
 pub fn init_alt_bn128_params() {
     init_alt_bn128_fields();

@@ -9,7 +9,7 @@ use crate::algebra::curves::mnt::mnt6::mnt6_init::{
     mnt6_twist_mul_by_q_X, mnt6_twist_mul_by_q_Y,
 };
 use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -20,7 +20,7 @@ type base_field = mnt6_Fq;
 type twist_field = mnt6_Fq3;
 type scalar_field = mnt6_Fr;
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct mnt6_G2 {
     pub X: mnt6_Fq3,
     pub Y: mnt6_Fq3,
@@ -39,6 +39,14 @@ impl Fq2mConfig for mnt6_G2 {
 }
 
 impl mnt6_G2 {
+// Cofactor
+     const  h_bitcount:usize = 596;
+     const  h_limbs:usize =
+        (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+  const   h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
+   pub fn new(X: mnt6_Fq3, Y: mnt6_Fq3, Z: mnt6_Fq3) -> Self {
+        Self { X, Y, Z }
+    }
     pub fn size_in_bits() -> usize {
         return base_field::ceil_size_in_bits() + 1;
     }
@@ -50,11 +58,12 @@ impl mnt6_G2 {
     }
 }
 
-impl mnt6_G2 {
-    pub fn new() -> Self {
-        Self::Self::G2_zero()()
+impl Default for mnt6_G2 {
+     fn default() -> Self {
+        Self::G2_zero()
     }
-
+}
+impl mnt6_G2 {
     pub fn mul_by_a(elt: &mnt6_Fq3) -> mnt6_Fq3 {
         return mnt6_Fq3::new(
             mnt6_twist_mul_by_a_c0 * elt.c1,
@@ -75,16 +84,16 @@ impl mnt6_G2 {
         if self.is_zero() {
             print!("O\n");
         } else {
-            let copy = self.clone();
+            let mut copy = self.clone();
             copy.to_affine_coordinates();
             print!(
                 "({:N$}*z^2 + {:N$}*z + {:N$} , {:N$}*z^2 + {:N$}*z + {:N$})\n",
-                copy.X.c2.as_bigint().0.0,
-                copy.X.c1.as_bigint().0.0,
-                copy.X.c0.as_bigint().0.0,
-                copy.Y.c2.as_bigint().0.0,
-                copy.Y.c1.as_bigint().0.0,
-                copy.Y.c0.as_bigint().0.0,
+                copy.X.c2.as_bigint().0.0[0],
+                copy.X.c1.as_bigint().0.0[0],
+                copy.X.c0.as_bigint().0.0[0],
+                copy.Y.c2.as_bigint().0.0[0],
+                copy.Y.c1.as_bigint().0.0[0],
+                copy.Y.c0.as_bigint().0.0[0],
                 N = mnt6_Fq::num_limbs
             );
         }
@@ -96,15 +105,15 @@ impl mnt6_G2 {
         } else {
             print!(
                 "({:N$}*z^2 + {:N$}*z + {:N$} : {:N$}*z^2 + {:N$}*z + {:N$} : {:N$}*z^2 + {:N$}*z + {:N$})\n",
-                self.X.c2.as_bigint().0.0,
-                self.X.c1.as_bigint().0.0,
-                self.X.c0.as_bigint().0.0,
-                self.Y.c2.as_bigint().0.0,
-                self.Y.c1.as_bigint().0.0,
-                self.Y.c0.as_bigint().0.0,
-                self.Z.c2.as_bigint().0.0,
-                self.Z.c1.as_bigint().0.0,
-                self.Z.c0.as_bigint().0.0,
+                self.X.c2.as_bigint().0.0[0],
+                self.X.c1.as_bigint().0.0[0],
+                self.X.c0.as_bigint().0.0[0],
+                self.Y.c2.as_bigint().0.0[0],
+                self.Y.c1.as_bigint().0.0[0],
+                self.Y.c0.as_bigint().0.0[0],
+                self.Z.c2.as_bigint().0.0[0],
+                self.Z.c1.as_bigint().0.0[0],
+                self.Z.c0.as_bigint().0.0[0],
                 N = mnt6_Fq::num_limbs
             );
         }
@@ -139,7 +148,7 @@ impl mnt6_G2 {
     pub fn add(&self, other: &mnt6_G2) -> mnt6_G2 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -150,12 +159,12 @@ impl mnt6_G2 {
         // (they cannot exist in a prime-order subgroup)
 
         // handle double case
-        if self.operator == (other) {
+        if self == other {
             return self.dbl();
         }
 
         // #ifdef PROFILE_OP_COUNTS
-        self.add_cnt += 1;
+        // self.add_cnt += 1;
 
         // NOTE: does not handle O and pts of order 2,4
         // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
@@ -174,19 +183,19 @@ impl mnt6_G2 {
         let Y3 = u * (R - A) - vvv * Y1Z2; // Y3   = u*(R-A) - vvv*Y1Z2
         let Z3 = vvv * Z1Z2; // Z3   = vvv*Z1Z2
 
-        return mnt6_G2(X3, Y3, Z3);
+        return mnt6_G2::new(X3, Y3, Z3);
     }
 
     pub fn mixed_add(&self, other: &mnt6_G2) -> mnt6_G2 {
         // #ifdef PROFILE_OP_COUNTS
-        self.add_cnt += 1;
+        // self.add_cnt += 1;
 
         // NOTE: does not handle O and pts of order 2,4
         // http://www.hyperelliptic.org/EFD/g1p/auto-shortw-projective.html#addition-add-1998-cmo-2
         //assert!(other.Z == mnt6_Fq3::one());
 
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -201,7 +210,7 @@ impl mnt6_G2 {
 
         // (used both in add and double checks)
 
-        let Y1Z2: &mnt6_Fq3 = (self.Y); // Y1Z2 = Y1*Z2 (but other is special and not zero)
+        let Y1Z2:mnt6_Fq3 = (self.Y); // Y1Z2 = Y1*Z2 (but other is special and not zero)
         let Y2Z1 = (self.Z) * (other.Y); // Y2Z1 = Y2*Z1
 
         if X1Z2 == X2Z1 && Y1Z2 == Y2Z1 {
@@ -219,12 +228,12 @@ impl mnt6_G2 {
         let Y3 = u * (R - A) - vvv * self.Y; // Y3 = u*(R-A)-vvv*Y1
         let Z3 = vvv * self.Z; // Z3 = vvv*Z1
 
-        return mnt6_G2(X3, Y3, Z3);
+        return mnt6_G2::new(X3, Y3, Z3);
     }
 
     pub fn dbl(&self) -> mnt6_G2 {
         // #ifdef PROFILE_OP_COUNTS
-        self.dbl_cnt += 1;
+        // self.dbl_cnt += 1;
 
         if self.is_zero() {
             return self.clone();
@@ -234,7 +243,7 @@ impl mnt6_G2 {
 
         let XX = (self.X).squared(); // XX  = X1^2
         let ZZ = (self.Z).squared(); // ZZ  = Z1^2
-        let w = mnt6_G2::mul_by_a(ZZ) + (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let w = mnt6_G2::mul_by_a(&ZZ) + (XX + XX + XX); // w   = a*ZZ + 3*XX
         let Y1Z1 = (self.Y) * (self.Z);
         let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
         let ss = s.squared(); // ss  = s^2
@@ -242,24 +251,24 @@ impl mnt6_G2 {
         let R = (self.Y) * s; // R   = Y1*s
         let RR = R.squared(); // RR  = R^2
         let B = ((self.X) + R).squared() - XX - RR; // B   = (X1+R)^2 - XX - RR
-        let h = w.squared() - (B + B); // h   = w^2-2*B
-        let X3 = h * s; // X3  = h*s
-        let Y3 = w * (B - h) - (RR + RR); // Y3  = w*(B-h) - 2*RR
+        let hh = w.squared() - (B + B); // h   = w^2-2*B
+        let X3 = hh * s; // X3  = h*s
+        let Y3 = w * (B - hh) - (RR + RR); // Y3  = w*(B-h) - 2*RR
         let Z3 = sss; // Z3  = sss
 
-        return mnt6_G2(X3, Y3, Z3);
+        return mnt6_G2::new(X3, Y3, Z3);
     }
 
     pub fn mul_by_q(&self) -> mnt6_G2 {
-        return mnt6_G2(
-            mnt6_twist_mul_by_q_X * (self.X).Frobenius_map(1),
-            mnt6_twist_mul_by_q_Y * (self.Y).Frobenius_map(1),
+        return mnt6_G2::new(
+(self.X).Frobenius_map(1)*           mnt6_twist_mul_by_q_X.clone(),
+(self.Y).Frobenius_map(1)*           mnt6_twist_mul_by_q_Y.clone(),
             (self.Z).Frobenius_map(1),
         );
     }
 
     pub fn mul_by_cofactor(&self) -> mnt6_G2 {
-        return mnt6_G2::h * self.clone();
+        self.clone()*mnt6_G2::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -291,23 +300,28 @@ impl mnt6_G2 {
     pub fn one() -> Self {
         return Self::G2_one();
     }
-
+     pub fn G2_zero() -> Self {
+        Self{X:Default::default(),Y:Default::default(),Z:Default::default()}
+    }
+ pub fn G2_one() -> Self {
+        Self{X:Default::default(),Y:Default::default(),Z:Default::default()}
+    }
     pub fn random_element() -> Self {
-        return (mnt6_Fr::random_element().as_bigint()) * Self::G2_one();
+       Self::G2_one()*mnt6_Fr::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<mnt6_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt6_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
-        batch_invert::<mnt6_Fq3>(Z_vec);
+        batch_invert::<mnt6_Fq3>(&mut Z_vec);
 
         let one = mnt6_Fq3::one();
 
         for i in 0..vec.len() {
-            vec[i] = mnt6_G2(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
+            vec[i] = mnt6_G2::new(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
         }
     }
 }

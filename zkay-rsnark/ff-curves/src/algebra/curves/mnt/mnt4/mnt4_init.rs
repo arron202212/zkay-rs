@@ -3,15 +3,15 @@ use crate::algebra::curves::mnt::mnt4::mnt4_fields::{init_mnt4_fields, mnt4_q_li
 use crate::algebra::curves::mnt::mnt4::mnt4_fields::{mnt4_Fq, mnt4_Fq2};
 use ffec::field_utils::bigint::bigint;
 
-pub const mnt4_twist: mnt4_Fq2 = mnt4_Fq2::zero();
-pub const mnt4_twist_coeff_a: mnt4_Fq2 = mnt4_Fq2::zero();
-pub const mnt4_twist_coeff_b: mnt4_Fq2 = mnt4_Fq2::zero();
-pub const mnt4_twist_mul_by_a_c0: mnt4_Fq = mnt4_Fq::zero();
-pub const mnt4_twist_mul_by_a_c1: mnt4_Fq = mnt4_Fq::zero();
-pub const mnt4_twist_mul_by_b_c0: mnt4_Fq = mnt4_Fq::zero();
-pub const mnt4_twist_mul_by_b_c1: mnt4_Fq = mnt4_Fq::zero();
-pub const mnt4_twist_mul_by_q_X: mnt4_Fq = mnt4_Fq::zero();
-pub const mnt4_twist_mul_by_q_Y: mnt4_Fq = mnt4_Fq::zero();
+pub const mnt4_twist: mnt4_Fq2 = mnt4_Fq2::const_default();
+pub const mnt4_twist_coeff_a: mnt4_Fq2 = mnt4_Fq2::const_default();
+pub const mnt4_twist_coeff_b: mnt4_Fq2 = mnt4_Fq2::const_default();
+pub const mnt4_twist_mul_by_a_c0: mnt4_Fq = mnt4_Fq::const_default();
+pub const mnt4_twist_mul_by_a_c1: mnt4_Fq = mnt4_Fq::const_default();
+pub const mnt4_twist_mul_by_b_c0: mnt4_Fq = mnt4_Fq::const_default();
+pub const mnt4_twist_mul_by_b_c1: mnt4_Fq = mnt4_Fq::const_default();
+pub const mnt4_twist_mul_by_q_X: mnt4_Fq = mnt4_Fq::const_default();
+pub const mnt4_twist_mul_by_q_Y: mnt4_Fq = mnt4_Fq::const_default();
 pub const mnt4_q_limbs4: usize = mnt4_q_limbs * 4;
 pub const mnt4_ate_loop_count: bigint<mnt4_q_limbs> = bigint::<mnt4_q_limbs>::zero();
 pub const mnt4_ate_is_loop_count_neg: bool = false;

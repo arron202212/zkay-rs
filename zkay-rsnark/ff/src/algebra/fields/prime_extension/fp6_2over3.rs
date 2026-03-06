@@ -179,7 +179,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_2over3_model<N, T> {
     pub fn mul_by_non_residue(
         elem: &Fp3_model<N, T::Fp3_modelConfig>,
     ) -> Fp3_model<N, T::Fp3_modelConfig> {
-        Fp3_model::<N, T::Fp3_modelConfig>::new(elem.c2 * &T::non_residue, elem.c0, elem.c1)
+        Fp3_model::<N, T::Fp3_modelConfig>::new(elem.c2 * T::non_residue.clone(), elem.c0, elem.c1)
     }
 
     pub fn zero() -> Self {
@@ -269,7 +269,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_2over3_model<N, T> {
     pub fn Frobenius_map(&self, power: usize) -> Self {
         Self::new(
             self.c0.Frobenius_map(power),
-            &self.c1.Frobenius_map(power) * &T::Frobenius_coeffs_c1[power % 6],
+            self.c1.Frobenius_map(power) * T::Frobenius_coeffs_c1[power % 6].clone(),
         )
     }
 
@@ -459,13 +459,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_2over3_model<N, T> {
 //     Self::new(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
-    for &Fp6_2over3_model<N, T>
+impl<const N: usize, T6: Fp6_modelConfig<N>, T: FpmConfig<N>> Mul<Fp_model<N, T>>
+    for Fp6_2over3_model<N, T6>
 {
-    type Output = Fp6_2over3_model<N, T>;
+    type Output = Fp6_2over3_model<N, T6>;
 
-    fn mul(self, rhs: &Fp_model<N, T::Fp_modelConfig>) -> Self::Output {
-        Fp6_2over3_model::<N, T>::new(&self.c0 * rhs, &self.c1 * rhs)
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        Fp6_2over3_model::<N, T6>::new(self.c0.clone() * rhs, self.c1.clone() * rhs)
     }
 }
 

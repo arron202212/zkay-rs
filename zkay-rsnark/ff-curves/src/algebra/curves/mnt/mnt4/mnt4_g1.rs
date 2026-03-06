@@ -74,8 +74,8 @@ impl mnt4_G1 {
             copy.to_affine_coordinates();
             print!(
                 "({:N$} , {:N$})\n",
-                copy.X.as_bigint().0.0,
-                copy.Y.as_bigint().0.0,
+                copy.X.as_bigint().0.0[0],
+                copy.Y.as_bigint().0.0[0],
                 N = mnt4_Fq::num_limbs
             );
         }
@@ -87,9 +87,9 @@ impl mnt4_G1 {
         } else {
             print!(
                 "({:N$}: {:N$}: {:N$})\n",
-                self.X.as_bigint().0.0,
-                self.Y.as_bigint().0.0,
-                self.Z.as_bigint().0.0,
+                self.X.as_bigint().0.0[0],
+                self.Y.as_bigint().0.0[0],
+                self.Z.as_bigint().0.0[0],
                 N = mnt4_Fq::num_limbs
             );
         }
@@ -120,10 +120,10 @@ impl mnt4_G1 {
         return (self.X.is_zero() && self.Z.is_zero());
     }
 
-    pub fn add(&self, other: &Self) -> &mnt4_G1 {
+    pub fn add(&self, other: &Self) -> mnt4_G1 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -170,7 +170,7 @@ impl mnt4_G1 {
         //assert!(other.Z == mnt4_Fq::one());
 
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -218,7 +218,7 @@ impl mnt4_G1 {
 
         let XX = (self.X).squared(); // XX  = X1^2
         let ZZ = (self.Z).squared(); // ZZ  = Z1^2
-        let w = mnt4_G1::coeff_a * ZZ + (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let w :mnt4_Fq=   ZZ*mnt4_G1::coeff_a + (XX + XX + XX); // w   = a*ZZ + 3*XX
         let Y1Z1 = (self.Y) * (self.Z);
         let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
         let ss = s.squared(); // ss  = s^2
@@ -257,7 +257,7 @@ impl mnt4_G1 {
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();
 
-        (self.Z * (Y2 - mnt4_G1::coeff_b * Z2) == self.X * (X2 + mnt4_G1::coeff_a * Z2))
+        (self.Z * (Y2 -  Z2*mnt4_G1::coeff_b ) == self.X * (X2 +   Z2*mnt4_G1::coeff_a))
     }
 
     pub fn zero() -> mnt4_G1 {
@@ -272,21 +272,21 @@ impl mnt4_G1 {
         Self::default()
     }
     pub fn random_element() -> mnt4_G1 {
-        return (scalar_field::random_element().as_bigint()) * Self::G1_one();
+        Self::G1_one()*scalar_field::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<mnt4_G1>) {
-        let Z_vec = Vec::with_capacity(vec.len());
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt4_G1>) {
+        let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
-        batch_invert::<mnt4_Fq>(Z_vec);
+        batch_invert::<mnt4_Fq>(&mut Z_vec);
 
         let mut one = mnt4_Fq::one();
 
         for i in 0..vec.len() {
-            vec[i] = mnt4_G1::from(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
+            vec[i] = mnt4_G1::new(vec[i].X * Z_vec[i], vec[i].Y * Z_vec[i], one);
         }
     }
 }

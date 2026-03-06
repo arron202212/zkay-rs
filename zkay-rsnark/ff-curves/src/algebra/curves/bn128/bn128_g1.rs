@@ -1,7 +1,7 @@
 use crate::FpmConfig;
 use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12};
 use crate::algebra::curves::bn128::bn128_fields::{bn128_Fq, bn128_Fr};
-use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -14,6 +14,9 @@ const bn128_Fq_nqr_to_t: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const bn128_Fq_t_minus_1_over_2: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const bn128_coeff_b: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const BN128_COEFF_B: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
+
+
+
 
 type base_field = bn128_Fq;
 type scalar_field = bn128_Fr;
@@ -33,6 +36,9 @@ impl FpmConfig for bn128_G1 {
     type Fr = bn128_Fq;
 }
 impl bn128_G1 {
+    const  h_bitcount:usize = 1;
+     const  h_limbs:usize = (Self::h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
+    const  h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
     pub fn fill_coord(&self, coord: &mut [Fp; 3]) {
         coord[0] = self.X;
         coord[1] = self.Y;
@@ -210,14 +216,14 @@ impl bn128_G1 {
 
         let mut Z1Z1 = Fp::default();
         Z1Z1 = self.Z.squared();
-        let U1: Fp = self.X;
-        let U2 = Fp::default();
+        let mut  U1: Fp = self.X.clone();
+        let mut U2 = Fp::default();
         U2 = other.X.clone() * Z1Z1;
-        let Z1_cubed = Fp::default();
+        let mut Z1_cubed = Fp::default();
         Z1_cubed = self.Z.clone() * Z1Z1;
 
-        let S1: Fp = self.Y;
-        let S2 = Fp::default();
+        let mut S1: Fp = self.Y;
+        let mut S2 = Fp::default();
         S2 = other.Y.clone() * Z1_cubed; // S2 = Y2*Z1*Z1Z1
 
         if U1 == U2 && S1 == S2 {
@@ -229,7 +235,7 @@ impl bn128_G1 {
         // self.add_cnt += 1;
 
         let mut result = bn128_G1::default();
-        let (H, HH, I, J, r, V, tmp) = (
+        let (mut H,mut  HH,mut  I,mut  J,mut  r,mut  V,mut  tmp) = (
             Fp::default(),
             Fp::default(),
             Fp::default(),
@@ -246,7 +252,7 @@ impl bn128_G1 {
         tmp = HH.clone() + &HH;
         I = tmp.clone() + &tmp;
         // J = H*I
-        J = H.clone() * &I;
+        J = H.clone() * I.clone();
         // r = 2*(S2-Y1)
         tmp = S2.clone() - self.Y.clone();
         r = tmp.clone() + &tmp;
@@ -259,8 +265,8 @@ impl bn128_G1 {
         result.X = result.X.clone() - V.clone();
         // Y3 = r*(V-X3)-2*Y1*J
         tmp = V.clone() - result.X.clone();
-        result.Y = r.clone() * &tmp;
-        tmp = self.Y.clone() * &J;
+        result.Y = r.clone() * tmp.clone();
+        tmp = self.Y.clone() * J.clone();
         result.Y = result.Y.clone() - tmp.clone();
         result.Y = result.Y.clone() - tmp.clone();
         // Z3 = (Z1+H)^2-Z1Z1-HH
@@ -319,17 +325,17 @@ impl bn128_G1 {
         Z2 = self.Z.clone().squared();
 
         let (mut X3, mut Z3, mut Z6) = (Fp::default(), Fp::default(), Fp::default());
-        X3 = X2.clone() * &self.X;
-        Z3 = Z2.clone() * &self.Z;
+        X3 = X2.clone() * self.X.clone();
+        Z3 = Z2.clone() * self.Z.clone();
         Z6 = Z3.squared();
 
         return (Y2 == X3 + bn128_coeff_b * Z6);
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<bn128_G1>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<bn128_G1>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z);
         }
         // bn_batch_invert::<Fp>(Z_vec);
@@ -339,10 +345,10 @@ impl bn128_G1 {
         for i in 0..vec.len() {
             let (mut Z2, mut Z3) = (Fp::default(), Fp::default());
             Z2 = Z_vec[i].squared();
-            Z3 = Z2.clone() * &Z_vec[i];
+            Z3 = Z2.clone() * Z_vec[i].clone();
 
-            vec[i].X = vec[i].X.clone() * &Z2;
-            vec[i].Y = vec[i].Y.clone() * &Z3;
+            vec[i].X = vec[i].X.clone() * Z2.clone();
+            vec[i].Y = vec[i].Y.clone() * Z3.clone();
             vec[i].Z = one;
         }
     }

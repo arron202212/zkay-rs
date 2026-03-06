@@ -6,7 +6,7 @@ use crate::algebra::curves::mnt::mnt4::mnt4_init::{
 };
 use crate::{FpmConfig, Fq2mConfig};
 use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -16,6 +16,8 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 type base_field = mnt4_Fq;
 type twist_field = mnt4_Fq2;
 type scalar_field = mnt4_Fr;
+
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct mnt4_G2 {
@@ -34,6 +36,14 @@ impl Fq2mConfig for mnt4_G2 {
     type Fr = Self;
 }
 impl mnt4_G2 {
+// Cofactor
+     const  h_bitcount:usize = 298;
+     const  h_limbs:usize =
+        (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+  const   h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
+    pub fn new(X: mnt4_Fq2, Y: mnt4_Fq2, Z: mnt4_Fq2) -> Self {
+        Self { X, Y, Z }
+    }
     pub fn size_in_bits() -> usize {
         return base_field::ceil_size_in_bits() + 1;
     }
@@ -88,10 +98,10 @@ impl mnt4_G2 {
             copy.to_affine_coordinates();
             print!(
                 "({:N$}*z + {:N$} , {:N$}*z + {:N$})\n",
-                copy.X.c1.as_bigint().0.0,
-                copy.X.c0.as_bigint().0.0,
-                copy.Y.c1.as_bigint().0.0,
-                copy.Y.c0.as_bigint().0.0,
+                copy.X.c1.as_bigint().0.0[0],
+                copy.X.c0.as_bigint().0.0[0],
+                copy.Y.c1.as_bigint().0.0[0],
+                copy.Y.c0.as_bigint().0.0[0],
                 N = mnt4_Fq::num_limbs
             );
         }
@@ -103,12 +113,12 @@ impl mnt4_G2 {
         } else {
             print!(
                 "({:N$}*z + {:N$} : {:N$}*z + {:N$} : {:N$}*z + {:N$})\n",
-                self.X.c1.as_bigint().0.0,
-                self.X.c0.as_bigint().0.0,
-                self.Y.c1.as_bigint().0.0,
-                self.Y.c0.as_bigint().0.0,
-                self.Z.c1.as_bigint().0.0,
-                self.Z.c0.as_bigint().0.0,
+                self.X.c1.as_bigint().0.0[0],
+                self.X.c0.as_bigint().0.0[0],
+                self.Y.c1.as_bigint().0.0[0],
+                self.Y.c0.as_bigint().0.0[0],
+                self.Z.c1.as_bigint().0.0[0],
+                self.Z.c0.as_bigint().0.0[0],
                 N = mnt4_Fq::num_limbs
             );
         }
@@ -142,7 +152,7 @@ impl mnt4_G2 {
     pub fn add(&self, other: &mnt4_G2) -> mnt4_G2 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -153,7 +163,7 @@ impl mnt4_G2 {
         // (they cannot exist in a prime-order subgroup)
 
         // handle double case
-        if self.operator == (other) {
+        if self == (other) {
             return self.dbl();
         }
 
@@ -177,7 +187,7 @@ impl mnt4_G2 {
         let Y3 = u * (R - A) - vvv * Y1Z2; // Y3   = u*(R-A) - vvv*Y1Z2
         let Z3 = vvv * Z1Z2; // Z3   = vvv*Z1Z2
 
-        return mnt4_G2(X3, Y3, Z3);
+        return mnt4_G2::new(X3, Y3, Z3);
     }
 
     pub fn mixed_add(&self, other: &mnt4_G2) -> mnt4_G2 {
@@ -189,7 +199,7 @@ impl mnt4_G2 {
         //assert!(other.Z == mnt4_Fq2::one());
 
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -222,7 +232,7 @@ impl mnt4_G2 {
         let Y3 = u * (R - A) - vvv * self.Y; // Y3 = u*(R-A)-vvv*Y1
         let Z3 = vvv * self.Z; // Z3 = vvv*Z1
 
-        return mnt4_G2(X3, Y3, Z3);
+        return mnt4_G2::new(X3, Y3, Z3);
     }
 
     pub fn dbl(&self) -> mnt4_G2 {
@@ -237,7 +247,7 @@ impl mnt4_G2 {
 
         let XX = (self.X).squared(); // XX  = X1^2
         let ZZ = (self.Z).squared(); // ZZ  = Z1^2
-        let w = mnt4_G2::mul_by_a(ZZ) + (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let w = mnt4_G2::mul_by_a(&ZZ) + (XX + XX + XX); // w   = a*ZZ + 3*XX
         let Y1Z1 = (self.Y) * (self.Z);
         let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
         let ss = s.squared(); // ss  = s^2
@@ -250,19 +260,19 @@ impl mnt4_G2 {
         let Y3 = w * (B - h) - (RR + RR); // Y3  = w*(B-h) - 2*RR
         let Z3 = sss; // Z3  = sss
 
-        return mnt4_G2(X3, Y3, Z3);
+        return mnt4_G2::new(X3, Y3, Z3);
     }
 
     pub fn mul_by_q(&self) -> mnt4_G2 {
-        return mnt4_G2(
-            mnt4_twist_mul_by_q_X * (self.X).Frobenius_map(1),
-            mnt4_twist_mul_by_q_Y * (self.Y).Frobenius_map(1),
+        return mnt4_G2::new(
+             &(self.X).Frobenius_map(1)*&mnt4_twist_mul_by_q_X ,
+             &(self.Y).Frobenius_map(1)*&mnt4_twist_mul_by_q_Y ,
             (self.Z).Frobenius_map(1),
         );
     }
 
     pub fn mul_by_cofactor(&self) -> mnt4_G2 {
-        return mnt4_G2::h * self.clone();
+        self.clone()*mnt4_G2::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -296,16 +306,16 @@ impl mnt4_G2 {
     }
 
     pub fn random_element() -> Self {
-        return (mnt4_Fr::random_element().as_bigint()) * Self::G2_one();
+        Self::G2_one()*mnt4_Fr::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<mnt4_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt4_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
-        batch_invert::<mnt4_Fq2>(Z_vec);
+        batch_invert::<mnt4_Fq2>(&mut Z_vec);
 
         let one = mnt4_Fq2::one();
 

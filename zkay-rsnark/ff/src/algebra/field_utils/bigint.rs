@@ -50,6 +50,30 @@ pub const GMP_NUMB_BITS: usize = 64;
 pub struct bigint<const N: usize>(pub BigInt<N>);
 
 
+impl<const N: usize> std::iter::ExactSizeIterator for bigint<N> {
+    fn len(&self) -> usize {
+        0
+    }
+}
+
+impl<const N: usize> Iterator for bigint<N>  {
+    // we will be counting with usize
+    type Item = u64;
+
+    // next() is the only required method
+    fn next(&mut self) -> Option<Self::Item> {
+        // Increment our count. This is why we started at zero.
+        // self.count += 1;
+
+        // Check to see if we've finished counting or not.
+        // if self.count < 6 {
+        //     Some(0)
+        // } else {
+            None
+        // }
+    }
+}
+
 impl<const N: usize> From<u128> for bigint<N> {
     fn from(rhs: u128) -> Self {
         Self(BigInt::from(rhs as u64))

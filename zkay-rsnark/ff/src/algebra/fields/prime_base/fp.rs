@@ -548,16 +548,33 @@ impl<const N: usize, T: Fp_modelConfig<N>> Mul<i32> for Fp_model<N, T> {
         r
     }
 }
-
-impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> Mul<O> for Fp_model<N, T> {
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<i64> for Fp_model<N, T> {
     type Output = Fp_model<N, T>;
 
-    fn mul(self, rhs: O) -> Self::Output {
+    fn mul(self, rhs: i64) -> Self::Output {
         let mut r = self;
-        r *= *rhs.borrow();
+        // r *= *rhs.borrow();
         r
     }
 }
+impl<const N: usize, T: Fp_modelConfig<N>,OT: Fp_modelConfig<N>> Mul<Fp_model<N, OT> > for Fp_model<N, T> {
+    type Output = Fp_model<N, T>;
+
+    fn mul(self, rhs: Fp_model<N, OT> ) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+// impl<const N: usize, T: Fp_modelConfig<N>> Mul for Fp_model<N, T> {
+//     type Output = Fp_model<N, T>;
+
+//     fn mul(self, rhs: Fp_model<N, T> ) -> Self::Output {
+//         let mut r = self;
+//         // r *= *rhs.borrow();
+//         r
+//     }
+// }
 
 impl<const N: usize, T: Fp_modelConfig<N>> BitXor<u64> for Fp_model<N, T> {
     type Output = Self;

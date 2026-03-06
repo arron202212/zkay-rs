@@ -48,13 +48,13 @@ impl bls12_381_G2 {
             copy.to_affine_coordinates();
             print!(
                 "(%Nd*z + %Nd , %Nd*z + %Nd)\n",
-                copy.X.c1.as_bigint().0.0,
+                copy.X.c1.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                copy.X.c0.as_bigint().0.0,
+                copy.X.c0.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                copy.Y.c1.as_bigint().0.0,
+                copy.Y.c1.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                copy.Y.c0.as_bigint().0.0,
+                copy.Y.c0.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs
             );
         }
@@ -66,17 +66,17 @@ impl bls12_381_G2 {
         } else {
             print!(
                 "(%Nd*z + %Nd : %Nd*z + %Nd : %Nd*z + %Nd)\n",
-                self.X.c1.as_bigint().0.0,
+                self.X.c1.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                self.X.c0.as_bigint().0.0,
+                self.X.c0.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                self.Y.c1.as_bigint().0.0,
+                self.Y.c1.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                self.Y.c0.as_bigint().0.0,
+                self.Y.c0.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                self.Z.c1.as_bigint().0.0,
+                self.Z.c1.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs,
-                self.Z.c0.as_bigint().0.0,
+                self.Z.c0.as_bigint().0.0[0],
                 bls12_381_Fq::num_limbs
             );
         }
@@ -119,7 +119,7 @@ impl bls12_381_G2 {
 
         // handle special cases having to do with O
         if self.is_zero() {
-            return other;
+            return other.clone()
         }
 
         if other.is_zero() {
@@ -254,10 +254,10 @@ impl bls12_381_G2 {
         return (bls12_381_Fr::random_element().as_bigint()) * G2_one;
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<bls12_381_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<bls12_381_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
         batch_invert::<bls12_381_Fq2>(Z_vec);

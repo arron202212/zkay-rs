@@ -31,7 +31,7 @@ pub trait PpConfig:
     + std::ops::Sub<Output = Self>
     + std::ops::Mul<Self::TT, Output = Self>
     + std::ops::Mul<Output = Self>
-    + for<'a> std::ops::Mul<&'a Self, Output = Self>
+    + std::ops::Mul<Self, Output = Self>
 {
     type TT: AsRef<[u64]>;
 

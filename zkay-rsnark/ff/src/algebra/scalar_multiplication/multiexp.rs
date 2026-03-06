@@ -810,7 +810,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: FieldTConfig>(
     // //#pragma omp parallel for
     // 
     for i in 0..v.len() {
-        res[i] = windowed_exp::<T, FieldT>(scalar_size, window, table, &(v[i].clone() * coeff));
+        res[i] = windowed_exp::<T, FieldT>(scalar_size, window, table, &(v[i].clone() * coeff.clone()));
 
         if !inhibit_profiling_info && (i % 10000 == 0) {
             print!(".");

@@ -1,6 +1,7 @@
 use crate::algebra::curves::edwards::edwards_fields::{
     edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT,
 };
+use ffec::PpConfig;
 use crate::algebra::curves::edwards::edwards_g1::edwards_G1;
 use crate::algebra::curves::edwards::edwards_g2::edwards_G2;
 use crate::algebra::curves::edwards::edwards_init::{
@@ -131,16 +132,16 @@ pub fn edwards_final_exponentiation(elt: &edwards_Fq6) -> edwards_GT {
 
 pub fn edwards_tate_precompute_G2(Q: &edwards_G2) -> edwards_tate_G2_precomp {
     enter_block("Call to edwards_tate_precompute_G2", false);
-    let Qcopy = Q;
+    let mut Qcopy: edwards_G2  = Q.clone();
     Qcopy.to_affine_coordinates();
     let mut result = edwards_tate_G2_precomp::default();
     result.y0 = Qcopy.Y * Qcopy.Z.inverse(); // Y/Z
-    result.eta = (Qcopy.Z + Qcopy.Y) * edwards_Fq6::mul_by_non_residue(Qcopy.X).inverse(); // (Z+Y)/(nqr*X)
+    result.eta = (Qcopy.Z + Qcopy.Y) * edwards_Fq6::mul_by_non_residue(&Qcopy.X).inverse(); // (Z+Y)/(nqr*X)
     leave_block("Call to edwards_tate_precompute_G2", false);
 
     result
 }
-
+#[derive(Clone, Debug,Default, PartialEq)]
 pub struct extended_edwards_G1_projective {
     pub X: edwards_Fq,
     pub Y: edwards_Fq,
@@ -199,8 +200,8 @@ pub fn doubling_step_for_miller_loop(
 
 pub fn full_addition_step_for_miller_loop(
     base: &extended_edwards_G1_projective,
-    current: &extended_edwards_G1_projective,
-    cc: &edwards_Fq_conic_coefficients,
+    current: &mut extended_edwards_G1_projective,
+    cc: &mut edwards_Fq_conic_coefficients,
 ) {
     let X1: edwards_Fq = current.X.clone();
     let Y1 = current.Y.clone();
@@ -271,7 +272,7 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
     enter_block("Call to edwards_tate_precompute_G1", false);
     let mut result = edwards_tate_G1_precomp::default();
 
-    let Pcopy = P;
+    let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
 
     let mut P_ext = extended_edwards_G1_projective::default();
@@ -280,7 +281,7 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
     P_ext.Z = Pcopy.Z;
     P_ext.T = Pcopy.X * Pcopy.Y;
 
-    let mut R = P_ext;
+    let mut R = P_ext.clone();
 
     let mut found_one = false;
     for i in (0..=edwards_modulus_r.max_bits()).rev() {
@@ -295,11 +296,11 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
         edwards_modulus_r (skipping leading zeros) in MSB to LSB
         order */
         let mut cc = edwards_Fq_conic_coefficients::default();
-        doubling_step_for_miller_loop(R, cc);
-        result.push(cc);
+        doubling_step_for_miller_loop(&mut R, &mut cc);
+        result.0.push(cc.clone());
 
         if bit {
-            mixed_addition_step_for_miller_loop(P_ext, R, &mut cc);
+            mixed_addition_step_for_miller_loop(&P_ext, &mut R, &mut cc);
             result.0.push(cc);
         }
     }
@@ -314,7 +315,7 @@ pub fn edwards_tate_miller_loop(
 ) -> edwards_Fq6 {
     enter_block("Call to edwards_tate_miller_loop", false);
 
-    let f = edwards_Fq6::one();
+    let mut f = edwards_Fq6::one();
 
     let mut found_one = false;
     let mut idx = 0;
@@ -329,22 +330,22 @@ pub fn edwards_tate_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         edwards_modulus_r (skipping leading zeros) in MSB to LSB
         order */
-        let cc = prec_P[idx];
+        let mut cc = prec_P.0[idx].clone();
         idx += 1;
         let g_RR_at_Q = edwards_Fq6::new(
             edwards_Fq3::new(cc.c_XZ, edwards_Fq::from(0), edwards_Fq::from(0))
-                + cc.c_XY * prec_Q.y0,
-            cc.c_ZZ * prec_Q.eta,
+                + prec_Q.y0.clone()*cc.c_XY.clone(),
+prec_Q.eta.clone()*           cc.c_ZZ.clone(),
         );
         f = f.squared() * g_RR_at_Q;
         if bit {
-            cc = prec_P.0[idx];
+            cc = prec_P.0[idx].clone();
             idx += 1;
 
             let g_RP_at_Q = edwards_Fq6::new(
                 edwards_Fq3::new(cc.c_XZ, edwards_Fq::from(0), edwards_Fq::from(0))
-                    + cc.c_XY * prec_Q.y0,
-                cc.c_ZZ * prec_Q.eta,
+                    + prec_Q.y0.clone()*cc.c_XY.clone(),
+ prec_Q.eta.clone()*               cc.c_ZZ.clone(),
             );
             f = f * g_RP_at_Q;
         }
@@ -370,7 +371,7 @@ pub fn edwards_tate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_G
     leave_block("Call to edwards_tate_reduce_pairing", false);
     result
 }
-
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_edwards_G2_projective {
     pub X: edwards_Fq3,
     pub Y: edwards_Fq3,
@@ -533,7 +534,7 @@ pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
     Q_ext.Z = Qcopy.Z;
     Q_ext.T = Qcopy.X * Qcopy.Y;
 
-    let R = Q_ext;
+    let mut R = Q_ext.clone();
 
     let mut found_one = false;
     for i in (0..=loop_count.max_bits() - 1).rev() {
@@ -544,11 +545,11 @@ pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
             continue;
         }
 
-        let cc = edwards_Fq3_conic_coefficients::default();
-        doubling_step_for_flipped_miller_loop(R, &cc);
-        result.0.push(cc);
+        let mut cc = edwards_Fq3_conic_coefficients::default();
+        doubling_step_for_flipped_miller_loop(&mut R, &mut cc);
+        result.0.push(cc.clone());
         if bit {
-            mixed_addition_step_for_flipped_miller_loop(Q_ext, R, &cc);
+            mixed_addition_step_for_flipped_miller_loop(&Q_ext,&mut R, &mut cc);
             result.0.push(cc);
         }
     }
@@ -564,7 +565,7 @@ pub fn edwards_ate_miller_loop(
     enter_block("Call to edwards_ate_miller_loop", false);
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
-    let f = edwards_Fq6::one();
+    let mut f = edwards_Fq6::one();
 
     let mut found_one = false;
     let mut idx = 0;
@@ -579,20 +580,20 @@ pub fn edwards_ate_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         edwards_param_p (skipping leading zeros) in MSB to LSB
         order */
-        let cc = prec_Q.0[idx];
+        let mut cc = prec_Q.0[idx].clone();
         idx += 1;
 
         let g_RR_at_P = edwards_Fq6::new(
-            prec_P.P_XY * cc.c_XY + prec_P.P_XZ * cc.c_XZ,
-            prec_P.P_ZZplusYZ * cc.c_ZZ,
+ cc.c_XY.clone()*           prec_P.P_XY.clone() + cc.c_XZ.clone()*prec_P.P_XZ.clone(),
+cc.c_ZZ.clone()*           prec_P.P_ZZplusYZ.clone(),
         );
         f = f.squared() * g_RR_at_P;
         if bit {
-            cc = prec_Q[idx];
+            cc = prec_Q.0[idx].clone();
             idx += 1;
             let g_RQ_at_P = edwards_Fq6::new(
-                prec_P.P_ZZplusYZ * cc.c_ZZ,
-                prec_P.P_XY * cc.c_XY + prec_P.P_XZ * cc.c_XZ,
+cc.c_ZZ.clone()*               prec_P.P_ZZplusYZ.clone(),
+ cc.c_XY.clone()*               prec_P.P_XY.clone() + cc.c_XZ*prec_P.P_XZ.clone(),
             );
             f = f * g_RQ_at_P;
         }
@@ -609,9 +610,9 @@ pub fn edwards_ate_double_miller_loop(
     prec_Q2: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
     enter_block("Call to edwards_ate_double_miller_loop", false);
-    let loop_count: bigint<edwards_Fr::num_limbs> = edwards_ate_loop_count;
+    let loop_count: bigint<{edwards_Fr::num_limbs}> = edwards_ate_loop_count;
 
-    let f = edwards_Fq6::one();
+    let mut f = edwards_Fq6::one();
 
     let mut found_one = false;
     let mut idx = 0;
@@ -626,32 +627,32 @@ pub fn edwards_ate_double_miller_loop(
         /* code below gets executed for all bits (EXCEPT the MSB itself) of
         edwards_param_p (skipping leading zeros) in MSB to LSB
         order */
-        let cc1 = prec_Q1[idx];
-        let cc2 = prec_Q2[idx];
+        let mut cc1 = prec_Q1.0[idx].clone();
+        let mut cc2 = prec_Q2.0[idx].clone();
         idx += 1;
 
         let g_RR_at_P1 = edwards_Fq6::new(
-            prec_P1.P_XY * cc1.c_XY + prec_P1.P_XZ * cc1.c_XZ,
-            prec_P1.P_ZZplusYZ * cc1.c_ZZ,
+  cc1.c_XY.clone()*           prec_P1.P_XY.clone() +  cc1.c_XZ.clone()*prec_P1.P_XZ.clone() ,
+ cc1.c_ZZ.clone()*           prec_P1.P_ZZplusYZ.clone() ,
         );
 
         let g_RR_at_P2 = edwards_Fq6::new(
-            prec_P2.P_XY * cc2.c_XY + prec_P2.P_XZ * cc2.c_XZ,
-            prec_P2.P_ZZplusYZ * cc2.c_ZZ,
+ cc2.c_XY.clone()*           prec_P2.P_XY.clone() + cc2.c_XZ.clone()*prec_P2.P_XZ.clone(),
+cc2.c_ZZ.clone()*           prec_P2.P_ZZplusYZ.clone(),
         );
         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
 
         if bit {
-            cc1 = prec_Q1[idx];
-            cc2 = prec_Q2[idx];
+            cc1 = prec_Q1.0[idx].clone();
+            cc2 = prec_Q2.0[idx].clone();
             idx += 1;
             let g_RQ_at_P1 = edwards_Fq6::new(
-                prec_P1.P_ZZplusYZ * cc1.c_ZZ,
-                prec_P1.P_XY * cc1.c_XY + prec_P1.P_XZ * cc1.c_XZ,
+ cc1.c_ZZ.clone()*               prec_P1.P_ZZplusYZ.clone(),
+  cc1.c_XY.clone()*               prec_P1.P_XY.clone() +  cc1.c_XZ.clone()*prec_P1.P_XZ.clone() ,
             );
             let g_RQ_at_P2 = edwards_Fq6::new(
-                prec_P2.P_ZZplusYZ * cc2.c_ZZ,
-                prec_P2.P_XY * cc2.c_XY + prec_P2.P_XZ * cc2.c_XZ,
+cc2.c_ZZ.clone()*               prec_P2.P_ZZplusYZ.clone(),
+ cc2.c_XY.clone()*               prec_P2.P_XY.clone() + cc2.c_XZ.clone()*prec_P2.P_XZ.clone(),
             );
             f = f * g_RQ_at_P1 * g_RQ_at_P2;
         }
@@ -661,11 +662,11 @@ pub fn edwards_ate_double_miller_loop(
     f
 }
 
-pub fn edwards_ate_pairing(Q: &edwards_G1, P: &edwards_G2) -> edwards_Fq6 {
+pub fn edwards_ate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
     enter_block("Call to edwards_ate_pairing", false);
     let prec_P = edwards_ate_precompute_G1(P);
     let prec_Q = edwards_ate_precompute_G2(Q);
-    let result = edwards_ate_miller_loop(prec_P, prec_Q);
+    let result = edwards_ate_miller_loop(&prec_P, &prec_Q);
     leave_block("Call to edwards_ate_pairing", false);
     result
 }
@@ -673,7 +674,7 @@ pub fn edwards_ate_pairing(Q: &edwards_G1, P: &edwards_G2) -> edwards_Fq6 {
 pub fn edwards_ate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_GT {
     enter_block("Call to edwards_ate_reduced_pairing", false);
     let f = edwards_ate_pairing(P, Q);
-    let result = edwards_final_exponentiation(f);
+    let result = edwards_final_exponentiation(&f);
     leave_block("Call to edwards_ate_reduced_pairing", false);
     result
 }

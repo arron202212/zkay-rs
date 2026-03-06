@@ -4,7 +4,7 @@ use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12, bn128_Fq2}
 use crate::algebra::curves::bn128::bn128_fields::{bn128_Fq, bn128_Fr};
 use ffec::field_utils::algorithms::PowerConfig;
 use ffec::field_utils::algorithms::Powers;
-use ffec::field_utils::{BigInt, bigint::bigint};
+use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -14,12 +14,16 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 const bn128_Fq_s: usize = 1;
 const bn128_Fq2_s: usize = 1;
 const bn128_Fq_nqr_to_t: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
+const bn128_Fq_t_minus_1_over_2: u64 =0;// bn128_Fq2::const_new(BigInt!("0"));
 const bn128_Fq2_nqr_to_t: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
-const bn128_Fq2_t_minus_1_over_2: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
+const bn128_Fq2_t_minus_1_over_2: u64 =0;// bn128_Fq2::const_new(BigInt!("0"));
 const bn128_twist_coeff_b: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
 const bn128_coeff_b: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const BN128_COEFF_B: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const BN128_TWIST_COEFF_B: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
+
+
+
 
 type base_field = bn128_Fq;
 type scalar_field = bn128_Fr;
@@ -47,6 +51,11 @@ impl Default for bn128_G2 {
     }
 }
 impl bn128_G2 {
+ // Cofactor
+     const  h_bitcount:usize = 256;
+     const  h_limbs:usize =
+        (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+  const   h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
     pub fn fill_coord(&self, coord: &mut [Fp2; 3]) {
         coord[0] = self.X;
         coord[1] = self.Y;
@@ -74,14 +83,15 @@ impl bn128_G2 {
 
 impl bn128_G2 {
     pub fn sqrt(el: &Fp2) -> Fp2 {
-        let v = bn128_Fq2_s;
-        let z = bn128_Fq2_nqr_to_t;
-        let w = Powers::power(el, bn128_Fq2_t_minus_1_over_2);
-        let x = el * w;
-        let b = x * w;
+        let mut v = bn128_Fq2_s;
+        let mut z = bn128_Fq2_nqr_to_t;
+        let mut w = Powers::power(el, bn128_Fq2_t_minus_1_over_2);
+        let mut ell:Fp2=el.clone();
+        let mut x = ell*w;
+        let mut b = x * w;
 
         // check if square with Euler's criterion
-        let check = b;
+        let mut check = b;
         for i in 0..v - 1 {
             check.square();
         }
@@ -227,7 +237,7 @@ impl bn128_G2 {
         // self.add_cnt += 1;
 
         let mut result = bn128_G2::default();
-        let (H, HH, I, J, r, V, tmp) = (
+        let (mut H,mut  HH,mut  I,mut  J,mut  r,mut  V,mut  tmp) = (
             Fp2::default(),
             Fp2::default(),
             Fp2::default(),
@@ -282,7 +292,7 @@ impl bn128_G2 {
     }
 
     pub fn mul_by_cofactor(&self) -> bn128_G2 {
-        return bn128_G2::h * self.clone();
+         self.clone()* bn128_G2::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -298,12 +308,12 @@ impl bn128_G2 {
             y^2 / z^6 = x^3 / z^6 + b
             y^2 = x^3 + b z^6
         */
-        let (X2, Y2, Z2) = (Fp2::default(), Fp2::default(), Fp2::default());
+        let (mut X2,mut  Y2,mut  Z2) = (Fp2::default(), Fp2::default(), Fp2::default());
         X2 = self.X.squared();
         Y2 = self.Y.squared();
         Z2 = self.Z.squared();
 
-        let (X3, Z3, Z6) = (Fp2::default(), Fp2::default(), Fp2::default());
+        let (mut X3,mut  Z3,mut  Z6) = (Fp2::default(), Fp2::default(), Fp2::default());
         X3 = X2.clone() * &self.X;
         Z3 = Z2.clone() * &self.Z;
         Z6 = Z3.squared();
@@ -336,10 +346,10 @@ impl bn128_G2 {
         Self::G2_one() * bn128_Fr::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<bn128_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<bn128_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
         // bn_batch_invert::<Fp2>(Z_vec);
@@ -347,7 +357,7 @@ impl bn128_G2 {
         let one: Fp2 = 1.into();
 
         for i in 0..vec.len() {
-            let (Z2, Z3) = (Fp2::default(), Fp2::default());
+            let (mut Z2, mut Z3) = (Fp2::default(), Fp2::default());
             Z2 = Z_vec[i].squared();
             Z3 = Z2.clone() * &Z_vec[i];
 

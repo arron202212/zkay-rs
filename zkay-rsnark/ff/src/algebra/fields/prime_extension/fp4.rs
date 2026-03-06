@@ -501,6 +501,16 @@ impl<const N: usize, T: Fp4_modelConfig<N>> Sub for Fp4_model<N, T> {
 //                                 lhs*rhs.c1);
 // }
 
+impl<const N: usize, T4: Fp4_modelConfig<N>,T: FpmConfig<N>> Mul<Fp_model<N, T> > for Fp4_model<N, T4> {
+    type Output = Fp4_model<N, T4>;
+
+    fn mul(self, rhs:Fp_model<N, T> ) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
 impl<const N: usize, T: Fp4_modelConfig<N>, O: Borrow<Self>> Mul<O> for Fp4_model<N, T> {
     type Output = Fp4_model<N, T>;
 

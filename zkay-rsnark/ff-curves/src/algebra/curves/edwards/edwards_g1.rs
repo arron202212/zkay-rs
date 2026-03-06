@@ -247,10 +247,10 @@ impl edwards_G1 {
         Self::G1_one() * edwards_Fr::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<edwards_G1>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<edwards_G1>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
         batch_invert::<edwards_Fq>(&mut Z_vec);

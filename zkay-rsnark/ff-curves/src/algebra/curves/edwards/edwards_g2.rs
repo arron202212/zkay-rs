@@ -241,8 +241,8 @@ impl edwards_G2 {
     pub fn mul_by_q(&self) -> edwards_G2 {
         return edwards_G2::new(
             (self.X).Frobenius_map(1),
-            edwards_twist_mul_by_q_Y * (self.Y).Frobenius_map(1),
-            edwards_twist_mul_by_q_Z * (self.Z).Frobenius_map(1),
+(self.Y).Frobenius_map(1)*            edwards_twist_mul_by_q_Y.clone(),
+(self.Z).Frobenius_map(1)*            edwards_twist_mul_by_q_Z.clone(),
         );
     }
 
@@ -293,10 +293,10 @@ impl edwards_G2 {
         Self::G2_one() * edwards_Fr::random_element().as_bigint()
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &Vec<edwards_G2>) {
+    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<edwards_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());
 
-        for el in vec {
+        for el in vec.iter() {
             Z_vec.push(el.Z.clone());
         }
         batch_invert::<edwards_Fq3>(&mut Z_vec);
