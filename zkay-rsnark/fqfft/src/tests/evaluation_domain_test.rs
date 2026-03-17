@@ -1,3 +1,4 @@
+use crate::dbl_vec;
 use crate::evaluation_domain::domains::arithmetic_sequence_domain::arithmetic_sequence_domain;
 use crate::evaluation_domain::domains::basic_radix2_domain::basic_radix2_domain;
 use crate::evaluation_domain::domains::extended_radix2_domain::extended_radix2_domain;
@@ -9,9 +10,6 @@ use crate::polynomial_arithmetic::naive_evaluate::evaluate_lagrange_polynomial;
 use crate::polynomial_arithmetic::naive_evaluate::evaluate_polynomial;
 use ffec::common::double::Double;
 use rccell::RcCell;
-use crate::dbl_vec;
-
-
 
 /**
  * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)

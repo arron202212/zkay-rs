@@ -1,9 +1,6 @@
-
 // Declaration of functions for generating randomness.
 
-
 // FieldT SHA512_rng(const uint64_t idx);
-
 
 //#include <gmp.h>
 //#include <openssl/sha.h>
@@ -11,7 +8,6 @@ use crate::algebra::field_utils::bigint::GMP_NUMB_BITS;
 use crate::algebra::field_utils::bigint::bigint;
 use crate::common::rng;
 use crate::common::utils::is_little_endian;
-
 
 // struct A{
 // data:[u8;10]}
@@ -79,7 +75,3 @@ use crate::common::utils::is_little_endian;
 
 //     return FieldT::from(rval);
 // }
-
-
-
-

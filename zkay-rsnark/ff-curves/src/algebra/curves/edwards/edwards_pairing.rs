@@ -1,7 +1,6 @@
 use crate::algebra::curves::edwards::edwards_fields::{
     edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT,
 };
-use ffec::PpConfig;
 use crate::algebra::curves::edwards::edwards_g1::edwards_G1;
 use crate::algebra::curves::edwards::edwards_g2::edwards_G2;
 use crate::algebra::curves::edwards::edwards_init::{
@@ -9,6 +8,7 @@ use crate::algebra::curves::edwards::edwards_init::{
     edwards_final_exponent_last_chunk_is_w0_neg, edwards_final_exponent_last_chunk_w1,
     edwards_modulus_r,
 };
+use ffec::PpConfig;
 
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::bigint::bigint;
@@ -132,7 +132,7 @@ pub fn edwards_final_exponentiation(elt: &edwards_Fq6) -> edwards_GT {
 
 pub fn edwards_tate_precompute_G2(Q: &edwards_G2) -> edwards_tate_G2_precomp {
     enter_block("Call to edwards_tate_precompute_G2", false);
-    let mut Qcopy: edwards_G2  = Q.clone();
+    let mut Qcopy: edwards_G2 = Q.clone();
     Qcopy.to_affine_coordinates();
     let mut result = edwards_tate_G2_precomp::default();
     result.y0 = Qcopy.Y * Qcopy.Z.inverse(); // Y/Z
@@ -141,7 +141,7 @@ pub fn edwards_tate_precompute_G2(Q: &edwards_G2) -> edwards_tate_G2_precomp {
 
     result
 }
-#[derive(Clone, Debug,Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_edwards_G1_projective {
     pub X: edwards_Fq,
     pub Y: edwards_Fq,
@@ -334,8 +334,8 @@ pub fn edwards_tate_miller_loop(
         idx += 1;
         let g_RR_at_Q = edwards_Fq6::new(
             edwards_Fq3::new(cc.c_XZ, edwards_Fq::from(0), edwards_Fq::from(0))
-                + prec_Q.y0.clone()*cc.c_XY.clone(),
-prec_Q.eta.clone()*           cc.c_ZZ.clone(),
+                + prec_Q.y0.clone() * cc.c_XY.clone(),
+            prec_Q.eta.clone() * cc.c_ZZ.clone(),
         );
         f = f.squared() * g_RR_at_Q;
         if bit {
@@ -344,8 +344,8 @@ prec_Q.eta.clone()*           cc.c_ZZ.clone(),
 
             let g_RP_at_Q = edwards_Fq6::new(
                 edwards_Fq3::new(cc.c_XZ, edwards_Fq::from(0), edwards_Fq::from(0))
-                    + prec_Q.y0.clone()*cc.c_XY.clone(),
- prec_Q.eta.clone()*               cc.c_ZZ.clone(),
+                    + prec_Q.y0.clone() * cc.c_XY.clone(),
+                prec_Q.eta.clone() * cc.c_ZZ.clone(),
             );
             f = f * g_RP_at_Q;
         }
@@ -549,7 +549,7 @@ pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
         doubling_step_for_flipped_miller_loop(&mut R, &mut cc);
         result.0.push(cc.clone());
         if bit {
-            mixed_addition_step_for_flipped_miller_loop(&Q_ext,&mut R, &mut cc);
+            mixed_addition_step_for_flipped_miller_loop(&Q_ext, &mut R, &mut cc);
             result.0.push(cc);
         }
     }
@@ -584,16 +584,16 @@ pub fn edwards_ate_miller_loop(
         idx += 1;
 
         let g_RR_at_P = edwards_Fq6::new(
- cc.c_XY.clone()*           prec_P.P_XY.clone() + cc.c_XZ.clone()*prec_P.P_XZ.clone(),
-cc.c_ZZ.clone()*           prec_P.P_ZZplusYZ.clone(),
+            cc.c_XY.clone() * prec_P.P_XY.clone() + cc.c_XZ.clone() * prec_P.P_XZ.clone(),
+            cc.c_ZZ.clone() * prec_P.P_ZZplusYZ.clone(),
         );
         f = f.squared() * g_RR_at_P;
         if bit {
             cc = prec_Q.0[idx].clone();
             idx += 1;
             let g_RQ_at_P = edwards_Fq6::new(
-cc.c_ZZ.clone()*               prec_P.P_ZZplusYZ.clone(),
- cc.c_XY.clone()*               prec_P.P_XY.clone() + cc.c_XZ*prec_P.P_XZ.clone(),
+                cc.c_ZZ.clone() * prec_P.P_ZZplusYZ.clone(),
+                cc.c_XY.clone() * prec_P.P_XY.clone() + cc.c_XZ * prec_P.P_XZ.clone(),
             );
             f = f * g_RQ_at_P;
         }
@@ -610,7 +610,7 @@ pub fn edwards_ate_double_miller_loop(
     prec_Q2: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
     enter_block("Call to edwards_ate_double_miller_loop", false);
-    let loop_count: bigint<{edwards_Fr::num_limbs}> = edwards_ate_loop_count;
+    let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
     let mut f = edwards_Fq6::one();
 
@@ -632,13 +632,13 @@ pub fn edwards_ate_double_miller_loop(
         idx += 1;
 
         let g_RR_at_P1 = edwards_Fq6::new(
-  cc1.c_XY.clone()*           prec_P1.P_XY.clone() +  cc1.c_XZ.clone()*prec_P1.P_XZ.clone() ,
- cc1.c_ZZ.clone()*           prec_P1.P_ZZplusYZ.clone() ,
+            cc1.c_XY.clone() * prec_P1.P_XY.clone() + cc1.c_XZ.clone() * prec_P1.P_XZ.clone(),
+            cc1.c_ZZ.clone() * prec_P1.P_ZZplusYZ.clone(),
         );
 
         let g_RR_at_P2 = edwards_Fq6::new(
- cc2.c_XY.clone()*           prec_P2.P_XY.clone() + cc2.c_XZ.clone()*prec_P2.P_XZ.clone(),
-cc2.c_ZZ.clone()*           prec_P2.P_ZZplusYZ.clone(),
+            cc2.c_XY.clone() * prec_P2.P_XY.clone() + cc2.c_XZ.clone() * prec_P2.P_XZ.clone(),
+            cc2.c_ZZ.clone() * prec_P2.P_ZZplusYZ.clone(),
         );
         f = f.squared() * g_RR_at_P1 * g_RR_at_P2;
 
@@ -647,12 +647,12 @@ cc2.c_ZZ.clone()*           prec_P2.P_ZZplusYZ.clone(),
             cc2 = prec_Q2.0[idx].clone();
             idx += 1;
             let g_RQ_at_P1 = edwards_Fq6::new(
- cc1.c_ZZ.clone()*               prec_P1.P_ZZplusYZ.clone(),
-  cc1.c_XY.clone()*               prec_P1.P_XY.clone() +  cc1.c_XZ.clone()*prec_P1.P_XZ.clone() ,
+                cc1.c_ZZ.clone() * prec_P1.P_ZZplusYZ.clone(),
+                cc1.c_XY.clone() * prec_P1.P_XY.clone() + cc1.c_XZ.clone() * prec_P1.P_XZ.clone(),
             );
             let g_RQ_at_P2 = edwards_Fq6::new(
-cc2.c_ZZ.clone()*               prec_P2.P_ZZplusYZ.clone(),
- cc2.c_XY.clone()*               prec_P2.P_XY.clone() + cc2.c_XZ.clone()*prec_P2.P_XZ.clone(),
+                cc2.c_ZZ.clone() * prec_P2.P_ZZplusYZ.clone(),
+                cc2.c_XY.clone() * prec_P2.P_XY.clone() + cc2.c_XZ.clone() * prec_P2.P_XZ.clone(),
             );
             f = f * g_RQ_at_P1 * g_RQ_at_P2;
         }

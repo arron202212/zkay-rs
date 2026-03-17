@@ -9,7 +9,10 @@ use crate::algebra::curves::mnt::mnt6::mnt6_init::{
     mnt6_twist_mul_by_q_X, mnt6_twist_mul_by_q_Y,
 };
 use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
+use ffec::field_utils::{
+    BigInt,
+    bigint::{GMP_NUMB_BITS, bigint},
+};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -39,12 +42,11 @@ impl Fq2mConfig for mnt6_G2 {
 }
 
 impl mnt6_G2 {
-// Cofactor
-     const  h_bitcount:usize = 596;
-     const  h_limbs:usize =
-        (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-  const   h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
-   pub fn new(X: mnt6_Fq3, Y: mnt6_Fq3, Z: mnt6_Fq3) -> Self {
+    // Cofactor
+    const h_bitcount: usize = 596;
+    const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+    const h: bigint<{ Self::h_limbs }> = bigint::<{ Self::h_limbs }>(BigInt!("1"));
+    pub fn new(X: mnt6_Fq3, Y: mnt6_Fq3, Z: mnt6_Fq3) -> Self {
         Self { X, Y, Z }
     }
     pub fn size_in_bits() -> usize {
@@ -59,7 +61,7 @@ impl mnt6_G2 {
 }
 
 impl Default for mnt6_G2 {
-     fn default() -> Self {
+    fn default() -> Self {
         Self::G2_zero()
     }
 }
@@ -148,7 +150,7 @@ impl mnt6_G2 {
     pub fn add(&self, other: &mnt6_G2) -> mnt6_G2 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -195,7 +197,7 @@ impl mnt6_G2 {
         //assert!(other.Z == mnt6_Fq3::one());
 
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -210,7 +212,7 @@ impl mnt6_G2 {
 
         // (used both in add and double checks)
 
-        let Y1Z2:mnt6_Fq3 = (self.Y); // Y1Z2 = Y1*Z2 (but other is special and not zero)
+        let Y1Z2: mnt6_Fq3 = (self.Y); // Y1Z2 = Y1*Z2 (but other is special and not zero)
         let Y2Z1 = (self.Z) * (other.Y); // Y2Z1 = Y2*Z1
 
         if X1Z2 == X2Z1 && Y1Z2 == Y2Z1 {
@@ -261,14 +263,14 @@ impl mnt6_G2 {
 
     pub fn mul_by_q(&self) -> mnt6_G2 {
         return mnt6_G2::new(
-(self.X).Frobenius_map(1)*           mnt6_twist_mul_by_q_X.clone(),
-(self.Y).Frobenius_map(1)*           mnt6_twist_mul_by_q_Y.clone(),
+            (self.X).Frobenius_map(1) * mnt6_twist_mul_by_q_X.clone(),
+            (self.Y).Frobenius_map(1) * mnt6_twist_mul_by_q_Y.clone(),
             (self.Z).Frobenius_map(1),
         );
     }
 
     pub fn mul_by_cofactor(&self) -> mnt6_G2 {
-        self.clone()*mnt6_G2::h
+        self.clone() * mnt6_G2::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -300,14 +302,22 @@ impl mnt6_G2 {
     pub fn one() -> Self {
         return Self::G2_one();
     }
-     pub fn G2_zero() -> Self {
-        Self{X:Default::default(),Y:Default::default(),Z:Default::default()}
+    pub fn G2_zero() -> Self {
+        Self {
+            X: Default::default(),
+            Y: Default::default(),
+            Z: Default::default(),
+        }
     }
- pub fn G2_one() -> Self {
-        Self{X:Default::default(),Y:Default::default(),Z:Default::default()}
+    pub fn G2_one() -> Self {
+        Self {
+            X: Default::default(),
+            Y: Default::default(),
+            Z: Default::default(),
+        }
     }
     pub fn random_element() -> Self {
-       Self::G2_one()*mnt6_Fr::random_element().as_bigint()
+        Self::G2_one() * mnt6_Fr::random_element().as_bigint()
     }
 
     pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt6_G2>) {

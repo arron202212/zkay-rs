@@ -78,7 +78,7 @@ forge-verify = { workspace=true }
 # forge-script-sequence = { path = "crates/script-sequence" }
 # foundry-cheatcodes = { path = "crates/cheatcodes" }
 # foundry-cheatcodes-spec = { path = "crates/cheatcodes/spec" }
-# foundry-cli = { workspace=true }
+foundry-cli = { workspace=true }
 foundry-common = { workspace=true }
 # foundry-common-fmt = { path = "crates/common/fmt" }
 foundry-config = { workspace=true }
@@ -92,6 +92,7 @@ foundry-evm = { workspace=true }
 # foundry-macros = { path = "crates/macros" }
 # foundry-test-utils = { path = "crates/test-utils" }
 foundry-wallets = { workspace = true }
+foundry-primitives ={workspace = true}
 # foundry-linking = { path = "crates/linking" }
 
 # # solc & compilation utilities
@@ -111,7 +112,9 @@ cast={workspace=true}
 # ## alloy
 alloy-consensus = { workspace = true }
 # alloy-contract = { version = "0.5.4", default-features = false }
-# alloy-eips = { version = "0.5.4", default-features = false }
+alloy-ens = {workspace = true}
+
+alloy-eips = { workspace = true}
 # alloy-genesis = { version = "0.5.4", default-features = false }
 # alloy-json-rpc = { version = "0.5.4", default-features = false }
 alloy-network = { workspace = true }

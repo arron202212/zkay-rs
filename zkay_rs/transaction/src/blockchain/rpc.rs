@@ -1,9 +1,13 @@
 use cast::Cast;
 use clap::Parser;
 use eyre::Result;
-use foundry_cli::{opts::RpcOpts, utils};
+
+use foundry_cli::{
+    opts::RpcOpts,
+    utils::{self, LoadConfig},
+};
 // use foundry_common::sh_println;
-use foundry_config::Config;
+// use foundry_config::Config;
 // use itertools::Itertools;
 /// CLI arguments for `cast rpc`.
 #[derive(Clone, Debug, Parser, Default)]
@@ -42,7 +46,7 @@ impl RpcArgs {
             rpc,
         } = self;
 
-        let config = Config::from(&rpc);
+        let config = rpc.load_config()?;
         let provider = utils::get_provider(&config)?;
 
         let params = if raw {

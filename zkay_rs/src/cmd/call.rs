@@ -5,17 +5,19 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::debug::handle_traces;
 use crate::tx::{CastTxBuilder, SenderKind};
+use alloy_ens::NameOrAddress;
 use alloy_primitives::{TxKind, U256};
 use alloy_rpc_types::{BlockId, BlockNumberOrTag};
+use cast::cmd::run::fetch_contracts_bytecode_from_trace;
 use cast::{Cast, traces::TraceKind};
 use clap::Parser;
 use eyre::Result;
 use foundry_cli::{
     opts::{EthereumOpts, TransactionOpts},
-    utils::{self, TraceResult, handle_traces, parse_ether_value},
+    utils::{self, TraceResult, parse_ether_value},
 };
-use foundry_common::ens::NameOrAddress;
 use foundry_common::{sh_println, shell};
 use foundry_compilers::artifacts::EvmVersion;
 use foundry_config::{
@@ -25,7 +27,12 @@ use foundry_config::{
         value::{Dict, Map},
     },
 };
-use foundry_evm::{executors::TracingExecutor, opts::EvmOpts};
+use foundry_evm::{
+    executors::TracingExecutor,
+    opts::EvmOpts,
+    traces::{InternalTraceMode, TraceMode},
+};
+use std::collections::HashMap;
 use std::str::FromStr;
 use zkay_config::{config::CFG, config_user::UserConfig};
 use zkay_transaction::blockchain::web3::{Web3, Web3Tx};
@@ -126,7 +133,7 @@ impl CallArgs {
     pub async fn run(self) -> Result<()> {
         let figment = Into::<Figment>::into(&self.eth).merge(&self);
         let evm_opts = figment.extract::<EvmOpts>()?;
-        let mut config = Config::try_from(figment)?.sanitized();
+        let mut config = Config::from_provider(figment)?.sanitized();
 
         let Self {
             to,
@@ -197,14 +204,21 @@ impl CallArgs {
             }
 
             let (mut env, fork, chain, alphanet) =
-                TracingExecutor::get_fork_material(&config, evm_opts).await?;
+                TracingExecutor::get_fork_material(&mut config, evm_opts).await?;
 
             // modify settings that usually set in eth_call
-            env.cfg.disable_block_gas_limit = true;
-            env.block.gas_limit = U256::MAX;
+            // env.cfg.disable_block_gas_limit = true;
+            // env.block.gas_limit = U256::MAX;
 
-            let mut executor =
-                TracingExecutor::new(env, fork, evm_version, debug, decode_internal, alphanet);
+            let mut executor = TracingExecutor::new(
+                env,
+                fork,
+                evm_version,
+                TraceMode::Debug,
+                alphanet,
+                from,
+                None,
+            )?;
 
             let value = tx.value.unwrap_or_default();
             let input = tx.inner.input.into_input().unwrap_or_default();
@@ -220,15 +234,29 @@ impl CallArgs {
                     TraceKind::Execution,
                 ),
             };
-
-            handle_traces(trace, &config, chain, labels, debug, decode_internal, false).await?;
+            let contracts_bytecode = fetch_contracts_bytecode_from_trace(&executor, &trace)?;
+            handle_traces(
+                trace,
+                &config,
+                chain,
+                &contracts_bytecode,
+                labels,
+                debug,
+                decode_internal,
+                false,
+                false,
+                None,
+            )
+            .await?;
 
             return Ok(());
         }
 
         sh_println!(
             "{}",
-            Cast::new(provider).call(&tx, func.as_ref(), block).await?
+            Cast::new(provider)
+                .call(&tx, func.as_ref(), block, None, None)
+                .await?
         )?;
 
         Ok(())

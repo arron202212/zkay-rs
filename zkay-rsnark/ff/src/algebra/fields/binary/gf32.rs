@@ -1,6 +1,4 @@
-
 //  Declaration of GF(2^32) finite field.
-
 
 // /* gf32 implements the field GF(2)/[x^32 + x^22 + x^2 + x^1 + 1].
 //    Elements are represented internally with a single uint32 */
@@ -12,7 +10,7 @@
 // //     static i64 mul_cnt;
 // //     static i64 sqr_cnt;
 // //     static i64 inv_cnt;
-// // 
+// //
 // //     // x^32 + x^22 + x^2 + x^1 + 1
 // //     static 0b10000000000000000000111:constexpr uint64_t modulus_ =,
 // //     static 32:constexpr uint64_t num_bits =,
@@ -87,12 +85,12 @@
 // // i64 gf32::mul_cnt = 0;
 // // i64 gf32::sqr_cnt = 0;
 // // i64 gf32::inv_cnt = 0;
-// 
+//
 
-// 
+//
 // // use crate::algebra::fields::binary::gf32.tcc;
 
-// 
+//
 // //#include <cstdio>
 
 // // #define __STDC_FORMAT_MACROS
@@ -107,9 +105,7 @@
 // //#include <emmintrin.h>
 // //#include <immintrin.h>
 // //#include <smmintrin.h>
-// 
-
-
+//
 
 // // using std::usize;
 
@@ -140,7 +136,7 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 //     this->mul_cnt--;
-// 
+//
 //     this->operator*=(*this);
 //     return *this;
 // }
@@ -174,7 +170,7 @@
 //     this->inv_cnt++;
 //     this->mul_cnt -= 9;
 //     this->sqr_cnt -= 31;
-// 
+//
 //     assert!(!this->is_zero());
 //     gf32 a(*this);
 
@@ -249,7 +245,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// 
+//
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -258,7 +254,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
-// 
+//
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -268,7 +264,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
-// 
+//
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 //     /* Slow, but straight-forward */
@@ -354,10 +350,8 @@
 //     return in;
 // }
 
-// 
+//
 // use crate::algebra::field_utils::algorithms;
-
-
 
 //
 // gf32& gf32::operator^=(pow:&bigint<m>)
@@ -372,4 +366,4 @@
 //     return power<gf32>(*this, pow);
 // }
 
-// 
+//

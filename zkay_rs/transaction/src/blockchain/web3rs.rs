@@ -21,10 +21,10 @@
 use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
-use alloy_network::{AnyNetwork, EthereumWallet, TransactionBuilder};
+use alloy_network::{AnyNetwork, AnyTransactionReceipt, EthereumWallet, TransactionBuilder};
 use alloy_primitives::{Address, Bytes, hex};
 use alloy_provider::{PendingTransactionError, Provider, ProviderBuilder};
-use alloy_rpc_types::{AnyTransactionReceipt, TransactionRequest};
+use alloy_rpc_types::TransactionRequest;
 use alloy_serde::WithOtherFields;
 use alloy_signer::Signer;
 use alloy_transport::{Transport, TransportError};
@@ -34,8 +34,8 @@ use forge_verify::RetryArgs;
 use forge_verify::VerifyArgs;
 use foundry_cli::utils::did_you_mean;
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, RpcOpts, TransactionOpts},
-    utils::{self, LoadConfig, read_constructor_args_file, remove_contract},
+    opts::{EthereumOpts, EtherscanOpts, RpcOpts, TransactionOpts},
+    utils::{self, LoadConfig, read_constructor_args_file},
 };
 use foundry_common::{
     compile::{self},
@@ -45,6 +45,7 @@ use foundry_compilers::{ArtifactId, Project};
 use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
 use std::path::Path;
 use std::str::FromStr;
+use std::time::Duration;
 // use alloy_json_abi::JsonAbi;
 // use alloy_primitives::Address;
 // use eyre::{eyre::Result, WrapErr};
@@ -101,28 +102,23 @@ use zkay_utils::timer::time_measure;
 /// compatibility with less-abstract Contracts.
 ///
 /// For full usage docs, see [`DeploymentTxFactory`].
-pub type ContractFactory<P, T> = DeploymentTxFactory<Arc<P>, P, T>;
+pub type ContractFactory<P> = DeploymentTxFactory<P>;
 
 /// Helper which manages the deployment transaction of a smart contract. It
 /// wraps a deployment transaction, and retrieves the contract address output
 /// by it.
-///
-/// Currently, we recommend using the [`ContractDeployer`] type alias.
 #[derive(Debug)]
 #[must_use = "ContractDeploymentTx does nothing unless you `send` it"]
-pub struct ContractDeploymentTx<B, P, T, C> {
+pub struct ContractDeploymentTx<P, C> {
     /// the actual deployer, exposed for overriding the defaults
-    pub deployer: Deployer<B, P, T>,
+    pub deployer: Deployer<P>,
     /// marker for the `Contract` type to create afterwards
     ///
     /// this type will be used to construct it via `From::from(Contract)`
     _contract: PhantomData<C>,
 }
 
-impl<B, P, T, C> Clone for ContractDeploymentTx<B, P, T, C>
-where
-    B: Clone,
-{
+impl<P: Clone, C> Clone for ContractDeploymentTx<P, C> {
     fn clone(&self) -> Self {
         Self {
             deployer: self.deployer.clone(),
@@ -131,8 +127,8 @@ where
     }
 }
 
-impl<B, P, T, C> From<Deployer<B, P, T>> for ContractDeploymentTx<B, P, T, C> {
-    fn from(deployer: Deployer<B, P, T>) -> Self {
+impl<P, C> From<Deployer<P>> for ContractDeploymentTx<P, C> {
+    fn from(deployer: Deployer<P>) -> Self {
         Self {
             deployer,
             _contract: PhantomData,
@@ -141,55 +137,30 @@ impl<B, P, T, C> From<Deployer<B, P, T>> for ContractDeploymentTx<B, P, T, C> {
 }
 
 /// Helper which manages the deployment transaction of a smart contract
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[must_use = "Deployer does nothing unless you `send` it"]
-pub struct Deployer<B, P, T> {
+pub struct Deployer<P> {
     /// The deployer's transaction, exposed for overriding the defaults
     pub tx: WithOtherFields<TransactionRequest>,
-    abi: JsonAbi,
-    client: B,
+    client: P,
     confs: usize,
     timeout: u64,
-    _p: PhantomData<P>,
-    _t: PhantomData<T>,
 }
 
-impl<B, P, T> Clone for Deployer<B, P, T>
-where
-    B: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            tx: self.tx.clone(),
-            abi: self.abi.clone(),
-            client: self.client.clone(),
-            confs: self.confs,
-            timeout: self.timeout,
-            _p: PhantomData,
-            _t: PhantomData,
-        }
-    }
-}
-
-impl<B, P, T> Deployer<B, P, T>
-where
-    B: Borrow<P> + Clone,
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
-{
+impl<P: Provider<AnyNetwork>> Deployer<P> {
     /// Broadcasts the contract deployment transaction and after waiting for it to
-    /// be sufficiently confirmed (default: 1), it returns a tuple with
-    /// the [`Contract`](crate::Contract) struct at the deployed contract's address
-    /// and the corresponding [`AnyReceipt`].
+    /// be sufficiently confirmed (default: 1), it returns a tuple with the [`Address`] at the
+    /// deployed contract's address and the corresponding [`AnyTransactionReceipt`].
     pub async fn send_with_receipt(
         self,
-    ) -> eyre::Result<(Address, AnyTransactionReceipt), ContractDeploymentError> {
+    ) -> Result<(Address, AnyTransactionReceipt), ContractDeploymentError> {
         let receipt = self
             .client
             .borrow()
             .send_transaction(self.tx)
             .await?
             .with_required_confirmations(self.confs as u64)
+            .with_timeout(Some(Duration::from_secs(self.timeout)))
             .get_receipt()
             .await?;
 
@@ -201,85 +172,27 @@ where
     }
 }
 
-/// To deploy a contract to the Ethereum network, a `ContractFactory` can be
+/// To deploy a contract to the Ethereum network, a [`ContractFactory`] can be
 /// created which manages the Contract bytecode and Application Binary Interface
 /// (ABI), usually generated from the Solidity compiler.
-///
-/// Once the factory's deployment transaction is mined with sufficient confirmations,
-/// the [`Contract`](crate::Contract) object is returned.
-///
-/// # Example
-///
-/// ```
-/// # fn foo() -> eyre::Result<(), Box<dyn std::error::Error>> {
-/// use alloy_primitives::Bytes;
-/// use ethers_contract::ContractFactory;
-/// use ethers_providers::{Provider, Http};
-///
-/// // get the contract ABI and bytecode
-/// let abi = Default::default();
-/// let bytecode = Bytes::from_static(b"...");
-///
-/// // connect to the network
-/// let client = Provider::<Http>::try_from("http://localhost:8545").unwrap();
-/// let client = std::sync::Arc::new(client);
-///
-/// // create a factory which will be used to deploy instances of the contract
-/// let factory = ContractFactory::new(abi, bytecode, client);
-///
-/// // The deployer created by the `deploy` call exposes a builder which gets consumed
-/// // by the `send` call
-/// let contract = factory
-///     .deploy("initial value".to_string())?
-///     .confirmations(0usize)
-///     .send()
-///     .await?;
-/// println!("{}", contract.address());
-/// # Ok(())
-/// # }
-#[derive(Debug)]
-pub struct DeploymentTxFactory<B, P, T> {
-    client: B,
+#[derive(Clone, Debug)]
+pub struct DeploymentTxFactory<P> {
+    client: P,
     abi: JsonAbi,
     bytecode: Bytes,
     timeout: u64,
-    _p: PhantomData<P>,
-    _t: PhantomData<T>,
 }
 
-impl<B, P, T> Clone for DeploymentTxFactory<B, P, T>
-where
-    B: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            client: self.client.clone(),
-            abi: self.abi.clone(),
-            bytecode: self.bytecode.clone(),
-            timeout: self.timeout,
-            _p: PhantomData,
-            _t: PhantomData,
-        }
-    }
-}
-
-impl<P, T, B> DeploymentTxFactory<B, P, T>
-where
-    B: Borrow<P> + Clone,
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
-{
+impl<P: Provider<AnyNetwork> + Clone> DeploymentTxFactory<P> {
     /// Creates a factory for deployment of the Contract with bytecode, and the
     /// constructor defined in the abi. The client will be used to send any deployment
     /// transaction.
-    pub fn new(abi: JsonAbi, bytecode: Bytes, client: B, timeout: u64) -> Self {
+    pub fn new(abi: JsonAbi, bytecode: Bytes, client: P, timeout: u64) -> Self {
         Self {
             client,
             abi,
             bytecode,
             timeout,
-            _p: PhantomData,
-            _t: PhantomData,
         }
     }
 
@@ -288,10 +201,7 @@ where
     pub fn deploy_tokens(
         self,
         params: Vec<DynSolValue>,
-    ) -> eyre::Result<Deployer<B, P, T>, ContractDeploymentError>
-    where
-        B: Clone,
-    {
+    ) -> Result<Deployer<P>, ContractDeploymentError> {
         // Encode the constructor args & concatenate with the bytecode if necessary
         let data: Bytes = match (self.abi.constructor(), params.is_empty()) {
             (None, false) => return Err(ContractDeploymentError::ConstructorError),
@@ -311,12 +221,9 @@ where
 
         Ok(Deployer {
             client: self.client.clone(),
-            abi: self.abi,
             tx,
             confs: 1,
             timeout: self.timeout,
-            _p: PhantomData,
-            _t: PhantomData,
         })
     }
 }
@@ -340,11 +247,88 @@ impl From<PendingTransactionError> for ContractDeploymentError {
     }
 }
 
-// max_gas_limit = 10000000
-// #[enum_dispatch]
-// pub trait Web3Blockchain {
-//     fn _create_w3_instance(&self);
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloy_primitives::I256;
+
+    #[test]
+    fn can_parse_create() {
+        let args: CreateArgs = CreateArgs::parse_from([
+            "foundry-cli",
+            "src/Domains.sol:Domains",
+            "--verify",
+            "--retries",
+            "10",
+            "--delay",
+            "30",
+        ]);
+        assert_eq!(args.retry.retries, 10);
+        assert_eq!(args.retry.delay, 30);
+    }
+    #[test]
+    fn can_parse_chain_id() {
+        let args: CreateArgs = CreateArgs::parse_from([
+            "foundry-cli",
+            "src/Domains.sol:Domains",
+            "--verify",
+            "--retries",
+            "10",
+            "--delay",
+            "30",
+            "--chain-id",
+            "9999",
+        ]);
+        assert_eq!(args.chain_id(), Some(9999));
+    }
+
+    #[test]
+    fn test_parse_constructor_args() {
+        let args: CreateArgs = CreateArgs::parse_from([
+            "foundry-cli",
+            "src/Domains.sol:Domains",
+            "--constructor-args",
+            "Hello",
+        ]);
+        let constructor: Constructor = serde_json::from_str(r#"{"type":"constructor","inputs":[{"name":"_name","type":"string","internalType":"string"}],"stateMutability":"nonpayable"}"#).unwrap();
+        let params = args
+            .parse_constructor_args(&constructor, &args.constructor_args)
+            .unwrap();
+        assert_eq!(params, vec![DynSolValue::String("Hello".to_string())]);
+    }
+
+    #[test]
+    fn test_parse_tuple_constructor_args() {
+        let args: CreateArgs = CreateArgs::parse_from([
+            "foundry-cli",
+            "src/Domains.sol:Domains",
+            "--constructor-args",
+            "[(1,2), (2,3), (3,4)]",
+        ]);
+        let constructor: Constructor = serde_json::from_str(r#"{"type":"constructor","inputs":[{"name":"_points","type":"tuple[]","internalType":"struct Point[]","components":[{"name":"x","type":"uint256","internalType":"uint256"},{"name":"y","type":"uint256","internalType":"uint256"}]}],"stateMutability":"nonpayable"}"#).unwrap();
+        let _params = args
+            .parse_constructor_args(&constructor, &args.constructor_args)
+            .unwrap();
+    }
+
+    #[test]
+    fn test_parse_int_constructor_args() {
+        let args: CreateArgs = CreateArgs::parse_from([
+            "foundry-cli",
+            "src/Domains.sol:Domains",
+            "--constructor-args",
+            "-5",
+        ]);
+        let constructor: Constructor = serde_json::from_str(r#"{"type":"constructor","inputs":[{"name":"_name","type":"int256","internalType":"int256"}],"stateMutability":"nonpayable"}"#).unwrap();
+        let params = args
+            .parse_constructor_args(&constructor, &args.constructor_args)
+            .unwrap();
+        assert_eq!(
+            params,
+            vec![DynSolValue::Int(I256::unchecked_from(-5), 256)]
+        );
+    }
+}
 
 #[derive(Clone)]
 pub struct Web3BlockchainBase<
@@ -415,7 +399,7 @@ impl<
         } else {
             get_contract_names(sol_filename)[0].clone()
         };
-        let (abi, bin, id) = self.compile_contract(
+        let (abi, bin, _, id) = self.compile_contract(
             &PathBuf::from(sol_filename),
             &contract_name,
             None,
@@ -531,7 +515,7 @@ impl<
         address: &str,
         pk: &Value<String, PublicKeyValue>,
         crypto_params: &CryptoParams,
-    ) -> eyre::Result<String> {
+    ) -> eyre::Result<()> {
         //         with log_context(f"announcePk"):
         let pki_contract = self.pki_contract(&crypto_params.crypto_name).await?;
         let len = if "elgamal" == &crypto_params.crypto_name {
@@ -614,7 +598,7 @@ impl<
         function: &str,
         actual_args: &Vec<DataType>,
         _wei_amount: Option<i32>,
-    ) -> Result<String> {
+    ) -> Result<()> {
         // use ff::*;
         println!("====_transact=============before=actual_args=={actual_args:?}=======");
         // use num_bigint::{BigInt, RandBigInt, Sign, ToBigInt};
@@ -724,13 +708,13 @@ impl<
             .for_each(|x| {
                 let _ = std::fs::copy(x.path(), inst_target_path.join(x.file_name()));
             });
-        let inst_config = Config::load_with_root(inst_target_path).sanitized();
+        let inst_config = Config::load_with_root(inst_target_path)?.sanitized();
         let _inst_project = inst_config.project().expect("===project===");
         // let cout;
         let (abi, bin, id);
         with_context_block!(var filename= self.__hardcoded_external_contracts_ctx(&project_dir,&project_dir, &external_contract_addresses) =>{
             println!("==={filename:?}======project_dir====={project_dir:?}=============");
-            (abi, bin, id) = self.compile_contract(&PathBuf::from(filename), contract, None,&project_dir).expect("===compile_contract===");
+            (abi, bin,_, id) = self.compile_contract(&PathBuf::from(filename), contract, None,&project_dir).expect("===compile_contract===");
         });
         let handle;
         with_context_block!(var _a= log_context("constructor")=>{
@@ -757,7 +741,7 @@ impl<
             with_context_block!(var _a= log_context("constructor")=>{
                             with_context_block!(var _b=log_context(&format!("{verifier_name}"))=>{
                                 let filename = project_dir.join( &format!("{verifier_name}.sol"));
-                                let (abi, bin, id) = self.compile_contract(&filename, &verifier_name, lib_addresses.as_ref().and_then(|la|la.lock().as_ref().cloned()),&PathBuf::from(".")).expect("=======compile_contract======_deploy_dependencies=====");
+                                let (abi, bin, _,id) = self.compile_contract(&filename, &verifier_name, lib_addresses.as_ref().and_then(|la|la.lock().as_ref().cloned()),&PathBuf::from(".")).expect("=======compile_contract======_deploy_dependencies=====");
                                 with_context_block!(var _tm= time_measure("transaction_full",false,false)=>{
             println!("========_deploy_contract======2=====");
                                     vf.insert(verifier_name.clone(),self._deploy_contract(sender, abi.clone(),&vec![],None,abi, bin, id).await.unwrap());
@@ -977,7 +961,7 @@ impl<
             !actual_code.is_empty(),
             "Expected contract {cname} is not deployed at address {contract_with_libs_addr}"
         );
-        let (_abi, bin, _id) =
+        let (_abi, bin, _, _id) =
             self.compile_contract(sol_with_libs_filename, &cname, None, &PathBuf::from("."))?;
         let bytes = bin.object.into_bytes();
         let bytes: Vec<u8> = bytes.unwrap().into();
@@ -1063,7 +1047,12 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         contract_name: &str,
         _libs: Option<BTreeMap<String, Address>>,
         _cwd: &PathBuf,
-    ) -> eyre::Result<(JsonAbi, CompactBytecode, ArtifactId)> {
+    ) -> eyre::Result<(
+        JsonAbi,
+        CompactBytecode,
+        CompactDeployedBytecode,
+        ArtifactId,
+    )> {
         // let solp = sol_filename; //std::path::PathBuf::from(sol_filename);
         // let jout = compile_solidity_json(
         //     &sol_filename.to_string_lossy().to_string(),
@@ -1085,7 +1074,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         // })
         let project = self.web3tx.config.project()?;
         let mut output = compile::compile_target(&sol_filename, &project, false)?;
-        remove_contract(output, &sol_filename, contract_name)
+        remove_contract_ex(output, &sol_filename, contract_name)
     }
     pub fn compile_contract_ex(
         &self,
@@ -1181,8 +1170,8 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         } else {
             vec![]
         };
-        let config = Config::from(&self.web3tx.eth);
-
+        // let config = Config::from(&self.web3tx.eth);
+        let config = self.web3tx.eth.load_config()?;
         let provider = utils::get_provider(&config)?;
 
         // respect chain, if set explicitly via cmd args
@@ -1293,7 +1282,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
 
     /// Deploys the contract
     #[allow(clippy::too_many_arguments)]
-    async fn deploys<PR: Provider<T, AnyNetwork>, T: Transport + Clone>(
+    async fn deploys<PR: Provider<AnyNetwork>>(
         &self,
         abi: JsonAbi,
         bin: BytecodeObject,
@@ -1352,7 +1341,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
         //     }?);
         deployer
             .tx
-            .set_gas_limit(provider.estimate_gas(&deployer.tx).await?);
+            .set_gas_limit(provider.estimate_gas(deployer.tx.clone()).await?);
         if is_legacy {
             let gas_price = provider.get_gas_price().await?;
             //  if let Some(gas_price) = self.tx.gas_price {
@@ -1362,7 +1351,7 @@ impl<P: ZkayProverInterface + std::marker::Send, W: std::marker::Send + std::mar
             // };
             deployer.tx.set_gas_price(gas_price);
         } else {
-            let estimate = provider.estimate_eip1559_fees(None).await.wrap_err("Failed to estimate EIP1559 fees. This chain might not support EIP1559, try adding --legacy to your command.")?;
+            let estimate = provider.estimate_eip1559_fees().await.wrap_err("Failed to estimate EIP1559 fees. This chain might not support EIP1559, try adding --legacy to your command.")?;
             let priority_fee = estimate.max_priority_fee_per_gas;
             //  if let Some(priority_fee) = self.tx.priority_gas_price {
             //     priority_fee.to()
@@ -1570,7 +1559,7 @@ impl<P: ZkayProverInterface + std::marker::Send> Web3BlockchainBase<P, Web3Teste
                 &format!("{pki_contract_name}.sol"),
                 &pki_contract_code,
             );
-            let (abi, bin, id) = self.compile_contract(
+            let (abi, bin, _, id) = self.compile_contract(
                 &PathBuf::from(pki_sol),
                 &pki_contract_name,
                 None,
@@ -1596,7 +1585,7 @@ impl<P: ZkayProverInterface + std::marker::Send> Web3BlockchainBase<P, Web3Teste
         );
         let mut _lib_addresses = BTreeMap::new();
         for lib in CFG.lock().unwrap().external_crypto_lib_names() {
-            let (abi, bin, id) = self.compile_contract(
+            let (abi, bin, _, id) = self.compile_contract(
                 &PathBuf::from(verify_sol.clone()),
                 &lib,
                 None,

@@ -46,7 +46,8 @@ pub trait Fp6_modelConfig<const N: usize>:
     type Fp_modelConfig: FpmConfig<N>;
     type Fp3_modelConfig: Fp3_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
     type Fp2_modelConfig: Fp2_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
-    const non_residue: my_Fp_modelConfig<N, Self> = Fp_model::<N, Self::Fp_modelConfig>::const_default();
+    const non_residue: my_Fp_modelConfig<N, Self> =
+        Fp_model::<N, Self::Fp_modelConfig>::const_default();
 
     const nqr: (my_Fp_modelConfig<N, Self>, my_Fp_modelConfig<N, Self>) = (
         Fp_model::<N, Self::Fp_modelConfig>::const_default(),
@@ -77,7 +78,6 @@ pub struct Fp6_2over3_model<const N: usize, T: Fp6_modelConfig<N>> {
     // static i64 mul_cnt;
     // static i64 sqr_cnt;
     // static i64 inv_cnt;
-    
 
     // static bigint<6*n> euler; // (modulus^6-1)/2
     // static std::usize s; // modulus^6 = 2^s * t + 1
@@ -211,7 +211,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_2over3_model<N, T> {
     pub fn mul_by_2345(&self, other: &Self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.mul_cnt++;
-        
+
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
         assert!(other.c0.c0.is_zero());
         assert!(other.c0.c1.is_zero());
@@ -232,7 +232,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_2over3_model<N, T> {
     pub fn squared(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        
+
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex) */
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
@@ -251,7 +251,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_2over3_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        
+
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
         let (a, b) = (self.c0, self.c1);
         let t1 = b.squared();
@@ -418,7 +418,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> PartialEq for Fp6_2over3_model<N, T>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// 
+//
 //     Self::new(self.c0 + other.c0,
 //                                 self.c1 + other.c1);
 // }
@@ -436,7 +436,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp6_2ove
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// 
+//
 //     Self::new(self.c0 - other.c0,
 //                                 self.c1 - other.c1);
 // }
@@ -455,7 +455,7 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_2over3_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// 
+//
 //     Self::new(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }
@@ -474,7 +474,7 @@ impl<const N: usize, T6: Fp6_modelConfig<N>, T: FpmConfig<N>> Mul<Fp_model<N, T>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// 
+//
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 //     B:&my_Fp3<N,T::Fp3_modelConfig> = other.c1, &A = other.c0,
 //                  &b = self.c1, &a = self.c0;

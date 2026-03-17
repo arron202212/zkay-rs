@@ -64,7 +64,7 @@ lazy_static! {
         ]),);
 }
 
-#[derive(Default, Clone, Debug,  PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Default, Clone, Debug, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub struct Homomorphism {
     pub value: String,
     pub type_annotation: String,

@@ -4,13 +4,15 @@ use alloy_provider::Provider;
 use alloy_rpc_types::BlockId;
 use clap::Parser;
 use eyre::Result;
+
 use foundry_cli::{
     opts::{EthereumOpts, TransactionOpts},
-    utils::{self, parse_ether_value},
+    utils::{self, LoadConfig, parse_ether_value},
 };
-use foundry_common::ens::NameOrAddress;
+// use alloy_ens::NameOrAddress;
+use alloy_ens::NameOrAddress;
 // use foundry_common::sh_println;
-use foundry_config::Config;
+// use foundry_config::Config;
 use std::str::FromStr;
 
 /// CLI arguments for `cast estimate`.
@@ -78,7 +80,8 @@ impl EstimateArgs {
             command,
         } = self;
 
-        let config = Config::from(&eth);
+        // let config = Config::from(&eth);
+        let config = eth.load_config()?;
         let provider = utils::get_provider(&config)?;
         let sender = SenderKind::from_wallet_opts(eth.wallet).await?;
 
@@ -109,7 +112,7 @@ impl EstimateArgs {
             .await?;
 
         let gas = provider
-            .estimate_gas(&tx)
+            .estimate_gas(tx)
             .block(block.unwrap_or_default())
             .await?;
 

@@ -1,12 +1,10 @@
+use crate::dbl_vec;
 use crate::polynomial_arithmetic::basic_operations::{
     _polynomial_addition, _polynomial_division, _polynomial_multiplication,
     _polynomial_multiplication_on_kronecker, _polynomial_subtraction,
 };
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use ffec::common::double::Double;
-use crate::dbl_vec;
-
-
 
 #[cfg(test)]
 mod test {

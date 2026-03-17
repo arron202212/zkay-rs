@@ -1,28 +1,25 @@
-
 //  Declaration of complex domain data type.
 
-use crate::{One,Zero};
-use std::ops::{Add,Sub,Mul,Neg,BitXor,AddAssign,SubAssign,MulAssign};
+use crate::{FieldTConfig, PpConfig};
+use crate::{One, Zero};
+use num_complex::{Complex, Complex64, ComplexFloat};
 use std::borrow::Borrow;
- use std::cmp::Ordering;
-use crate::{FieldTConfig,PpConfig};
-use num_complex::{Complex, ComplexFloat,Complex64};
+use std::cmp::Ordering;
+use std::ops::{Add, AddAssign, BitXor, Mul, MulAssign, Neg, Sub, SubAssign};
 // #include <complex>
 // #include <libff/algebra/fields/bigint.hpp>
 
-
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub struct Double {
     val: Complex64,
-    v:Option<Vec<u64>>,
+    v: Option<Vec<u64>>,
 }
-impl FieldTConfig for Double{
+impl FieldTConfig for Double {}
+impl PpConfig for Double {
+    type TT = bigint<1>;
 }
-impl PpConfig for Double{
-    type TT=bigint<1>;
-}
-impl Eq for Double{}
-impl AsMut<[u64]> for Double{
+impl Eq for Double {}
+impl AsMut<[u64]> for Double {
     #[inline]
     fn as_mut(&mut self) -> &mut [u64] {
         self.v.as_mut().unwrap()
@@ -82,55 +79,50 @@ impl AsMut<[u64]> for Double{
 use crate::algebra::field_utils::bigint::bigint;
 // use crate::common::f64;
 
-
-
-
 // using std::usize;
 impl Default for Double {
-     fn default() -> Self {
+    fn default() -> Self {
         Self::new(0.0, 0.0)
     }
 }
-impl From<i32> for Double{
-     fn from(real: i32) -> Self {
+impl From<i32> for Double {
+    fn from(real: i32) -> Self {
         Self::new(real as f64, 0.0)
     }
 }
-impl From<u32> for Double{
-     fn from(real: u32) -> Self {
+impl From<u32> for Double {
+    fn from(real: u32) -> Self {
         Self::new(real as f64, 0.0)
     }
 }
-impl From<usize> for Double{
-     fn from(real: usize) -> Self {
+impl From<usize> for Double {
+    fn from(real: usize) -> Self {
         Self::new(real as f64, 0.0)
     }
 }
-impl From<i64> for Double{
-     fn from(real: i64) -> Self {
+impl From<i64> for Double {
+    fn from(real: i64) -> Self {
         Self::new(real as f64, 0.0)
     }
 }
-impl From<f64> for Double{
-     fn from(real: f64) -> Self {
+impl From<f64> for Double {
+    fn from(real: f64) -> Self {
         Self::new(real, 0.0)
     }
 }
-impl From<Complex64> for Double{
-     fn from(val:Complex64) -> Self {
-        Self {
-            val,v:None,
-        }
+impl From<Complex64> for Double {
+    fn from(val: Complex64) -> Self {
+        Self { val, v: None }
     }
 }
 
 impl Double {
     pub fn new(real: f64, imag: f64) -> Self {
         Self {
-            val: Complex::<f64>::new(real, imag),v:None,
+            val: Complex::<f64>::new(real, imag),
+            v: None,
         }
     }
-
 
     // unsigned pub fn add_cnt = 0;
     // unsigned pub fn sub_cnt = 0;
@@ -140,13 +132,12 @@ impl Double {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // ++inv_cnt;
-        
 
-         Self::from(Complex::<f64>::new(1.0, 0.0) / self.val.clone())
+        Self::from(Complex::<f64>::new(1.0, 0.0) / self.val.clone())
     }
 
     pub fn as_bigint(&self) -> bigint<1> {
-         bigint::<1>::new(self.val.re() as u64)
+        bigint::<1>::new(self.val.re() as u64)
     }
 
     pub fn as_ulong(&self) -> u64 {
@@ -154,44 +145,35 @@ impl Double {
     }
 
     pub fn squared(&self) -> Self {
-         Self::from(self.val.clone() * self.val.clone())
+        Self::from(self.val.clone() * self.val.clone())
     }
 
     pub fn one() -> Self {
-         Self::from(1.0)
+        Self::from(1.0)
     }
 
     pub fn zero() -> Self {
-         Self::from(0.0)
+        Self::from(0.0)
     }
 
     pub fn random_element() -> Self {
         // use rand::Rng;
         // let mut rng = rand::thread_rng();
-         Self::from((rand::random::<i64>() % 1001) as f64)
+        Self::from((rand::random::<i64>() % 1001) as f64)
     }
 
     pub fn geometric_generator() -> Self {
-         Self::from(2.0)
+        Self::from(2.0)
     }
 
     pub fn arithmetic_generator() -> Self {
-         Self::from(1.0)
+        Self::from(1.0)
     }
 
-    pub fn multiplicative_generator()->Self{
+    pub fn multiplicative_generator() -> Self {
         Self::from(2.0)
     }
-  
 }
-
-
-
-
-
-
-
-
 
 use std::fmt;
 impl fmt::Display for Double {
@@ -219,11 +201,11 @@ impl Zero for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
-// 
+//
 
 //     return Self::new(val + other.val);
 // }
-impl< O: Borrow<Self>> Add<O> for Double {
+impl<O: Borrow<Self>> Add<O> for Double {
     type Output = Self;
 
     fn add(self, other: O) -> Self::Output {
@@ -245,7 +227,7 @@ impl Add<i32> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
-// 
+//
 
 //     return Self::new(val - other.val);
 // }
@@ -271,11 +253,11 @@ impl Sub<i32> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
-// 
+//
 
 //     return Self::new(val * other.val);
 // }
-impl< O: Borrow<Self>> Mul<O> for Double {
+impl<O: Borrow<Self>> Mul<O> for Double {
     type Output = Double;
 
     fn mul(self, rhs: O) -> Self::Output {
@@ -321,20 +303,19 @@ impl Neg for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++add_cnt;
-// 
+//
 
 //     this->val = Complex::<f64>::new(val + other.val);
 //     return *this;
 // }
-impl<O: Borrow<Self>> AddAssign<O>  for Double {
-    fn add_assign(&mut self, other: O) {
-    }
+impl<O: Borrow<Self>> AddAssign<O> for Double {
+    fn add_assign(&mut self, other: O) {}
 }
 // Double& pub fn operator-=(other:&Double)
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++sub_cnt;
-// 
+//
 
 //     this->val = Complex::<f64>::new(val - other.val);
 //     return *this;
@@ -347,15 +328,13 @@ impl<O: Borrow<Self>> SubAssign<O> for Double {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     ++mul_cnt;
-// 
+//
 
 //     this->val *= Complex::<f64>::new(other.val);
 //     return *this;
 // }
-impl< O: Borrow<Self>> MulAssign<O> for Double {
-    fn mul_assign(&mut self, rhs: O) {
-       
-    }
+impl<O: Borrow<Self>> MulAssign<O> for Double {
+    fn mul_assign(&mut self, rhs: O) {}
 }
 
 // bool pub fn operator==(other:&Double) const
@@ -363,7 +342,7 @@ impl< O: Borrow<Self>> MulAssign<O> for Double {
 //     return (std::abs(val.real() - other.val.real()) < 0.000001)
 //         && (std::abs(val.imag() - other.val.imag()) < 0.000001);
 // }
-impl PartialEq for Double{
+impl PartialEq for Double {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         false
@@ -379,7 +358,7 @@ impl PartialEq for Double{
 // {
 //     return (val.real() < other.val.real());
 // }
-impl Ord for Double{
+impl Ord for Double {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> Ordering {
         // self.into_bigint().cmp(&other.into_bigint())
@@ -390,7 +369,7 @@ impl Ord for Double{
 // {
 //     return (val.real() > other.val.real());
 // }
-impl PartialOrd for Double{
+impl PartialOrd for Double {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))

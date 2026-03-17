@@ -9,7 +9,7 @@
 use clap::{Parser, ValueHint};
 
 use eyre::Result;
-use foundry_cli::{opts::CoreBuildArgs, utils::LoadConfig};
+use foundry_cli::utils::LoadConfig;
 use foundry_common::{compile::ProjectCompiler, sh_println};
 use foundry_compilers::{
     Project, ProjectCompileOutput,

@@ -13,23 +13,27 @@ use alloy_dyn_abi::{DynSolValue, ErrorExt, EventExt};
 use alloy_primitives::{Address, B256, eip191_hash_message, hex, keccak256};
 use alloy_provider::Provider;
 use alloy_rpc_types::{BlockId, BlockNumberOrTag::Latest};
-use cast::{Cast, SimpleCast};
+use cast::cmd::erc20::IERC20;
+use cast::{Cast, SimpleCast, tx::CastTxSender};
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, value_parser};
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use eyre::Result;
+use foundry_cli::utils::LoadConfig;
 use foundry_cli::{handler, utils};
 use foundry_common::{
     abi::get_event,
-    ens::{ProviderEnsExt, namehash},
+    // ens::{ProviderEnsExt, namehash},
     fmt::{format_tokens, format_tokens_raw, format_uint_exp},
     fs,
     selectors::{
-        ParsedSignatures, SelectorImportData, SelectorType, decode_calldata, decode_event_topic,
+        ParsedSignatures, SelectorImportData, decode_calldata, decode_event_topic,
         decode_function_selector, decode_selectors, import_selectors, parse_signatures,
         pretty_calldata,
     },
-    sh_println, shell, stdin,
+    sh_println,
+    shell,
+    stdin,
 };
 use foundry_config::Config;
 use itertools::Itertools;
@@ -47,6 +51,7 @@ mod tests;
 // pub mod cmd;
 // pub mod zkay;
 pub mod contract;
+pub mod debug;
 pub mod tx;
 pub mod zkay_frontend;
 
@@ -57,8 +62,8 @@ mod cmd;
 // use cmd::{cache::CacheSubcommands, generate::GenerateSubcommands, watch};
 
 mod zkay;
+use foundry_common::block_on;
 use zkay::{Zkay, ZkaySubcommand};
-
 // #[macro_use]
 // extern crate foundry_common;
 
@@ -72,7 +77,7 @@ use zkay::{Zkay, ZkaySubcommand};
 fn main() {
     unsafe { backtrace_on_stack_overflow::enable() };
     assert!(std::env::var("ZKAY_PATH").is_ok(), "ZKAY_PATH Not Found");
-    if let Err(err) = utils::block_on(run()) {
+    if let Err(err) = block_on(run()) {
         // let _ = foundry_common::Shell::get().error(&err);
         println!("=========={err:?}");
         std::process::exit(1);
@@ -94,15 +99,20 @@ async fn run() -> Result<()> {
             rpc,
             erc20,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config()?;
             let provider = utils::get_provider(&config)?;
             let account_addr = who.resolve(&provider).await?;
 
             match erc20 {
                 Some(token) => {
-                    let balance = Cast::new(&provider)
-                        .erc20_balance(token, account_addr, block)
+                    let balance = IERC20::new(token, &provider)
+                        .balanceOf(account_addr)
+                        .block(block.unwrap_or_default())
+                        .call()
                         .await?;
+                    // let balance = Cast::new(&provider)
+                    //     .erc20_balance(token, account_addr, block)
+                    //     .await?;
                     sh_println!("{}", format_uint_exp(balance))
                 }
                 None => {
@@ -121,19 +131,24 @@ async fn run() -> Result<()> {
             field,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config()?;
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
                 Cast::new(provider)
-                    .block(block.unwrap_or(BlockId::Number(Latest)), full, field)
+                    .block(
+                        block.unwrap_or(BlockId::Number(Latest)),
+                        full,
+                        vec![field.unwrap().clone()],
+                        false
+                    )
                     .await?
             )
         }
 
         ZkaySubcommand::Estimate(cmd) => cmd.run().await,
         ZkaySubcommand::GasPrice { rpc } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config()?;
             let provider = utils::get_provider(&config)?;
             sh_println!("{}", Cast::new(provider).gas_price().await?)
         }
@@ -145,7 +160,7 @@ async fn run() -> Result<()> {
             disassemble,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config()?;
             let provider = utils::get_provider(&config)?;
             let who = who.resolve(&provider).await?;
             sh_println!(
@@ -160,11 +175,11 @@ async fn run() -> Result<()> {
             confirmations,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config()?;
             let provider = utils::get_provider(&config)?;
             sh_println!(
                 "{}",
-                Cast::new(provider)
+                CastTxSender::new(provider)
                     .receipt(tx_hash, field, confirmations, None, cast_async)
                     .await?
             )

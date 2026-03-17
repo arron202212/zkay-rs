@@ -16,11 +16,11 @@ use crate::cmd::{
 //     mktx::MakeTxArgs, rpc::RpcArgs, run::RunArgs, send::SendTxArgs, storage::StorageArgs,
 //     wallet::WalletSubcommands,
 // };
+use alloy_ens::NameOrAddress;
 use alloy_primitives::{Address, B256, U256};
 use alloy_rpc_types::BlockId;
 use eyre::Result;
-use foundry_cli::opts::{EtherscanOpts, GlobalOpts, RpcOpts};
-use foundry_common::ens::NameOrAddress;
+use foundry_cli::opts::{EtherscanOpts, GlobalArgs, RpcOpts};
 use std::{path::PathBuf, str::FromStr};
 
 use clap::{Parser, Subcommand, ValueHint};
@@ -38,7 +38,7 @@ const VERSION_MESSAGE: &str = env!("ZKAY_VERSION");
 pub struct Zkay {
     /// Include the global options.
     #[command(flatten)]
-    pub global: GlobalOpts,
+    pub global: GlobalArgs,
 
     #[command(subcommand)]
     pub cmd: ZkaySubcommand,

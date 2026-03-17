@@ -900,7 +900,7 @@ impl<
         args: Vec<DataType>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-    ) -> eyre::Result<String> {
+    ) -> eyre::Result<()> {
         self.__conn
             .lock()
             .transact(

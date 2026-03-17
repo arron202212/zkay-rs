@@ -25,10 +25,10 @@
 use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
-use alloy_network::{AnyNetwork, EthereumWallet, TransactionBuilder};
+use alloy_network::{AnyNetwork, AnyTransactionReceipt, EthereumWallet, TransactionBuilder};
 use alloy_primitives::{Address, Bytes, hex};
 use alloy_provider::{PendingTransactionError, Provider, ProviderBuilder};
-use alloy_rpc_types::{AnyTransactionReceipt, TransactionRequest};
+use alloy_rpc_types::TransactionRequest;
 use alloy_serde::WithOtherFields;
 use alloy_signer::Signer;
 use alloy_transport::{Transport, TransportError};
@@ -37,8 +37,8 @@ use eyre::{Context, Result};
 use forge_verify::RetryArgs;
 use forge_verify::VerifyArgs;
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
-    utils::{self, LoadConfig, read_constructor_args_file, remove_contract},
+    opts::{EthereumOpts, EtherscanOpts, TransactionOpts},
+    utils::{self, LoadConfig, read_constructor_args_file},
 };
 use foundry_common::{
     compile::{self},
@@ -84,9 +84,9 @@ use zkay_transaction_crypto_params::params::CryptoParams;
 use zkp_u256::{U256, Zero};
 // use zkay_frontend::compile_zkay_file;
 // use crate::runtime::Runtime;
-use crate::blockchain::web3rs::Web3BlockchainBase;
-use crate::blockchain::web3rs::Web3HttpGanacheBlockchain;
-use crate::blockchain::web3rs::Web3TesterBlockchain;
+// use crate::blockchain::web3rs::Web3BlockchainBase;
+use crate::runtime::BlockchainClass::Web3HttpGanacheBlockchain;
+// use crate::blockchain::web3rs::Web3TesterBlockchain;
 use crate::runtime::BlockchainClass;
 use crate::types::{
     ARcCell, AddressValue, BlockStruct, CipherValue, DataType, KeyPair, MsgStruct, PrivateKeyValue,
@@ -245,7 +245,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         sender: &str,
         pk: &Value<String, PublicKeyValue>,
         crypto_params: &CryptoParams,
-    ) -> eyre::Result<String> {
+    ) -> eyre::Result<()> {
         //         assert isinstance(sender, AddressValue)
         //         assert isinstance(pk, PublicKeyValue)
         zk_print!(r#"Announcing public key "{pk:?}" for address "{sender}""#);
@@ -326,7 +326,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         actual_args: Vec<DataType>,
         should_encrypt: Vec<bool>,
         wei_amount: Option<i32>,
-    ) -> eyre::Result<String> {
+    ) -> eyre::Result<()> {
         //         assert contract_handle is not None
         self.__check_args(actual_args.clone(), should_encrypt);
         zk_print!(r#"Issuing transaction for function "{function}" from account "{sender}""#);
@@ -709,7 +709,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         address: &str,
         pk: &Value<String, PublicKeyValue>,
         crypto_params: &CryptoParams,
-    ) -> eyre::Result<String>;
+    ) -> eyre::Result<()>;
 
     async fn _call(
         &self,
@@ -733,7 +733,7 @@ pub trait ZkayBlockchainInterface<P: ZkayProverInterface + std::marker::Send + s
         function: &str,
         actual_args: &Vec<DataType>,
         wei_amount: Option<i32>,
-    ) -> eyre::Result<String>;
+    ) -> eyre::Result<()>;
     // pass
 
     async fn _deploy(

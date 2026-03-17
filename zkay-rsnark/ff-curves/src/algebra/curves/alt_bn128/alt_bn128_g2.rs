@@ -10,11 +10,12 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init::{
 };
 
 use crate::algebra::curves::{alt_bn128::curves::Bn254, pairing::Pairing};
-use ffec::field_utils::{BigInt,
+use ffec::field_utils::{
+    BigInt,
     bigint::{GMP_NUMB_BITS, bigint},
     field_utils::batch_invert,
 };
-use ffec::{BigInt,Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -195,7 +196,7 @@ type scalar_field = alt_bn128_Fr;
 impl alt_bn128_G2 {
     const h_bitcount: usize = 256;
     const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
- const  h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
+    const h: bigint<{ Self::h_limbs }> = bigint::<{ Self::h_limbs }>(BigInt!("1"));
     pub fn size_in_bits() -> usize {
         twist_field::ceil_size_in_bits() + 1
     }

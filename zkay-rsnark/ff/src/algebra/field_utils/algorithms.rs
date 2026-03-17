@@ -15,7 +15,6 @@ use num_traits::One;
 //     // static Fp4_model<n, modulus> nqr_to_t; // nqr^t
 // }
 
-
 // /** Repeated squaring. */
 //
 // FieldT power(base:&FieldT, exponent:&bigint<m>);
@@ -42,10 +41,7 @@ use num_traits::One;
 //
 // FieldT tonelli_shanks_sqrt<(value:&FieldT);
 
-
-
 // use crate::common::utils;
-
 
 pub struct Powers;
 // using std::usize;
@@ -174,7 +170,7 @@ pub fn tonelli_shanks_sqrt<FieldT: Clone>(value: &FieldT) -> FieldT {
     //     //     check = check.squared();
     //     // }
     //     // assert!(check == one);
-    // 
+    //
 
     //     // compute square root with Tonelli--Shanks
     //     // (does not terminate if not a square!)

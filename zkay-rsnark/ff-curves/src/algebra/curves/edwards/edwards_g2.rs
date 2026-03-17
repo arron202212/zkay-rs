@@ -241,8 +241,8 @@ impl edwards_G2 {
     pub fn mul_by_q(&self) -> edwards_G2 {
         return edwards_G2::new(
             (self.X).Frobenius_map(1),
-(self.Y).Frobenius_map(1)*            edwards_twist_mul_by_q_Y.clone(),
-(self.Z).Frobenius_map(1)*            edwards_twist_mul_by_q_Z.clone(),
+            (self.Y).Frobenius_map(1) * edwards_twist_mul_by_q_Y.clone(),
+            (self.Z).Frobenius_map(1) * edwards_twist_mul_by_q_Z.clone(),
         );
     }
 

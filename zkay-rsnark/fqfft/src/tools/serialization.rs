@@ -101,7 +101,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // #else
 //     char c;
 //     in.read(&c, 1);
-// 
+//
 // }
 
 // inline pub fn  consume_OUTPUT_SEPARATOR(std::istream &in)
@@ -111,7 +111,7 @@ const OUTPUT_SEPARATOR:&str= " ";
 // #else
 //     char c;
 //     in.read(&c, 1);
-// 
+//
 // }
 
 // inline pub fn  output_bool(std::ostream &out, b:bool)

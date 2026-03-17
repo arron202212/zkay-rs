@@ -1,8 +1,10 @@
 use alloy_consensus::{SidecarBuilder, SimpleCoder};
+use alloy_ens::NameOrAddress;
 use alloy_json_abi::Function;
 use alloy_network::{
     AnyNetwork, TransactionBuilder, TransactionBuilder4844, TransactionBuilder7702,
 };
+use alloy_primitives::U256;
 use alloy_primitives::{Address, Bytes, TxKind, hex};
 use alloy_provider::Provider;
 use alloy_rpc_types::{AccessList, Authorization, TransactionInput, TransactionRequest};
@@ -14,7 +16,6 @@ use foundry_cli::{
     opts::{CliAuthorizationList, TransactionOpts},
     utils::{self, parse_function_args},
 };
-use foundry_common::ens::NameOrAddress;
 use foundry_config::{Chain, Config};
 use foundry_wallets::{WalletOpts, WalletSigner};
 
@@ -126,23 +127,22 @@ pub struct InputState {
 /// It is implemented as a stateful builder with expected state transition of [InitState] ->
 /// [TxKindState] -> [InputState].
 #[derive(Debug)]
-pub struct CastTxBuilder<T, P, S> {
+pub struct CastTxBuilder<P, S> {
     provider: P,
     tx: WithOtherFields<TransactionRequest>,
     legacy: bool,
     blob: bool,
-    auth: Option<CliAuthorizationList>,
+    eip4844: bool,
+    auth: Vec<CliAuthorizationList>,
     chain: Chain,
     etherscan_api_key: Option<String>,
     access_list: Option<Option<AccessList>>,
     state: S,
-    _t: std::marker::PhantomData<T>,
 }
 
-impl<T, P> CastTxBuilder<T, P, InitState>
+impl<P> CastTxBuilder<P, InitState>
 where
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     /// Creates a new instance of [CastTxBuilder] filling transaction with fields present in
     /// provided [TransactionOpts].
@@ -190,15 +190,15 @@ where
             blob: tx_opts.blob,
             chain,
             etherscan_api_key,
+            eip4844: false,
             auth: tx_opts.auth,
             access_list: tx_opts.access_list,
             state: InitState,
-            _t: std::marker::PhantomData,
         })
     }
 
     /// Sets [TxKind] for this builder and changes state to [TxKindState].
-    pub async fn with_to(self, to: Option<NameOrAddress>) -> Result<CastTxBuilder<T, P, ToState>> {
+    pub async fn with_to(self, to: Option<NameOrAddress>) -> Result<CastTxBuilder<P, ToState>> {
         let to = if let Some(to) = to {
             Some(to.resolve(&self.provider).await?)
         } else {
@@ -211,18 +211,17 @@ where
             blob: self.blob,
             chain: self.chain,
             etherscan_api_key: self.etherscan_api_key,
+            eip4844: false,
             auth: self.auth,
             access_list: self.access_list,
             state: ToState { to },
-            _t: self._t,
         })
     }
 }
 
-impl<T, P> CastTxBuilder<T, P, ToState>
+impl<P> CastTxBuilder<P, ToState>
 where
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     /// Accepts user-provided code, sig and args params and constructs calldata for the transaction.
     /// If code is present, input will be set to code + encoded constructor arguments. If no code is
@@ -232,7 +231,7 @@ where
         code: Option<String>,
         sig: Option<String>,
         args: Vec<String>,
-    ) -> Result<CastTxBuilder<T, P, InputState>> {
+    ) -> Result<CastTxBuilder<P, InputState>> {
         let (mut args, func) = if let Some(sig) = sig {
             parse_function_args(
                 &sig,
@@ -257,7 +256,7 @@ where
 
         if self.state.to.is_none() && code.is_none() {
             let has_value = self.tx.value.is_some_and(|v| !v.is_zero());
-            let has_auth = self.auth.is_some();
+            let has_auth = !self.auth.is_empty();
             // We only allow user to omit the recipient address if transaction is an EIP-7702 tx
             // without a value.
             if !has_auth || has_value {
@@ -272,6 +271,7 @@ where
             blob: self.blob,
             chain: self.chain,
             etherscan_api_key: self.etherscan_api_key,
+            eip4844: false,
             auth: self.auth,
             access_list: self.access_list,
             state: InputState {
@@ -279,15 +279,13 @@ where
                 input,
                 func,
             },
-            _t: self._t,
         })
     }
 }
 
-impl<T, P> CastTxBuilder<T, P, InputState>
+impl<P> CastTxBuilder<P, InputState>
 where
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     /// Builds [TransactionRequest] and fiils missing fields. Returns a transaction which is ready
     /// to be broadcasted.
@@ -369,7 +367,7 @@ where
         if !self.legacy
             && (self.tx.max_fee_per_gas.is_none() || self.tx.max_priority_fee_per_gas.is_none())
         {
-            let estimate = self.provider.estimate_eip1559_fees(None).await?;
+            let estimate = self.provider.estimate_eip1559_fees().await?;
 
             if !self.legacy {
                 if self.tx.max_fee_per_gas.is_none() {
@@ -383,7 +381,7 @@ where
         }
 
         if self.tx.gas.is_none() {
-            self.tx.gas = Some(self.provider.estimate_gas(&self.tx).await?);
+            self.tx.gas = Some(self.provider.estimate_gas(self.tx.clone()).await?);
         }
 
         Ok((self.tx, self.state.func))
@@ -391,16 +389,16 @@ where
 
     /// Parses the passed --auth value and sets the authorization list on the transaction.
     async fn resolve_auth(&mut self, sender: SenderKind<'_>, tx_nonce: u64) -> Result<()> {
-        let Some(auth) = self.auth.take() else {
+        let Some(auth) = self.auth.first() else {
             return Ok(());
         };
 
         let auth = match auth {
             CliAuthorizationList::Address(address) => {
                 let auth = Authorization {
-                    chain_id: self.chain.id(),
+                    chain_id: U256::from(self.chain.id()),
                     nonce: tx_nonce + 1,
-                    address,
+                    address: *address,
                 };
 
                 let Some(signer) = sender.as_signer() else {
@@ -410,7 +408,7 @@ where
 
                 auth.into_signed(signature)
             }
-            CliAuthorizationList::Signed(auth) => auth,
+            CliAuthorizationList::Signed(auth) => auth.clone(),
         };
 
         self.tx.set_authorization_list(vec![auth]);
@@ -419,10 +417,9 @@ where
     }
 }
 
-impl<T, P, S> CastTxBuilder<T, P, S>
+impl<P, S> CastTxBuilder<P, S>
 where
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     pub fn with_blob_data(mut self, blob_data: Option<Vec<u8>>) -> Result<Self> {
         let Some(blob_data) = blob_data else {
@@ -431,10 +428,17 @@ where
 
         let mut coder = SidecarBuilder::<SimpleCoder>::default();
         coder.ingest(&blob_data);
-        let sidecar = coder.build()?;
 
-        self.tx.set_blob_sidecar(sidecar);
-        self.tx.populate_blob_hashes();
+        if self.eip4844 {
+            let sidecar = coder.build_4844()?;
+            alloy_network::TransactionBuilder4844::set_blob_sidecar(
+                &mut self.tx,
+                alloy_consensus::BlobTransactionSidecarVariant::Eip4844(sidecar),
+            );
+        } else {
+            let sidecar = coder.build_7594()?;
+            self.tx.set_blob_sidecar_7594(sidecar);
+        }
 
         Ok(self)
     }

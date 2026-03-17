@@ -1,8 +1,4 @@
-
 //  Declaration of GF(2^128) finite field.
-
-
-
 
 // // /* gf128 implements the field GF(2)/(x^128 + x^7 + x^2 + x + 1).
 // //    Elements are represented internally with two uint64s */
@@ -14,7 +10,7 @@
 // //     static i64 mul_cnt;
 // //     static i64 sqr_cnt;
 // //     static i64 inv_cnt;
-// // 
+// //
 // //     // x^128 + x^7 + x^2 + x + 1
 // //     static 0b10000111:constexpr uint64_t modulus_ =,
 // //     static 128:constexpr uint64_t num_bits =,
@@ -93,12 +89,12 @@
 // // i64 gf128::mul_cnt = 0;
 // // i64 gf128::sqr_cnt = 0;
 // // i64 gf128::inv_cnt = 0;
-// 
+//
 
-// 
+//
 // // use crate::algebra::fields::binary::gf128.tcc;
 
-// 
+//
 // //#include <cstdio>
 
 // // #define __STDC_FORMAT_MACROS
@@ -113,9 +109,7 @@
 // //#include <emmintrin.h>
 // //#include <immintrin.h>
 // //#include <smmintrin.h>
-// 
-
-
+//
 
 // // using std::usize;
 
@@ -151,7 +145,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// 
+//
 //     this->value_[0] ^= other.value_[0];
 //     this->value_[1] ^= other.value_[1];
 //     return (*this);
@@ -161,7 +155,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
-// 
+//
 //     this->value_[0] ^= other.value_[0];
 //     this->value_[1] ^= other.value_[1];
 //     return (*this);
@@ -171,7 +165,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
-// 
+//
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
@@ -236,7 +230,7 @@
 //     this->value_[1] = result[1];
 
 //     return (*this);
-// 
+//
 // }
 
 // gf128& gf128::operator^=(const u64 pow)
@@ -250,7 +244,7 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 //     this->mul_cnt--;
-// 
+//
 //     this->operator*=(*this);
 //     return *this;
 // }
@@ -304,7 +298,7 @@
 //     this->inv_cnt++;
 //     this->mul_cnt -= 13;
 //     this->sqr_cnt -= 127;
-// 
+//
 //     assert!(!this->is_zero());
 //     gf128 a(*this);
 
@@ -398,10 +392,8 @@
 //     return in;
 // }
 
-// 
+//
 // use crate::algebra::field_utils::algorithms;
-
-
 
 //
 // gf128& gf128::operator^=(pow:&bigint<m>)
@@ -416,4 +408,4 @@
 //     return power<gf128>(*this, pow);
 // }
 
-// 
+//

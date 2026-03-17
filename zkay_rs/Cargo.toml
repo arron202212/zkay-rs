@@ -74,11 +74,11 @@ forge-verify = { workspace=true }
 # forge-script-sequence = { path = "crates/script-sequence" }
 # foundry-cheatcodes = { path = "crates/cheatcodes" }
 # foundry-cheatcodes-spec = { path = "crates/cheatcodes/spec" }
-# foundry-cli = { workspace=true }
+foundry-cli = { workspace=true }
 foundry-common = { workspace=true }
 # foundry-common-fmt = { path = "crates/common/fmt" }
 foundry-config = { workspace=true }
-# foundry-debugger = { path = "crates/debugger" }
+foundry-debugger = {workspace=true }
 foundry-evm = { workspace=true }
 # foundry-evm-abi = { path = "crates/evm/abi" }
 # foundry-evm-core = { path = "crates/evm/core" }
@@ -112,9 +112,10 @@ alloy-consensus = { workspace = true }
 # alloy-json-rpc = { version = "0.5.4", default-features = false }
 alloy-network = { workspace = true }
 alloy-provider = { workspace= true }
+alloy-ens = { workspace= true }
 # alloy-pubsub = { version = "0.5.4", default-features = false }
 # alloy-rpc-client = { version = "0.5.4", default-features = false }
-alloy-rpc-types = {workspace = true }
+alloy-rpc-types = {workspace = true, default-features = true  }
 alloy-serde = {workspace=true}
 alloy-signer = {workspace=true}
 # alloy-signer-aws = { version = "0.5.4", default-features = false }

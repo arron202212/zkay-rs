@@ -46,9 +46,8 @@ use zeroize::Zeroize;
 // //  */
 pub const GMP_NUMB_BITS: usize = 64;
 
-#[derive(Copy, Clone, Debug, PartialOrd, Ord,PartialEq, Eq, Hash, Zeroize)]
+#[derive(Copy, Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash, Zeroize)]
 pub struct bigint<const N: usize>(pub BigInt<N>);
-
 
 impl<const N: usize> std::iter::ExactSizeIterator for bigint<N> {
     fn len(&self) -> usize {
@@ -56,7 +55,7 @@ impl<const N: usize> std::iter::ExactSizeIterator for bigint<N> {
     }
 }
 
-impl<const N: usize> Iterator for bigint<N>  {
+impl<const N: usize> Iterator for bigint<N> {
     // we will be counting with usize
     type Item = u64;
 
@@ -69,7 +68,7 @@ impl<const N: usize> Iterator for bigint<N>  {
         // if self.count < 6 {
         //     Some(0)
         // } else {
-            None
+        None
         // }
     }
 }
@@ -92,11 +91,9 @@ impl<const N: usize> AsRef<[u64]> for bigint<N> {
 }
 #[macro_export]
 macro_rules! BigInte {
-    ($c0:expr) => {{
-        bigint($crate::BigInt!(c0))
-    }};
+    ($c0:expr) => {{ bigint($crate::BigInt!(c0)) }};
 }
-const SS:bigint<100>=bigint::<100>(BigInt!("1"));
+const SS: bigint<100> = bigint::<100>(BigInt!("1"));
 // // using usize;
 use std::mem;
 impl<const N: usize> bigint<N> {
@@ -248,7 +245,7 @@ impl<const N: usize> fmt::Display for bigint<N> {
 //     out << t;
 
 //     mpz_clear(t);
-// 
+//
 //     return out;
 // }
 
@@ -278,6 +275,6 @@ impl<const N: usize> fmt::Display for bigint<N> {
 //     }
 
 //     delete[] s_copy;
-// 
+//
 //     return in;
 // }

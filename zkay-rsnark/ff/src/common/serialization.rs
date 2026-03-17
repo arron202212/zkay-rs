@@ -9,7 +9,6 @@
 
 // Declaration of serialization routines and constants.
 
-
 // #define SERIALIZATION_HPP_
 
 //#include <istream>
@@ -17,8 +16,6 @@
 //#include <ostream>
 //#include <set>
 //#include <vector>
-
-
 
 /*
  * @todo
@@ -102,16 +99,10 @@ pub const OUTPUT_SEPARATOR:&str= " ";
 //
 // std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
-
-
-
-
-
 use crate::common::utils;
 use std::io::BufRead;
 use std::io::BufWriter;
 use std::io::Write;
-
 
 // using std::usize;
 
@@ -129,7 +120,6 @@ pub fn consume_OUTPUT_NEWLINE(ins: &impl BufRead) {
     // #else
     // let mut c;
     // in.read(&c, 1);
-    
 }
 
 #[inline]
@@ -140,7 +130,6 @@ pub fn consume_OUTPUT_SEPARATOR(ins: &impl BufRead) {
     // #else
     // char c;
     // ins.read(&c, 1);
-    
 }
 
 #[inline]
@@ -192,8 +181,6 @@ pub fn reserialize<T: Clone>(obj: &T) -> T {
 }
 
 // }
-
-
 
 //
 // std::ostream& operator<<(std::ostream& out, v:&Vec<T>)

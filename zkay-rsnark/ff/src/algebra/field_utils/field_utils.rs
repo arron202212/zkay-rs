@@ -126,7 +126,6 @@ enum field_type {
 //
 // pub fn  batch_invert(Vec<FieldT> &vec);
 
-
 // trait FTConfig {
 //     const NUM_LIMBS: usize;
 // }

@@ -1,6 +1,4 @@
-
 //  Declaration of GF(2^64) finite field.
-
 
 // /* gf64 implements the field GF(2)/[x^64 + x^4 + x^3 + x + 1].
 //    Elements are represented internally with a single uint64 */
@@ -12,7 +10,7 @@
 // //     static i64 mul_cnt;
 // //     static i64 sqr_cnt;
 // //     static i64 inv_cnt;
-// // 
+// //
 // //     // x^64 + x^4 + x^3 + x + 1. The assembly code assumes that no term other
 // //     // than x^64 is greater than x^31, to enable faster multiplication.
 // //     static 0b11011:constexpr uint64_t modulus_ =,
@@ -88,12 +86,12 @@
 // // i64 gf64::mul_cnt = 0;
 // // i64 gf64::sqr_cnt = 0;
 // // i64 gf64::inv_cnt = 0;
-// 
+//
 
-// 
+//
 // // use crate::algebra::fields::binary::gf64.tcc;
 
-// 
+//
 
 // //#include <cstdio>
 
@@ -109,9 +107,7 @@
 // //#include <emmintrin.h>
 // //#include <immintrin.h>
 // //#include <smmintrin.h>
-// 
-
-
+//
 
 // // using std::usize;
 
@@ -141,7 +137,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->add_cnt++;
-// 
+//
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -150,7 +146,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sub_cnt++;
-// 
+//
 //     this->value_ ^= other.value_;
 //     return (*this);
 // }
@@ -160,7 +156,7 @@
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
-// 
+//
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
@@ -203,7 +199,7 @@
 //     this->value_ = result;
 
 //     return (*this);
-// 
+//
 // }
 
 // gf64& gf64::operator^=(const u64 pow)
@@ -217,7 +213,7 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->sqr_cnt++;
 //     this->mul_cnt--;
-// 
+//
 //     this->operator*=(*this);
 //     return *this;
 // }
@@ -283,7 +279,7 @@
 //     this->inv_cnt++;
 //     this->mul_cnt -= 15;
 //     this->sqr_cnt -= 58;
-// 
+//
 //     assert!(!this->is_zero());
 //     // comments on the right side are of the form operation_number : exponent at the set variable
 //     gf64 t0 = *this;        //    1 : 1
@@ -398,11 +394,9 @@
 //     return in;
 // }
 
-// 
+//
 
 // use crate::algebra::field_utils::algorithms;
-
-
 
 //
 // gf64& gf64::operator^=(pow:&bigint<m>)
@@ -417,4 +411,4 @@
 //     return power<gf64>(*this, pow);
 // }
 
-// 
+//

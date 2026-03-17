@@ -27,7 +27,7 @@ impl FpmConfig for mnt6_G1 {
     type Fr = mnt6_Fq;
 }
 impl mnt6_G1 {
-  pub fn new(X: mnt6_Fq, Y: mnt6_Fq, Z: mnt6_Fq) -> Self {
+    pub fn new(X: mnt6_Fq, Y: mnt6_Fq, Z: mnt6_Fq) -> Self {
         Self { X, Y, Z }
     }
     pub fn size_in_bits() -> usize {
@@ -42,7 +42,7 @@ impl mnt6_G1 {
 }
 
 impl Default for mnt6_G1 {
-     fn default() -> Self {
+    fn default() -> Self {
         Self::G1_zero()
     }
 }
@@ -104,7 +104,7 @@ impl mnt6_G1 {
     pub fn add(&self, other: &mnt6_G1) -> mnt6_G1 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -151,7 +151,7 @@ impl mnt6_G1 {
         //assert!(other.Z == mnt6_Fq::one());
 
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -199,7 +199,7 @@ impl mnt6_G1 {
 
         let XX = (self.X).squared(); // XX  = X1^2
         let ZZ = (self.Z).squared(); // ZZ  = Z1^2
-        let w :mnt6_Fq=   ZZ *mnt6_G1::coeff_a+ (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let w: mnt6_Fq = ZZ * mnt6_G1::coeff_a + (XX + XX + XX); // w   = a*ZZ + 3*XX
         let Y1Z1 = (self.Y) * (self.Z);
         let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
         let ss = s.squared(); // ss  = s^2
@@ -238,7 +238,7 @@ impl mnt6_G1 {
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();
 
-        return (self.Z * (Y2 -   Z2*mnt6_G1::coeff_b) == self.X * (X2 +  Z2*mnt6_G1::coeff_a ));
+        return (self.Z * (Y2 - Z2 * mnt6_G1::coeff_b) == self.X * (X2 + Z2 * mnt6_G1::coeff_a));
     }
 
     pub fn zero() -> Self {
@@ -249,14 +249,22 @@ impl mnt6_G1 {
         return Self::G1_one();
     }
     pub fn G1_zero() -> Self {
-        Self{X:Default::default(),Y:Default::default(),Z:Default::default(),}
+        Self {
+            X: Default::default(),
+            Y: Default::default(),
+            Z: Default::default(),
+        }
     }
 
     pub fn G1_one() -> Self {
-                Self{X:Default::default(),Y:Default::default(),Z:Default::default(),}
+        Self {
+            X: Default::default(),
+            Y: Default::default(),
+            Z: Default::default(),
+        }
     }
     pub fn random_element() -> Self {
-     Self::G1_one()*scalar_field::random_element().as_bigint()
+        Self::G1_one() * scalar_field::random_element().as_bigint()
     }
 
     pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt6_G1>) {

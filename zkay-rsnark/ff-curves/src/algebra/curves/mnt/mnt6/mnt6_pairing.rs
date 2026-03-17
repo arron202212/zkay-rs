@@ -132,8 +132,7 @@ pub fn mnt6_final_exponentiation_last_chunk(elt: &mnt6_Fq6, elt_inv: &mnt6_Fq6) 
     enter_block("Call to mnt6_final_exponentiation_last_chunk", false);
     let elt_q = elt.Frobenius_map(1);
     let w1_part = elt_q.cyclotomic_exp(&mnt6_final_exponent_last_chunk_w1);
-    let w0_part=
-    if mnt6_final_exponent_last_chunk_is_w0_neg {
+    let w0_part = if mnt6_final_exponent_last_chunk_is_w0_neg {
         elt_inv.cyclotomic_exp(&mnt6_final_exponent_last_chunk_abs_of_w0)
     } else {
         elt.cyclotomic_exp(&mnt6_final_exponent_last_chunk_abs_of_w0)
@@ -183,7 +182,7 @@ pub fn mnt6_affine_ate_precompute_G1(P: &mnt6_G1) -> mnt6_affine_ate_G1_precompu
     let mut result = mnt6_affine_ate_G1_precomputation::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PY_twist_squared = mnt6_twist.squared()*Pcopy.Y.clone();
+    result.PY_twist_squared = mnt6_twist.squared() * Pcopy.Y.clone();
 
     leave_block("Call to mnt6_affine_ate_precompute_G1", false);
     result
@@ -291,7 +290,7 @@ pub fn mnt6_affine_ate_miller_loop(
 
         let mut g_RR_at_P = mnt6_Fq6::new(
             prec_P.PY_twist_squared,
-            c.gamma_twist.clone()*(-prec_P.PX).clone()  + c.gamma_X - c.old_RY,
+            c.gamma_twist.clone() * (-prec_P.PX).clone() + c.gamma_X - c.old_RY,
         );
         f = f.squared().mul_by_2345(&g_RR_at_P);
 
@@ -302,12 +301,12 @@ pub fn mnt6_affine_ate_miller_loop(
             if NAF[i] > 0 {
                 g_RQ_at_P = mnt6_Fq6::new(
                     prec_P.PY_twist_squared,
- c.gamma_twist.clone()*                   -prec_P.PX.clone() + c.gamma_X - prec_Q.QY,
+                    c.gamma_twist.clone() * -prec_P.PX.clone() + c.gamma_X - prec_Q.QY,
                 );
             } else {
                 g_RQ_at_P = mnt6_Fq6::new(
                     prec_P.PY_twist_squared,
- c.gamma_twist.clone()*                   -prec_P.PX.clone() + c.gamma_X + prec_Q.QY,
+                    c.gamma_twist.clone() * -prec_P.PX.clone() + c.gamma_X + prec_Q.QY,
                 );
             }
             f = f.mul_by_2345(&g_RQ_at_P);
@@ -331,12 +330,12 @@ pub fn mnt6_affine_ate_miller_loop(
 }
 
 /* ate pairing */
-#[derive(Clone, Debug,Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_mnt6_G2_projective {
-pub  X: mnt6_Fq3,
-pub  Y: mnt6_Fq3,
-pub  Z: mnt6_Fq3,
-pub  T: mnt6_Fq3,
+    pub X: mnt6_Fq3,
+    pub Y: mnt6_Fq3,
+    pub Z: mnt6_Fq3,
+    pub T: mnt6_Fq3,
 }
 impl extended_mnt6_G2_projective {
     pub fn print(&self) {
@@ -354,7 +353,7 @@ impl extended_mnt6_G2_projective {
 
 pub fn doubling_step_for_flipped_miller_loop(
     current: &mut extended_mnt6_G2_projective,
-    dc:&mut  mnt6_ate_dbl_coeffs,
+    dc: &mut mnt6_ate_dbl_coeffs,
 ) {
     let X = current.X.clone();
     let mut Y = current.Y.clone();
@@ -370,7 +369,7 @@ pub fn doubling_step_for_flipped_miller_loop(
     let G = F.squared(); // G = F^2
 
     current.X = -(E + E + E + E) + G; // X3 = -4*E+G
-    current.Y = D*-mnt6_Fq::from("8")  + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
+    current.Y = D * -mnt6_Fq::from("8") + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
     current.Z = (Y + Z).squared() - C - Z.squared(); // Z3 = (Y1+Z1)^2-C-Z1^2
     current.T = current.Z.squared(); // T3 = Z3^2
 
@@ -427,8 +426,8 @@ pub fn mnt6_ate_precompute_G1(P: &mnt6_G1) -> mnt6_ate_G1_precomp {
     let mut result = mnt6_ate_G1_precomp::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PX_twist = mnt6_twist.clone()*Pcopy.X.clone()  ;
-    result.PY_twist = mnt6_twist.clone()*Pcopy.Y.clone()  ;
+    result.PX_twist = mnt6_twist.clone() * Pcopy.X.clone();
+    result.PY_twist = mnt6_twist.clone() * Pcopy.Y.clone();
 
     leave_block("Call to mnt6_ate_precompute_G1", false);
     result
@@ -467,12 +466,18 @@ pub fn mnt6_ate_precompute_G2(Q: &mnt6_G2) -> mnt6_ate_G2_precomp {
         }
 
         let mut dc = mnt6_ate_dbl_coeffs::default();
-        doubling_step_for_flipped_miller_loop(&mut R,&mut  dc);
+        doubling_step_for_flipped_miller_loop(&mut R, &mut dc);
         result.dbl_coeffs.push(dc);
 
         if bit {
             let mut ac = mnt6_ate_add_coeffs::default();
-            mixed_addition_step_for_flipped_miller_loop(result.QX, result.QY, result.QY2, R.clone(), ac.clone());
+            mixed_addition_step_for_flipped_miller_loop(
+                result.QX,
+                result.QY,
+                result.QY2,
+                R.clone(),
+                ac.clone(),
+            );
             result.add_coeffs.push(ac);
         }
     }

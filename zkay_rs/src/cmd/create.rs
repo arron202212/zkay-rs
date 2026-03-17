@@ -5,13 +5,15 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::CastTxSender;
+use crate::utils::find_contract_artifacts;
 use alloy_chains::Chain;
 use alloy_dyn_abi::{DynSolValue, JsonAbiExt, Specifier};
 use alloy_json_abi::{Constructor, JsonAbi};
-use alloy_network::{AnyNetwork, EthereumWallet, TransactionBuilder};
+use alloy_network::{AnyNetwork, AnyTransactionReceipt, EthereumWallet, TransactionBuilder};
 use alloy_primitives::{Address, Bytes, hex};
 use alloy_provider::{PendingTransactionError, Provider, ProviderBuilder};
-use alloy_rpc_types::{AnyTransactionReceipt, TransactionRequest};
+use alloy_rpc_types::TransactionRequest;
 use alloy_serde::WithOtherFields;
 use alloy_signer::Signer;
 use alloy_transport::{Transport, TransportError};
@@ -20,12 +22,13 @@ use eyre::{Context, Result};
 use forge_verify::RetryArgs;
 use forge_verify::VerifyArgs;
 use foundry_cli::{
-    opts::{CoreBuildArgs, EthereumOpts, EtherscanOpts, TransactionOpts},
-    utils::{self, LoadConfig, read_constructor_args_file, remove_contract},
+    opts::{BuildOpts, EthereumOpts, EtherscanOpts, TransactionOpts},
+    utils::{self, LoadConfig, get_provider, read_constructor_args_file},
 };
 use foundry_common::{
     compile::{self},
     fmt::parse_tokens,
+    provider::RetryProvider,
 };
 use foundry_compilers::{ArtifactId, Project};
 use foundry_compilers::{artifacts::BytecodeObject, info::ContractInfo, utils::canonicalize};
@@ -82,7 +85,7 @@ alloy_sol_types::sol!(
 alloy_sol_types::sol!(
     function greeting(uint256 i) public returns (string);
 );
-merge_impl_figment_convert!(CreateArgs, opts, eth);
+merge_impl_figment_convert!(CreateArgs, eth);
 
 /// CLI arguments for `forge create`.
 #[derive(Clone, Debug, Parser)]
@@ -159,7 +162,7 @@ pub struct CreateArgs {
     pub timeout: Option<u64>,
 
     #[command(flatten)]
-    opts: CoreBuildArgs,
+    build: BuildOpts,
 
     #[command(flatten)]
     tx: TransactionOpts,
@@ -198,7 +201,7 @@ impl CreateArgs {
         if self.is_send {
             return self.send().await;
         }
-        let config = self.try_load_config_emit_warnings()?;
+        let config = self.load_config_no_warnings()?;
 
         let Self {
             // to,
@@ -329,7 +332,7 @@ impl CreateArgs {
 
     async fn call(&self) -> eyre::Result<()> {
         use alloy_primitives::{Address, Bytes, U256};
-        use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
+        // use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
         use alloy_rpc_types::TransactionRequest;
         use alloy_serde::WithOtherFields;
         use alloy_sol_types::{SolCall, sol};
@@ -339,23 +342,26 @@ impl CreateArgs {
         sol!(
             function is_result_published() public view returns (bool) ;
         );
+        // let alloy_provider = ProviderBuilder::<AnyNetwork>
+        //     ::new("http://localhost:8545")
+        //     ;
         let alloy_provider = ProviderBuilder::<_, _, AnyNetwork>::default()
-            .on_builtin("http://localhost:8545")
+            .connect("http://localhost:8545")
             .await?;
         let to = Address::from_str("0x5b98D45C450fff4998d9Eb408C460C8b8B344Afa")?;
         let greeting = is_result_publishedCall {}.abi_encode(); //is_result_publishedCall
         let bytes = Bytes::from_iter(greeting.iter());
         let tx = TransactionRequest::default().to(to).input(bytes.into());
         let tx = WithOtherFields::new(tx);
-        let cast = Cast::new(alloy_provider);
-        let data = cast.call(&tx, None, None).await?;
+        let cast = Cast::new(&alloy_provider);
+        let data = cast.call(&tx, None, None, None, None).await?;
         println!("=========call==========={}", data);
         Ok(())
     }
 
     async fn send(&self) -> eyre::Result<()> {
         use alloy_primitives::{Address, Bytes, U256};
-        use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
+        // use alloy_provider::{ProviderBuilder, RootProvider, network::AnyNetwork};
         use alloy_rpc_types::TransactionRequest;
         use alloy_serde::WithOtherFields;
         use alloy_sol_types::{SolCall, sol};
@@ -363,7 +369,7 @@ impl CreateArgs {
         use std::str::FromStr;
 
         let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
-            .on_builtin("http://localhost:8545")
+            .connect("http://localhost:8545")
             .await?;
         let from = Address::from_str("0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")?;
         let to = Address::from_str("0xB3C95ff08316fb2F2e3E52Ee82F8e7b605Aa1304")?;
@@ -380,13 +386,13 @@ impl CreateArgs {
             .input(bytes.into())
             .from(from);
         let tx = WithOtherFields::new(tx);
-        let cast = Cast::new(provider);
+        let cast = CastTxSender::new(provider);
         let data = cast.send(tx).await?;
         println!("{:#?}", data);
         Ok(())
     }
     pub async fn deploy_pki(mut self) -> Result<()> {
-        let config = self.try_load_config_emit_warnings()?;
+        let config = self.load_config_no_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         let sender = if let Some(address) = eth.wallet.from {
@@ -430,7 +436,7 @@ impl CreateArgs {
         Ok(())
     }
     pub async fn deploy_external(mut self) -> Result<()> {
-        let config = self.try_load_config_emit_warnings()?;
+        let config = self.load_config_no_warnings()?;
         let Self { mut tx, eth, .. } = self;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         let sender = if let Some(address) = eth.wallet.from {
@@ -468,7 +474,7 @@ impl CreateArgs {
     }
     /// Executes the command to create a contract
     pub async fn deploy_lib(mut self) -> Result<()> {
-        let config = self.try_load_config_emit_warnings()?;
+        let config = self.load_config_no_warnings()?;
         // Find Project & Compile
         let project = config.project()?;
 
@@ -490,8 +496,8 @@ impl CreateArgs {
 
         println!("==target_path========={},", target_path.display());
         let output = compile::compile_target(&target_path, &project, self.json)?;
-        let (abi, bin, id) = remove_contract(output, &target_path, &self.contract.name)?;
-
+        // let (abi, bin,_, id) = output.remove_contract(&target_path).ok_or_else(||eyre::eyre!(""));//, &self.contract.name
+        let (abi, bin, id) = find_contract_artifacts(output, &target_path, &self.contract.name)?;
         let bin = match bin.object {
             BytecodeObject::Bytecode(_) => bin.object,
             _ => {
@@ -555,7 +561,7 @@ impl CreateArgs {
             let deployer = signer.address();
             let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
                 .wallet(EthereumWallet::new(signer))
-                .on_provider(provider);
+                .connect_provider(provider);
             self.deploy(
                 abi,
                 bin,
@@ -632,7 +638,7 @@ impl CreateArgs {
             &external_contract_addresses,
         );
         // let inst_target_path=PathBuf::from(inst_target_path_str.clone());
-        let inst_config = Config::load_with_root(inst_target_path).sanitized();
+        let inst_config = Config::load_with_root(inst_target_path)?.sanitized();
         let _inst_project = inst_config.project()?;
         // with_context_block!(var filename= self.__hardcoded_external_contracts_ctx(&project_dir, &external_contract_addresses) =>{
         let (abi, bin, id) = self.compile_contract(&filename, project, contract)?;
@@ -874,8 +880,10 @@ impl CreateArgs {
         //     "bin": jout["evm"]["bytecode"]["object"],
         //     "deployed_bin": jout["evm"]["deployedBytecode"]["object"],
         // })
-        let mut output = compile::compile_target(&sol_filename, project, self.json)?;
-        remove_contract(output, &sol_filename, contract_name)
+        let mut output = compile::compile_target(&sol_filename, project, self.json)?; //, contract_name
+        // output.remove_contract(sol_filename).ok_or_else(|| eyre::eyre!(""))
+        let (abi, bin, id) = find_contract_artifacts(output, &sol_filename, &contract_name)?;
+        Ok((abi, bin, id))
     }
     async fn _deploy_contract(
         &self,
@@ -917,7 +925,7 @@ impl CreateArgs {
         } else {
             vec![]
         };
-        let config = self.try_load_config_emit_warnings()?;
+        let config = self.load_config_no_warnings()?;
 
         let provider = utils::get_provider(&config)?;
 
@@ -948,7 +956,7 @@ impl CreateArgs {
             let deployer = signer.address();
             let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
                 .wallet(EthereumWallet::new(signer))
-                .on_provider(provider);
+                .connect_provider(provider);
             self.clone()
                 .deploy(
                     abi,
@@ -1028,19 +1036,23 @@ impl CreateArgs {
             skip_is_verified_check: true,
             watch: true,
             retry: self.retry,
-            libraries: self.opts.libraries.clone(),
+            libraries: self.build.libraries.clone(),
             root: None,
             verifier: self.verifier.clone(),
-            via_ir: self.opts.via_ir,
-            evm_version: self.opts.compiler.evm_version,
+            via_ir: self.build.via_ir,
+            evm_version: self.build.compiler.evm_version,
             show_standard_json_input: self.show_standard_json_input,
             guess_constructor_args: false,
             compilation_profile: Some(id.profile.to_string()),
+            use_solc: None,
+            no_auto_detect: false,
+            language: None,
+            creation_transaction_hash: None,
         };
 
         // Check config for Etherscan API Keys to avoid preflight check failing if no
         // ETHERSCAN_API_KEY value set.
-        let config = verify.load_config_emit_warnings();
+        let config = verify.load_config_no_warnings()?;
         verify.etherscan.key = config
             .get_etherscan_config_with_chain(Some(chain.into()))?
             .map(|c| c.key);
@@ -1056,7 +1068,7 @@ impl CreateArgs {
 
     /// Deploys the contract
     #[allow(clippy::too_many_arguments)]
-    async fn deploy<P: Provider<T, AnyNetwork>, T: Transport + Clone>(
+    async fn deploy<P: Provider<AnyNetwork>>(
         self,
         abi: JsonAbi,
         bin: BytecodeObject,
@@ -1106,7 +1118,7 @@ impl CreateArgs {
             .set_gas_limit(if let Some(gas_limit) = self.tx.gas_limit {
                 Ok(gas_limit.to())
             } else {
-                provider.estimate_gas(&deployer.tx).await
+                provider.estimate_gas(deployer.tx.clone()).await
             }?);
 
         if is_legacy {
@@ -1117,7 +1129,7 @@ impl CreateArgs {
             };
             deployer.tx.set_gas_price(gas_price);
         } else {
-            let estimate = provider.estimate_eip1559_fees(None).await.wrap_err("Failed to estimate EIP1559 fees. This chain might not support EIP1559, try adding --legacy to your command.")?;
+            let estimate = provider.estimate_eip1559_fees().await.wrap_err("Failed to estimate EIP1559 fees. This chain might not support EIP1559, try adding --legacy to your command.")?;
             let priority_fee = if let Some(priority_fee) = self.tx.priority_gas_price {
                 priority_fee.to()
             } else {
@@ -1171,8 +1183,8 @@ impl CreateArgs {
 
         println!("Starting contract verification...");
 
-        let num_of_optimizations = if self.opts.compiler.optimize.unwrap_or_default() {
-            self.opts.compiler.optimizer_runs
+        let num_of_optimizations = if self.build.compiler.optimize.unwrap_or_default() {
+            self.build.compiler.optimizer_runs
         } else {
             None
         };
@@ -1193,14 +1205,18 @@ impl CreateArgs {
             skip_is_verified_check: true,
             watch: true,
             retry: self.retry,
-            libraries: self.opts.libraries.clone(),
+            libraries: self.build.libraries.clone(),
             root: None,
             verifier: self.verifier,
-            via_ir: self.opts.via_ir,
-            evm_version: self.opts.compiler.evm_version,
+            via_ir: self.build.via_ir,
+            evm_version: self.build.compiler.evm_version,
             show_standard_json_input: self.show_standard_json_input,
             guess_constructor_args: false,
             compilation_profile: Some(id.profile.to_string()),
+            use_solc: None,
+            no_auto_detect: false,
+            language: None,
+            creation_transaction_hash: None,
         };
         println!(
             "Waiting for {} to detect contract deployment...",
@@ -1251,7 +1267,7 @@ impl figment::Provider for CreateArgs {
 /// compatibility with less-abstract Contracts.
 ///
 /// For full usage docs, see [`DeploymentTxFactory`].
-pub type ContractFactory<P, T> = DeploymentTxFactory<Arc<P>, P, T>;
+pub type ContractFactory<P> = DeploymentTxFactory<Arc<P>, P>;
 
 /// Helper which manages the deployment transaction of a smart contract. It
 /// wraps a deployment transaction, and retrieves the contract address output
@@ -1260,16 +1276,16 @@ pub type ContractFactory<P, T> = DeploymentTxFactory<Arc<P>, P, T>;
 /// Currently, we recommend using the [`ContractDeployer`] type alias.
 #[derive(Debug)]
 #[must_use = "ContractDeploymentTx does nothing unless you `send` it"]
-pub struct ContractDeploymentTx<B, P, T, C> {
+pub struct ContractDeploymentTx<B, P, C> {
     /// the actual deployer, exposed for overriding the defaults
-    pub deployer: Deployer<B, P, T>,
+    pub deployer: Deployer<B, P>,
     /// marker for the `Contract` type to create afterwards
     ///
     /// this type will be used to construct it via `From::from(Contract)`
     _contract: PhantomData<C>,
 }
 
-impl<B, P, T, C> Clone for ContractDeploymentTx<B, P, T, C>
+impl<B, P, C> Clone for ContractDeploymentTx<B, P, C>
 where
     B: Clone,
 {
@@ -1281,8 +1297,8 @@ where
     }
 }
 
-impl<B, P, T, C> From<Deployer<B, P, T>> for ContractDeploymentTx<B, P, T, C> {
-    fn from(deployer: Deployer<B, P, T>) -> Self {
+impl<B, P, C> From<Deployer<B, P>> for ContractDeploymentTx<B, P, C> {
+    fn from(deployer: Deployer<B, P>) -> Self {
         Self {
             deployer,
             _contract: PhantomData,
@@ -1293,7 +1309,7 @@ impl<B, P, T, C> From<Deployer<B, P, T>> for ContractDeploymentTx<B, P, T, C> {
 /// Helper which manages the deployment transaction of a smart contract
 #[derive(Debug)]
 #[must_use = "Deployer does nothing unless you `send` it"]
-pub struct Deployer<B, P, T> {
+pub struct Deployer<B, P> {
     /// The deployer's transaction, exposed for overriding the defaults
     pub tx: WithOtherFields<TransactionRequest>,
     abi: JsonAbi,
@@ -1301,10 +1317,9 @@ pub struct Deployer<B, P, T> {
     confs: usize,
     timeout: u64,
     _p: PhantomData<P>,
-    _t: PhantomData<T>,
 }
 
-impl<B, P, T> Clone for Deployer<B, P, T>
+impl<B, P> Clone for Deployer<B, P>
 where
     B: Clone,
 {
@@ -1316,16 +1331,14 @@ where
             confs: self.confs,
             timeout: self.timeout,
             _p: PhantomData,
-            _t: PhantomData,
         }
     }
 }
 
-impl<B, P, T> Deployer<B, P, T>
+impl<B, P> Deployer<B, P>
 where
     B: Borrow<P> + Clone,
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     /// Broadcasts the contract deployment transaction and after waiting for it to
     /// be sufficiently confirmed (default: 1), it returns a tuple with
@@ -1388,16 +1401,15 @@ where
 /// # Ok(())
 /// # }
 #[derive(Debug)]
-pub struct DeploymentTxFactory<B, P, T> {
+pub struct DeploymentTxFactory<B, P> {
     client: B,
     abi: JsonAbi,
     bytecode: Bytes,
     timeout: u64,
     _p: PhantomData<P>,
-    _t: PhantomData<T>,
 }
 
-impl<B, P, T> Clone for DeploymentTxFactory<B, P, T>
+impl<B, P> Clone for DeploymentTxFactory<B, P>
 where
     B: Clone,
 {
@@ -1408,16 +1420,14 @@ where
             bytecode: self.bytecode.clone(),
             timeout: self.timeout,
             _p: PhantomData,
-            _t: PhantomData,
         }
     }
 }
 
-impl<P, T, B> DeploymentTxFactory<B, P, T>
+impl<P, B> DeploymentTxFactory<B, P>
 where
     B: Borrow<P> + Clone,
-    P: Provider<T, AnyNetwork>,
-    T: Transport + Clone,
+    P: Provider<AnyNetwork>,
 {
     /// Creates a factory for deployment of the Contract with bytecode, and the
     /// constructor defined in the abi. The client will be used to send any deployment
@@ -1429,7 +1439,6 @@ where
             bytecode,
             timeout,
             _p: PhantomData,
-            _t: PhantomData,
         }
     }
 
@@ -1438,7 +1447,7 @@ where
     pub fn deploy_tokens(
         self,
         params: Vec<DynSolValue>,
-    ) -> Result<Deployer<B, P, T>, ContractDeploymentError>
+    ) -> Result<Deployer<B, P>, ContractDeploymentError>
     where
         B: Clone,
     {
@@ -1466,7 +1475,6 @@ where
             confs: 1,
             timeout: self.timeout,
             _p: PhantomData,
-            _t: PhantomData,
         })
     }
 }

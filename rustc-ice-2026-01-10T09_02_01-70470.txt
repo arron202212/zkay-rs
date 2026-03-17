@@ -1,0 +1,73 @@
+thread 'rustc' panicked at compiler/rustc_middle/src/ty/normalize_erasing_regions.rs:171:13:
+Box<dyn Any>
+stack backtrace:
+   0:        0x11a67cf17 - std::backtrace::Backtrace::create::he7f3837d79fa2cc8
+   1:        0x11a67ce65 - std::backtrace::Backtrace::force_capture::hb0c239c9e7d2afec
+   2:        0x11822e6e4 - std[13a149ada9c6562f]::panicking::update_hook::<alloc[ef76d93d0e6c47d4]::boxed::Box<rustc_driver_impl[8d281498eb16af99]::install_ice_hook::{closure#1}>>::{closure#0}
+   3:        0x11a69b473 - std::panicking::rust_panic_with_hook::hb70492a6b403b955
+   4:        0x1182c7ed7 - std[13a149ada9c6562f]::panicking::begin_panic::<rustc_errors[a0bb5a7b23026743]::ExplicitBug>::{closure#0}
+   5:        0x1182b2aa9 - std[13a149ada9c6562f]::sys::backtrace::__rust_end_short_backtrace::<std[13a149ada9c6562f]::panicking::begin_panic<rustc_errors[a0bb5a7b23026743]::ExplicitBug>::{closure#0}, !>
+   6:        0x11da04c46 - std[13a149ada9c6562f]::panicking::begin_panic::<rustc_errors[a0bb5a7b23026743]::ExplicitBug>
+   7:        0x11da05276 - <rustc_errors[a0bb5a7b23026743]::diagnostic::BugAbort as rustc_errors[a0bb5a7b23026743]::diagnostic::EmissionGuarantee>::emit_producing_guarantee
+   8:        0x11da90c6c - rustc_middle[339edcd486ca432]::util::bug::opt_span_bug_fmt::<rustc_span[64f12af340bf00d7]::span_encoding::Span>::{closure#0}
+   9:        0x1190f0e27 - rustc_middle[339edcd486ca432]::ty::context::tls::with_opt::<rustc_middle[339edcd486ca432]::util::bug::opt_span_bug_fmt<rustc_span[64f12af340bf00d7]::span_encoding::Span>::{closure#0}, !>::{closure#0}
+  10:        0x1190f0935 - rustc_middle[339edcd486ca432]::ty::context::tls::with_context_opt::<rustc_middle[339edcd486ca432]::ty::context::tls::with_opt<rustc_middle[339edcd486ca432]::util::bug::opt_span_bug_fmt<rustc_span[64f12af340bf00d7]::span_encoding::Span>::{closure#0}, !>::{closure#0}, !>
+  11:        0x11da90b4b - rustc_middle[339edcd486ca432]::util::bug::bug_fmt
+  12:        0x1190bacf7 - <rustc_middle[339edcd486ca432]::ty::normalize_erasing_regions::NormalizeAfterErasingRegionsFolder>::normalize_generic_arg_after_erasing_regions
+  13:        0x1190bad3d - <rustc_middle[339edcd486ca432]::ty::normalize_erasing_regions::NormalizeAfterErasingRegionsFolder as rustc_type_ir[f55468f76a97f49a]::fold::TypeFolder<rustc_middle[339edcd486ca432]::ty::context::TyCtxt>>::fold_ty
+  14:        0x11a5f1d4f - rustc_ty_utils[111f9302739b666e]::instance::resolve_instance_raw
+  15:        0x119c15504 - rustc_query_impl[f3386141b3bfe30e]::plumbing::__rust_begin_short_backtrace::<rustc_query_impl[f3386141b3bfe30e]::query_impl::resolve_instance_raw::dynamic_query::{closure#2}::{closure#0}, rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 32usize]>>
+  16:        0x119bc2706 - <rustc_query_impl[f3386141b3bfe30e]::query_impl::resolve_instance_raw::dynamic_query::{closure#2} as core[f0bd84ea55a3646f]::ops::function::FnOnce<(rustc_middle[339edcd486ca432]::ty::context::TyCtxt, rustc_middle[339edcd486ca432]::ty::PseudoCanonicalInput<(rustc_span[64f12af340bf00d7]::def_id::DefId, &rustc_middle[339edcd486ca432]::ty::list::RawList<(), rustc_middle[339edcd486ca432]::ty::generic_args::GenericArg>)>)>>::call_once
+  17:        0x1199c8f13 - rustc_query_system[2f1f2eb1f54b978d]::query::plumbing::try_execute_query::<rustc_query_impl[f3386141b3bfe30e]::DynamicConfig<rustc_query_system[2f1f2eb1f54b978d]::query::caches::DefaultCache<rustc_middle[339edcd486ca432]::ty::PseudoCanonicalInput<(rustc_span[64f12af340bf00d7]::def_id::DefId, &rustc_middle[339edcd486ca432]::ty::list::RawList<(), rustc_middle[339edcd486ca432]::ty::generic_args::GenericArg>)>, rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 32usize]>>, false, false, false>, rustc_query_impl[f3386141b3bfe30e]::plumbing::QueryCtxt, true>
+  18:        0x119cb9fa7 - rustc_query_impl[f3386141b3bfe30e]::query_impl::resolve_instance_raw::get_query_incr::__rust_end_short_backtrace
+  19:        0x1191832f4 - <rustc_middle[339edcd486ca432]::ty::instance::Instance>::try_resolve
+  20:        0x119166938 - <rustc_middle[339edcd486ca432]::ty::context::TyCtxt>::const_eval_resolve_for_typeck
+  21:        0x11a472c85 - rustc_trait_selection[988feee68ab7f1be]::traits::try_evaluate_const
+  22:        0x11a43f217 - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillProcessor as rustc_data_structures[4fe5b495f9e50f26]::obligation_forest::ObligationProcessor>::process_obligation::{closure#0}
+  23:        0x11a43e5b0 - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillProcessor as rustc_data_structures[4fe5b495f9e50f26]::obligation_forest::ObligationProcessor>::process_obligation
+  24:        0x11a1658d7 - <rustc_data_structures[4fe5b495f9e50f26]::obligation_forest::ObligationForest<rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::PendingPredicateObligation>>::process_obligations::<rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillProcessor>
+  25:        0x11a3d72e9 - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillmentContext<rustc_infer[496e5d5d2832385b]::traits::engine::ScrubbedTraitError> as rustc_infer[496e5d5d2832385b]::traits::engine::TraitEngine<rustc_infer[496e5d5d2832385b]::traits::engine::ScrubbedTraitError>>::select_where_possible
+  26:        0x11a2dfd2f - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillmentContext<rustc_infer[496e5d5d2832385b]::traits::engine::ScrubbedTraitError> as rustc_infer[496e5d5d2832385b]::traits::engine::TraitEngine<rustc_infer[496e5d5d2832385b]::traits::engine::ScrubbedTraitError>>::select_all_or_error
+  27:        0x11a43c3ca - <rustc_trait_selection[988feee68ab7f1be]::traits::const_evaluatable::satisfied_from_param_env::Visitor as rustc_type_ir[f55468f76a97f49a]::visit::TypeVisitor<rustc_middle[339edcd486ca432]::ty::context::TyCtxt>>::visit_const
+  28:        0x11a43c122 - rustc_trait_selection[988feee68ab7f1be]::traits::const_evaluatable::satisfied_from_param_env
+  29:        0x11a43bc19 - rustc_trait_selection[988feee68ab7f1be]::traits::const_evaluatable::is_const_evaluatable
+  30:        0x11a43df76 - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillProcessor as rustc_data_structures[4fe5b495f9e50f26]::obligation_forest::ObligationProcessor>::process_obligation
+  31:        0x11a1658d7 - <rustc_data_structures[4fe5b495f9e50f26]::obligation_forest::ObligationForest<rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::PendingPredicateObligation>>::process_obligations::<rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillProcessor>
+  32:        0x1188d0b93 - <rustc_trait_selection[988feee68ab7f1be]::traits::fulfill::FulfillmentContext<rustc_trait_selection[988feee68ab7f1be]::traits::FulfillmentError> as rustc_infer[496e5d5d2832385b]::traits::engine::TraitEngine<rustc_trait_selection[988feee68ab7f1be]::traits::FulfillmentError>>::select_where_possible
+  33:        0x1189a128d - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_argument_types
+  34:        0x11893f7db - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::confirm_builtin_call
+  35:        0x118a6b90a - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_expr_kind
+  36:        0x1189647f5 - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_expr_with_expectation_and_args
+  37:        0x1189b1065 - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_decl
+  38:        0x1189b1a89 - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_expr_block
+  39:        0x1189647f5 - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_expr_with_expectation_and_args
+  40:        0x118967260 - <rustc_hir_typeck[40f2f25806c422b5]::fn_ctxt::FnCtxt>::check_return_or_body_tail
+  41:        0x118a4dcbb - rustc_hir_typeck[40f2f25806c422b5]::check::check_fn
+  42:        0x118a99c1d - rustc_hir_typeck[40f2f25806c422b5]::typeck_with_inspect::{closure#0}
+  43:        0x118a497f0 - rustc_hir_typeck[40f2f25806c422b5]::typeck
+  44:        0x119c177fa - rustc_query_impl[f3386141b3bfe30e]::plumbing::__rust_begin_short_backtrace::<rustc_query_impl[f3386141b3bfe30e]::query_impl::typeck::dynamic_query::{closure#2}::{closure#0}, rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 8usize]>>
+  45:        0x119a46dca - rustc_query_system[2f1f2eb1f54b978d]::query::plumbing::try_execute_query::<rustc_query_impl[f3386141b3bfe30e]::DynamicConfig<rustc_data_structures[4fe5b495f9e50f26]::vec_cache::VecCache<rustc_span[64f12af340bf00d7]::def_id::LocalDefId, rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 8usize]>, rustc_query_system[2f1f2eb1f54b978d]::dep_graph::graph::DepNodeIndex>, false, false, false>, rustc_query_impl[f3386141b3bfe30e]::plumbing::QueryCtxt, true>
+  46:        0x119c4d608 - rustc_query_impl[f3386141b3bfe30e]::query_impl::typeck::get_query_incr::__rust_end_short_backtrace
+  47:        0x11854a7b8 - <rustc_middle[339edcd486ca432]::ty::context::TyCtxt>::par_hir_body_owners::<rustc_hir_analysis[e2455d5e8e843b26]::check_crate::{closure#1}>::{closure#0}
+  48:        0x1186f44d2 - rustc_hir_analysis[e2455d5e8e843b26]::check_crate
+  49:        0x118ccdd77 - rustc_interface[20d0f2e250919dbd]::passes::run_required_analyses
+  50:        0x118cd0b03 - rustc_interface[20d0f2e250919dbd]::passes::analysis
+  51:        0x119c1784a - rustc_query_impl[f3386141b3bfe30e]::plumbing::__rust_begin_short_backtrace::<rustc_query_impl[f3386141b3bfe30e]::query_impl::analysis::dynamic_query::{closure#2}::{closure#0}, rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 0usize]>>
+  52:        0x11999ea07 - rustc_query_system[2f1f2eb1f54b978d]::query::plumbing::try_execute_query::<rustc_query_impl[f3386141b3bfe30e]::DynamicConfig<rustc_query_system[2f1f2eb1f54b978d]::query::caches::SingleCache<rustc_middle[339edcd486ca432]::query::erase::Erased<[u8; 0usize]>>, false, false, false>, rustc_query_impl[f3386141b3bfe30e]::plumbing::QueryCtxt, true>
+  53:        0x119c25f37 - rustc_query_impl[f3386141b3bfe30e]::query_impl::analysis::get_query_incr::__rust_end_short_backtrace
+  54:        0x1181de172 - rustc_interface[20d0f2e250919dbd]::passes::create_and_enter_global_ctxt::<core[f0bd84ea55a3646f]::option::Option<rustc_interface[20d0f2e250919dbd]::queries::Linker>, rustc_driver_impl[8d281498eb16af99]::run_compiler::{closure#0}::{closure#2}>
+  55:        0x118234037 - rustc_interface[20d0f2e250919dbd]::interface::run_compiler::<(), rustc_driver_impl[8d281498eb16af99]::run_compiler::{closure#0}>::{closure#1}
+  56:        0x11821e098 - std[13a149ada9c6562f]::sys::backtrace::__rust_begin_short_backtrace::<rustc_interface[20d0f2e250919dbd]::util::run_in_thread_with_globals<rustc_interface[20d0f2e250919dbd]::util::run_in_thread_pool_with_globals<rustc_interface[20d0f2e250919dbd]::interface::run_compiler<(), rustc_driver_impl[8d281498eb16af99]::run_compiler::{closure#0}>::{closure#1}, ()>::{closure#0}, ()>::{closure#0}::{closure#0}, ()>
+  57:        0x11823954d - <<std[13a149ada9c6562f]::thread::Builder>::spawn_unchecked_<rustc_interface[20d0f2e250919dbd]::util::run_in_thread_with_globals<rustc_interface[20d0f2e250919dbd]::util::run_in_thread_pool_with_globals<rustc_interface[20d0f2e250919dbd]::interface::run_compiler<(), rustc_driver_impl[8d281498eb16af99]::run_compiler::{closure#0}>::{closure#1}, ()>::{closure#0}, ()>::{closure#0}::{closure#0}, ()>::{closure#1} as core[f0bd84ea55a3646f]::ops::function::FnOnce<()>>::call_once::{shim:vtable#0}
+  58:        0x11a69f097 - std::sys::pal::unix::thread::Thread::new::thread_start::hea53c46e0e4261b0
+  59:     0x7ff801f15e05 - __pthread_start
+
+
+rustc version: 1.89.0-nightly (60dabef95 2025-05-19)
+platform: x86_64-apple-darwin
+
+query stack during panic:
+#0 [resolve_instance_raw] resolving instance `<<P as gadgetlib1::gadgets::pairing::pairing_params::pairing_selector<PCD_ppT>>::FieldT as ffec::PpConfig>::num_limbs`
+#1 [typeck] type-checking `zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_verifier`
+#2 [analysis] running analysis passes on this crate
+end of query stack

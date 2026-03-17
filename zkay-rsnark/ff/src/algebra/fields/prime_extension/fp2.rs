@@ -72,7 +72,6 @@ pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
     // static i64 mul_cnt;
     // static i64 sqr_cnt;
     // static i64 inv_cnt;
-    
 
     // static bigint<2*n> euler; // (modulus^2-1)/2
     // static std::usize s;       // modulus^2 = 2^s * t + 1
@@ -147,8 +146,6 @@ pub struct Fp2_model<const N: usize, T: Fp2_modelConfig<N>> {
 // friend std::istream& operator>> <n, modulus>(std::istream &in, Fp2_model<n, modulus> &el);
 // }
 
-
-
 impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
     pub fn ceil_size_in_bits() -> usize {
         2 * my_Fp::<N, T::Fp_modelConfig>::ceil_size_in_bits()
@@ -166,15 +163,15 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
     }
     pub const fn const_new(b: BigInt<N>) -> Self {
         Self {
-            c0:my_Fp::<N, T::Fp_modelConfig>::const_new(b),
-            c1:my_Fp::<N, T::Fp_modelConfig>::const_new(b),
+            c0: my_Fp::<N, T::Fp_modelConfig>::const_new(b),
+            c1: my_Fp::<N, T::Fp_modelConfig>::const_new(b),
             _t: PhantomData,
         }
     }
- pub const fn const_default() -> Self {
+    pub const fn const_default() -> Self {
         Self {
-            c0:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
-            c1:my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            c0: my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
+            c1: my_Fp::<N, T::Fp_modelConfig>::const_new(BigInt::<N>::zero()),
             _t: PhantomData,
         }
     }
@@ -216,7 +213,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
     pub fn squared_karatsuba(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        
+
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
         let (a, b) = (self.c0, self.c1);
         let asq = a.squared();
@@ -228,7 +225,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
     pub fn squared_complex(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
-        
+
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
@@ -242,7 +239,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Fp2_model<N, T> {
     pub fn inverse(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
-        
+
         let (a, b) = (self.c0, self.c1);
 
         /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
@@ -328,7 +325,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> PartialEq for Fp2_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.add_cnt++;
-// 
+//
 //     return Fp2_model<n,modulus>(self.c0 + other.c0,
 //                                 self.c1 + other.c1);
 // }
@@ -347,7 +344,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp2_mode
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.sub_cnt++;
-// 
+//
 //     return Fp2_model<n,modulus>(self.c0 - other.c0,
 //                                 self.c1 - other.c1);
 // }
@@ -366,7 +363,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Sub for Fp2_model<N, T> {
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     rhs.mul_cnt++;
-// 
+//
 //     return Fp2_model<n,modulus>(lhs*rhs.c0,
 //                                 lhs*rhs.c1);
 // }
@@ -386,7 +383,7 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
 // {
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
-// 
+//
 //     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
 //     const my_Fp<N,T::Fp2_modelConfig>
 //         &A = other.c0, &B = other.c1,
@@ -555,64 +552,86 @@ impl<const N: usize, T: Fp2_modelConfig<N>> Zero for Fp2_model<N, T> {
     }
 }
 
-
 impl<const N: usize, T: Fp2_modelConfig<N>> From<usize> for Fp2_model<N, T> {
     fn from(b: usize) -> Self {
-        let c=Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new(b as u64),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 
 impl<const N: usize, T: Fp2_modelConfig<N>> From<u32> for Fp2_model<N, T> {
     fn from(b: u32) -> Self {
-        let c=Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new(b as u64),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 
 impl<const N: usize, T: Fp2_modelConfig<N>> From<i32> for Fp2_model<N, T> {
     fn from(b: i32) -> Self {
-       let c= Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new(b as u64),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 
 impl<const N: usize, T: Fp2_modelConfig<N>> From<i64> for Fp2_model<N, T> {
     fn from(b: i64) -> Self {
-       let c= Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new(b as u64),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 
-
 impl<const N: usize, T: Fp2_modelConfig<N>> From<u64> for Fp2_model<N, T> {
     fn from(b: u64) -> Self {
-        let c=Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new(b),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 impl<const N: usize, T: Fp2_modelConfig<N>> From<&str> for Fp2_model<N, T> {
     fn from(b: &str) -> Self {
-       let c= Fp_model::<N, T::Fp_modelConfig> {
+        let c = Fp_model::<N, T::Fp_modelConfig> {
             mont_repr: bigint::<N>::new_with_str(b).unwrap(),
             t: PhantomData,
         };
-        Fp2_model::<N, T> {c0:c.clone(),c1:c.clone(),_t: PhantomData,}
+        Fp2_model::<N, T> {
+            c0: c.clone(),
+            c1: c.clone(),
+            _t: PhantomData,
+        }
     }
 }
 

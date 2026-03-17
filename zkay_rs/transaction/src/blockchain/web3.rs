@@ -13,12 +13,13 @@ use alloy_rpc_types::TransactionRequest;
 use alloy_serde::WithOtherFields;
 use alloy_signer::Signer;
 
-use crate::blockchain::tx::{self, CastTxBuilder, SenderKind};
+use crate::blockchain::tx::{self, CastTxBuilder, CastTxSender, SenderKind};
 use crate::blockchain::{estimate::EstimateArgs, rpc::RpcArgs};
 use alloy_dyn_abi::{DynSolValue, ErrorExt, EventExt};
 use alloy_primitives::{Address, B256, eip191_hash_message, hex, keccak256};
 use alloy_rpc_types::{BlockId, BlockNumberOrTag, BlockNumberOrTag::Latest};
 use alloy_transport::Transport;
+use cast::cmd::erc20::IERC20;
 use cast::{Cast, SimpleCast};
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command, value_parser};
 use clap::{CommandFactory, Parser};
@@ -27,16 +28,16 @@ use eyre::Result;
 use foundry_cli::handler;
 use foundry_cli::{
     opts::{EthereumOpts, RpcOpts, TransactionOpts},
-    utils,
+    utils::{self, LoadConfig},
 };
-use foundry_common::ens::NameOrAddress;
+// use alloy_ens::NameOrAddress;
+use alloy_ens::NameOrAddress;
 use foundry_common::{
     abi::get_event,
-    ens::{ProviderEnsExt, namehash},
     fmt::{format_tokens, format_tokens_raw, format_uint_exp},
     fs,
     selectors::{
-        ParsedSignatures, SelectorImportData, SelectorType, decode_calldata, decode_event_topic,
+        ParsedSignatures, SelectorImportData, decode_calldata, decode_event_topic,
         decode_function_selector, decode_selectors, import_selectors, parse_signatures,
         pretty_calldata,
     },
@@ -295,16 +296,22 @@ async fn run(cmd: Web3Subcommand) -> String {
             rpc,
             erc20,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config().expect("load config fail");
             let provider = utils::get_provider(&config).unwrap();
             let account_addr = who.resolve(&provider).await.unwrap();
 
             match erc20 {
                 Some(token) => {
-                    let balance = Cast::new(&provider)
-                        .erc20_balance(token, account_addr, block)
+                    let balance = IERC20::new(token, &provider)
+                        .balanceOf(account_addr)
+                        .block(block.unwrap_or_default())
+                        .call()
                         .await
                         .unwrap();
+                    // let balance = Cast::new(&provider)
+                    //     .erc20-token(token, account_addr, block)
+                    //     .await
+                    //     .unwrap();//,
                     format!("{}", format_uint_exp(balance))
                 }
                 None => {
@@ -329,19 +336,24 @@ async fn run(cmd: Web3Subcommand) -> String {
             field,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config().expect("load config fail");
             let provider = utils::get_provider(&config).unwrap();
             format!(
                 "{}",
                 Cast::new(provider)
-                    .block(block.unwrap_or(BlockId::Number(Latest)), full, field)
+                    .block(
+                        block.unwrap_or(BlockId::Number(Latest)),
+                        full,
+                        vec![field.unwrap().clone()],
+                        false
+                    )
                     .await
                     .unwrap()
             )
         }
         Web3Subcommand::Estimate(cmd) => cmd.run().await.unwrap(),
         Web3Subcommand::GasPrice { rpc } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config().expect("load config fail");
             let provider = utils::get_provider(&config).unwrap();
             format!("{}", Cast::new(provider).gas_price().await.unwrap())
         }
@@ -352,7 +364,7 @@ async fn run(cmd: Web3Subcommand) -> String {
             disassemble,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config().expect("load config fail");
             let provider = utils::get_provider(&config).unwrap();
             let who = who.resolve(&provider).await.unwrap();
             format!(
@@ -370,11 +382,11 @@ async fn run(cmd: Web3Subcommand) -> String {
             confirmations,
             rpc,
         } => {
-            let config = Config::from(&rpc);
+            let config = rpc.load_config().expect("load config fail");
             let provider = utils::get_provider(&config).unwrap();
             format!(
                 "{}",
-                Cast::new(provider)
+                CastTxSender::new(provider)
                     .receipt(tx_hash, field, confirmations, None, cast_async)
                     .await
                     .unwrap()
@@ -415,7 +427,8 @@ pub struct Web3Tx {
 impl Default for Web3Tx {
     fn default() -> Self {
         let eth = EthereumOpts::default();
-        let config = Config::from(&eth);
+        // let config = Config::from(&eth);
+        let config = eth.load_config().expect("load config fail");
         let tx: TransactionOpts = TransactionOpts::parse_from(["foundry-cli"]);
         Self { eth, config, tx }
     }
@@ -475,7 +488,9 @@ impl Web3Tx {
             .await?;
         Ok(format!(
             "{}",
-            Cast::new(provider).call(&tx, func.as_ref(), block).await?
+            Cast::new(provider)
+                .call(&tx, func.as_ref(), block, None, None)
+                .await?
         ))
     }
 
@@ -484,7 +499,7 @@ impl Web3Tx {
         to: Option<NameOrAddress>,
         sig: Option<String>,
         args: Vec<String>,
-    ) -> Result<String> {
+    ) -> Result<()> {
         println!("===send==tx========={to:?}====={sig:?}======{args:?}=========");
         let confirmations = 1;
         let unlocked = false;
@@ -527,7 +542,15 @@ impl Web3Tx {
 
             let (tx, _) = builder.build(self.config.sender.clone()).await?;
 
-            cast_send(provider, tx, cast_async, confirmations, timeout).await
+            cast_send(
+                provider,
+                tx.into_inner().into(),
+                cast_async,
+                false,
+                confirmations,
+                timeout,
+            )
+            .await
         // Case 2:
         // An option to use a local signer was provided.
         // If we cannot successfully instantiate a local signer, then we will assume we don't have
@@ -544,129 +567,50 @@ impl Web3Tx {
             let wallet = EthereumWallet::from(signer);
             let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
                 .wallet(wallet)
-                .on_provider(&provider);
+                .connect_provider(&provider);
 
-            cast_send(provider, tx, cast_async, confirmations, timeout).await
+            cast_send(
+                provider,
+                tx.into_inner().into(),
+                cast_async,
+                false,
+                confirmations,
+                timeout,
+            )
+            .await
         }
     }
 }
 
-pub async fn call_tx<P: Provider<T, AnyNetwork>, T: Transport + Clone>(
-    provider: P,
-    config: &Config,
-    to: Option<NameOrAddress>,
-    sender: Address,
-    tx: TransactionOpts,
-    sig: Option<String>,
-    args: Vec<String>,
-) -> Result<String> {
-    let (code, block) = (None, None);
-    let (tx, func) = CastTxBuilder::new(&provider, tx, &config)
-        .await?
-        .with_to(to)
-        .await?
-        .with_code_sig_and_args(code, sig, args)
-        .await?
-        .build_raw(sender)
-        .await?;
-    Ok(format!(
-        "{}",
-        Cast::new(provider).call(&tx, func.as_ref(), block).await?
-    ))
-}
-
-async fn send_tx<P: Provider<T, AnyNetwork>, T: Transport + Clone>(
-    provider: P,
-    config: &Config,
-    to: Option<NameOrAddress>,
-    tx: TransactionOpts,
-    eth: EthereumOpts,
-    sig: Option<String>,
-    args: Vec<String>,
-) -> Result<String> {
-    let confirmations = 1;
-    let unlocked = false;
-    let cast_async = false;
-    let (code, blob_data) = (None, None);
-    let builder = CastTxBuilder::new(&provider, tx, &config)
-        .await?
-        .with_to(to)
-        .await?
-        .with_code_sig_and_args(code, sig, args)
-        .await?
-        .with_blob_data(blob_data)?;
-
-    let timeout = config.transaction_timeout; //timeout.unwrap_or(config.transaction_timeout);
-
-    // Case 1:
-    // Default to sending via eth_sendTransaction if the --unlocked flag is passed.
-    // This should be the only way this RPC method is used as it requires a local node
-    // or remote RPC with unlocked accounts.
-    if unlocked {
-        // only check current chain id if it was specified in the config
-        if let Some(config_chain) = config.chain {
-            let current_chain_id = provider.get_chain_id().await?;
-            let config_chain_id = config_chain.id();
-            // switch chain if current chain id is not the same as the one specified in the
-            // config
-            if config_chain_id != current_chain_id {
-                sh_warn!("Switching to chain {}", config_chain)?;
-                //    let _x:Result<String,!>= provider
-                //         .raw_request(
-                //             "wallet_switchEthereumChain".into(),
-                //             [serde_json::json!({
-                //                 "chainId": format!("0x{:x}", config_chain_id),
-                //             })],
-                //         )
-                //         .await?;
-            }
-        }
-
-        let (tx, _) = builder.build(config.sender).await?;
-
-        cast_send(provider, tx, cast_async, confirmations, timeout).await
-    // Case 2:
-    // An option to use a local signer was provided.
-    // If we cannot successfully instantiate a local signer, then we will assume we don't have
-    // enough information to sign and we must bail.
-    } else {
-        // Retrieve the signer, and bail if it can't be constructed.
-        let signer = eth.wallet.signer().await?;
-        let from = signer.address();
-
-        tx::validate_from_address(eth.wallet.from, from)?;
-
-        let (tx, _) = builder.build(&signer).await?;
-
-        let wallet = EthereumWallet::from(signer);
-        let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
-            .wallet(wallet)
-            .on_provider(&provider);
-
-        cast_send(provider, tx, cast_async, confirmations, timeout).await
-    }
-}
-
-async fn cast_send<P: Provider<T, AnyNetwork>, T: Transport + Clone>(
+pub(crate) async fn cast_send<P: Provider<AnyNetwork>>(
     provider: P,
     tx: WithOtherFields<TransactionRequest>,
     cast_async: bool,
+    sync: bool,
     confs: u64,
     timeout: u64,
-) -> Result<String> {
-    let cast = Cast::new(provider);
-    let pending_tx = cast.send(tx).await?;
+) -> Result<()> {
+    let cast = CastTxSender::new(&provider);
 
-    let tx_hash = pending_tx.inner().tx_hash();
-
-    Ok(if cast_async {
-        format!("{tx_hash:#x}")
+    if sync {
+        // Send transaction and wait for receipt synchronously
+        let receipt = cast.send_sync(tx).await?;
+        sh_println!("{receipt}")?;
     } else {
-        let receipt = cast
-            .receipt(format!("{tx_hash:#x}"), None, confs, Some(timeout), false)
-            .await?;
-        format!("{receipt}")
-    })
+        let pending_tx = cast.send(tx).await?;
+        let tx_hash = pending_tx.inner().tx_hash();
+
+        if cast_async {
+            sh_println!("{tx_hash:#x}")?;
+        } else {
+            let receipt = cast
+                .receipt(format!("{tx_hash:#x}"), None, confs, Some(timeout), false)
+                .await?;
+            sh_println!("{receipt}")?;
+        }
+    }
+
+    Ok(())
 }
 
 fn value_or_string(value: String) -> serde_json::Value {

@@ -6,7 +6,10 @@ use crate::algebra::curves::mnt::mnt4::mnt4_init::{
 };
 use crate::{FpmConfig, Fq2mConfig};
 use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
+use ffec::field_utils::{
+    BigInt,
+    bigint::{GMP_NUMB_BITS, bigint},
+};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -16,8 +19,6 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 type base_field = mnt4_Fq;
 type twist_field = mnt4_Fq2;
 type scalar_field = mnt4_Fr;
-
-
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct mnt4_G2 {
@@ -36,11 +37,10 @@ impl Fq2mConfig for mnt4_G2 {
     type Fr = Self;
 }
 impl mnt4_G2 {
-// Cofactor
-     const  h_bitcount:usize = 298;
-     const  h_limbs:usize =
-        (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-  const   h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
+    // Cofactor
+    const h_bitcount: usize = 298;
+    const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+    const h: bigint<{ Self::h_limbs }> = bigint::<{ Self::h_limbs }>(BigInt!("1"));
     pub fn new(X: mnt4_Fq2, Y: mnt4_Fq2, Z: mnt4_Fq2) -> Self {
         Self { X, Y, Z }
     }
@@ -152,7 +152,7 @@ impl mnt4_G2 {
     pub fn add(&self, other: &mnt4_G2) -> mnt4_G2 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -199,7 +199,7 @@ impl mnt4_G2 {
         //assert!(other.Z == mnt4_Fq2::one());
 
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -265,14 +265,14 @@ impl mnt4_G2 {
 
     pub fn mul_by_q(&self) -> mnt4_G2 {
         return mnt4_G2::new(
-             &(self.X).Frobenius_map(1)*&mnt4_twist_mul_by_q_X ,
-             &(self.Y).Frobenius_map(1)*&mnt4_twist_mul_by_q_Y ,
+            &(self.X).Frobenius_map(1) * &mnt4_twist_mul_by_q_X,
+            &(self.Y).Frobenius_map(1) * &mnt4_twist_mul_by_q_Y,
             (self.Z).Frobenius_map(1),
         );
     }
 
     pub fn mul_by_cofactor(&self) -> mnt4_G2 {
-        self.clone()*mnt4_G2::h
+        self.clone() * mnt4_G2::h
     }
 
     pub fn is_well_formed(&self) -> bool {
@@ -306,7 +306,7 @@ impl mnt4_G2 {
     }
 
     pub fn random_element() -> Self {
-        Self::G2_one()*mnt4_Fr::random_element().as_bigint()
+        Self::G2_one() * mnt4_Fr::random_element().as_bigint()
     }
 
     pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt4_G2>) {

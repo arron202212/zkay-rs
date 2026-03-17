@@ -123,7 +123,7 @@ impl mnt4_G1 {
     pub fn add(&self, other: &Self) -> mnt4_G1 {
         // handle special cases having to do with O
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -170,7 +170,7 @@ impl mnt4_G1 {
         //assert!(other.Z == mnt4_Fq::one());
 
         if self.is_zero() {
-            return other.clone()
+            return other.clone();
         }
 
         if other.is_zero() {
@@ -218,7 +218,7 @@ impl mnt4_G1 {
 
         let XX = (self.X).squared(); // XX  = X1^2
         let ZZ = (self.Z).squared(); // ZZ  = Z1^2
-        let w :mnt4_Fq=   ZZ*mnt4_G1::coeff_a + (XX + XX + XX); // w   = a*ZZ + 3*XX
+        let w: mnt4_Fq = ZZ * mnt4_G1::coeff_a + (XX + XX + XX); // w   = a*ZZ + 3*XX
         let Y1Z1 = (self.Y) * (self.Z);
         let s = Y1Z1 + Y1Z1; // s   = 2*Y1*Z1
         let ss = s.squared(); // ss  = s^2
@@ -257,7 +257,7 @@ impl mnt4_G1 {
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();
 
-        (self.Z * (Y2 -  Z2*mnt4_G1::coeff_b ) == self.X * (X2 +   Z2*mnt4_G1::coeff_a))
+        (self.Z * (Y2 - Z2 * mnt4_G1::coeff_b) == self.X * (X2 + Z2 * mnt4_G1::coeff_a))
     }
 
     pub fn zero() -> mnt4_G1 {
@@ -272,7 +272,7 @@ impl mnt4_G1 {
         Self::default()
     }
     pub fn random_element() -> mnt4_G1 {
-        Self::G1_one()*scalar_field::random_element().as_bigint()
+        Self::G1_one() * scalar_field::random_element().as_bigint()
     }
 
     pub fn batch_to_special_all_non_zeros(vec: &mut Vec<mnt4_G1>) {

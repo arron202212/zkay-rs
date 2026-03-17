@@ -8,6 +8,7 @@
 // use typing::Optional, Collection, Any, Dict, Tuple, List, Union, Callable
 use num_bigint::BigInt;
 use parking_lot::Mutex;
+use std::cmp::Ordering;
 use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{
@@ -356,10 +357,28 @@ impl ParamLength for RandomnessValue {
     }
 }
 type Callable = fn(&AddressValue) -> i32;
-
-#[derive(Debug, Clone, Default, Ord, PartialOrd, Eq, PartialEq)]
+// Ord, PartialOrd,PartialEq
+#[derive(Debug, Clone, Default, Eq)]
 pub struct AddressValue {
+    id: usize,
+    priority: u8,
     get_balance: Option<Callable>,
+}
+impl PartialEq for AddressValue {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl PartialOrd for AddressValue {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AddressValue {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.priority.cmp(&other.priority)
+    }
 }
 impl AddressValue {
     //     get_balance: Optional[Callable[['AddressValue'], int]] = None

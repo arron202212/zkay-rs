@@ -1,7 +1,10 @@
 use crate::FpmConfig;
 use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12};
 use crate::algebra::curves::bn128::bn128_fields::{bn128_Fq, bn128_Fr};
-use ffec::field_utils::{BigInt, bigint::{bigint,GMP_NUMB_BITS}};
+use ffec::field_utils::{
+    BigInt,
+    bigint::{GMP_NUMB_BITS, bigint},
+};
 use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
 use std::borrow::Borrow;
@@ -14,9 +17,6 @@ const bn128_Fq_nqr_to_t: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const bn128_Fq_t_minus_1_over_2: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const bn128_coeff_b: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const BN128_COEFF_B: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
-
-
-
 
 type base_field = bn128_Fq;
 type scalar_field = bn128_Fr;
@@ -36,9 +36,9 @@ impl FpmConfig for bn128_G1 {
     type Fr = bn128_Fq;
 }
 impl bn128_G1 {
-    const  h_bitcount:usize = 1;
-     const  h_limbs:usize = (Self::h_bitcount+GMP_NUMB_BITS-1)/GMP_NUMB_BITS;
-    const  h:bigint<{Self::h_limbs}>=bigint::<{Self::h_limbs}>(BigInt!("1"));
+    const h_bitcount: usize = 1;
+    const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+    const h: bigint<{ Self::h_limbs }> = bigint::<{ Self::h_limbs }>(BigInt!("1"));
     pub fn fill_coord(&self, coord: &mut [Fp; 3]) {
         coord[0] = self.X;
         coord[1] = self.Y;
@@ -216,7 +216,7 @@ impl bn128_G1 {
 
         let mut Z1Z1 = Fp::default();
         Z1Z1 = self.Z.squared();
-        let mut  U1: Fp = self.X.clone();
+        let mut U1: Fp = self.X.clone();
         let mut U2 = Fp::default();
         U2 = other.X.clone() * Z1Z1;
         let mut Z1_cubed = Fp::default();
@@ -235,7 +235,7 @@ impl bn128_G1 {
         // self.add_cnt += 1;
 
         let mut result = bn128_G1::default();
-        let (mut H,mut  HH,mut  I,mut  J,mut  r,mut  V,mut  tmp) = (
+        let (mut H, mut HH, mut I, mut J, mut r, mut V, mut tmp) = (
             Fp::default(),
             Fp::default(),
             Fp::default(),

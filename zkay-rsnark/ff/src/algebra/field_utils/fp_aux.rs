@@ -1,9 +1,7 @@
-
 //  Assembly code snippets for F[p] finite field arithmetic, used by fp.tcc .
 //  Specific to x86-64, and used only if USE_ASM is defined.
 //  On other architectures or without USE_ASM, fp.tcc uses a portable
 //  C++ implementation instead.
-
 
 // #define STR_HELPER(x) #x
 // #define STR(x) STR_HELPER(x)
@@ -372,6 +370,3 @@
 //          : [k] "=&r" (k_), [tmp1] "=&r" (tmp1_), [tmp2] "=&r" (tmp2_), [tmp3] "=&r" (tmp3_) \
 //          : [modprime] "r" (inv_), [res] "r" (res_), [mod] "r" (mod_) \
 //          : "%rax", "%rdx", "cc", "memory")
-
-
-

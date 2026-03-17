@@ -1,6 +1,7 @@
 use cast::Cast;
 use clap::Parser;
 use eyre::Result;
+use foundry_cli::utils::LoadConfig;
 use foundry_cli::{opts::RpcOpts, utils};
 use foundry_common::sh_println;
 use foundry_config::Config;
@@ -47,7 +48,7 @@ impl RpcArgs {
             ..
         } = self;
 
-        let config = Config::from(&rpc);
+        let config = rpc.load_config()?;
         let provider = utils::get_provider(&config)?;
         // let web3tx=Web3Tx::new(eth.clone(),config.clone(),tx.clone());
         // if self.is_survey {

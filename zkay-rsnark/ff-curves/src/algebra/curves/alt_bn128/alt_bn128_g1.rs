@@ -26,9 +26,9 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 // std::istream& operator>>(std::istream &, alt_bn128_G1&);
 #[derive(Clone, Default, Debug, PartialEq)]
 pub struct alt_bn128_G1 {
-pub  X: alt_bn128_Fq,
-pub  Y: alt_bn128_Fq,
-pub  Z: alt_bn128_Fq,
+    pub X: alt_bn128_Fq,
+    pub Y: alt_bn128_Fq,
+    pub Z: alt_bn128_Fq,
 }
 // impl alt_bn128_G1 {
 //     pub fn size_in_bits() -> usize {

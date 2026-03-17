@@ -5,6 +5,7 @@
 #![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(unused_braces)]
+use crate::CastTxSender;
 use crate::tx::{self, CastTxBuilder};
 use alloy_network::{AnyNetwork, EthereumWallet};
 use alloy_provider::{Provider, ProviderBuilder};
@@ -12,14 +13,16 @@ use alloy_rpc_types::TransactionRequest;
 use alloy_serde::WithOtherFields;
 use alloy_signer::Signer;
 use alloy_transport::Transport;
+
+use alloy_ens::NameOrAddress;
 use cast::Cast;
 use clap::Parser;
 use eyre::Result;
+use foundry_cli::utils::LoadConfig;
 use foundry_cli::{
     opts::{EthereumOpts, TransactionOpts},
     utils,
 };
-use foundry_common::ens::NameOrAddress;
 use foundry_common::{sh_println, sh_warn};
 use foundry_config::Config;
 use std::{path::PathBuf, str::FromStr};
@@ -136,7 +139,7 @@ impl SendTxArgs {
             None
         };
 
-        let config = Config::from(&eth);
+        let config = eth.load_config()?;
         let provider = utils::get_provider(&config)?;
         let web3tx = Web3Tx::new(eth.clone(), config.clone(), tx.clone()).await?;
         if self.is_survey {
@@ -199,21 +202,21 @@ impl SendTxArgs {
             let wallet = EthereumWallet::from(signer);
             let provider = ProviderBuilder::<_, _, AnyNetwork>::default()
                 .wallet(wallet)
-                .on_provider(&provider);
+                .connect_provider(&provider);
 
             cast_send(provider, tx, cast_async, confirmations, timeout).await
         }
     }
 }
 
-async fn cast_send<P: Provider<T, AnyNetwork>, T: Transport + Clone>(
+async fn cast_send<P: Provider<AnyNetwork>>(
     provider: P,
     tx: WithOtherFields<TransactionRequest>,
     cast_async: bool,
     confs: u64,
     timeout: u64,
 ) -> Result<()> {
-    let cast = Cast::new(provider);
+    let cast = CastTxSender::new(provider);
     let pending_tx = cast.send(tx).await?;
 
     let tx_hash = pending_tx.inner().tx_hash();

@@ -57,7 +57,7 @@ pub trait Fp_modelConfig<const N: usize>:
 }
 
 #[derive(Educe)]
-#[educe(Default, Clone, Debug, Hash, Copy,PartialOrd, Ord, Eq)] // PartialEq,
+#[educe(Default, Clone, Debug, Hash, Copy, PartialOrd, Ord, Eq)] // PartialEq,
 pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
     pub t: PhantomData<T>,
@@ -71,7 +71,7 @@ pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
 //      i64 mul_cnt;
 //      i64 sqr_cnt;
 //      i64 inv_cnt;
-// 
+//
 //      std::usize num_bits;
 //      bigint<N> euler; // (modulus-1)/2
 //      std::usize s; // modulus = 2^s * t + 1
@@ -241,7 +241,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> From<i64> for Fp_model<N, T> {
     }
 }
 
-
 impl<const N: usize, T: Fp_modelConfig<N>> From<u64> for Fp_model<N, T> {
     fn from(b: u64) -> Self {
         Fp_model::<N, T> {
@@ -291,11 +290,10 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
             // self.mont_repr.data[0] = x;//(mp_limb_t)
         } else {
             // let  borrow = mpn_sub_1(self.mont_repr.data, modulus.data, n, (mp_limb_t)-x);
-            
+
             //             assert!(borrow == 0);
             // #else
             //             UNUSED(borrow);
-            
         }
 
         // Self::mul_reduce(T::Rsquared);
@@ -557,10 +555,12 @@ impl<const N: usize, T: Fp_modelConfig<N>> Mul<i64> for Fp_model<N, T> {
         r
     }
 }
-impl<const N: usize, T: Fp_modelConfig<N>,OT: Fp_modelConfig<N>> Mul<Fp_model<N, OT> > for Fp_model<N, T> {
+impl<const N: usize, T: Fp_modelConfig<N>, OT: Fp_modelConfig<N>> Mul<Fp_model<N, OT>>
+    for Fp_model<N, T>
+{
     type Output = Fp_model<N, T>;
 
-    fn mul(self, rhs: Fp_model<N, OT> ) -> Self::Output {
+    fn mul(self, rhs: Fp_model<N, OT>) -> Self::Output {
         let mut r = self;
         // r *= *rhs.borrow();
         r
