@@ -20,3 +20,4 @@
 solc-macos
 **/.cargo
 **/circuit.*
+**/*.txt
