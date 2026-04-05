@@ -10,23 +10,44 @@ use crate::algebra::curves::alt_bn128::alt_bn128_init;
 use ffec::field_utils::bigint::bigint;
 use ffec::{BigInt, MontFp};
 pub const alt_bn128_coeff_b: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
-pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::new(
-    alt_bn128_Fq::const_new(BigInt!("3")),
-    alt_bn128_Fq::const_new(BigInt!("3")),
+
+pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
+    alt_bn128_Fq::const_new(BigInt!("9")),
+    alt_bn128_Fq::const_new(BigInt!("1")),
 );
-pub const alt_bn128_twist_coeff_b: alt_bn128_Fq2 = alt_bn128_Fq2::new(
-    alt_bn128_Fq::const_new(BigInt!("3")),
-    alt_bn128_Fq::const_new(BigInt!("3")),
+#[inline(always)]
+pub fn alt_bn128_twist_coeff_b() -> alt_bn128_Fq2 {
+    &alt_bn128_twist.inverse() * &alt_bn128_coeff_b
+}
+// pub const alt_bn128_twist_coeff_b: alt_bn128_Fq2 = alt_bn128_Fq2::new(
+//     alt_bn128_Fq::const_new(BigInt!("3")),
+//     alt_bn128_Fq::const_new(BigInt!("3")),
+// );
+// pub const alt_bn128_twist_mul_by_b_c0: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
+// pub const alt_bn128_twist_mul_by_b_c1: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
+#[inline(always)]
+pub fn alt_bn128_twist_mul_by_b_c0() -> alt_bn128_Fq {
+    alt_bn128_Fq2::non_residue * alt_bn128_coeff_b
+}
+#[inline(always)]
+pub fn alt_bn128_twist_mul_by_b_c1() -> alt_bn128_Fq {
+    alt_bn128_Fq2::non_residue * alt_bn128_coeff_b
+}
+pub const alt_bn128_twist_mul_by_q_X: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
+    alt_bn128_Fq::const_new(BigInt!(
+        "21575463638280843010398324269430826099269044274347216827212613867836435027261"
+    )),
+    alt_bn128_Fq::const_new(BigInt!(
+        "10307601595873709700152284273816112264069230130616436755625194854815875713954"
+    )),
 );
-pub const alt_bn128_twist_mul_by_b_c0: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
-pub const alt_bn128_twist_mul_by_b_c1: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
-pub const alt_bn128_twist_mul_by_q_X: alt_bn128_Fq2 = alt_bn128_Fq2::new(
-    alt_bn128_Fq::const_new(BigInt!("3")),
-    alt_bn128_Fq::const_new(BigInt!("3")),
-);
-pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::new(
-    alt_bn128_Fq::const_new(BigInt!("3")),
-    alt_bn128_Fq::const_new(BigInt!("3")),
+pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
+    alt_bn128_Fq::const_new(BigInt!(
+        "2821565182194536844548159561693502659359617185244120367078079554186484126554"
+    )),
+    alt_bn128_Fq::const_new(BigInt!(
+        "3505843767911556378687030309984248845540243509899259641013678093033130930403"
+    )),
 );
 
 pub const alt_bn128_ate_loop_count: bigint<alt_bn128_q_limbs> =

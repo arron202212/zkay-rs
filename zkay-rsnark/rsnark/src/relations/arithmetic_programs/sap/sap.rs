@@ -17,7 +17,7 @@ use fqfft::evaluation_domain::evaluation_domain::{
     EvaluationDomainConfig, EvaluationDomainType, evaluation_domain,
 };
 use rccell::RcCell;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 /* forward declaration */
 //
 // pub struct sap_witness;
@@ -41,23 +41,23 @@ pub struct sap_instance<FieldT: FieldTConfig> {
 
     pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
-    pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub A_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+    pub C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 
 //     sap_instance(domain:&RcCell<ED >,
 //                  num_variables:usize,
 //                  degree:usize,
 //                  num_inputs:usize,
-//                  A_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >,
-//                  C_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >);
+//                  A_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >,
+//                  C_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >);
 
 //     sap_instance(domain:&RcCell<ED >,
 //                  num_variables:usize,
 //                  degree:usize,
 //                  num_inputs:usize,
-//                  Vec<HashMap<usize, FieldT> > &&A_in_Lagrange_basis,
-//                  Vec<HashMap<usize, FieldT> > &&C_in_Lagrange_basis);
+//                  Vec<BTreeMap<usize, FieldT> > &&A_in_Lagrange_basis,
+//                  Vec<BTreeMap<usize, FieldT> > &&C_in_Lagrange_basis);
 
 //     sap_instance(other:&sap_instance<FieldT>) = default;
 //     sap_instance(sap_instance<FieldT> &&other) = default;
@@ -184,8 +184,8 @@ impl<FieldT: FieldTConfig> sap_instance<FieldT> {
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
-        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+        A_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+        C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
     ) -> Self {
         Self {
             num_variables,
@@ -202,8 +202,8 @@ impl<FieldT: FieldTConfig> sap_instance<FieldT> {
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
-        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+        A_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+        C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
     ) -> Self {
         Self {
             num_variables,

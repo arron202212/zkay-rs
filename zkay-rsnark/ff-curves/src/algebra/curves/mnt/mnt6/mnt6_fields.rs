@@ -21,11 +21,13 @@ pub const mnt6_q_bitcount: usize = mnt46_A_bitcount;
 
 pub const mnt6_r_limbs: usize = mnt46_B_limbs;
 pub const mnt6_q_limbs: usize = mnt46_A_limbs;
-
+const mnt6_q_limbs2: usize = mnt6_q_limbs * 2;
+const mnt6_q_limbs6: usize = mnt6_q_limbs * 6;
+const mnt6_q_limbs12: usize = mnt6_q_limbs * 12;
 pub type mnt6_Fr = Fp_model<mnt6_r_limbs, Backend>;
 pub type mnt6_Fq = Fp_model<mnt6_q_limbs, Backend>;
 pub type mnt6_Fq3 = Fp3_model<mnt6_q_limbs, Backend>;
-pub type mnt6_Fq6 = Fp6_2over3_model<mnt6_q_limbs, Backend>;
+pub type mnt6_Fq6 = Fp6_2over3_model<mnt6_q_limbs, mnt6_q_limbs2, Backend>;
 pub type mnt6_GT = mnt6_Fq6;
 
 #[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
@@ -116,22 +118,22 @@ impl PpConfig for Backend {
     // type Fr=Self;
 }
 impl Fp_modelConfig<mnt6_q_limbs> for Backend {}
-impl Fp2_modelConfig<mnt6_q_limbs> for Backend {
+impl Fp2_modelConfig<mnt6_q_limbs, mnt6_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
 }
 impl Fp3_modelConfig<mnt6_q_limbs> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp6_modelConfig<mnt6_q_limbs> for Backend {
+impl Fp6_modelConfig<mnt6_q_limbs, mnt6_q_limbs2, mnt6_q_limbs6> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
 }
-impl ffec::fp6_2over3::Fp6_modelConfig<mnt6_q_limbs> for Backend {
+impl ffec::fp6_2over3::Fp6_modelConfig<mnt6_q_limbs, mnt6_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
     type Fp3_modelConfig = Self;
 }
-impl Fp12_modelConfig<mnt6_q_limbs> for Backend {
+impl Fp12_modelConfig<mnt6_q_limbs, mnt6_q_limbs2, mnt6_q_limbs6, mnt6_q_limbs12> for Backend {
     type Fp_modelConfig = Self;
     type Fp6_modelConfig = Self;
 }

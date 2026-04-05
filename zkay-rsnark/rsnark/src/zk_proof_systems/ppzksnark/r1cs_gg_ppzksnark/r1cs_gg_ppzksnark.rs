@@ -77,11 +77,7 @@ use std::ops::{Add, Mul};
  * A proving key for the R1CS GG-ppzkSNARK.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_proving_key<ppT: PublicParams>
-// where
-//     <ppT as ff_curves::PublicParams>::G2: PpConfig,
-//     <ppT as ff_curves::PublicParams>::G1: PpConfig,
-{
+pub struct r1cs_gg_ppzksnark_proving_key<ppT: PublicParams> {
     pub alpha_g1: G1<ppT>,
     pub beta_g1: G1<ppT>,
     pub beta_g2: G2<ppT>,
@@ -174,10 +170,7 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
  * A verification key for the R1CS GG-ppzkSNARK.
  */
 #[derive(Clone, Default)]
-pub struct r1cs_gg_ppzksnark_verification_key<ppT: PublicParams>
-// where
-//     <ppT as ff_curves::PublicParams>::G1: PpConfig,
-{
+pub struct r1cs_gg_ppzksnark_verification_key<ppT: PublicParams> {
     pub alpha_g1_beta_g2: GT<ppT>,
     pub gamma_g2: G2<ppT>,
     pub delta_g2: G2<ppT>,
@@ -358,20 +351,7 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proof<ppT> {
 
 pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     r1cs: &r1cs_gg_ppzksnark_constraint_system<ppT>,
-) -> r1cs_gg_ppzksnark_keypair<ppT>
-// where
-//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-//     ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
-//             <ppT as ff_curves::PublicParams>::Fr,
-//         >,
-{
+) -> r1cs_gg_ppzksnark_keypair<ppT> {
     enter_block("Call to r1cs_gg_ppzksnark_generator", false);
 
     /* Make the B_query "lighter" if possible */
@@ -595,24 +575,7 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     pk: &r1cs_gg_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_gg_ppzksnark_auxiliary_input<ppT>,
-) -> r1cs_gg_ppzksnark_proof<ppT>
-// where
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::Fr>,
-//     <ppT as ff_curves::PublicParams>::G1:
-//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::G1:
-//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-//     <ppT as ff_curves::PublicParams>::G2:
-//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
-//     <ppT as ff_curves::PublicParams>::G1:
-//         Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     ED: fqfft::evaluation_domain::evaluation_domain::evaluation_domain<
-//             <ppT as ff_curves::PublicParams>::Fr,
-//         >,
-{
+) -> r1cs_gg_ppzksnark_proof<ppT> {
     enter_block("Call to r1cs_gg_ppzksnark_prover", false);
 
     // // #ifdef DEBUG
@@ -1143,10 +1106,7 @@ impl<ppT: PublicParams> fmt::Display for r1cs_gg_ppzksnark_proof<ppT> {
 // }
 
 impl<ppT: PublicParams> r1cs_gg_ppzksnark_verification_key<ppT> {
-    pub fn dummy_verification_key(input_size: usize) -> r1cs_gg_ppzksnark_verification_key<ppT>
-// where
-    //     <ppT as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::GT, Output = <ppT as ff_curves::PublicParams>::GT>,
-    {
+    pub fn dummy_verification_key(input_size: usize) -> r1cs_gg_ppzksnark_verification_key<ppT> {
         let mut result = r1cs_gg_ppzksnark_verification_key::<ppT>::default();
         result.alpha_g1_beta_g2 = GT::<ppT>::random_element() * Fr::<ppT>::random_element();
         result.gamma_g2 = G2::<ppT>::random_element();

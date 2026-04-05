@@ -516,9 +516,9 @@ fn generate_proof(
     if ret { 0 } else { -2 }
 }
 
-fn main(argc: i32, argv: Vec<String>) -> i32 {
+pub fn mains(argc: i32, argv: &[&str]) -> i32 {
     if argc < 5 {
-        eprintln!("Invalid command");
+        eprintln!("Invalid command,{}", argc);
         return -1;
     }
     let in_dir = &argv[2];

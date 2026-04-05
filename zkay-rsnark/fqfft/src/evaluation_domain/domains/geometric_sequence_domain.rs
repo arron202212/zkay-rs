@@ -10,7 +10,7 @@ use crate::polynomial_arithmetic::basis_change::monomial_to_newton_basis_geometr
 use crate::polynomial_arithmetic::basis_change::newton_to_monomial_basis_geometric;
 use ffec::FieldTConfig;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct geometric_sequence_domain<FieldT: FieldTConfig> {
     //   : public evaluation_domain<FieldT>
     precomputation_sentinel: bool,
@@ -52,8 +52,9 @@ impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
         if m <= 1 {
             eyre::bail!("geometric(): expected m > 1");
         }
-        //   if FieldT::geometric_generator() == FieldT::zero()
-        //     {eyre::bail!("geometric(): expected FieldT::geometric_generator() != FieldT::zero()");}
+        if FieldT::geometric_generator() == FieldT::zero() {
+            eyre::bail!("geometric(): expected FieldT::geometric_generator() != FieldT::zero()");
+        }
 
         Ok(evaluation_domain::<Self>::new(
             m,
@@ -68,6 +69,9 @@ impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence_domains<FieldT> {
+  fn m(&self) -> usize {
+        self.m
+    } 
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("geometric: expected a.len() == self.m");

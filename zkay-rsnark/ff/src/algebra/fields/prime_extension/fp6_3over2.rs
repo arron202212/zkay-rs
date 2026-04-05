@@ -35,45 +35,39 @@ use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, S
 //  */
 //
 
-pub trait Fp6_modelConfig<const N: usize>:
+pub trait Fp6_modelConfig<const N: usize, const N2: usize, const N6: usize>:
     'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: Fp_modelConfig<N>;
-    type Fp2_modelConfig: Fp2_modelConfig<N, Fp_modelConfig = Self::Fp_modelConfig>;
+    type Fp2_modelConfig: Fp2_modelConfig<N, N2, Fp_modelConfig = Self::Fp_modelConfig>;
+    const euler: bigint<N6> = bigint::<N6>::one(); // (modulus-1)/2
+    const s: usize = 1; // modulus = 2^s * t + 1
+    const t: bigint<N6> = bigint::<N6>::one(); // with t odd
+    const t_minus_1_over_2: bigint<N6> = bigint::<N6>::one(); // (t-1)/2
+    const non_residue: my_Fp2<N, N2, Self::Fp2_modelConfig> =
+        Fp2_model::<N, N2, Self::Fp2_modelConfig>::const_default();
 
-    const non_residue: my_Fp<N, Self::Fp_modelConfig> =
-        Fp_model::<N, Self::Fp_modelConfig>::const_default();
-
-    const nqr: (
-        my_Fp<N, Self::Fp_modelConfig>,
-        my_Fp<N, Self::Fp_modelConfig>,
-    ) = (
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    );
-    const nqr_to_t: (
-        my_Fp<N, Self::Fp_modelConfig>,
-        my_Fp<N, Self::Fp_modelConfig>,
-    ) = (
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    );
+    const nqr: Fp6_3over2_model<N, N2, N6, Self> =
+        Fp6_3over2_model::<N, N2, N6, Self>::const_default();
+    const nqr_to_t: Fp6_3over2_model<N, N2, N6, Self> =
+        Fp6_3over2_model::<N, N2, N6, Self>::const_default();
     /// T::non_residue^((modulus^i-1)/2)
-    const Frobenius_coeffs_c1: [my_Fp<N, Self::Fp_modelConfig>; 2] = [
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    ];
-    const Frobenius_coeffs_c2: [my_Fp<N, Self::Fp_modelConfig>; 2] = [
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    ];
+    const Frobenius_coeffs_c1: [my_Fp2<N, N2, Self::Fp2_modelConfig>; 6] =
+        [Fp2_model::<N, N2, Self::Fp2_modelConfig>::const_default(); 6];
+    const Frobenius_coeffs_c2: [my_Fp2<N, N2, Self::Fp2_modelConfig>; 6] =
+        [Fp2_model::<N, N2, Self::Fp2_modelConfig>::const_default(); 6];
 }
 
 type my_Fp<const N: usize, T> = Fp_model<N, T>;
-type my_Fp2<const N: usize, T> = Fp2_model<N, T>;
+type my_Fp2<const N: usize, const N2: usize, T> = Fp2_model<N, N2, T>;
 
 #[derive(Default, Clone, Debug, Copy, Eq)]
-pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
+pub struct Fp6_3over2_model<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+> {
     // // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     //     static i64 add_cnt;
     //     static i64 sub_cnt;
@@ -91,9 +85,9 @@ pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
     //     static my_Fp2<N,T::Fp2_modelConfig> T::non_residue;
     //     static my_Fp2<N,T::Fp2_modelConfig> Frobenius_coeffs_c1[6]; // T::non_residue^((modulus^i-1)/3)   for i=0,1,2,3,4,5
     //     static my_Fp2<N,T::Fp2_modelConfig> Frobenius_coeffs_c2[6]; // T::non_residue^((2*modulus^i-2)/3) for i=0,1,2,3,4,5
-    pub c0: my_Fp2<N, T::Fp2_modelConfig>,
-    pub c1: my_Fp2<N, T::Fp2_modelConfig>,
-    pub c2: my_Fp2<N, T::Fp2_modelConfig>,
+    pub c0: my_Fp2<N, N2, T::Fp2_modelConfig>,
+    pub c1: my_Fp2<N, N2, T::Fp2_modelConfig>,
+    pub c2: my_Fp2<N, N2, T::Fp2_modelConfig>,
     _t: PhantomData<T>,
     //     Fp6_3over2_model() {};
     //     Fp6_3over2_model(c0:my_Fp2<N,T::Fp2_modelConfig>, c1:my_Fp2<N,T::Fp2_modelConfig>, c2:my_Fp2<N,T::Fp2_modelConfig>)->Selfc0,c1,c2 {};
@@ -157,17 +151,19 @@ pub struct Fp6_3over2_model<const N: usize, T: Fp6_modelConfig<N>> {
 }
 
 // use crate::algebra::field_utils::field_utils;
-impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    Fp6_3over2_model<N, N2, N6, T>
+{
     pub fn ceil_size_in_bits() -> usize {
-        3 * my_Fp2::<N, T::Fp2_modelConfig>::ceil_size_in_bits()
+        3 * my_Fp2::<N, N2, T::Fp2_modelConfig>::ceil_size_in_bits()
     }
     pub fn floor_size_in_bits() -> usize {
-        3 * my_Fp2::<N, T::Fp2_modelConfig>::floor_size_in_bits()
+        3 * my_Fp2::<N, N2, T::Fp2_modelConfig>::floor_size_in_bits()
     }
     pub fn new(
-        c0: my_Fp2<N, T::Fp2_modelConfig>,
-        c1: my_Fp2<N, T::Fp2_modelConfig>,
-        c2: my_Fp2<N, T::Fp2_modelConfig>,
+        c0: my_Fp2<N, N2, T::Fp2_modelConfig>,
+        c1: my_Fp2<N, N2, T::Fp2_modelConfig>,
+        c2: my_Fp2<N, N2, T::Fp2_modelConfig>,
     ) -> Self {
         Self {
             c0,
@@ -176,34 +172,53 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
             _t: PhantomData,
         }
     }
-
+    pub const fn const_new(
+        c0: my_Fp2<N, N2, T::Fp2_modelConfig>,
+        c1: my_Fp2<N, N2, T::Fp2_modelConfig>,
+        c2: my_Fp2<N, N2, T::Fp2_modelConfig>,
+    ) -> Self {
+        Self {
+            c0,
+            c1,
+            c2,
+            _t: PhantomData,
+        }
+    }
+    pub const fn const_default() -> Self {
+        Self {
+            c0: my_Fp2::<N, N2, T::Fp2_modelConfig>::const_default(),
+            c1: my_Fp2::<N, N2, T::Fp2_modelConfig>::const_default(),
+            c2: my_Fp2::<N, N2, T::Fp2_modelConfig>::const_default(),
+            _t: PhantomData,
+        }
+    }
     pub fn mul_by_non_residue(
-        elt: &Fp2_model<N, T::Fp2_modelConfig>,
-    ) -> Fp2_model<N, T::Fp2_modelConfig> {
-        elt * &T::non_residue
+        elt: &Fp2_model<N, N2, T::Fp2_modelConfig>,
+    ) -> Fp2_model<N, N2, T::Fp2_modelConfig> {
+        T::non_residue.clone() * elt
     }
 
-    pub fn zero() -> Self {
-        Self::new(
-            my_Fp2::<N, T::Fp2_modelConfig>::zero(),
-            my_Fp2::<N, T::Fp2_modelConfig>::zero(),
-            my_Fp2::<N, T::Fp2_modelConfig>::zero(),
+    pub const fn zero() -> Self {
+        Self::const_new(
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
         )
     }
 
-    pub fn one() -> Self {
-        Self::new(
-            my_Fp2::<N, T::Fp2_modelConfig>::one(),
-            my_Fp2::<N, T::Fp2_modelConfig>::zero(),
-            my_Fp2::<N, T::Fp2_modelConfig>::zero(),
+    pub const fn one() -> Self {
+        Self::const_new(
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::one(),
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
+            my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
         )
     }
 
     pub fn random_element() -> Self {
         Self {
-            c0: my_Fp2::<N, T::Fp2_modelConfig>::random_element(),
-            c1: my_Fp2::<N, T::Fp2_modelConfig>::random_element(),
-            c2: my_Fp2::<N, T::Fp2_modelConfig>::random_element(),
+            c0: my_Fp2::<N, N2, T::Fp2_modelConfig>::random_element(),
+            c1: my_Fp2::<N, N2, T::Fp2_modelConfig>::random_element(),
+            c2: my_Fp2::<N, N2, T::Fp2_modelConfig>::random_element(),
             _t: PhantomData,
         }
     }
@@ -265,8 +280,8 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
     pub fn Frobenius_map(&self, power: usize) -> Self {
         Self::new(
             self.c0.Frobenius_map(power),
-            &self.c1.Frobenius_map(power) * &T::Frobenius_coeffs_c1[power % 6],
-            &self.c2.Frobenius_map(power) * &T::Frobenius_coeffs_c2[power % 6],
+            self.c1.Frobenius_map(power) * T::Frobenius_coeffs_c1[power % 6].clone(),
+            self.c2.Frobenius_map(power) * T::Frobenius_coeffs_c2[power % 6].clone(),
         )
     }
 
@@ -316,7 +331,9 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Fp6_3over2_model<N, T> {
 // {
 //     return (self.c0 == other.c0 && self.c1 == other.c1 && self.c2 == other.c2);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> PartialEq for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PartialEq
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         false
@@ -340,8 +357,15 @@ impl<const N: usize, T: Fp6_modelConfig<N>> PartialEq for Fp6_3over2_model<N, T>
 //                                        self.c2 + other.c2);
 // }
 
-impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp6_3over2_model<N, T> {
-    type Output = Fp6_3over2_model<N, T>;
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+    O: Borrow<Self>,
+> Add<O> for Fp6_3over2_model<N, N2, N6, T>
+{
+    type Output = Fp6_3over2_model<N, N2, N6, T>;
 
     fn add(self, other: O) -> Self::Output {
         let mut r = self;
@@ -361,7 +385,9 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp6_3ove
 //                                        self.c2 - other.c2);
 // }
 
-impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Sub
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
@@ -381,13 +407,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Sub for Fp6_3over2_model<N, T> {
 //                                        lhs*rhs.c1,
 //                                        lhs*rhs.c2);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
-    for &Fp6_3over2_model<N, T>
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    Mul<&Fp_model<N, T::Fp_modelConfig>> for &Fp6_3over2_model<N, N2, N6, T>
 {
-    type Output = Fp6_3over2_model<N, T>;
+    type Output = Fp6_3over2_model<N, N2, N6, T>;
 
     fn mul(self, rhs: &Fp_model<N, T::Fp_modelConfig>) -> Self::Output {
-        Fp6_3over2_model::<N, T>::new(&self.c0 * rhs, &self.c1 * rhs, &self.c2 * rhs)
+        Fp6_3over2_model::<N, N2, N6, T>::new(&self.c0 * rhs, &self.c1 * rhs, &self.c2 * rhs)
     }
 }
 
@@ -401,13 +427,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp_model<N, T::Fp_modelConfig>>
 //                                        lhs*rhs.c1,
 //                                        lhs*rhs.c2);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp2_model<N, T::Fp2_modelConfig>>
-    for &Fp6_3over2_model<N, T>
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    Mul<&Fp2_model<N, N2, T::Fp2_modelConfig>> for &Fp6_3over2_model<N, N2, N6, T>
 {
-    type Output = Fp6_3over2_model<N, T>;
+    type Output = Fp6_3over2_model<N, N2, N6, T>;
 
-    fn mul(self, rhs: &Fp2_model<N, T::Fp2_modelConfig>) -> Self::Output {
-        Fp6_3over2_model::<N, T>::new(self.c0 * rhs, self.c1 * rhs, self.c2 * rhs)
+    fn mul(self, rhs: &Fp2_model<N, N2, T::Fp2_modelConfig>) -> Self::Output {
+        Fp6_3over2_model::<N, N2, N6, T>::new(self.c0 * rhs, self.c1 * rhs, self.c2 * rhs)
     }
 }
 
@@ -429,8 +455,15 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Mul<&Fp2_model<N, T::Fp2_modelConfig
 //                                        (a+c)*(A+C)-aA+bB-cC);
 // }
 
-impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Mul<O> for Fp6_3over2_model<N, T> {
-    type Output = Fp6_3over2_model<N, T>;
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+    O: Borrow<Self>,
+> Mul<O> for Fp6_3over2_model<N, N2, N6, T>
+{
+    type Output = Fp6_3over2_model<N, N2, N6, T>;
 
     fn mul(self, rhs: O) -> Self::Output {
         let mut r = self;
@@ -446,7 +479,9 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> Mul<O> for Fp6_3ove
 //                                        -self.c1,
 //                                        -self.c2);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> Neg for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Neg
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -460,7 +495,9 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Neg for Fp6_3over2_model<N, T> {
 // {
 //     return power<Fp6_3over2_model<n, modulus> >(*this, pow);
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> BitXor<u64> for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> BitXor<u64>
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
@@ -476,8 +513,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>> BitXor<u64> for Fp6_3over2_model<N, 
 // {
 //     return power<Fp6_3over2_model<n, modulus>, m>(*this, pow);
 // }
-impl<const N: usize, const M: usize, T: Fp6_modelConfig<N>> BitXor<&bigint<M>>
-    for Fp6_3over2_model<N, T>
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    const M: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+> BitXor<&bigint<M>> for Fp6_3over2_model<N, N2, N6, T>
 {
     type Output = Self;
 
@@ -494,8 +536,13 @@ impl<const N: usize, const M: usize, T: Fp6_modelConfig<N>> BitXor<&bigint<M>>
 //     *self = *this + other;
 //     return *self;
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> AddAssign<O>
-    for Fp6_3over2_model<N, T>
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+    O: Borrow<Self>,
+> AddAssign<O> for Fp6_3over2_model<N, N2, N6, T>
 {
     fn add_assign(&mut self, other: O) {}
 }
@@ -506,8 +553,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> AddAssign<O>
 //     *self = *this - other;
 //     return *self;
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> SubAssign<O>
-    for Fp6_3over2_model<N, T>
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+    O: Borrow<Self>,
+> SubAssign<O> for Fp6_3over2_model<N, N2, N6, T>
 {
     fn sub_assign(&mut self, other: O) {}
 }
@@ -517,8 +569,13 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> SubAssign<O>
 //     *self = *this * other;
 //     return *self;
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> MulAssign<O>
-    for Fp6_3over2_model<N, T>
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+    O: Borrow<Self>,
+> MulAssign<O> for Fp6_3over2_model<N, N2, N6, T>
 {
     fn mul_assign(&mut self, rhs: O) {
         let rhs = rhs.borrow();
@@ -530,9 +587,11 @@ impl<const N: usize, T: Fp6_modelConfig<N>, O: Borrow<Self>> MulAssign<O>
 //     *self = *this ^ pow;
 //     return *self;
 // }
-impl<const N: usize, T: Fp6_modelConfig<N>> BitXorAssign<u64> for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    BitXorAssign<u64> for Fp6_3over2_model<N, N2, N6, T>
+{
     fn bitxor_assign(&mut self, rhs: u64) {
-        // *self = Powers::power::<Fp6_3over2_model<N, T>>(self, rhs);
+        // *self = Powers::power::<Fp6_3over2_model<N,N2,N6, T>>(self, rhs);
     }
 }
 
@@ -543,11 +602,16 @@ impl<const N: usize, T: Fp6_modelConfig<N>> BitXorAssign<u64> for Fp6_3over2_mod
 //     *self = *this ^ pow;
 //     return *self;
 // }
-impl<const N: usize, const M: usize, T: Fp6_modelConfig<N>> BitXorAssign<&bigint<M>>
-    for Fp6_3over2_model<N, T>
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    const M: usize,
+    T: Fp6_modelConfig<N, N2, N6>,
+> BitXorAssign<&bigint<M>> for Fp6_3over2_model<N, N2, N6, T>
 {
     fn bitxor_assign(&mut self, rhs: &bigint<M>) {
-        //*self = Powers::power::<Fp6_3over2_model<N, T>>(self, rhs);
+        //*self = Powers::power::<Fp6_3over2_model<N,N2,N6, T>>(self, rhs);
     }
 }
 
@@ -578,20 +642,25 @@ impl<const N: usize, const M: usize, T: Fp6_modelConfig<N>> BitXorAssign<&bigint
 // }
 
 use std::fmt;
-impl<const N: usize, T: Fp6_modelConfig<N>> fmt::Display for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> fmt::Display
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.c0)
     }
 }
-impl<const N: usize, T: Fp6_modelConfig<N>> PpConfig for Fp6_3over2_model<N, T>
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PpConfig
+    for Fp6_3over2_model<N, N2, N6, T>
 where
-    <T as Fp6_modelConfig<N>>::Fp_modelConfig: PpConfig,
+    <T as Fp6_modelConfig<N, N2, N6>>::Fp_modelConfig: PpConfig,
 {
     type TT = bigint<N>;
     //  type Fr=T::Fp_modelConfig;
 }
 
-impl<const N: usize, T: Fp6_modelConfig<N>> Mul<bigint<N>> for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Mul<bigint<N>>
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     type Output = Self;
 
     fn mul(self, rhs: bigint<N>) -> Self::Output {
@@ -600,13 +669,17 @@ impl<const N: usize, T: Fp6_modelConfig<N>> Mul<bigint<N>> for Fp6_3over2_model<
         r
     }
 }
-impl<const N: usize, T: Fp6_modelConfig<N>> One for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> One
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     fn one() -> Self {
         Self::one()
     }
 }
 
-impl<const N: usize, T: Fp6_modelConfig<N>> Zero for Fp6_3over2_model<N, T> {
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Zero
+    for Fp6_3over2_model<N, N2, N6, T>
+{
     fn zero() -> Self {
         Self::zero()
     }

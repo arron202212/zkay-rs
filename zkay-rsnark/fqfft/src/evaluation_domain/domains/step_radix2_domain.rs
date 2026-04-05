@@ -7,10 +7,10 @@ use crate::evaluation_domain::domains::basic_radix2_domain_aux::{
 };
 use crate::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use ffec::FieldTConfig;
-use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::utils::log2;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct step_radix2_domain<FieldT: FieldTConfig> {
     //: public evaluation_domain<FieldT>
     big_m: usize,
@@ -62,7 +62,7 @@ impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
         if small_m != 1usize << log2(small_m) {
             eyre::bail!("step_radix2(): expected small_m == 1u64<<log2(small_m)");
         }
-        let omega = get_root_of_unity_is_same_double::<FieldT>(1usize << log2(m));
+        let omega = get_root_of_unity_for_not_double::<FieldT>(1usize << log2(m))?;
         let big_omega = FieldT::one(); //omega.squared();
         Ok(evaluation_domain::<Self>::new(
             m,
@@ -72,7 +72,7 @@ impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
                 m: 0,
                 omega,
                 big_omega,
-                small_omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
+                small_omega: get_root_of_unity_for_not_double::<FieldT>(small_m)?,
             },
         ))
         // catch (const std::invalid_argument& e) { throw DomainSizeException(e.what()); }
@@ -80,6 +80,9 @@ impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domains<FieldT> {
+  fn m(&self) -> usize {
+        self.m
+    } 
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("step_radix2: expected a.len() == self.m");
@@ -113,7 +116,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
         }
 
         _basic_radix2_FFT(&mut c, &self.t.omega); //self.t.omega.squared()
-        let sm: FieldT = get_root_of_unity_is_same_double::<FieldT>(self.t.small_m);
+        let sm: FieldT = get_root_of_unity_for_not_double::<FieldT>(self.t.small_m)?;
         _basic_radix2_FFT(&mut e, &sm);
 
         for i in 0..self.t.big_m {
@@ -135,7 +138,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domain
         let mut U1 = a[..self.t.big_m].to_vec();
 
         // _basic_radix2_FFT(U0, self.t.omega.squared().inverse());
-        // _basic_radix2_FFT(U1, get_root_of_unity_is_same_double::<FieldT>(self.t.small_m).inverse());
+        // _basic_radix2_FFT(U1, get_root_of_unity_for_double::<FieldT>(self.t.small_m).inverse());
 
         // let  U0_size_inv = FieldT::from(self.t.big_m).inverse();
         for i in 0..self.t.big_m {

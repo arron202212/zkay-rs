@@ -16,12 +16,15 @@ const bn128_q_bitcount: usize = 254;
 
 const bn128_r_limbs: usize = (bn128_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 const bn128_q_limbs: usize = (bn128_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-
+const bn128_q_limbs2: usize = bn128_q_limbs * 2;
+const bn128_q_limbs6: usize = bn128_q_limbs * 6;
+const bn128_q_limbs12: usize = bn128_q_limbs * 12;
 pub type bn128_Fr = Fp_model<bn128_r_limbs, Backend>;
 pub type bn128_Fq = Fp_model<bn128_q_limbs, Backend>;
-pub type bn128_Fq2 = Fp2_model<bn128_q_limbs, Backend>;
-pub type bn128_Fq6 = Fp6_3over2_model<bn128_q_limbs, Backend>;
-pub type bn128_Fq12 = Fp12_2over3over2_model<bn128_q_limbs, Backend>;
+pub type bn128_Fq2 = Fp2_model<bn128_q_limbs, bn128_q_limbs2, Backend>;
+pub type bn128_Fq6 = Fp6_3over2_model<bn128_q_limbs, bn128_q_limbs2, bn128_q_limbs6, Backend>;
+pub type bn128_Fq12 =
+    Fp12_2over3over2_model<bn128_q_limbs, bn128_q_limbs2, bn128_q_limbs6, bn128_q_limbs12, Backend>;
 
 pub type Fp = bn128_Fq;
 pub type Fp2 = bn128_Fq2;
@@ -116,17 +119,17 @@ impl PpConfig for Backend {
     // type Fr=Self;
 }
 impl Fp_modelConfig<bn128_q_limbs> for Backend {}
-impl Fp2_modelConfig<bn128_q_limbs> for Backend {
+impl Fp2_modelConfig<bn128_q_limbs, bn128_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
 }
 impl Fp3_modelConfig<bn128_q_limbs> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp6_modelConfig<bn128_q_limbs> for Backend {
+impl Fp6_modelConfig<bn128_q_limbs, bn128_q_limbs2, bn128_q_limbs6> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
 }
-impl Fp12_modelConfig<bn128_q_limbs> for Backend {
+impl Fp12_modelConfig<bn128_q_limbs, bn128_q_limbs2, bn128_q_limbs6, bn128_q_limbs12> for Backend {
     type Fp_modelConfig = Self;
     type Fp6_modelConfig = Self;
 }

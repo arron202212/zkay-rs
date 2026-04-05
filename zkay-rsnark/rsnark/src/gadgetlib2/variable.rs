@@ -277,7 +277,7 @@ pub struct R1P_Elem {
 //     Variables are field agnostic, this means they can be used regardless of the context field,
 //     which will also be determined by the assignment.
 //  */
-pub type VariableAssignment = HashMap<Variable, FElem>; //VariableStrictOrder
+pub type VariableAssignment = BTreeMap<Variable, FElem>; //VariableStrictOrder
 #[derive(Default, Clone, Debug, Hash, Ord, Eq)]
 pub struct Variable {
     pub index_: VarIndex_t,
@@ -514,7 +514,7 @@ pub struct LinearTerm {
 #[derive(Clone, Eq, PartialEq)]
 pub struct LinearCombination {
     pub linearTerms_: Vec<LinearTerm>,
-    pub indexMap_: HashMap<i32, i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
+    pub indexMap_: BTreeMap<i32, i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
     pub constant_: FElem,
     //
     //     LinearCombination()->Self linearTerms_(), constant_(0) {}
@@ -624,7 +624,8 @@ impl AddAssign<&Self> for FElem {
     #[inline]
     fn add_assign(&mut self, other: &Self) {
         self.promoteToFieldType(&other.fieldType());
-        *self.elem_.borrow_mut() += &other.elem_.borrow();
+        let oe = other.elem_.borrow().clone();
+        *self.elem_.borrow_mut() += &oe;
     }
 }
 
@@ -789,7 +790,8 @@ impl FElem {
             fConst.is_ok(),
             "Cannot convert between specialized field types."
         );
-        *self.elem_.borrow_mut() = ElemType::Elem(R1P_Elem::from(fConst.unwrap().asLong()));
+        let v = ElemType::Elem(R1P_Elem::from(fConst.unwrap().asLong()));
+        *self.elem_.borrow_mut() = v;
     }
 
     pub fn inverses(&self, fieldType: &FieldType) -> Self {
@@ -817,7 +819,17 @@ impl FElem {
 impl AddAssign<&ElemType> for FConst {
     #[inline]
     fn add_assign(&mut self, other: &ElemType) {
-        self.contents_ += other.try_as_const_ref().unwrap().contents_;
+        let (v, flag) = self
+            .contents_
+            .overflowing_add(other.try_as_const_ref().unwrap().contents_);
+        self.contents_ = v;
+        if flag {
+            eprintln!(
+                "overflow {},{}",
+                self.contents_,
+                other.try_as_const_ref().unwrap().contents_
+            );
+        }
     }
 }
 
@@ -922,7 +934,7 @@ impl AddAssign<&ElemType> for R1P_Elem {
         if other.fieldType() == FieldType::R1P {
             self.elem_ += &other.try_as_elem_ref().unwrap().elem_;
         } else if other.fieldType() == FieldType::AGNOSTIC {
-            self.elem_ += Fp::from(other.try_as_elem_ref().unwrap().asLong());
+            self.elem_ += Fp::from(other.try_as_const_ref().unwrap().asLong());
         } else {
             panic!("Attempted to add incompatible pub type to R1P_Elem.");
         }
@@ -1091,7 +1103,7 @@ impl Variable {
         assignment
             .get(self)
             .expect(&format!(
-                "Attempted to evaluate unassigned Variable \"{}\", idx:{}",
+                "Attempted to evaluate unassigned Variable \"{}\", idx:{},",
                 self.name(),
                 self.index_
             ))
@@ -1488,7 +1500,8 @@ impl AddAssign<&Self> for LinearCombination {
 
         if self.indexMap_.len() == 0 {
             self.linearTerms_.extend(other.linearTerms_.clone());
-            self.constant_ += &other.constant_;
+            let oc = other.constant_.clone();
+            self.constant_ += &oc;
         } else {
             for lt in other.linearTerms_.iter() {
                 if let Some(v) = self.indexMap_.get(&(lt.variable().getIndex() as i32)) {
@@ -1690,7 +1703,7 @@ impl Default for LinearCombination {
     fn default() -> Self {
         Self {
             linearTerms_: vec![],
-            indexMap_: HashMap::new(),
+            indexMap_: BTreeMap::new(),
             constant_: FElem::from(0),
         }
     }
@@ -1699,7 +1712,7 @@ impl From<Variable> for LinearCombination {
     fn from(rhs: Variable) -> Self {
         Self {
             linearTerms_: vec![rhs.into()],
-            indexMap_: HashMap::new(),
+            indexMap_: BTreeMap::new(),
             constant_: FElem::from(0),
         }
     }
@@ -1708,7 +1721,7 @@ impl From<LinearTerm> for LinearCombination {
     fn from(rhs: LinearTerm) -> Self {
         Self {
             linearTerms_: vec![rhs],
-            indexMap_: HashMap::new(),
+            indexMap_: BTreeMap::new(),
             constant_: FElem::from(0),
         }
     }
@@ -1717,7 +1730,7 @@ impl From<u64> for LinearCombination {
     fn from(rhs: u64) -> Self {
         Self {
             linearTerms_: vec![],
-            indexMap_: HashMap::new(),
+            indexMap_: BTreeMap::new(),
             constant_: FElem::from(rhs),
         }
     }
@@ -1726,7 +1739,7 @@ impl From<FElem> for LinearCombination {
     fn from(rhs: FElem) -> Self {
         Self {
             linearTerms_: vec![],
-            indexMap_: HashMap::new(),
+            indexMap_: BTreeMap::new(),
             constant_: rhs,
         }
     }

@@ -69,7 +69,7 @@ use fqfft::evaluation_domain::{
 //                                             &d3:FieldT);
 
 // use crate::reductions::r1cs_to_qap::r1cs_to_qap;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 /**
  * Instance map for the R1CS-to-QAP reduction.
@@ -96,11 +96,11 @@ pub fn r1cs_to_qap_instance_map<
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
     let mut A_in_Lagrange_basis =
-        Vec::<HashMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
+        Vec::<BTreeMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
     let mut B_in_Lagrange_basis =
-        Vec::<HashMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
+        Vec::<BTreeMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
     let mut C_in_Lagrange_basis =
-        Vec::<HashMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
+        Vec::<BTreeMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
 
     enter_block("Compute polynomials A, B, C in Lagrange basis", false);
     /**
@@ -172,7 +172,10 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
 
     let domain =
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
-
+    println!(
+        "=======m============================{}",
+        domain.borrow().m()
+    );
     let (mut At, mut Bt, mut Ct, mut Ht) = (
         vec![FieldT::zero(); cs.num_variables() + 1],
         vec![FieldT::zero(); cs.num_variables() + 1],

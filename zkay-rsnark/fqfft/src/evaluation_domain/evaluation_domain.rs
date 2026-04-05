@@ -30,13 +30,14 @@ use crate::evaluation_domain::domains::geometric_sequence_domain::geometric_sequ
 use crate::evaluation_domain::domains::step_radix2_domain::step_radix2_domains;
 use enum_dispatch::enum_dispatch;
 use ffec::FieldTConfig;
+use std::fmt::Debug;
 
-#[derive(Default, Clone)]
-pub struct evaluation_domain<T: Default + Clone> {
+#[derive(Default, Clone,Debug)]
+pub struct evaluation_domain<T: Default + Clone+Debug> {
     pub m: usize,
     pub t: T,
 }
-impl<T: Default + Clone> evaluation_domain<T> {
+impl<T: Default + Clone+Debug> evaluation_domain<T> {
     pub fn new(m: usize, t: T) -> Self {
         Self { m, t }
     }

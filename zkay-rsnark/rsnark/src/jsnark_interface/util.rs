@@ -5,7 +5,7 @@ use ff_curves::default_ec_pp;
 type FieldT = Fr<default_ec_pp>;
 
 pub fn readIds(str: &str, vec: &mut Vec<u32>) {
-    for id in str.lines() {
+    for id in str.split_ascii_whitespace() {
         vec.push(id.parse::<u32>().unwrap());
     }
 }

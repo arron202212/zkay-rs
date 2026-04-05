@@ -35,7 +35,7 @@ use crate::relations::variable::{linear_combination, variable};
 use ffec::FieldTConfig;
 use ffec::common::serialization;
 use rccell::RcCell;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 #[derive(Clone, Default)]
 pub struct tinyram_cpu_checker<FieldT: FieldTConfig> {
     // : public tinyram_standard_gadget<FieldT>
@@ -1014,7 +1014,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .opcode
             .get_field_element_from_bits(&self.pb)
             .as_ulong();
-        let tinyram_opcode_names_map: HashMap<_, _> =
+        let tinyram_opcode_names_map: BTreeMap<_, _> =
             tinyram_opcode_names.iter().cloned().collect();
         print!(
             "   {} r{}, r{}, {}{}\n",

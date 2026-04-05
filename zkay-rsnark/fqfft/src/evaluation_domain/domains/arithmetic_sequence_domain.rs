@@ -14,7 +14,7 @@ use ffec::common::utils::log2;
 use num_traits::One;
 use std::ops::Sub;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct arithmetic_sequence_domain<FieldT: FieldTConfig> {
     //   : public evaluation_domain<FieldT>
     precomputation_sentinel: bool,
@@ -60,8 +60,9 @@ impl<FieldT: FieldTConfig> arithmetic_sequence_domain<FieldT> {
         if m <= 1 {
             eyre::bail!("arithmetic(): expected m > 1");
         }
-        //   if FieldT::arithmetic_generator() == FieldT::zero()
-        //     {eyre::bail!("arithmetic(): expected FieldT::arithmetic_generator() != FieldT::zero()");}
+        if FieldT::arithmetic_generator() == FieldT::zero() {
+            eyre::bail!("arithmetic(): expected FieldT::arithmetic_generator() != FieldT::zero()");
+        }
 
         Ok(evaluation_domain::<Self>::new(
             m,
@@ -76,6 +77,9 @@ impl<FieldT: FieldTConfig> arithmetic_sequence_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequence_domains<FieldT> {
+  fn m(&self) -> usize {
+        self.m
+    } 
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("arithmetic: expected a.len() == self.m");

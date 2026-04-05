@@ -18,12 +18,12 @@ const bn128_Fq_s: usize = 1;
 const bn128_Fq2_s: usize = 1;
 const bn128_Fq_nqr_to_t: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const bn128_Fq_t_minus_1_over_2: u64 = 0; // bn128_Fq2::const_new(BigInt!("0"));
-const bn128_Fq2_nqr_to_t: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
+const bn128_Fq2_nqr_to_t: bn128_Fq2 = bn128_Fq2::const_newb(BigInt!("0"));
 const bn128_Fq2_t_minus_1_over_2: u64 = 0; // bn128_Fq2::const_new(BigInt!("0"));
-const bn128_twist_coeff_b: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
+const bn128_twist_coeff_b: bn128_Fq2 = bn128_Fq2::const_newb(BigInt!("0"));
 const bn128_coeff_b: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
 const BN128_COEFF_B: bn128_Fq = bn128_Fq::const_new(BigInt!("0"));
-const BN128_TWIST_COEFF_B: bn128_Fq2 = bn128_Fq2::const_new(BigInt!("0"));
+const BN128_TWIST_COEFF_B: bn128_Fq2 = bn128_Fq2::const_newb(BigInt!("0"));
 
 type base_field = bn128_Fq;
 type scalar_field = bn128_Fr;

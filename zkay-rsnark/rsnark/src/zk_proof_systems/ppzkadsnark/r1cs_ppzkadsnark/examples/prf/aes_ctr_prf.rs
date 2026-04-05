@@ -70,8 +70,6 @@ impl<ppT: ppzkadsnarkConfig<prfKeyT = aesPrfKeyT>> PrfConfig<ppT> for PrfAdsnark
     }
 }
 
-
-
 // use aes::cipher::{BlockEncrypt, KeyInit, generic_array::GenericArray};
 // use aes::Aes128;
 // use num_bigint::BigUint;
@@ -82,7 +80,7 @@ impl<ppT: ppzkadsnarkConfig<prfKeyT = aesPrfKeyT>> PrfConfig<ppT> for PrfAdsnark
 //     // 1. 初始化 AES 实例
 //     // C++ 代码中使用 key.key_bytes 作为 PRF 密钥
 //     let cipher_prf = Aes128::new(GenericArray::from_slice(&key[0..16]));
-    
+
 //     // 2. 生成 seed_bytes (PRF 阶段)
 //     let mut seed_bytes = GenericArray::clone_from_slice(label);
 //     cipher_prf.encrypt_block(&mut seed_bytes);
@@ -115,7 +113,7 @@ impl<ppT: ppzkadsnarkConfig<prfKeyT = aesPrfKeyT>> PrfConfig<ppT> for PrfAdsnark
 
 //     // 4. 将 48 字节大整数对 Fr 取模
 //     let total_rand_int = BigUint::from_bytes_be(&random_bytes);
-    
+
 //     // 获取 Fr 的模数 (Modulus)
 //     let fr_modulus: BigUint = Fr::MODULUS.into();
 //     let result_int = total_rand_int % fr_modulus;

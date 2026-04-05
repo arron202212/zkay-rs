@@ -16,7 +16,7 @@ use fqfft::evaluation_domain::evaluation_domain::{
     EvaluationDomainConfig, EvaluationDomainType, evaluation_domain,
 };
 use rccell::RcCell;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 /* forward declaration */
 //
 // pub struct qap_witness;
@@ -40,26 +40,26 @@ pub struct qap_instance<FieldT: FieldTConfig> {
 
     pub domain: RcCell<EvaluationDomainType<FieldT>>,
 
-    pub A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    pub B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-    pub C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+    pub A_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+    pub B_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+    pub C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 // impl qap_instance<FieldT>{
 //     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
-//                  A_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >
-//                  B_in_Lagrange_basis:&Vec<HashMap<usize, FieldT> >
-//                  &C_in_Lagrange_basis:Vec<HashMap<usize, FieldT> >);
+//                  A_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >
+//                  B_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >
+//                  &C_in_Lagrange_basis:Vec<BTreeMap<usize, FieldT> >);
 
 //     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
 //                  num_variables:usize
 //                  degree:usize
 //                  num_inputs:usize
-//                 Vec<HashMap<usize, FieldT> > &&A_in_Lagrange_basis,
-//                 Vec<HashMap<usize, FieldT> > &&B_in_Lagrange_basis,
-//                 Vec<HashMap<usize, FieldT> > &&C_in_Lagrange_basis);
+//                 Vec<BTreeMap<usize, FieldT> > &&A_in_Lagrange_basis,
+//                 Vec<BTreeMap<usize, FieldT> > &&B_in_Lagrange_basis,
+//                 Vec<BTreeMap<usize, FieldT> > &&C_in_Lagrange_basis);
 
 //     qap_instance(&other:qap_instance<FieldT>) = default;
 //     qap_instance(qap_instance<FieldT> &&other) = default;
@@ -190,9 +190,9 @@ impl<FieldT: FieldTConfig> qap_instance<FieldT> {
         num_variables: usize,
         degree: usize,
         num_inputs: usize,
-        A_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        B_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
-        C_in_Lagrange_basis: Vec<HashMap<usize, FieldT>>,
+        A_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+        B_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
+        C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
     ) -> Self {
         Self {
             num_variables,

@@ -50,15 +50,11 @@ use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations::*;
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use ffec::common::utils::log2;
+use ffec::FieldTConfig;
 
 //
 pub fn compute_subproduct_tree<
-    FieldT: Clone
-        + std::convert::From<i32>
-        + std::cmp::PartialEq
-        + num_traits::Zero
-        + num_traits::One
-        + std::default::Default,
+    FieldT:FieldTConfig,
 >(
     m: usize,
     T: &mut Vec<Vec<Vec<FieldT>>>,
@@ -101,15 +97,7 @@ pub fn compute_subproduct_tree<
 
 //
 pub fn monomial_to_newton_basis<
-    FieldT: num_traits::Zero
-        + std::default::Default
-        + std::ops::Neg<Output = FieldT>
-        + std::ops::SubAssign
-        + std::cmp::PartialEq
-        + std::ops::AddAssign
-        + std::ops::Sub<Output = FieldT>
-        + Clone
-        + num_traits::One,
+    FieldT: FieldTConfig,
 >(
     a: &mut Vec<FieldT>,
     T: &Vec<Vec<Vec<FieldT>>>,
@@ -178,7 +166,7 @@ pub fn monomial_to_newton_basis<
 
 //
 pub fn newton_to_monomial_basis<
-    FieldT: Clone + num_traits::Zero + num_traits::One + std::cmp::PartialEq + std::default::Default,
+    FieldT: FieldTConfig
 >(
     a: &mut Vec<FieldT>,
     T: &Vec<Vec<Vec<FieldT>>>,
@@ -213,12 +201,7 @@ pub fn newton_to_monomial_basis<
 
 //
 pub fn monomial_to_newton_basis_geometric<
-    FieldT: num_traits::Zero
-        + Clone
-        + num_traits::One
-        + std::default::Default
-        + std::cmp::PartialEq
-        + std::ops::Neg<Output = FieldT>,
+    FieldT: FieldTConfig,
 >(
     a: &mut Vec<FieldT>,
     geometric_sequence: &Vec<FieldT>,
@@ -258,14 +241,7 @@ pub fn monomial_to_newton_basis_geometric<
 
 //
 pub fn newton_to_monomial_basis_geometric<
-    FieldT: num_traits::Zero
-        + std::default::Default
-        + Clone
-        + num_traits::One
-        + std::ops::Mul
-        + std::cmp::PartialEq
-        + std::ops::Neg<Output = FieldT>
-        + std::ops::Sub,
+    FieldT: FieldTConfig,
 >(
     a: &mut Vec<FieldT>,
     geometric_sequence: &Vec<FieldT>,

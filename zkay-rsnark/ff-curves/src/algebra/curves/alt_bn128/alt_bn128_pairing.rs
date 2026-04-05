@@ -286,7 +286,7 @@ pub fn doubling_step_for_flipped_miller_loop(
     let B = Y.squared(); // B = Y1^2
     let C = Z.squared(); // C = Z1^2
     let D = C + C + C; // D = 3 * C
-    let E = alt_bn128_twist_coeff_b * D; // E = twist_b * D
+    let E = alt_bn128_twist_coeff_b() * D; // E = twist_b * D
     let F = E + E + E; // F = 3 * E
     let G = &(B + F) * &two_inv; // G = (B+F)/2
     let H = (Y + Z).squared() - (B + C); // H = (Y1+Z1)^2-(B+C)

@@ -1,6 +1,7 @@
 #![allow(incomplete_features, dead_code, non_upper_case_globals)]
 // #![feature(generic_const_exprs, generic_const_items)]
 
+use crate::FieldTConfig;
 use crate::algebra::field_utils::{
     BigInteger,
     bigint::{GMP_NUMB_BITS, bigint},
@@ -9,6 +10,7 @@ use crate::algebra::fields::binary::{gf64, gf128, gf192, gf256};
 use crate::algebra::fields::prime_base::fp;
 use crate::common::double;
 use crate::common::utils::{bit_vector, div_ceil, log2};
+use num_complex::{Complex, Complex64, ComplexFloat};
 use num_traits::{One, Zero};
 
 pub trait is_additive {
@@ -186,26 +188,29 @@ pub fn coset_shift<FieldT: Default>() -> FieldT {
 }
 
 // std::enable_if<std::is_same<FieldT, Double>::value, FieldT>::type
-pub fn get_root_of_unity_is_same_double<FieldT: Default>(n: usize) -> FieldT {
+pub fn get_root_of_unity_for_double<FieldT: Default + From<Complex<f64>>>(n: usize) -> FieldT {
     const PI: f64 = 3.141592653589793238460264338328;
-    // return FieldT((2.0 * PI / n).cos(), (2.0 * PI / n).sin());
-    FieldT::default()
+    let n = n as f64;
+    FieldT::from(Complex::<f64>::new(
+        (2.0 * PI / n).cos(),
+        (2.0 * PI / n).sin(),
+    ))
 }
 
-//
 // std::enable_if<!std::is_same<FieldT, Double>::value, FieldT>::type
-pub fn get_root_of_unity_is_not_same_double<FieldT: Default>(n: usize) -> eyre::Result<FieldT> {
+pub fn get_root_of_unity_for_not_double<FieldT: FieldTConfig>(n: usize) -> eyre::Result<FieldT> {
     let logn = log2(n);
     if n != (1 << logn) {
         eyre::bail!("get_root_of_unity: expected n == (1<< logn)");
     }
-    // if logn > FieldT::s{ eyre::bail!("get_root_of_unity: expected logn <= FieldT::s");}
+    if logn > FieldT::ss() {
+        eyre::bail!("get_root_of_unity: expected logn <= FieldT::s");
+    }
 
     let mut omega = FieldT::default(); //root_of_unity;
-    // for _ in (logn+1..=FieldT::s).rev()
-    // {
-    //     omega *= omega;
-    // }
+    for _ in (logn + 1..=FieldT::ss()).rev() {
+        omega *= omega.clone();
+    }
 
     Ok(omega)
 }

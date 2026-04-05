@@ -14,7 +14,19 @@ use ffec::common::utils::log2;
 use num_enum::{FromPrimitive, IntoPrimitive};
 use std::collections::BTreeMap;
 use strum::Display;
-#[derive(Display, Hash, PartialEq, Eq, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
+#[derive(
+    Display,
+    Hash,
+    PartialEq,
+    Eq,
+    Ord,
+    PartialOrd,
+    Debug,
+    Default,
+    Clone,
+    FromPrimitive,
+    IntoPrimitive,
+)]
 #[repr(u8)]
 pub enum tinyram_opcode {
     #[default]

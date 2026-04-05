@@ -6,7 +6,7 @@ use crate::gadgetlib2::variable::{
     FElem, FieldType, LinearCombination, LinearTerm, Variable, VariableAssignment, nextFreeIndex_,
 };
 use ffec::FieldTConfig;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::sync::atomic::{self, AtomicUsize, Ordering};
 
 pub trait ConvertConfig<T, R> {
@@ -30,7 +30,7 @@ pub trait GadgetLibAdapter {
         Self::linear_combination_t,
     );
     type constraint_sys_t = Vec<Self::constraint_t>;
-    type assignment_t = HashMap<Self::variable_index_t, Self::Fp_elem_t>;
+    type assignment_t = BTreeMap<Self::variable_index_t, Self::Fp_elem_t>;
     type protoboard_t = (Self::constraint_sys_t, Self::assignment_t);
 
     //    fn  convert(lt:&LinearTerm)->linear_term_t;
@@ -66,7 +66,7 @@ impl GadgetLibAdapter for GLA {
         Self::linear_combination_t,
     );
     type constraint_sys_t = Vec<Self::constraint_t>;
-    type assignment_t = HashMap<Self::variable_index_t, Self::Fp_elem_t>;
+    type assignment_t = BTreeMap<Self::variable_index_t, Self::Fp_elem_t>;
     type protoboard_t = (Self::constraint_sys_t, Self::assignment_t);
     fn resetVariableIndex() {
         // This is a hack, used for testing

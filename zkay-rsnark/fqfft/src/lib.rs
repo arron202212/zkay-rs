@@ -6,6 +6,8 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
+#![feature(const_trait_impl)]
+#![feature(const_ops)]
 pub mod evaluation_domain;
 pub mod kronecker_substitution;
 pub mod polynomial_arithmetic;

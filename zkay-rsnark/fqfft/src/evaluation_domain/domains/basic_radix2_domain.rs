@@ -7,14 +7,14 @@ use crate::evaluation_domain::domains::basic_radix2_domain_aux::{
 use crate::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use ffec::FieldTConfig;
 use ffec::algebra::field_utils::field_utils;
-use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::double;
 use ffec::common::utils::log2;
 use num_traits::One;
 use std::ops::BitXor;
 use std::ops::Sub;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct basic_radix2_domain<FieldT: FieldTConfig> {
     // : public evaluation_domain<FieldT>
     pub omega: FieldT,
@@ -54,18 +54,20 @@ impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
     pub fn new(m: usize) -> eyre::Result<basic_radix2_domains<FieldT>> {
         // : evaluation_domain<FieldT>(m)
         if m <= 1 {
-            eyre::bail!("basic_radix2(): expected m > 1");
+            eyre::bail!("InvalidSize: expected m > 1");
         }
 
-        if "FieldT" != "Double" {
+        if !FieldT::is_double() {
             let logm = log2(m);
-            // if logm > (FieldT::s){eyre::bail!("basic_radix2(): expected logm <= FieldT::s");}
+            if logm > FieldT::ss() {
+                eyre::bail!("basic_radix2(): expected logm <= FieldT::s");
+            }
         }
 
         Ok(evaluation_domain::<Self>::new(
             m,
             Self {
-                omega: get_root_of_unity_is_same_double::<FieldT>(m),
+                omega: get_root_of_unity_for_not_double::<FieldT>(m)?,
                 m,
             },
         ))
@@ -74,6 +76,9 @@ impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for basic_radix2_domains<FieldT> {
+     fn m(&self) -> usize {
+        self.m
+    } 
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("basic_radix2: expected a.len() == self.m");

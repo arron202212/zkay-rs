@@ -29,7 +29,7 @@
 use crate::tools::exceptions;
 use ffec::FieldTConfig;
 use ffec::algebra::field_utils::field_utils;
-use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::profiling::print_indent;
 use ffec::common::utils::bitreverse;
 use ffec::common::utils::log2;
@@ -246,7 +246,7 @@ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT: FieldTConfig>(
         eyre::bail!("expected m == (1u32 << log2(m))");
     }
 
-    let omega = get_root_of_unity_is_same_double::<FieldT>(m);
+    let omega = get_root_of_unity_for_not_double::<FieldT>(m)?;
 
     let mut u = vec![FieldT::zero(); m];
 

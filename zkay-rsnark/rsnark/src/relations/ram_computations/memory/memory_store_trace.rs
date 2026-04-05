@@ -1,7 +1,7 @@
 // Declaration of interfaces for a memory store trace.
 
 use super::memory_interface::{memory_base, memory_contents, memory_interface};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::ops::{Index, IndexMut};
 /**
  * A pair consisting of an address and a value.
@@ -14,10 +14,10 @@ pub type address_and_value = (usize, usize);
  */
 #[derive(Default)]
 pub struct memory_store_trace {
-    entries: HashMap<usize, address_and_value>,
+    entries: BTreeMap<usize, address_and_value>,
     //     memory_store_trace();
     //     address_and_value get_trace_entry(timestamp:usize,) const;
-    //     HashMap<usize, address_and_value> get_all_trace_entries() const;
+    //     BTreeMap<usize, address_and_value> get_all_trace_entries() const;
     //     pub fn  set_trace_entry(timestamp:usize, av:&address_and_value);
     //     memory_contents as_memory_contents() const;
 }
@@ -39,7 +39,7 @@ impl IndexMut<usize> for memory_store_trace {
 impl memory_store_trace {
     pub fn new() -> Self {
         Self {
-            entries: HashMap::new(),
+            entries: BTreeMap::new(),
         }
     }
 
@@ -52,7 +52,7 @@ impl memory_store_trace {
         // return if it != entries.end() {it.1} else{std::make_pair<usize, usize>(0, 0)};
     }
 
-    pub fn get_all_trace_entries(&self) -> &HashMap<usize, address_and_value> {
+    pub fn get_all_trace_entries(&self) -> &BTreeMap<usize, address_and_value> {
         &self.entries
     }
 

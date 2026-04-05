@@ -122,13 +122,14 @@ impl Protoboard {
     }
 
     pub fn val(&mut self, var: &Variable) -> &mut FElem {
+        self.assignment_.entry(var.clone()).or_default();
         let retval = self.assignment_.get_mut(var).unwrap();
         assert!(
             retval.fieldType() == self.fieldType_ || retval.fieldType() == FieldType::AGNOSTIC,
             "Assigned field element of incorrect field type in Variable \"{}\"",
             var.name()
         );
-        return retval;
+        retval
     }
 
     pub fn val_lc(&self, lc: &LinearCombination) -> FElem {

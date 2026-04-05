@@ -15,7 +15,8 @@ use crate::algebra::{
     },
 };
 use crate::common::utils::bit_vector;
-use num_traits::{One, Zero};
+use num_bigint::BigUint;
+use num_traits::{Num, One, Zero};
 use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -42,7 +43,7 @@ pub trait Fp_modelConfig<const N: usize>:
 {
     // const num_limbs: usize = 4;
     const modulus: bigint<N> = bigint::<N>::one();
-    const num_bits: usize = 42;
+    const num_bits: usize = 254;
     const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
     const s: usize = 42; // modulus = 2^s * t + 1
     const t: bigint<N> = bigint::<N>::one(); // with t odd
@@ -51,7 +52,7 @@ pub trait Fp_modelConfig<const N: usize>:
     const nqr_to_t: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // nqr^t
     const multiplicative_generator: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // generator of Fp^*
     const root_of_unity: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // generator^((modulus-1)/2^s)
-    const inv: u64 = 42; // modulus^(-1) mod W, where W = 2^(word size)
+    const inv: u64 = 0xc2e1f593efffffff; // modulus^(-1) mod W, where W = 2^(word size)
     const Rsquared: bigint<N> = bigint::<N>::one(); // R^2, where R = W^k, where k = ??
     const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
 }
@@ -197,6 +198,9 @@ impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {}
 impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
     type TT = bigint<N>;
     const num_limbs: usize = N;
+    fn size_in_bits() -> usize {
+        T::num_bits
+    }
     // type Fr=Self;
 }
 impl<const N: usize, T: Fp_modelConfig<N>> AsMut<[u64]> for Fp_model<N, T> {
@@ -252,7 +256,15 @@ impl<const N: usize, T: Fp_modelConfig<N>> From<u64> for Fp_model<N, T> {
 impl<const N: usize, T: Fp_modelConfig<N>> From<&str> for Fp_model<N, T> {
     fn from(b: &str) -> Self {
         Fp_model::<N, T> {
-            mont_repr: bigint::<N>::new_with_str(b).unwrap(),
+            mont_repr: bigint::<N>::new_with_str(b).expect(b),
+            t: PhantomData,
+        }
+    }
+}
+impl<const N: usize, T: Fp_modelConfig<N>> From<BigUint> for Fp_model<N, T> {
+    fn from(b: BigUint) -> Self {
+        Fp_model::<N, T> {
+            mont_repr: bigint::<N>(b.try_into().unwrap()),
             t: PhantomData,
         }
     }
@@ -272,7 +284,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         }
     }
 
-    pub fn mul_reduce(&mut self, other: &bigint<N>) {}
+    pub const fn mul_reduce(&mut self, other: &bigint<N>) {}
 
     pub const fn new(b: bigint<N>) -> Self {
         // mpn_copyi(self.mont_repr.data, Rsquared.data, n);
@@ -284,7 +296,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         _self
     }
 
-    pub fn new_with_i64(x: i64, is_unsigned: bool) -> Self {
+    pub const fn new_with_i64(x: i64, is_unsigned: bool) -> Self {
         // assert!(std::numeric_limits<mp_limb_t>::max() >= std::numeric_limits<long>::max() as u64, "long won't fit in mp_limb_t");
         if is_unsigned || x >= 0 {
             // self.mont_repr.data[0] = x;//(mp_limb_t)
@@ -298,7 +310,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 
         // Self::mul_reduce(T::Rsquared);
         Self {
-            mont_repr: bigint::<N>::new(0),
+            mont_repr: bigint::<N>::zero(),
             t: PhantomData,
         }
     }
@@ -356,17 +368,17 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         T::modulus.0.0[N - 1] != 0
     } // mpn inverse assumes that highest limb is non-zero
 
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         let mut res = Self::new_with_i64(0, false);
         // res.mont_repr.clear();
-        return res;
+        res
     }
 
-    pub fn one() -> Self {
+    pub const fn one() -> Self {
         let mut res = Self::new_with_i64(0, false);
         // res.mont_repr.0.0[0] = 1;
         res.mul_reduce(&T::Rsquared);
-        return res;
+        res
     }
 
     pub fn geometric_generator() -> Self {
@@ -531,6 +543,16 @@ impl<const N: usize, T: Fp_modelConfig<N>> Mul<bigint<N>> for Fp_model<N, T> {
     type Output = Fp_model<N, T>;
 
     fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<BigUint> for Fp_model<N, T> {
+    type Output = Fp_model<N, T>;
+
+    fn mul(self, rhs: BigUint) -> Self::Output {
         let mut r = self;
         // r *= *rhs.borrow();
         r

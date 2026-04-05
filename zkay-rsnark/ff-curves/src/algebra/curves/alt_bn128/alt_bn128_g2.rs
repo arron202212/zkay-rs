@@ -235,8 +235,8 @@ impl alt_bn128_G2 {
 
     pub fn mul_by_b(elt: &alt_bn128_Fq2) -> alt_bn128_Fq2 {
         alt_bn128_Fq2::new(
-            alt_bn128_twist_mul_by_b_c0 * elt.c0,
-            alt_bn128_twist_mul_by_b_c1 * elt.c1,
+            alt_bn128_twist_mul_by_b_c0() * elt.c0,
+            alt_bn128_twist_mul_by_b_c1() * elt.c1,
         )
     }
 
@@ -431,7 +431,7 @@ impl alt_bn128_G2 {
         let Z3 = self.Z * Z2;
         let Z6 = Z3.squared();
 
-        (Y2 == X3 + alt_bn128_twist_coeff_b * Z6)
+        (Y2 == X3 + alt_bn128_twist_coeff_b() * Z6)
     }
 
     pub fn zero() -> Self {

@@ -8,11 +8,11 @@ use crate::evaluation_domain::domains::basic_radix2_domain_aux::{
 use crate::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use ffec::FieldTConfig;
 use ffec::algebra::field_utils::bigint::bigint;
-use ffec::algebra::field_utils::field_utils::{coset_shift, get_root_of_unity_is_same_double};
+use ffec::algebra::field_utils::field_utils::{coset_shift, get_root_of_unity_for_not_double};
 use ffec::common::utils::log2;
 use std::ops::{BitXor, Mul};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone,Debug)]
 pub struct extended_radix2_domain<FieldT: FieldTConfig> {
     // : public evaluation_domain<FieldT>
     small_m: usize,
@@ -57,7 +57,7 @@ impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
             eyre::bail!("extended_radix2(): expected m > 1");
         }
 
-        if "FieldT" != "Double" {
+        if !FieldT::is_double() {
             let logm = log2(m);
             // if logm != (FieldT::s + 1){eyre::bail!("extended_radix2(): expected logm == FieldT::s + 1");}
         }
@@ -68,7 +68,7 @@ impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
             m,
             Self {
                 small_m,
-                omega: get_root_of_unity_is_same_double::<FieldT>(small_m),
+                omega: get_root_of_unity_for_not_double::<FieldT>(small_m)?,
                 shift: coset_shift::<FieldT>(),
                 m,
             },
@@ -80,6 +80,9 @@ impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for extended_radix2_domains<FieldT> {
+  fn m(&self) -> usize {
+        self.m
+    } 
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("extended_radix2: expected a.len() == self.m");

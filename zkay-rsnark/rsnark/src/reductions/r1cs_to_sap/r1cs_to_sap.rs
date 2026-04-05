@@ -47,7 +47,7 @@ use fqfft::evaluation_domain::{
 };
 use rccell::RcCell;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 /**
  * Helper function to find evaluation domain that will be used by the reduction
  * for a given R1CS instance.
@@ -132,9 +132,9 @@ pub fn r1cs_to_sap_instance_map<
     let sap_num_variables = cs.num_variables() + cs.num_constraints() + cs.num_inputs();
 
     let mut A_in_Lagrange_basis =
-        Vec::<HashMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
+        Vec::<BTreeMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
     let mut C_in_Lagrange_basis =
-        Vec::<HashMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
+        Vec::<BTreeMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
 
     enter_block("Compute polynomials A, C in Lagrange basis", false);
     /**

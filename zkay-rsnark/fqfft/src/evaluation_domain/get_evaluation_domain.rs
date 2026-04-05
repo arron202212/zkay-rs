@@ -25,14 +25,54 @@ pub fn get_evaluation_domain<FieldT: FieldTConfig>(
     let small = min_size - big;
     let rounded_small = (1usize << log2(small));
 
-    //         result=basic_radix2_domain::<FieldT>::new(min_size)).map_err(||
-    //         result=extended_radix2_domain::<FieldT>::new(min_size)) .map_err(||
-    //         result=step_radix2_domain::<FieldT>::new(min_size)).map_err(||
-    // result=basic_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
-    // result=extended_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
-    // result=step_radix2_domain::<FieldT>::new(big + rounded_small)).map_err(||
-    //  result=geometric_sequence_domain::<FieldT>::new(min_size)).map_err(||
-    //         result=arithmetic_sequence_domain::<FieldT>::new(min_size)).map_err(||
-    //      eyre::bail!("get_evaluation_domain: no matching domain")))))))))
-    eyre::bail!("get_evaluation_domain: no matching domain")
+    let result = basic_radix2_domain::<FieldT>::new(min_size);
+    if result.is_ok() {
+        return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = extended_radix2_domain::<FieldT>::new(min_size);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = step_radix2_domain::<FieldT>::new(min_size);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = basic_radix2_domain::<FieldT>::new(big + rounded_small);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = extended_radix2_domain::<FieldT>::new(big + rounded_small);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = step_radix2_domain::<FieldT>::new(big + rounded_small);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = geometric_sequence_domain::<FieldT>::new(min_size);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+    let result = arithmetic_sequence_domain::<FieldT>::new(min_size);
+    if result.is_ok() {
+         return result.map(|res|RcCell::new(res.into()));
+    }else{
+        eprintln!("{result:?}");
+    }
+
+    eyre::bail!("get_evaluation_domain: no matching domain {min_size}")
 }

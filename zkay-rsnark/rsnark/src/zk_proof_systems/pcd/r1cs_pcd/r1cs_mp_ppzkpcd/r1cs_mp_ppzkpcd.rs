@@ -492,7 +492,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     >::new(compliance_predicates.len(), vk_size_in_bits.clone());
 
     enter_block("Perform type checks", false);
-    let mut type_counts = HashMap::new();
+    let mut type_counts = BTreeMap::new();
 
     for cp in compliance_predicates {
         *type_counts.entry(cp.types).or_insert(0) += 1;

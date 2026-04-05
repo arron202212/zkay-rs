@@ -17,11 +17,13 @@ use crate::gadgetlib2::variable::{
     FElem, FElemInterface, FieldType, LinearCombination, LinearTerm, ProtoboardPtr, R1P_Elem,
     Variable, VariablePtr,
 };
-use crate::jsnark_interface::util::{readFieldElementFromHex, readIds};
+use crate::jsnark_interface::circuit_parser::{Gate, WireEntry, read_field_element_from_hex};
+use crate::jsnark_interface::util::readIds;
 use ff_curves::{Fr, default_ec_pp};
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use rccell::RcCell;
-
+use regex::Regex;
+use sscanf::sscanf;
 use std::{
     fmt::Debug,
     fs,
@@ -53,26 +55,30 @@ use std::{
 //
 // using namespace gadgetlib2;
 // using namespace std;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 type Wire = u32;
 
 pub type FieldT = Fr<default_ec_pp>;
 type LinearCombinationPtr = RcCell<LinearCombination>;
-type WireMap = HashMap<Wire, u32>;
+type WireMap = BTreeMap<Wire, u32>;
 
 fn lcp() -> LinearCombinationPtr {
     RcCell::new(LinearCombination::default())
 }
-const ADD_OPCODE: u32 = 1;
-const MUL_OPCODE: u32 = 2;
-const SPLIT_OPCODE: u32 = 3;
-const NONZEROCHECK_OPCODE: u32 = 4;
-const PACK_OPCODE: u32 = 5;
-const MULCONST_OPCODE: u32 = 6;
-const XOR_OPCODE: u32 = 7;
-const OR_OPCODE: u32 = 8;
-const CONSTRAINT_OPCODE: u32 = 9;
+
+enum OpCode {
+    Zero,
+    Add,
+    Mul,
+    Split,
+    NonZeroCheck,
+    Pack,
+    MulConst,
+    Xor,
+    Or,
+    Constraint,
+}
 
 pub struct CircuitReader {
     pb: ProtoboardPtr,
@@ -145,9 +151,12 @@ impl CircuitReader {
             currentLinearCombinationIdx: 0,
             currentVariableIdx: 0,
         };
-
-        _self.parseAndEval(arithFilepath, inputsFilepath);
-        _self.constructCircuit(arithFilepath);
+        let mut input = std::fs::read_to_string(arithFilepath).expect(arithFilepath);
+        let gates = super::circuit_parser::parse(&input);
+        // _self.parseAndEval(arithFilepath, inputsFilepath);
+        // _self.constructCircuit(arithFilepath);
+        _self.parse_and_eval(&gates, inputsFilepath);
+        _self.construct_circuit(&gates);
         _self.mapValuesToProtoboard();
 
         _self.wireLinearCombinations.clear();
@@ -170,27 +179,21 @@ impl CircuitReader {
     pub fn getOutputWireIds(&self) -> &Vec<Wire> {
         &self.outputWireIds
     }
-    pub fn parseAndEval(&mut self, arithFilepath: &str, inputsFilepath: &str) {
+
+    pub fn parse_and_eval(&mut self, gates: &[Gate], inputsFilepath: &str) {
         enter_block("Parsing and Evaluating the circuit", false);
-        let mut arithfs = fs::read_to_string(arithFilepath);
-        let mut inputfs = fs::read_to_string(inputsFilepath);
 
-        let mut line;
+        // let mut inputfs = fs::read_to_string(inputsFilepath);
 
-        if arithfs.is_err() {
-            println!("Unable to open circuit file {} \n", arithFilepath);
-            process::exit(-1);
-        }
-        let Ok(arithfs) = arithfs else { return };
-        let mut arithfs = arithfs.lines();
-        line = arithfs.next().unwrap();
-        let ret = scan_fmt!(line, "total {d}", u32);
+        let Gate::Total(ret) = gates[0] else {
+            panic!("total failed")
+        }; //scan_fmt!(&line.unwrap(), "total {d}", u32);
 
-        if ret.is_err() {
-            println!("File Format Does not Match\n");
-            process::exit(-1);
-        }
-        self.numWires = ret.unwrap();
+        // if ret.is_err() {
+        //     println!("File Format Does not Match\n");
+        //     process::exit(-1);
+        // }
+        self.numWires = ret;
         self.wireValues
             .resize(self.numWires as usize, FieldT::zero());
         self.wireUseCounters.resize(self.numWires as usize, 0);
@@ -198,25 +201,30 @@ impl CircuitReader {
             self.numWires as usize,
             RcCell::new(LinearCombination::default()),
         );
-
-        if inputfs.is_err() {
+        let mut input = std::fs::read_to_string(inputsFilepath).expect(inputsFilepath);
+        let Ok((_, inputfs)) = super::circuit_parser::parse_all_inputs(&input) else {
             println!("Unable to open input file {} \n", inputsFilepath);
             process::exit(-1);
-        }
-        let Ok(inputfs) = inputfs else { return };
-        let mut inputfs = inputfs.lines();
+        };
+        // if inputfs.is_err() {
+        //     println!("Unable to open input file {} \n", inputsFilepath);
+        //     process::exit(-1);
+        // }
+        // let Ok(inputfs) = inputfs else { println!("Unable to open input file {} \n", inputsFilepath);
+        //     process::exit(-1); };
+        // let mut inputfs = inputfs.lines();
         // let mut inputStr;
-        for line in inputfs {
-            if line.is_empty() {
-                continue;
-            }
+        for WireEntry { id, value } in inputfs {
+            // if line.is_empty() {
+            //     continue;
+            // }
             // let mut wireId;
-            if let Ok((wireId, inputStr)) = scan_fmt!(line, "{} {}", u32, String) {
-                self.wireValues[wireId as usize] = readFieldElementFromHex(&inputStr);
-            } else {
-                println!("Error in Input\n");
-                process::exit(-1);
-            }
+            // if let Ok((wireId, inputStr)) = scan_fmt!(line, "{} {}", u32, String) {
+            self.wireValues[id as usize] = value.into(); // read_field_element_from_hex(&inputStr);
+            // } else {
+            //     println!("Error in Input\n");
+            //     process::exit(-1);
+            // }
         }
 
         if self.wireValues[0] != FieldT::one() {
@@ -244,150 +252,183 @@ impl CircuitReader {
         // evalTime = 0;
 
         // Parse the circuit: few lines were imported from Pinocchio's code.
+        use std::time::{Duration, Instant};
+        let start = Instant::now();
+        for line in &gates[..] {
+            // let line = line.unwrap();
+            // if line.is_empty() {
+            //     continue;
+            // }
 
-        for line in arithfs {
-            if line.is_empty() {
-                continue;
-            }
-
-            if line.as_bytes()[0] == b'#' {
-                continue;
-            }
-            if let Ok((wireId)) = scan_fmt!(line, "input {}", u32) {
-                self.numInputs += 1;
-                self.inputWireIds.push(wireId);
-            } else if let Ok((wireId)) = scan_fmt!(line, "nizkinput {}", u32) {
-                self.numNizkInputs += 1;
-                self.nizkWireIds.push(wireId);
-            } else if let Ok((wireId)) = scan_fmt!(line, "output {}", u32) {
-                self.numOutputs += 1;
-                self.outputWireIds.push(wireId);
-                self.wireUseCounters[wireId as usize] += 1;
-            } else if let Ok((types, numGateInputs, inputStr, numGateOutputs, outputStr)) = scan_fmt!(
-                line,
-                "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",
-                String,
-                u32,
-                String,
-                u32,
-                String
-            ) {
-                let mut iss_i = inputStr.lines();
-                let mut inValues = vec![];
-                let mut outWires = vec![];
-
-                for s in inputStr.split_ascii_whitespace() {
-                    let inWireId = s.parse::<u32>().unwrap() as usize;
-                    self.wireUseCounters[inWireId as usize] += 1;
-                    inValues.push(self.wireValues[inWireId]);
+            // if line.as_bytes()[0] == b'#' {
+            //     continue;
+            // }
+            match line {
+                Gate::Input(wireId) => {
+                    self.numInputs += 1;
+                    self.inputWireIds.push(*wireId);
                 }
-                readIds(&outputStr, &mut outWires);
-
-                let mut opcode = 0;
-                let mut constant = FieldT::zero();
-                match types.as_str() {
-                    "add" => {
-                        opcode = ADD_OPCODE;
-                    }
-                    "mul" => {
-                        opcode = MUL_OPCODE;
-                    }
-                    "xor" => {
-                        opcode = XOR_OPCODE;
-                    }
-                    "or" => {
-                        opcode = OR_OPCODE;
-                    }
-                    "assert" => {
-                        self.wireUseCounters[outWires[0] as usize] += 1;
-                        opcode = CONSTRAINT_OPCODE;
-                    }
-                    "pack" => {
-                        opcode = PACK_OPCODE;
-                    }
-                    "zerop" => {
-                        opcode = NONZEROCHECK_OPCODE;
-                    }
-                    "split" => {
-                        opcode = SPLIT_OPCODE;
-                    }
-                    _ if types.contains("const-mul-neg-") => {
-                        opcode = MULCONST_OPCODE;
-                        let constStr = &types["const-mul-neg-".len() - 1..];
-                        constant = readFieldElementFromHex(constStr) * negOneElement;
-                    }
-                    _ if types.contains("const-mul-") => {
-                        opcode = MULCONST_OPCODE;
-                        let constStr = &types["const-mul-".len() - 1..];
-                        constant = readFieldElementFromHex(constStr);
-                    }
-                    _ => {
-                        println!("Error: unrecognized line: {line}\n");
-                        panic!("0");
-                    }
+                Gate::NizkInput(wireId) => {
+                    self.numNizkInputs += 1;
+                    self.nizkWireIds.push(*wireId);
                 }
-                // TODO: separate evaluation from parsing completely to get accurate evaluation cost
-                //	 Calling  get_nsec_time(); repetitively as in the old version adds much overhead
-                // TODO 2: change circuit format to enable skipping some lines during evaluation
-                //       Not all intermediate wire values need to be computed in this phase
-                // TODO 3: change circuit format to make common constants defined once
-
-                //begin = get_nsec_time();
-                if opcode == ADD_OPCODE {
-                    self.wireValues[outWires[0] as usize] =
-                        inValues.iter().fold(Fp::default(), |s, c| s + c);
-                } else if opcode == MUL_OPCODE {
-                    self.wireValues[outWires[0] as usize] = inValues[0] * inValues[1];
-                } else if opcode == XOR_OPCODE {
-                    self.wireValues[outWires[0] as usize] = if inValues[0] == inValues[1] {
-                        zeroElement
-                    } else {
-                        oneElement
-                    };
-                } else if opcode == OR_OPCODE {
-                    self.wireValues[outWires[0] as usize] =
-                        if inValues[0] == zeroElement && inValues[1] == zeroElement {
-                            zeroElement
-                        } else {
-                            oneElement
-                        };
-                } else if opcode == NONZEROCHECK_OPCODE {
-                    self.wireValues[outWires[1] as usize] = if inValues[0] == zeroElement {
-                        zeroElement
-                    } else {
-                        oneElement
-                    };
-                } else if opcode == PACK_OPCODE {
-                    let (mut sum, mut coeff) = (FieldT::zero(), FieldT::zero());
-                    let mut two = oneElement;
-                    for &v in &inValues {
-                        sum += two * v;
-                        two += two;
-                    }
-                    self.wireValues[outWires[0] as usize] = sum;
-                } else if opcode == SPLIT_OPCODE {
-                    let size = outWires.len();
-                    let inVal = FElem::from(R1P_Elem::froms(inValues[0].clone()));
-                    for i in 0..size {
-                        self.wireValues[outWires[i] as usize] =
-                            inVal.getBits(i as u32, &FieldType::R1P).into();
-                    }
-                } else if opcode == MULCONST_OPCODE {
-                    self.wireValues[outWires[0] as usize] = constant * inValues[0];
+                Gate::Output(wireId) => {
+                    self.numOutputs += 1;
+                    self.outputWireIds.push(*wireId);
+                    self.wireUseCounters[*wireId as usize] += 1;
                 }
-                //end =  get_nsec_time();
-                //evalTime += (end - begin);
-            } else {
-                println!("Error: unrecognized line: {line}\n");
-                panic!("0");
+                Gate::Complex {
+                    typ,
+                    inputs,
+                    outputs,
+                } => {
+                    // let ret = scan_fmt!(
+                    //     line.trim(),
+                    //     "{} in {} <{}> out {} <{}>",
+                    //     String,
+                    //     u32,
+                    //     String,
+                    //     u32,
+                    //     String
+                    // );
+                    // let mut ret1 = sscanf!(
+                    //     line.trim(),
+                    //     "{String} in {u32} <{String}> out {u32} <{String}>"
+                    // );
+                    // // println!("=ret==={ret:?}=={ret1:?}");
+                    // let re = Regex::new(r"(\S+) in (\d+) <([^>]+)> out (\d+) <([^>]+)>").unwrap();
+
+                    // let Some(caps) = re.captures(&line) else {
+                    //     panic!("Error: unrecognized line: {line}\n");
+                    // };
+                    let (types, numGateInputs, inputStr, numGateOutputs, outputStr) =
+                        (*typ, inputs.len(), inputs, outputs.len(), outputs);
+
+                    //   if let Some((types, numGateInputs, inputStr, numGateOutputs, outputStr)) = ret1 {
+                    // let mut iss_i = inputStr.lines();
+                    let mut inValues = vec![];
+                    let mut outWires = vec![];
+
+                    for inWireId in inputStr {
+                        // let inWireId = s.parse::<u32>().unwrap() as usize;
+                        self.wireUseCounters[*inWireId as usize] += 1;
+                        inValues.push(self.wireValues[*inWireId as usize]);
+                    }
+                    // readIds(&outputStr, &mut outWires);
+                    outWires = outputStr.clone();
+                    let mut opcode = OpCode::Zero;
+                    let mut constant = FieldT::zero();
+                    match types {
+                        "add" => {
+                            opcode = OpCode::Add;
+                        }
+                        "mul" => {
+                            opcode = OpCode::Mul;
+                        }
+                        "xor" => {
+                            opcode = OpCode::Xor;
+                        }
+                        "or" => {
+                            opcode = OpCode::Or;
+                        }
+                        "assert" => {
+                            self.wireUseCounters[outWires[0] as usize] += 1;
+                            opcode = OpCode::Constraint;
+                        }
+                        "pack" => {
+                            opcode = OpCode::Pack;
+                        }
+                        "zerop" => {
+                            opcode = OpCode::NonZeroCheck;
+                        }
+                        "split" => {
+                            opcode = OpCode::Split;
+                        }
+                        _ if types.starts_with("const-mul-neg-") => {
+                            opcode = OpCode::MulConst;
+                            let constStr = &types["const-mul-neg-".len()..];
+                            constant = negOneElement * read_field_element_from_hex(constStr);
+                        }
+                        _ if types.starts_with("const-mul-") => {
+                            opcode = OpCode::MulConst;
+                            let constStr = &types["const-mul-".len()..];
+                            constant = read_field_element_from_hex(constStr).into();
+                        }
+                        _ => {
+                            panic!("Error:types unrecognized line: {line:?}\n");
+                        }
+                    }
+                    // TODO: separate evaluation from parsing completely to get accurate evaluation cost
+                    //	 Calling  get_nsec_time(); repetitively as in the old version adds much overhead
+                    // TODO 2: change circuit format to enable skipping some lines during evaluation
+                    //       Not all intermediate wire values need to be computed in this phase
+                    // TODO 3: change circuit format to make common constants defined once
+
+                    //begin = get_nsec_time();
+                    match opcode {
+                        OpCode::Add => {
+                            self.wireValues[outWires[0] as usize] =
+                                inValues.iter().fold(Fp::default(), |s, c| s + c);
+                        }
+                        OpCode::Mul => {
+                            self.wireValues[outWires[0] as usize] = inValues[0] * inValues[1];
+                        }
+                        OpCode::Xor => {
+                            self.wireValues[outWires[0] as usize] = if inValues[0] == inValues[1] {
+                                zeroElement
+                            } else {
+                                oneElement
+                            };
+                        }
+                        OpCode::Or => {
+                            self.wireValues[outWires[0] as usize] =
+                                if inValues[0] == zeroElement && inValues[1] == zeroElement {
+                                    zeroElement
+                                } else {
+                                    oneElement
+                                };
+                        }
+                        OpCode::NonZeroCheck => {
+                            self.wireValues[outWires[1] as usize] = if inValues[0] == zeroElement {
+                                zeroElement
+                            } else {
+                                oneElement
+                            };
+                        }
+                        OpCode::Pack => {
+                            let (mut sum, mut coeff) = (FieldT::zero(), FieldT::zero());
+                            let mut two = oneElement;
+                            for &v in &inValues {
+                                sum += two * v;
+                                two += two;
+                            }
+                            self.wireValues[outWires[0] as usize] = sum;
+                        }
+                        OpCode::Split => {
+                            let size = outWires.len();
+                            let inVal = FElem::from(R1P_Elem::froms(inValues[0].clone()));
+                            for i in 0..size {
+                                self.wireValues[outWires[i] as usize] =
+                                    inVal.getBits(i as u32, &FieldType::R1P).into();
+                            }
+                        }
+                        OpCode::MulConst => {
+                            self.wireValues[outWires[0] as usize] = constant * inValues[0];
+                        }
+                        _ => {}
+                    }
+                    //end =  get_nsec_time();
+                    //evalTime += (end - begin);
+                }
+                _ => {}
             }
         }
-
+        println!("===eval==start=={:?}==", start.elapsed());
         // println!("\t Evaluation Done in %lf seconds \n", (double) (evalTime) * 1e-9);
         leave_block("Parsing and Evaluating the circuit", false);
     }
 
-    pub fn constructCircuit(&mut self, arithFilepath: &str) {
+    pub fn construct_circuit(&mut self, gates: &[Gate]) {
         println!("Translating Constraints ... ");
 
         //
@@ -422,93 +463,102 @@ impl CircuitReader {
         // string line;
         let (mut numGateInputs, mut numGateOutputs) = (0, 0);
 
-        let mut ifs2 = fs::read_to_string(arithFilepath);
+        // let mut ifs2 = fs::read_to_string(arithFilepath);
 
-        if ifs2.is_err() {
-            println!("Unable to open circuit file:\n");
-            process::exit(5);
-        }
+        // if ifs2.is_err() {
+        //     println!("Unable to open circuit file:\n");
+        //     process::exit(5);
+        // }
 
-        // Parse the circuit: few lines were imported from Pinocchio's code.
-        let Ok(ifs2) = ifs2 else { return };
-        let mut ifs2 = ifs2.lines();
-        let mut line = ifs2.next().unwrap();
-        let Ok(numWires) = scan_fmt!(line, "total {}", i32) else {
-            eprintln!("=======================");
-            return;
+        // // Parse the circuit: few lines were imported from Pinocchio's code.
+        // let Ok(ifs2) = ifs2 else { return };
+        // let mut ifs2 = ifs2.lines();
+        // let mut line = ifs2.next().unwrap();
+        let Gate::Total(numWires) = gates[0] else {
+            panic!("total failed")
         };
-
+        // let re = Regex::new(r"(\S+) in (\d+) <([^>]+)> out (\d+) <([^>]+)>").unwrap();
         let mut lineCount = 0;
-        for line in ifs2 {
+        use std::time::{Duration, Instant};
+        let start = Instant::now();
+        for line in &gates[1..] {
             lineCount += 1;
             //		if lineCount % 100000 == 0 {
             //			println!("At Line:: {}\n", lineCount);
             //		}
 
-            if line.is_empty() {
-                continue;
-            }
+            // if line.is_empty() {
+            //     continue;
+            // }
 
-            if let Ok((types, numGateInputs, inputStr, numGateOutputs, outputStr)) = scan_fmt!(
-                line,
-                "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",
-                String,
-                i32,
-                String,
-                i32,
-                String
-            ) {
-                match types.as_str() {
-                    "add" => {
-                        assert!(numGateOutputs == 1);
-                        self.handleAddition(&inputStr, &outputStr);
-                    }
-                    "mul" => {
-                        assert!(numGateInputs == 2 && numGateOutputs == 1);
-                        self.addMulConstraint(&inputStr, &outputStr);
-                    }
-                    "xor" => {
-                        assert!(numGateInputs == 2 && numGateOutputs == 1);
-                        self.addXorConstraint(&inputStr, &outputStr);
-                    }
-                    "or" => {
-                        assert!(numGateInputs == 2 && numGateOutputs == 1);
-                        self.addOrConstraint(&inputStr, &outputStr);
-                    }
-                    "assert" => {
-                        assert!(numGateInputs == 2 && numGateOutputs == 1);
-                        self.addAssertionConstraint(&inputStr, &outputStr);
-                    }
-                    _ if types.contains("const-mul-neg-") => {
-                        assert!(numGateInputs == 1 && numGateOutputs == 1);
-                        self.handleMulNegConst(&types, &inputStr, &outputStr);
-                    }
-                    _ if types.contains("const-mul-") => {
-                        assert!(numGateInputs == 1 && numGateOutputs == 1);
-                        self.handleMulConst(&types, &inputStr, &outputStr);
-                    }
-                    "zerop" => {
-                        assert!(numGateInputs == 1 && numGateOutputs == 2);
-                        self.addNonzeroCheckConstraint(&inputStr, &outputStr);
-                    }
-                    _ if types.contains("split") => {
-                        assert!(numGateInputs == 1);
-                        self.addSplitConstraint(&inputStr, &outputStr, numGateOutputs as u16);
-                    }
-                    _ if types.contains("pack") => {
-                        assert!(numGateOutputs == 1);
-                        // addPackConstraint(inputStr, outputStr, numGateInputs);
-                        self.handlePackOperation(&inputStr, &outputStr, numGateInputs as u16);
-                    }
-                    _ => {}
+            // let Ok((types, numGateInputs, inputStr, numGateOutputs, outputStr)) = scan_fmt!(
+            //     line,
+            //     "{} in {} <{:/[^>]+/}> out {} <{:/[^>]+/}>",
+            //     String,
+            //     i32,
+            //     String,
+            //     i32,
+            //     String
+            // )
+            let Gate::Complex {
+                typ,
+                inputs,
+                outputs,
+            } = line
+            else {
+                continue;
+            };
+            let (types, numGateInputs, inputStr, numGateOutputs, outputStr) =
+                (*typ, inputs.len(), inputs, outputs.len(), outputs);
+
+            match types {
+                "add" => {
+                    assert!(numGateOutputs == 1);
+                    self.handleAddition(&inputStr, &outputStr);
                 }
-            } else {
-                //			assert!(0);
+                "mul" => {
+                    assert!(numGateInputs == 2 && numGateOutputs == 1);
+                    self.addMulConstraint(&inputStr, &outputStr);
+                }
+                "xor" => {
+                    assert!(numGateInputs == 2 && numGateOutputs == 1);
+                    self.addXorConstraint(&inputStr, &outputStr);
+                }
+                "or" => {
+                    assert!(numGateInputs == 2 && numGateOutputs == 1);
+                    self.addOrConstraint(&inputStr, &outputStr);
+                }
+                "assert" => {
+                    assert!(numGateInputs == 2 && numGateOutputs == 1);
+                    self.addAssertionConstraint(&inputStr, &outputStr);
+                }
+                _ if types.starts_with("const-mul-neg-") => {
+                    assert!(numGateInputs == 1 && numGateOutputs == 1);
+                    self.handleMulNegConst(&types, &inputStr, &outputStr);
+                }
+                _ if types.starts_with("const-mul-") => {
+                    assert!(numGateInputs == 1 && numGateOutputs == 1);
+                    self.handleMulConst(&types, &inputStr, &outputStr);
+                }
+                "zerop" => {
+                    assert!(numGateInputs == 1 && numGateOutputs == 2);
+                    self.addNonzeroCheckConstraint(&inputStr, &outputStr);
+                }
+                _ if types.starts_with("split") => {
+                    assert!(numGateInputs == 1);
+                    self.addSplitConstraint(&inputStr, &outputStr, numGateOutputs as u16);
+                }
+                _ if types.starts_with("pack") => {
+                    assert!(numGateOutputs == 1);
+                    // addPackConstraint(inputStr, outputStr, numGateInputs);
+                    self.handlePackOperation(&inputStr, &outputStr, numGateInputs as u16);
+                }
+                _ => {}
             }
 
             self.clean();
         }
-
+        println!("===start===={:?}==", start.elapsed());
         println!("\tConstraint translation done\n");
 
         //
@@ -528,35 +578,36 @@ impl CircuitReader {
                 .borrow_mut()
                 .val(&self.variables[v as usize].borrow()) =
                 R1P_Elem::froms(self.wireValues[wireId as usize].clone()).into();
-            if let Some(&z) = self.zeropMap.get(&wireId) {
-                let l = self.zeroPwires[zeropGateIndex].clone();
-                zeropGateIndex += 1;
-                if self.pb.as_ref().unwrap().borrow().val_lc(&l.borrow())
-                    == FElem::from(R1P_Elem::froms(FieldT::zero()))
-                {
-                    *self
-                        .pb
-                        .as_ref()
-                        .unwrap()
-                        .borrow_mut()
-                        .val(&self.variables[z as usize].borrow()) =
-                        R1P_Elem::froms(FieldT::zero()).into();
-                } else {
-                    *self
-                        .pb
-                        .as_ref()
-                        .unwrap()
-                        .borrow_mut()
-                        .val(&self.variables[z as usize].borrow()) = self
-                        .pb
-                        .as_ref()
-                        .unwrap()
-                        .borrow()
-                        .val_lc(&l.borrow())
-                        .inverses(&self.pb.as_ref().unwrap().borrow().fieldType_);
-                }
+        }
+        for (&wireId, &z) in &self.zeropMap {
+            let l = self.zeroPwires[zeropGateIndex].clone();
+            zeropGateIndex += 1;
+            if self.pb.as_ref().unwrap().borrow().val_lc(&l.borrow())
+                == FElem::from(R1P_Elem::froms(FieldT::zero()))
+            {
+                *self
+                    .pb
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .val(&self.variables[z as usize].borrow()) =
+                    R1P_Elem::froms(FieldT::zero()).into();
+            } else {
+                *self
+                    .pb
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .val(&self.variables[z as usize].borrow()) = self
+                    .pb
+                    .as_ref()
+                    .unwrap()
+                    .borrow()
+                    .val_lc(&l.borrow())
+                    .inverses(&self.pb.as_ref().unwrap().borrow().fieldType_);
             }
         }
+
         if !self
             .pb
             .as_ref()
@@ -574,8 +625,12 @@ impl CircuitReader {
         if self.wireLinearCombinations[wireId as usize]
             .borrow()
             .clone()
-            != LinearCombination::default()
+            == LinearCombination::default()
         {
+            assert!(
+                self.variableMap.contains_key(&wireId),
+                "{wireId} not in variableMap"
+            );
             self.wireLinearCombinations[wireId as usize] = RcCell::new(LinearCombination::from(
                 self.variables[self.variableMap[&wireId] as usize]
                     .borrow()
@@ -607,15 +662,8 @@ impl CircuitReader {
         self.toClean.clear();
     }
 
-    pub fn addMulConstraint(&mut self, inputStr: &str, outputStr: &str) {
-        let (outputWireId, inWireId1, inWireId2);
-
-        let mut iss_i = inputStr.lines();
-        inWireId1 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        inWireId2 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
-
+    pub fn addMulConstraint(&mut self, inputs: &[u32], outputs: &[u32]) {
+        let (outputWireId, inWireId1, inWireId2) = (outputs[0], inputs[0], inputs[1]);
         let (mut l1, mut l2) = (lcp(), lcp());
         self.find(inWireId1, &mut l1, false);
         self.find(inWireId2, &mut l2, false);
@@ -644,14 +692,8 @@ impl CircuitReader {
         }
     }
 
-    pub fn addXorConstraint(&mut self, inputStr: &str, outputStr: &str) {
-        let (outputWireId, inWireId1, inWireId2);
-
-        let mut iss_i = inputStr.lines();
-        inWireId1 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        inWireId2 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn addXorConstraint(&mut self, inputs: &[u32], outputs: &[u32]) {
+        let (outputWireId, inWireId1, inWireId2) = (outputs[0], inputs[0], inputs[1]);
 
         let (mut lp1, mut lp2) = (lcp(), lcp());
         self.find(inWireId1, &mut lp1, false);
@@ -686,14 +728,8 @@ impl CircuitReader {
         }
     }
 
-    pub fn addOrConstraint(&mut self, inputStr: &str, outputStr: &str) {
-        let (outputWireId, inWireId1, inWireId2);
-
-        let mut iss_i = inputStr.lines();
-        inWireId1 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        inWireId2 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn addOrConstraint(&mut self, inputs: &[u32], outputs: &[u32]) {
+        let (outputWireId, inWireId1, inWireId2) = (outputs[0], inputs[0], inputs[1]);
 
         let (mut lp1, mut lp2) = (lcp(), lcp());
         self.find(inWireId1, &mut lp1, false);
@@ -725,14 +761,8 @@ impl CircuitReader {
         }
     }
 
-    pub fn addAssertionConstraint(&mut self, inputStr: &str, outputStr: &str) {
-        let (outputWireId, inWireId1, inWireId2);
-
-        let mut iss_i = inputStr.lines();
-        inWireId1 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        inWireId2 = iss_i.next().unwrap().parse::<u32>().unwrap();
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn addAssertionConstraint(&mut self, inputs: &[u32], outputs: &[u32]) {
+        let (outputWireId, inWireId1, inWireId2) = (outputs[0], inputs[0], inputs[1]);
 
         let (mut lp1, mut lp2, mut lp3) = (lcp(), lcp(), lcp());
         self.find(inWireId1, &mut lp1, false);
@@ -751,20 +781,17 @@ impl CircuitReader {
             .addRank1Constraint(l1, l2, l3, "Assertion ..");
     }
 
-    pub fn addSplitConstraint(&mut self, inputStr: &str, outputStr: &str, n: u16) {
-        let mut iss_i = inputStr.lines();
-        let inWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
+    pub fn addSplitConstraint(&mut self, inputs: &[u32], outputs: &[u32], n: u16) {
+        let inWireId = inputs[0];
 
         let mut l = lcp();
         self.find(inWireId, &mut l, false);
-
-        let mut iss_o = outputStr.lines();
 
         let mut sum = lcp();
         let mut two_i = Fr::<default_ec_pp>::from("1");
 
         for i in 0..n {
-            let bitWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+            let bitWireId = outputs[i as usize];
             let mut vptr;
             if let Some(&v) = self.variableMap.get(&bitWireId) {
                 vptr = self.variables[v as usize].clone();
@@ -779,11 +806,12 @@ impl CircuitReader {
                 .unwrap()
                 .borrow_mut()
                 .enforceBooleanity(&vptr.borrow());
-            *sum.borrow_mut() = sum.borrow().clone()
+            let v = sum.borrow().clone()
                 + &LinearTerm::new(
                     vptr.borrow().clone(),
                     FElem::from(R1P_Elem::froms(two_i.clone())),
                 );
+            *sum.borrow_mut() = v;
             two_i += &two_i.clone();
         }
 
@@ -795,15 +823,9 @@ impl CircuitReader {
         );
     }
 
-    pub fn addNonzeroCheckConstraint(&mut self, inputStr: &str, outputStr: &str) {
+    pub fn addNonzeroCheckConstraint(&mut self, inputs: &[u32], outputs: &[u32]) {
         // let mut auxConditionInverse_;
-        let (mut outputWireId, mut inWireId) = (0, 0);
-
-        let mut iss_i = inputStr.lines();
-        inWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+        let (mut outputWireId, mut inWireId) = (outputs[1], inputs[0]);
         let mut l = lcp();
 
         self.find(inWireId, &mut l, false);
@@ -841,9 +863,8 @@ impl CircuitReader {
         self.currentVariableIdx += 1;
     }
 
-    pub fn handlePackOperation(&mut self, inputStr: &str, outputStr: &str, n: u16) {
-        let mut iss_o = outputStr.lines();
-        let outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn handlePackOperation(&mut self, inputs: &[u32], outputs: &[u32], n: u16) {
+        let outputWireId = outputs[0];
 
         if self.variableMap.contains_key(&outputWireId) {
             println!(
@@ -855,27 +876,24 @@ impl CircuitReader {
             process::exit(-1);
         }
 
-        let mut iss_i = inputStr.lines();
         let mut sum = lcp();
-        let mut bitWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
+        let mut bitWireId = inputs[0];
 
         self.find(bitWireId, &mut sum, true);
         let mut two_i = Fr::<default_ec_pp>::from("1");
         for i in 1..n {
-            bitWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
+            bitWireId = inputs[i as usize];
             let mut l = lcp();
             self.find(bitWireId, &mut l, false);
             two_i += two_i;
-            *sum.borrow_mut() +=
-                &(l.borrow().clone() * &FElem::from(R1P_Elem::froms(two_i.clone())));
+            let lt = (l.borrow().clone() * &FElem::from(R1P_Elem::froms(two_i.clone())));
+            *sum.borrow_mut() += &lt;
         }
         self.wireLinearCombinations[outputWireId as usize] = sum;
     }
 
-    pub fn handleAddition(&mut self, inputStr: &str, outputStr: &str) {
-        let (inWireId, outputWireId);
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn handleAddition(&mut self, inputs: &[u32], outputs: &[u32]) {
+        let (inWireId, outputWireId) = (inputs[0], outputs[0]);
 
         if self.variableMap.contains_key(&outputWireId) {
             println!(
@@ -887,24 +905,20 @@ impl CircuitReader {
             process::exit(-1);
         }
 
-        let mut iss_i = inputStr.lines();
         let (mut s, mut l) = (lcp(), lcp());
-        inWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
         self.find(inWireId, &mut l, true);
         s = l.clone();
-        for inWireId in iss_i {
-            self.find(inWireId.parse::<u32>().unwrap(), &mut l, false);
-            *s.borrow_mut() += &l.borrow();
+        for &inWireId in &inputs[1..] {
+            self.find(inWireId, &mut l, false);
+            let ll = l.borrow().clone();
+            *s.borrow_mut() += &ll;
         }
         self.wireLinearCombinations[outputWireId as usize] = s;
     }
 
-    pub fn handleMulConst(&mut self, types: &str, inputStr: &str, outputStr: &str) {
-        let constStr = &types["const-mul-".len() - 1..];
-        let (outputWireId, inWireId);
-
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn handleMulConst(&mut self, types: &str, inputs: &[u32], outputs: &[u32]) {
+        let constStr = &types["const-mul-".len()..];
+        let (outputWireId, inWireId) = (outputs[0], inputs[0]);
 
         if self.variableMap.contains_key(&outputWireId) {
             println!(
@@ -916,20 +930,18 @@ impl CircuitReader {
             process::exit(-1);
         }
 
-        let mut iss_i = inputStr.lines();
-        inWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
         let mut l = lcp();
         self.find(inWireId, &mut l, true);
         self.wireLinearCombinations[outputWireId as usize] = l;
-        *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
-            &FElem::from(R1P_Elem::froms(readFieldElementFromHex(constStr)));
+        let v = FElem::from(R1P_Elem::froms(
+            read_field_element_from_hex(constStr).into(),
+        ));
+        *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *= &v;
     }
 
-    pub fn handleMulNegConst(&mut self, types: &str, inputStr: &str, outputStr: &str) {
-        let constStr = &types["const-mul-neg-".len() - 1..];
-        let (mut outputWireId, mut inWireId) = (0, 0);
-        let mut iss_o = outputStr.lines();
-        outputWireId = iss_o.next().unwrap().parse::<u32>().unwrap();
+    pub fn handleMulNegConst(&mut self, types: &str, inputs: &[u32], outputs: &[u32]) {
+        let constStr = &types["const-mul-neg-".len()..];
+        let (mut outputWireId, mut inWireId) = (outputs[0], inputs[0]);
 
         if self.variableMap.contains_key(&outputWireId) {
             println!(
@@ -940,16 +952,13 @@ impl CircuitReader {
             );
             process::exit(-1);
         }
-
-        let mut iss_i = inputStr.lines();
-        inWireId = iss_i.next().unwrap().parse::<u32>().unwrap();
-
         let mut l = lcp();
         self.find(inWireId, &mut l, true);
 
         self.wireLinearCombinations[outputWireId as usize] = l;
-        *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
-            &FElem::from(R1P_Elem::froms(readFieldElementFromHex(constStr)));
+        *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *= &FElem::from(
+            R1P_Elem::froms(read_field_element_from_hex(constStr).into()),
+        );
         *self.wireLinearCombinations[outputWireId as usize].borrow_mut() *=
             &FElem::from(R1P_Elem::froms(FieldT::from(-1))); //TODO: make shared FieldT constants
     }

@@ -16,11 +16,13 @@ pub const edwards_q_bitcount: usize = 183;
 
 pub const edwards_r_limbs: usize = (edwards_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 pub const edwards_q_limbs: usize = (edwards_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-
+const edwards_q_limbs2: usize = edwards_q_limbs * 2;
+const edwards_q_limbs6: usize = edwards_q_limbs * 6;
+const edwards_q_limbs12: usize = edwards_q_limbs * 12;
 pub type edwards_Fr = Fp_model<edwards_r_limbs, Backend>;
 pub type edwards_Fq = Fp_model<edwards_q_limbs, Backend>;
 pub type edwards_Fq3 = Fp3_model<edwards_q_limbs, Backend>;
-pub type edwards_Fq6 = Fp6_2over3_model<edwards_q_limbs, Backend>;
+pub type edwards_Fq6 = Fp6_2over3_model<edwards_q_limbs, edwards_q_limbs2, Backend>;
 pub type edwards_GT = edwards_Fq6;
 
 #[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
@@ -112,22 +114,24 @@ impl PpConfig for Backend {
     // type Fr=Self;
 }
 impl Fp_modelConfig<edwards_q_limbs> for Backend {}
-impl Fp2_modelConfig<edwards_q_limbs> for Backend {
+impl Fp2_modelConfig<edwards_q_limbs, edwards_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
 }
 impl Fp3_modelConfig<edwards_q_limbs> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp6_modelConfig<edwards_q_limbs> for Backend {
+impl Fp6_modelConfig<edwards_q_limbs, edwards_q_limbs2, edwards_q_limbs6> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
 }
-impl ffec::fp6_2over3::Fp6_modelConfig<edwards_q_limbs> for Backend {
+impl ffec::fp6_2over3::Fp6_modelConfig<edwards_q_limbs, edwards_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
     type Fp3_modelConfig = Self;
 }
-impl Fp12_modelConfig<edwards_q_limbs> for Backend {
+impl Fp12_modelConfig<edwards_q_limbs, edwards_q_limbs2, edwards_q_limbs6, edwards_q_limbs12>
+    for Backend
+{
     type Fp_modelConfig = Self;
     type Fp6_modelConfig = Self;
 }

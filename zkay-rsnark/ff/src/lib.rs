@@ -11,6 +11,8 @@
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
+#![feature(const_trait_impl)]
+#![feature(const_ops)]
 #[macro_use]
 pub mod algebra;
 pub use self::algebra::*;
@@ -133,6 +135,18 @@ pub trait FieldTConfig:
         Default::default()
     }
     fn Y(&self) -> Self {
+        Default::default()
+    }
+    fn is_double() -> bool {
+        false
+    }
+    fn ss() -> usize {
+        28
+    }
+    fn arithmetic_generator() -> Self {
+        Default::default()
+    }
+    fn geometric_generator() -> Self {
         Default::default()
     }
 }

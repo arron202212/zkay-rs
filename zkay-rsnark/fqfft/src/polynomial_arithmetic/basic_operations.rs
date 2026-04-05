@@ -73,7 +73,8 @@ use crate::kronecker_substitution::kronecker_substitution;
 use crate::polynomial_arithmetic::basic_operations::kronecker_substitution::kronecker_substitution;
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use crate::tools::exceptions;
-use ffec::algebra::field_utils::field_utils::get_root_of_unity_is_same_double;
+ use ffec::FieldTConfig;
+use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::utils::get_power_of_two;
 use ffec::common::utils::log2;
 // #ifdef MULTICORE
@@ -196,11 +197,7 @@ pub fn _polynomial_subtraction<
 }
 
 pub fn _polynomial_multiplication<
-    FieldT: Clone
-        + num_traits::Zero
-        + std::default::Default
-        + std::cmp::PartialEq
-        + std::ops::Mul<Output = FieldT>,
+    FieldT: FieldTConfig
 >(
     c: &mut Vec<FieldT>,
     a: &Vec<FieldT>,
@@ -210,18 +207,14 @@ pub fn _polynomial_multiplication<
 }
 
 pub fn _polynomial_multiplication_on_fft<
-    FieldT: Clone
-        + num_traits::Zero
-        + std::default::Default
-        + std::cmp::PartialEq
-        + std::ops::Mul<Output = FieldT>,
+    FieldT: FieldTConfig,
 >(
     c: &mut Vec<FieldT>,
     a: &Vec<FieldT>,
     b: &Vec<FieldT>,
 ) {
     let n = get_power_of_two(a.len() + b.len() - 1);
-    let omega = get_root_of_unity_is_same_double::<FieldT>(n);
+    let omega = get_root_of_unity_for_not_double::<FieldT>(n);
 
     let mut u = a.clone();
     let mut v = b.clone();
@@ -271,11 +264,7 @@ pub fn _polynomial_multiplication_on_kronecker<
 }
 
 pub fn _polynomial_multiplication_transpose<
-    FieldT: num_traits::Zero
-        + std::cmp::PartialEq
-        + Clone
-        + std::default::Default
-        + std::ops::Mul<Output = FieldT>,
+    FieldT: FieldTConfig,
 >(
     n: usize,
     a: &Vec<FieldT>,

@@ -11,6 +11,8 @@
 #![feature(generic_const_exprs)]
 #![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
+#![feature(const_trait_impl)]
+#![feature(const_ops)]
 pub mod algebra;
 pub mod common;
 pub use self::algebra::curves::public_params::*;

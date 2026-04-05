@@ -700,10 +700,7 @@ pub fn get_exp_window_size<T: PpConfig>(num_scalars: usize) -> usize {
     window
 }
 
-pub fn get_window_table<T: PpConfig>(scalar_size: usize, window: usize, g: T) -> window_table<T>
-// where
-//     for<'a> &'a T: Add<&'a T, Output = T>,
-{
+pub fn get_window_table<T: PpConfig>(scalar_size: usize, window: usize, g: T) -> window_table<T> {
     let mut in_window = 1usize << window;
     let mut outerc = (scalar_size + window - 1) / window;
     let mut last_in_window = 1usize << (scalar_size - (outerc - 1) * window);
