@@ -15,14 +15,16 @@ use crate::algebra::{
     },
 };
 use crate::common::utils::bit_vector;
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
+use crate::fp_aux::{add_assign_portable, mul_reduce_portable, sub_assign_portable};
+use cfg_if::cfg_if;
+use educe::Educe;
 use num_bigint::BigUint;
 use num_traits::{Num, One, Zero};
 use std::borrow::Borrow;
 use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-
-use educe::Educe;
 use std::marker::PhantomData;
+use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 //  use crate::algebra::field_utils::bigint::bigint;
 
 /**
@@ -270,6 +272,19 @@ impl<const N: usize, T: Fp_modelConfig<N>> From<BigUint> for Fp_model<N, T> {
     }
 }
 
+impl<const N: usize, T: Fp_modelConfig<N>> FPMConfig for Fp_model<N, T> {}
+impl<const N: usize, T: Fp_modelConfig<N>> FieldTForPowersConfig<N> for Fp_model<N, T> {
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
+}
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     pub const fn const_default() -> Fp_model<N, T> {
         Fp_model::<N, T> {
@@ -284,10 +299,27 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         }
     }
 
-    pub const fn mul_reduce(&mut self, other: &bigint<N>) {}
+    pub fn mul_reduce(&mut self, other: &bigint<N>) {
+        cfg_if! {
+            if #[cfg(all(target_arch = "x86_64", feature = "asm"))]
+            {
+
+               let data= match N {
+                    3 => unsafe { mul_reduce_n3(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
+                    4 => unsafe { mul_reduce_n4(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
+                    5 => unsafe { mul_reduce_n5(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
+                    _ => {return }//self.sub_assign_portable(other, modulus), // 回退到普通实现
+                };
+                self.mont_repr.0.0.copy_from_slice(&data[N..N*2]);
+            }else{
+               let data= mul_reduce_portable::<N>(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv);
+                self.mont_repr.0.0.copy_from_slice(&data[N..N*2]);
+            }
+        }
+    }
 
     pub const fn new(b: bigint<N>) -> Self {
-        // mpn_copyi(self.mont_repr.data, Rsquared.data, n);
+        // mpn_copyi(self.mont_repr.0.0, Rsquared.0, n);
         let mut _self = Self {
             mont_repr: bigint::<N>::one(),
             t: PhantomData,
@@ -299,9 +331,9 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     pub const fn new_with_i64(x: i64, is_unsigned: bool) -> Self {
         // assert!(std::numeric_limits<mp_limb_t>::max() >= std::numeric_limits<long>::max() as u64, "long won't fit in mp_limb_t");
         if is_unsigned || x >= 0 {
-            // self.mont_repr.data[0] = x;//(mp_limb_t)
+            // self.mont_repr.0.0[0] = x;//(mp_limb_t)
         } else {
-            // let  borrow = mpn_sub_1(self.mont_repr.data, modulus.data, n, (mp_limb_t)-x);
+            // let  borrow = mpn_sub_1(self.mont_repr.0.0, modulus.0, n, (mp_limb_t)-x);
 
             //             assert!(borrow == 0);
             // #else
@@ -374,7 +406,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         res
     }
 
-    pub const fn one() -> Self {
+    pub fn one() -> Self {
         let mut res = Self::new_with_i64(0, false);
         // res.mont_repr.0.0[0] = 1;
         res.mul_reduce(&T::Rsquared);
@@ -451,7 +483,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         let bit_offset = start_bit % 64;
 
         // Assumes mont_repr.0.0 is just the right size to fit ceil_size_in_bits().
-        // std::copy(words.begin() + start_word, words.end(), self.mont_repr.0.0);
+        // std::copy(words.begin() + start_word, words.end(),self.mont_repr.0.0);
         self.mont_repr.0.0.clone_from_slice(&words[start_word..]);
         // Zero out the left-most bit_offset bits.
         self.mont_repr.0.0[N - 1] =
@@ -474,11 +506,41 @@ impl<const N: usize, T: Fp_modelConfig<N>> PartialEq for Fp_model<N, T> {
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> AddAssign<O> for Fp_model<N, T> {
-    fn add_assign(&mut self, other: O) {}
+    fn add_assign(&mut self, other: O) {
+        cfg_if! {
+            if #[cfg(all(target_arch = "x86_64", feature = "asm"))]
+            {
+
+                match N {
+                    3 => unsafe { add_assign_n3(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    4 => unsafe { add_assign_n4(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    5 => unsafe { add_assign_n5(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    _ => {return }//self.sub_assign_portable(other, modulus), // 回退到普通实现
+                };
+            }else{
+               add_assign_portable(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0);
+            }
+        }
+    }
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> SubAssign<O> for Fp_model<N, T> {
-    fn sub_assign(&mut self, other: O) {}
+    fn sub_assign(&mut self, other: O) {
+        cfg_if! {
+            if #[cfg(all(target_arch = "x86_64", feature = "asm"))]
+            {
+
+                match N {
+                    3 => unsafe { sub_assign_n3(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    4 => unsafe { sub_assign_n4(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    5 => unsafe { sub_assign_n5(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
+                    _ => {return }
+                };
+            }else{
+               sub_assign_portable(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0);
+            }
+        }
+    }
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> MulAssign<O> for Fp_model<N, T> {
@@ -494,10 +556,8 @@ impl<const N: usize, T: Fp_modelConfig<N>> BitXorAssign<u64> for Fp_model<N, T> 
     }
 }
 
-impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXorAssign<&bigint<M>>
-    for Fp_model<N, T>
-{
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+impl<const N: usize, T: Fp_modelConfig<N>> BitXorAssign<bigint<N>> for Fp_model<N, T> {
+    fn bitxor_assign(&mut self, rhs: bigint<N>) {
         *self = Powers::power::<Fp_model<N, T>>(self, rhs);
     }
 }
@@ -619,11 +679,11 @@ impl<const N: usize, T: Fp_modelConfig<N>> BitXor<usize> for Fp_model<N, T> {
         r
     }
 }
-impl<const N: usize, const M: usize, T: Fp_modelConfig<N>> BitXor<&bigint<M>> for Fp_model<N, T> {
+impl<const N: usize, T: Fp_modelConfig<N>> BitXor<bigint<N>> for Fp_model<N, T> {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<N>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r
@@ -635,7 +695,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Neg for Fp_model<N, T> {
 
     fn neg(self) -> Self::Output {
         let mut r = Self::new_with_i64(0, false);
-        // mpn_sub_n(r.mont_repr.0.0, modulus.0.0, self.mont_repr.0.0, n);
+        // mpn_sub_n(r.mont_repr.0.0, modulus.0.0,self.mont_repr.0.0, n);
         r
     }
 }

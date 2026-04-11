@@ -17,6 +17,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
 
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -37,23 +38,15 @@ pub trait Fp3_modelConfig<const N: usize>:
     'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp_modelConfig: FpmConfig<N>;
+    const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
+    const s: usize = 1; // modulus = 2^s * t + 1
+    const t: bigint<N> = bigint::<N>::one(); // with t odd
+    const t_minus_1_over_2: bigint<N> = bigint::<N>::one(); // (t-1)/2
     const non_residue: my_Fp<N, Fp_modelConfig<N, Self>> =
         Fp_model::<N, Self::Fp_modelConfig>::const_default();
 
-    const nqr: (
-        my_Fp<N, Fp_modelConfig<N, Self>>,
-        my_Fp<N, Fp_modelConfig<N, Self>>,
-    ) = (
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    );
-    const nqr_to_t: (
-        my_Fp<N, Fp_modelConfig<N, Self>>,
-        my_Fp<N, Fp_modelConfig<N, Self>>,
-    ) = (
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-        Fp_model::<N, Self::Fp_modelConfig>::const_default(),
-    );
+    const nqr: Fp3_model<N, Self> = Fp3_model::<N, Self>::const_default();
+    const nqr_to_t: Fp3_model<N, Self> = Fp3_model::<N, Self>::const_default();
     /// T::non_residue^((modulus^i-1)/2)
     const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, Self>>; 2] = [
         Fp_model::<N, Self::Fp_modelConfig>::const_default(),
@@ -148,6 +141,19 @@ pub struct Fp3_model<const N: usize, T: Fp3_modelConfig<N>> {
     // friend std::istream& operator>> <n, modulus>(std::istream &in, Fp3_model<n, modulus> &el);
 }
 
+impl<const N: usize, T: Fp3_modelConfig<N>> FPMConfig for Fp3_model<N, T> {}
+impl<const N: usize, T: Fp3_modelConfig<N>> FieldTForPowersConfig<N> for Fp3_model<N, T> {
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
+}
 // use crate::algebra::field_utils::field_utils;
 impl<const N: usize, T: Fp3_modelConfig<N>> Fp3_model<N, T> {
     pub const fn const_new(b: BigInt<N>) -> Self {
@@ -221,17 +227,17 @@ impl<const N: usize, T: Fp3_modelConfig<N>> Fp3_model<N, T> {
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
 
         let (a, b, c) = (self.c0, self.c1, self.c2);
-        let s0 = a.squared();
-        let ab = a * b;
-        let s1 = ab + ab;
-        let s2 = (a - b + c).squared();
-        let bc = b * c;
-        let s3 = bc + bc;
-        let s4 = c.squared();
+        let s0: my_Fp<N, T::Fp_modelConfig> = a.squared();
+        let ab: my_Fp<N, T::Fp_modelConfig> = a * b;
+        let s1: my_Fp<N, T::Fp_modelConfig> = ab + ab;
+        let s2: my_Fp<N, T::Fp_modelConfig> = (a - b + c).squared();
+        let bc: my_Fp<N, T::Fp_modelConfig> = b * c;
+        let s3: my_Fp<N, T::Fp_modelConfig> = bc + bc;
+        let s4: my_Fp<N, T::Fp_modelConfig> = c.squared();
 
         Self::new(
-            s0 + T::non_residue * s3,
-            s1 + T::non_residue * s4,
+            T::non_residue * s3 + s0,
+            T::non_residue * s4 + s1,
             s1 + s2 + s3 - s0 - s4,
         )
     }
@@ -390,10 +396,10 @@ impl<const N: usize, T: Fp3_modelConfig<N>> BitXorAssign<u64> for Fp3_model<N, T
 //     return *self;
 // }
 
-impl<const N: usize, const M: usize, T: Fp3_modelConfig<N>> BitXorAssign<&bigint<M>>
+impl<const N: usize, const M: usize, T: Fp3_modelConfig<N>> BitXorAssign<bigint<M>>
     for Fp3_model<N, T>
 {
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+    fn bitxor_assign(&mut self, rhs: bigint<M>) {
         ////*self = Powers::power::<Fp3_model<N, T>>(self, rhs);
     }
 }
@@ -418,6 +424,22 @@ impl<const N: usize, T: Fp3_modelConfig<N>, O: Borrow<Self>> Add<O> for Fp3_mode
         r
     }
 }
+
+impl<const N: usize, T3: Fp3_modelConfig<N>> Add<Fp_model<N, Fp_modelConfig<N, T3>>>
+    for Fp3_model<N, T3>
+{
+    type Output = Fp3_model<N, T3>;
+
+    fn add(self, rhs: Fp_model<N, Fp_modelConfig<N, T3>>) -> Self::Output {
+        // let rhs = *rhs;
+        Fp3_model::<N, T3>::new(
+            self.c0.clone() * rhs.clone(),
+            self.c1.clone() * rhs.clone(),
+            self.c2.clone() * rhs.clone(),
+        )
+    }
+}
+
 //
 // Fp3_model<n,modulus> Fp3_model<n,modulus>::operator-(other:&Fp3_model<n,modulus>) const
 // {
@@ -515,11 +537,11 @@ impl<const N: usize, T: Fp3_modelConfig<N>> BitXor<u64> for Fp3_model<N, T> {
 //     return power<Fp3_model<n, modulus> >(*this, pow);
 // }
 
-impl<const N: usize, const M: usize, T: Fp3_modelConfig<N>> BitXor<&bigint<M>> for Fp3_model<N, T> {
+impl<const N: usize, const M: usize, T: Fp3_modelConfig<N>> BitXor<bigint<M>> for Fp3_model<N, T> {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<M>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r

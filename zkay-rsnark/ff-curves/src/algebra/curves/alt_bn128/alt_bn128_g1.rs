@@ -2,6 +2,7 @@
 // use crate::algebra::curves::curve_utils;
 
 use crate::FpmConfig;
+use ffec::BigInt;
 use crate::algebra::curves::alt_bn128::{
     alt_bn128_fields::{alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr},
     alt_bn128_init::{alt_bn128_coeff_b, alt_bn128_twist_mul_by_b_c0, alt_bn128_twist_mul_by_b_c1},
@@ -76,14 +77,46 @@ impl From<BigUint> for alt_bn128_G1 {
 //     }
 // }
 
-impl PpConfig for alt_bn128_G1 {
+impl PpConfig for alt_bn128_G1 {    
     type TT = bigint<1>;
     // type Fr=Self;
 }
 
+impl alt_bn128_G1Config for alt_bn128_G1 {
+ 
+    const wnaf_window_table: &'static [usize] = &[11, 24, 60, 127];
+
+    // alt_bn128_G1::fixed_base_exp_window_table.resize(0);
+    const fixed_base_exp_window_table: &'static [usize] = &[
+        // window 1 is unbeaten in [-inf, 4.99]
+        1,       // window 2 is unbeaten in [4.99, 10.99]
+        5,       // window 3 is unbeaten in [10.99, 32.29]
+        11,      // window 4 is unbeaten in [32.29, 55.23]
+        32,      // window 5 is unbeaten in [55.23, 162.03]
+        55,      // window 6 is unbeaten in [162.03, 360.15]
+        162,     // window 7 is unbeaten in [360.15, 815.44]
+        360,     // window 8 is unbeaten in [815.44, 2373.07]
+        815,     // window 9 is unbeaten in [2373.07, 6977.75]
+        2373,    // window 10 is unbeaten in [6977.75, 7122.23]
+        6978,    // window 11 is unbeaten in [7122.23, 57818.46]
+        7122,    // window 12 is never the best
+        0,       // window 13 is unbeaten in [57818.46, 169679.14]
+        57818,   // window 14 is never the best
+        0,       // window 15 is unbeaten in [169679.14, 439758.91]
+        169679,  // window 16 is unbeaten in [439758.91, 936073.41]
+        439759,  // window 17 is unbeaten in [936073.41, 4666554.74]
+        936073,  // window 18 is never the best
+        0,       // window 19 is unbeaten in [4666554.74, 7580404.42]
+        4666555, // window 20 is unbeaten in [7580404.42, 34552892.20]
+        7580404, // window 21 is never the best
+        0,       // window 22 is unbeaten in [34552892.20, inf]
+        34552892,
+    ];
+}
 impl alt_bn128_G1 {
     const h_bitcount: usize = 254;
     const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+    const h:bigint<{alt_bn128_G1::h_limbs}> = bigint::<{alt_bn128_G1::h_limbs}>(BigInt!("1"));
     pub fn size_in_bits() -> usize {
         return base_field::ceil_size_in_bits() + 1;
     }
@@ -102,9 +135,9 @@ impl alt_bn128_G1 {
     }
     fn G1_one() -> Self {
         Self::new(
-            alt_bn128_Fq::zero(),
             alt_bn128_Fq::one(),
-            alt_bn128_Fq::zero(),
+            alt_bn128_Fq::const_new(BigInt!("2")),
+            alt_bn128_Fq::one(),
         )
     }
     pub fn new(X: alt_bn128_Fq, Y: alt_bn128_Fq, Z: alt_bn128_Fq) -> Self {

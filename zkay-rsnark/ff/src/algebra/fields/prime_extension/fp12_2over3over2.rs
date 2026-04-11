@@ -1,5 +1,6 @@
 //  Declaration of arithmetic in the finite field F[((p^2)^3)^2].
 
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
 use crate::{
     algebra::{
         field_utils::{
@@ -16,7 +17,6 @@ use crate::{
     },
     {Fp_model, Fp_modelConfig, Fp2_model, Fp6_3over2_model, Fp6_modelConfig, PpConfig},
 };
-
 use ark_std::iterable::Iterable;
 use num_traits::{One, Zero};
 use std::{
@@ -158,6 +158,35 @@ pub struct Fp12_2over3over2_model<
 
     //     friend std::ostream& operator<< <n, modulus>(std::ostream &out, el:&Fp12_2over3over2_model<n, modulus>);
     //     friend std::istream& operator>> <n, modulus>(std::istream &in, Fp12_2over3over2_model<n, modulus> &el);
+}
+
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    const N12: usize,
+    T: Fp12_modelConfig<N, N2, N6, N12>,
+> FPMConfig for Fp12_2over3over2_model<N, N2, N6, N12, T>
+{
+}
+impl<
+    const N: usize,
+    const N2: usize,
+    const N6: usize,
+    const N12: usize,
+    T: Fp12_modelConfig<N, N2, N6, N12>,
+> FieldTForPowersConfig<N12> for Fp12_2over3over2_model<N, N2, N6, N12, T>
+{
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N12> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N12> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
 }
 
 impl<
@@ -766,14 +795,13 @@ impl<
     const N2: usize,
     const N6: usize,
     const N12: usize,
-    const M: usize,
     T: Fp12_modelConfig<N, N2, N6, N12>,
-> BitXor<&bigint<M>> for Fp12_2over3over2_model<N, N2, N6, N12, T>
+> BitXor<bigint<N12>> for Fp12_2over3over2_model<N, N2, N6, N12, T>
 {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<N12>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r
@@ -873,9 +901,9 @@ impl<
     const N12: usize,
     const M: usize,
     T: Fp12_modelConfig<N, N2, N6, N12>,
-> BitXorAssign<&bigint<M>> for Fp12_2over3over2_model<N, N2, N6, N12, T>
+> BitXorAssign<bigint<M>> for Fp12_2over3over2_model<N, N2, N6, N12, T>
 {
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+    fn bitxor_assign(&mut self, rhs: bigint<M>) {
         // *self = Powers::power::<Fp12_2over3over2_model<N,N2,N6,N12, T>>(self, rhs);
     }
 }

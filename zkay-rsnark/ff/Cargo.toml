@@ -58,3 +58,12 @@ rand_pcg={workspace = true}
 rand_core={workspace = true}
 rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
+
+# [dev-dependencies]
+# criterion = "0.5"
+
+[[bench]]
+name = "fp_bench"
+harness = false
+[profile.release] 
+lto = true

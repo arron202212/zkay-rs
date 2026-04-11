@@ -24,6 +24,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
 
 use crate::scalar_multiplication::wnaf::find_wnaf;
 use num_traits::{One, Zero};
@@ -36,24 +37,15 @@ pub trait Fp4_modelConfig<const N: usize, const N2: usize>:
     'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
 {
     type Fp2_modelConfig: Fp2_modelConfig<N, N2>;
-
+    const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
+    const s: usize = 1; // modulus = 2^s * t + 1
+    const t: bigint<N> = bigint::<N>::one(); // with t odd
+    const t_minus_1_over_2: bigint<N> = bigint::<N>::one(); // (t-1)/2
     const non_residue: my_Fp<N, Fp_modelConfig<N, N2, Self>> =
         Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default();
 
-    const nqr: (
-        my_Fp<N, Fp_modelConfig<N, N2, Self>>,
-        my_Fp<N, Fp_modelConfig<N, N2, Self>>,
-    ) = (
-        Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default(),
-        Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default(),
-    );
-    const nqr_to_t: (
-        my_Fp<N, Fp_modelConfig<N, N2, Self>>,
-        my_Fp<N, Fp_modelConfig<N, N2, Self>>,
-    ) = (
-        Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default(),
-        Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default(),
-    );
+    const nqr: Fp4_model<N, N2, Self> = Fp4_model::<N, N2, Self>::const_default();
+    const nqr_to_t: Fp4_model<N, N2, Self> = Fp4_model::<N, N2, Self>::const_default();
     /// T::non_residue^((modulus^i-1)/2)
     const Frobenius_coeffs_c1: [my_Fp<N, Fp_modelConfig<N, N2, Self>>; 2] = [
         Fp_model::<N, Fp_modelConfig<N, N2, Self>>::const_default(),
@@ -155,6 +147,21 @@ pub struct Fp4_model<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>>
 // use crate::algebra::field_utils::field_utils;
 // use crate::algebra::scalar_multiplication::wnaf;
 
+impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> FPMConfig for Fp4_model<N, N2, T> {}
+impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> FieldTForPowersConfig<N>
+    for Fp4_model<N, N2, T>
+{
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
+}
 impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> Fp4_model<N, N2, T> {
     pub fn ceil_size_in_bits() -> usize {
         2 * my_Fp2::<N, N2, T::Fp2_modelConfig>::ceil_size_in_bits()
@@ -169,6 +176,13 @@ impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> Fp4_model<N, N2
         Self {
             c0,
             c1,
+            _t: PhantomData,
+        }
+    }
+    pub const fn const_default() -> Self {
+        Self {
+            c0: my_Fp2::<N, N2, T::Fp2_modelConfig>::const_default(),
+            c1: my_Fp2::<N, N2, T::Fp2_modelConfig>::const_default(),
             _t: PhantomData,
         }
     }
@@ -429,9 +443,9 @@ impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> BitXorAssign<u6
 // }
 
 impl<const N: usize, const N2: usize, const M: usize, T: Fp4_modelConfig<N, N2>>
-    BitXorAssign<&bigint<M>> for Fp4_model<N, N2, T>
+    BitXorAssign<bigint<M>> for Fp4_model<N, N2, T>
 {
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+    fn bitxor_assign(&mut self, rhs: bigint<M>) {
         //*self = Powers::power::<Fp4_model<N,N2, T>>(self, rhs);
     }
 }
@@ -560,13 +574,13 @@ impl<const N: usize, const N2: usize, T: Fp4_modelConfig<N, N2>> BitXor<u64>
 //     return power<Fp4_model<n, modulus> >(*this, exponent);
 // }
 
-impl<const N: usize, const N2: usize, const M: usize, T: Fp4_modelConfig<N, N2>> BitXor<&bigint<M>>
+impl<const N: usize, const N2: usize, const M: usize, T: Fp4_modelConfig<N, N2>> BitXor<bigint<M>>
     for Fp4_model<N, N2, T>
 {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<M>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r

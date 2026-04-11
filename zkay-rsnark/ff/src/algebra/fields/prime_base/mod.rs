@@ -1,4 +1,5 @@
 pub mod fp;
+pub mod fp_aux;
 pub use self::fp::*;
 #[macro_use]
 mod montgomery_backend;

@@ -20,6 +20,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
 
 use num_traits::{One, Zero};
 use std::borrow::Borrow;
@@ -151,6 +152,25 @@ pub struct Fp6_3over2_model<
 }
 
 // use crate::algebra::field_utils::field_utils;
+
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> FPMConfig
+    for Fp6_3over2_model<N, N2, N6, T>
+{
+}
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    FieldTForPowersConfig<N6> for Fp6_3over2_model<N, N2, N6, T>
+{
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N6> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N6> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
+}
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     Fp6_3over2_model<N, N2, N6, T>
 {
@@ -206,8 +226,8 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         )
     }
 
-    pub const fn one() -> Self {
-        Self::const_new(
+    pub fn one() -> Self {
+        Self::new(
             my_Fp2::<N, N2, T::Fp2_modelConfig>::one(),
             my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
             my_Fp2::<N, N2, T::Fp2_modelConfig>::zero(),
@@ -513,18 +533,13 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 // {
 //     return power<Fp6_3over2_model<n, modulus>, m>(*this, pow);
 // }
-impl<
-    const N: usize,
-    const N2: usize,
-    const N6: usize,
-    const M: usize,
-    T: Fp6_modelConfig<N, N2, N6>,
-> BitXor<&bigint<M>> for Fp6_3over2_model<N, N2, N6, T>
+impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
+    BitXor<bigint<N6>> for Fp6_3over2_model<N, N2, N6, T>
 {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<N6>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r
@@ -608,9 +623,9 @@ impl<
     const N6: usize,
     const M: usize,
     T: Fp6_modelConfig<N, N2, N6>,
-> BitXorAssign<&bigint<M>> for Fp6_3over2_model<N, N2, N6, T>
+> BitXorAssign<bigint<M>> for Fp6_3over2_model<N, N2, N6, T>
 {
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+    fn bitxor_assign(&mut self, rhs: bigint<M>) {
         //*self = Powers::power::<Fp6_3over2_model<N,N2,N6, T>>(self, rhs);
     }
 }

@@ -13,6 +13,7 @@
 #![allow(incomplete_features)]
 #![feature(const_trait_impl)]
 #![feature(const_ops)]
+#![feature(const_index)]
 #[macro_use]
 pub mod algebra;
 pub use self::algebra::*;

@@ -17,6 +17,7 @@ use crate::algebra::{
         sqrt::SqrtPrecomputation,
     },
 };
+use crate::field_utils::algorithms::{FPMConfig, FieldTForPowersConfig};
 
 use std::borrow::Borrow;
 use std::fmt::Debug;
@@ -139,6 +140,21 @@ pub struct Fp2_model<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>>
 // friend std::istream& operator>> <n, modulus>(std::istream &in, Fp2_model<n, modulus> &el);
 // }
 
+impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> FPMConfig for Fp2_model<N, N2, T> {}
+impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> FieldTForPowersConfig<N2>
+    for Fp2_model<N, N2, T>
+{
+    type FPM = Self;
+    const num_limbs: usize = N;
+    const s: usize = T::s; // modulus = 2^s * t + 1
+    const t: bigint<N2> = T::t; // with t odd
+    const t_minus_1_over_2: bigint<N2> = T::t_minus_1_over_2; // (t-1)/2
+    const nqr: Self = T::nqr; // a quadratic nonresidue
+    const nqr_to_t: Self = T::nqr_to_t; // nqr^t
+    fn squared_(&self) -> Self {
+        self.squared()
+    }
+}
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2, T> {
     pub const non_residue: my_Fp<N, Fp_modelConfig<N, N2, T>> = T::non_residue;
     pub fn ceil_size_in_bits() -> usize {
@@ -186,8 +202,8 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
         )
     }
 
-    pub const fn one() -> Self {
-        Self::const_new(
+    pub fn one() -> Self {
+        Self::new(
             my_Fp::<N, T::Fp_modelConfig>::one(),
             my_Fp::<N, T::Fp_modelConfig>::zero(),
         )
@@ -450,18 +466,19 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<u64>
 // {
 //     return power<Fp2_model<n, modulus>, m>(*this, pow);
 // }
-impl<const N: usize, const N2: usize, const M: usize, T: Fp2_modelConfig<N, N2>> BitXor<&bigint<M>>
+impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<bigint<N2>>
     for Fp2_model<N, N2, T>
 {
     type Output = Self;
 
     // rhs is the "right-hand side" of the expression `a ^ b`
-    fn bitxor(self, rhs: &bigint<M>) -> Self::Output {
+    fn bitxor(self, rhs: bigint<N2>) -> Self::Output {
         let mut r = self;
         r ^= rhs;
         r
     }
 }
+
 //
 // Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator+=(const Fp2_model<n,modulus>& other)
 // {
@@ -519,9 +536,9 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<u6
 //     return *self;
 // }
 impl<const N: usize, const N2: usize, const M: usize, T: Fp2_modelConfig<N, N2>>
-    BitXorAssign<&bigint<M>> for Fp2_model<N, N2, T>
+    BitXorAssign<bigint<M>> for Fp2_model<N, N2, T>
 {
-    fn bitxor_assign(&mut self, rhs: &bigint<M>) {
+    fn bitxor_assign(&mut self, rhs: bigint<M>) {
         // *self = Powers::power::<Fp2_model<N,N2, T>>(self, rhs);
     }
 }

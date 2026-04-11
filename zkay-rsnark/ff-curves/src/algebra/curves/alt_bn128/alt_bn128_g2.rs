@@ -1,6 +1,7 @@
 // use crate::algebra::curves::curve_utils;
 use crate::FpmConfig;
 use crate::Fq2mConfig;
+use crate::new_fq2;
 use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
     alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr,
 };
@@ -21,128 +22,6 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-// impl One for alt_bn128_G2 {
-// fn one() -> Self { Self::G1_zero() }
-// }
-// impl BigInteger for alt_bn128_G2 {}
-impl From<BigUint> for alt_bn128_G2 {
-    fn from(_: BigUint) -> Self {
-        Default::default()
-    }
-}
-
-// impl AsRef<[u64]> for bigint<1> {
-//     fn as_ref(&self) -> &[u64] {
-//         &self.0
-//     }
-// }
-impl PpConfig for alt_bn128_G2 {
-    type TT = bigint<1>;
-    // type Fr=Self;
-}
-impl Fq2mConfig for alt_bn128_G2 {
-    // type TT = bigint<1>;
-    type Fr = Self;
-}
-
-impl Add<i32> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn add(self, other: i32) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
-    }
-}
-
-impl<O: Borrow<Self>> Add<O> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn add(self, other: O) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
-    }
-}
-
-impl Sub for alt_bn128_G2 {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self::Output {
-        let mut r = self;
-        // r -= other;
-        r
-    }
-}
-
-impl<const N: usize> Mul<bigint<N>> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn mul(self, rhs: bigint<N>) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
-    }
-}
-impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
-    }
-}
-
-impl Mul<i32> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn mul(self, other: i32) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
-    }
-}
-
-impl<O: Borrow<Self>> Mul<O> for alt_bn128_G2 {
-    type Output = alt_bn128_G2;
-
-    fn mul(self, rhs: O) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
-    }
-}
-
-impl Neg for alt_bn128_G2 {
-    type Output = Self;
-
-    fn neg(self) -> Self::Output {
-        self
-    }
-}
-
-use std::fmt;
-impl fmt::Display for alt_bn128_G2 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Self::one())
-    }
-}
-
-impl One for alt_bn128_G2 {
-    fn one() -> Self {
-        Self::one()
-    }
-}
-
-impl Zero for alt_bn128_G2 {
-    fn zero() -> Self {
-        Self::zero()
-    }
-    fn is_zero(&self) -> bool {
-        false
-    }
-}
 
 // pub type alt_bn128_G2 = <Bn254 as Pairing>::G2;
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -193,6 +72,36 @@ type base_field = alt_bn128_Fq;
 type twist_field = alt_bn128_Fq2;
 type scalar_field = alt_bn128_Fr;
 
+impl alt_bn128_G2Config for alt_bn128_G2 {
+const wnaf_window_table: &'static [usize] = &[5, 15, 39, 109];
+
+    // alt_bn128_G2::fixed_base_exp_window_table.resize(0);
+    const fixed_base_exp_window_table: &'static [usize] = &[
+        // window 1 is unbeaten in [-inf, 5.10]
+        1,       // window 2 is unbeaten in [5.10, 10.43]
+        5,       // window 3 is unbeaten in [10.43, 25.28]
+        10,      // window 4 is unbeaten in [25.28, 59.00]
+        25,      // window 5 is unbeaten in [59.00, 154.03]
+        59,      // window 6 is unbeaten in [154.03, 334.25]
+        154,     // window 7 is unbeaten in [334.25, 742.58]
+        334,     // window 8 is unbeaten in [742.58, 2034.40]
+        743,     // window 9 is unbeaten in [2034.40, 4987.56]
+        2034,    // window 10 is unbeaten in [4987.56, 8888.27]
+        4988,    // window 11 is unbeaten in [8888.27, 26271.13]
+        8888,    // window 12 is unbeaten in [26271.13, 39768.20]
+        26271,   // window 13 is unbeaten in [39768.20, 106275.75]
+        39768,   // window 14 is unbeaten in [106275.75, 141703.40]
+        106276,  // window 15 is unbeaten in [141703.40, 462422.97]
+        141703,  // window 16 is unbeaten in [462422.97, 926871.84]
+        462423,  // window 17 is unbeaten in [926871.84, 4873049.17]
+        926872,  // window 18 is never the best
+        0,       // window 19 is unbeaten in [4873049.17, 5706707.88]
+        4873049, // window 20 is unbeaten in [5706707.88, 31673814.95]
+        5706708, // window 21 is never the best
+        0,       // window 22 is unbeaten in [31673814.95, inf]
+        31673815,
+    ];
+}
 impl alt_bn128_G2 {
     const h_bitcount: usize = 256;
     const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
@@ -219,9 +128,9 @@ impl alt_bn128_G2 {
     }
     fn G2_one() -> Self {
         Self::new(
-            alt_bn128_Fq2::zero(),
+            new_fq2!("10857046999023057135944570762232829481370756359578518086990519993285655852781","11559732032986387107991004021392285783925812861821192530917403151452391805634"),
+            new_fq2!("8495653923123431417604973247489272438418190587263600148770280649306958101930","4082367875863433681332203403145435568316851327593401208105741076214120093531"),
             alt_bn128_Fq2::one(),
-            alt_bn128_Fq2::zero(),
         )
     }
     pub fn initialize() {
@@ -468,6 +377,129 @@ impl alt_bn128_G2 {
 }
 impl FpmConfig for alt_bn128_G2 {
     type Fr = alt_bn128_Fq;
+}
+
+// impl One for alt_bn128_G2 {
+// fn one() -> Self { Self::G1_zero() }
+// }
+// impl BigInteger for alt_bn128_G2 {}
+impl From<BigUint> for alt_bn128_G2 {
+    fn from(_: BigUint) -> Self {
+        Default::default()
+    }
+}
+
+// impl AsRef<[u64]> for bigint<1> {
+//     fn as_ref(&self) -> &[u64] {
+//         &self.0
+//     }
+// }
+impl PpConfig for alt_bn128_G2 {
+    type TT = bigint<1>;
+    // type Fr=Self;
+}
+impl Fq2mConfig for alt_bn128_G2 {
+    // type TT = bigint<1>;
+    type Fr = Self;
+}
+
+impl Add<i32> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn add(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl<O: Borrow<Self>> Add<O> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn add(self, other: O) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl Sub for alt_bn128_G2 {
+    type Output = Self;
+
+    fn sub(self, other: Self) -> Self::Output {
+        let mut r = self;
+        // r -= other;
+        r
+    }
+}
+
+impl<const N: usize> Mul<bigint<N>> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, rhs: bigint<N>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Mul<i32> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, other: i32) -> Self::Output {
+        let mut r = self;
+        // r += *other.borrow();
+        r
+    }
+}
+
+impl<O: Borrow<Self>> Mul<O> for alt_bn128_G2 {
+    type Output = alt_bn128_G2;
+
+    fn mul(self, rhs: O) -> Self::Output {
+        let mut r = self;
+        // r *= *rhs.borrow();
+        r
+    }
+}
+
+impl Neg for alt_bn128_G2 {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self
+    }
+}
+
+use std::fmt;
+impl fmt::Display for alt_bn128_G2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Self::one())
+    }
+}
+
+impl One for alt_bn128_G2 {
+    fn one() -> Self {
+        Self::one()
+    }
+}
+
+impl Zero for alt_bn128_G2 {
+    fn zero() -> Self {
+        Self::zero()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
 }
 // bool alt_bn128_G2::operator==(other:&alt_bn128_G2)
 // {
