@@ -6,8 +6,6 @@
 #![allow(unused_mut)]
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
-use super::BigInt;
-use crate::algebra::{field_utils::BigInteger, fields::fpn_field::PrimeField};
 
 // Declaration of bigint wrapper pub struct around GMP's MPZ long integers.
 
@@ -15,13 +13,15 @@ use crate::algebra::{field_utils::BigInteger, fields::fpn_field::PrimeField};
 // bigints should either be hardcoded or operated on the bit level to ensure
 // high performance.
 
+use super::BigInt;
+use crate::algebra::{field_utils::BigInteger, fields::fpn_field::PrimeField};
 use ark_std::{
     UniformRand,
     Zero,
     borrow::Borrow,
     // convert::TryFrom,
     fmt::{Debug, Display, UpperHex},
-    io::{Read, Write},
+
     ops::{
         BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Not, Shl, ShlAssign, Shr,
         ShrAssign,
@@ -34,11 +34,10 @@ use ark_std::{
     vec::*,
 };
 use num_bigint::BigUint;
+use num_integer::{ExtendedGcd, Integer};
+use std::io::{self, Read, Write};
+use std::ops::{Index, IndexMut, MulAssign, Rem, Sub};
 use zeroize::Zeroize;
-
-// //#include <gmp.h>
-
-// use crate::common::serialization;
 
 // // /**
 // //  * Wrapper pub struct around GMP's MPZ long integers. It supports arithmetic operations,
@@ -51,7 +50,7 @@ pub struct bigint<const N: usize>(pub BigInt<N>);
 
 impl<const N: usize> std::iter::ExactSizeIterator for bigint<N> {
     fn len(&self) -> usize {
-        0
+        self.0.0.len()
     }
 }
 
@@ -76,6 +75,26 @@ impl<const N: usize> Iterator for bigint<N> {
 impl<const N: usize> From<u128> for bigint<N> {
     fn from(rhs: u128) -> Self {
         Self(BigInt::from(rhs as u64))
+    }
+}
+
+impl<const N: usize> From<bigint<N>> for BigUint {
+    #[inline]
+    fn from(val: bigint<N>) -> num_bigint::BigUint {
+        (BigUint::from_bytes_le(&val.0.to_bytes_le()))
+    }
+}
+
+impl<const N: usize> From<bigint<N>> for num_bigint::BigInt {
+    #[inline]
+    fn from(val: bigint<N>) -> num_bigint::BigInt {
+        use num_bigint::Sign;
+        let sign = if val.0.is_zero() {
+            Sign::NoSign
+        } else {
+            Sign::Plus
+        };
+        num_bigint::BigInt::from_bytes_le(sign, &val.0.to_bytes_le())
     }
 }
 
@@ -128,14 +147,19 @@ impl<const N: usize> bigint<N> {
         print!("{:N$x?}\n", self.0);
     }
 
-    pub fn clear(&mut self) {
-        self.0.0.zeroize();
+    pub const fn clear(&mut self) {
+        self.0.0 = [0; N];
     }
 
     pub fn is_zero(&self) -> bool {
         self.0.is_zero()
     }
-
+    pub fn is_one(&self) -> bool {
+        self == &Self::one()
+    }
+    pub fn is_negative(&self) -> bool {
+        false
+    }
     pub fn is_even(&self) -> bool {
         self.0.is_even()
     }
@@ -158,8 +182,72 @@ impl<const N: usize> bigint<N> {
         self.0 = BigInt::<N>::rand(&mut rng);
         self
     }
+    pub fn abs(self) -> Self {
+        self
+    }
+    pub fn read<R: Read>(mut reader: R) -> io::Result<Self> {
+        let mut repr = [0u64; N];
+        for limb in repr.iter_mut() {
+            let mut buf = [0u8; 8];
+            reader.read_exact(&mut buf)?;
+            *limb = u64::from_le_bytes(buf); // 假设电路文件是小端序
+        }
+
+        Ok(Self(BigInt::<N>(repr)))
+    }
+    #[inline]
+    pub fn extended_gcd(&self, b: &Self) -> (Self, Self, Self) {
+        let (a, b): (BigUint, BigUint) = (self.0.clone().into(), b.0.clone().into());
+        let ExtendedGcd::<BigUint> { gcd, x, y } = a.extended_gcd(&b);
+        if gcd.is_zero() {
+            return (
+                Self(a.clone().try_into().unwrap()),
+                Self::one(),
+                Self::zero(),
+            );
+        }
+        (
+            Self(gcd.try_into().unwrap()),
+            Self(x.try_into().unwrap()),
+            Self(y.try_into().unwrap()),
+        )
+    }
 }
 
+impl<const N: usize> Index<usize> for bigint<N> {
+    type Output = u64;
+    #[inline(always)]
+    fn index(&self, index: usize) -> &Self::Output {
+        self.0.0.get(index).unwrap()
+    }
+}
+
+impl<const N: usize> IndexMut<usize> for bigint<N> {
+    #[inline(always)]
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.0.0.get_mut(index).unwrap()
+    }
+}
+impl<const N: usize> Rem for bigint<N> {
+    type Output = Self;
+
+    fn rem(self, rhs: Self) -> Self {
+        self
+    }
+}
+impl<const N: usize> Sub for bigint<N> {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        self
+    }
+}
+impl<const N: usize> MulAssign<&Self> for bigint<N> {
+    fn mul_assign(&mut self, rhs: &Self) {}
+}
+impl<const N: usize> MulAssign for bigint<N> {
+    fn mul_assign(&mut self, rhs: Self) {}
+}
 // use std::ops::Mul;
 // impl<const N:usize> Mul for bigint<N> {
 //     type Output =Self;
