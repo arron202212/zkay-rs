@@ -15,6 +15,7 @@ use crate::algebra::curves::{
     pairing::{Pairing, prepare_g1, prepare_g2},
 };
 use ffec::{
+    FieldTConfig,
     common::serialization::{
         OUTPUT_NEWLINE, OUTPUT_SEPARATOR, consume_newline, consume_output_newline,
         consume_output_separator, read_line_as_usize,
@@ -22,9 +23,10 @@ use ffec::{
     {
         One, PpConfig,
         common::profiling::{enter_block, leave_block},
-        field_utils::bigint::bigint,
+        field_utils::bigint::{BigIntegerT, bigint},
     },
 };
+
 //ate pairing
 
 // pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;

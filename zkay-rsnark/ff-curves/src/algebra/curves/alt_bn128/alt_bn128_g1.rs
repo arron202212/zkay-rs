@@ -15,7 +15,7 @@ use crate::{
 
 use cfg_if::cfg_if;
 use ffec::{
-    BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero,
+    BigInt, FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero,
     common::serialization::{
         OUTPUT_NEWLINE, OUTPUT_SEPARATOR, consume_output_newline, consume_output_separator,
         read_line_as_usize,
@@ -60,30 +60,20 @@ pub trait alt_bn128_G1Config: Send + Sync + Sized + 'static {
 pub type base_field = alt_bn128_Fq;
 pub type scalar_field = alt_bn128_Fr;
 
-// impl One for alt_bn128_G1 {
-// fn one() -> Self { Self::G1_zero() }
-// }
-// impl BigInteger for alt_bn128_G1 {}
 impl From<BigUint> for alt_bn128_G1 {
     fn from(_: BigUint) -> Self {
         Default::default()
     }
 }
 
-// impl AsRef<[u64]> for bigint<1> {
-//     fn as_ref(&self) -> &[u64] {
-//         &self.0
-//     }
-// }
-
 impl PpConfig for alt_bn128_G1 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
     fn size_in_bits() -> usize {
         base_field::ceil_size_in_bits() + 1
     }
-    fn as_bigint<const N: usize>(&self) -> bigint<N> {
-        self.as_bigint()
-    }
+    // fn as_bigint(&self) -> bigint<N> {
+    //     self.as_bigint()
+    // }
     fn dbl(&self) -> Self {
         // #ifdef PROFILE_OP_COUNTS
         // self.dbl_cnt+=1;

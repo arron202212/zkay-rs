@@ -471,7 +471,8 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> PpConfig
     for Fp4_model<N, N2, N4, T>
 {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
 }
 
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> One

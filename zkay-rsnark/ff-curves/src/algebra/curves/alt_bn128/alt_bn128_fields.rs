@@ -1,19 +1,22 @@
-use ffec::field_utils::{
-    bigint::{GMP_NUMB_BITS, bigint},
-    field_utils::batch_invert,
-};
 use ffec::{
-    BigInt, Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_modelConfig,
-    Fp6_3over2_model, Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig,
-    Zero,
+    field_utils::{
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils::batch_invert,
+    },
+    {
+        BigInt, Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_modelConfig,
+        Fp6_3over2_model, Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig,
+        Zero,
+    },
 };
 
-use std::borrow::Borrow;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    borrow::Borrow,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 use super::fields::{fq::Fq, fq2::Fq2, fq6::Fq6, fq12::Fq12, fr::Fr};
-use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
-use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
+use crate::algebra::curves::alt_bn128::{alt_bn128_g1::alt_bn128_G1, alt_bn128_g2::alt_bn128_G2};
 
 pub const alt_bn128_r_bitcount: usize = 254;
 pub const alt_bn128_q_bitcount: usize = 254;
@@ -151,7 +154,7 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 // impl Fp_modelConfig<alt_bn128_r_limbs> for Backend {
 //     const Rsquared: bigint<alt_bn128_r_limbs> = bigint::<alt_bn128_r_limbs>(BigInt!(

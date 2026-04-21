@@ -1,20 +1,21 @@
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT, alt_bn128_q_limbs,
-    init_alt_bn128_fields,
-};
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
-    alt_bn128_G1_precomp, alt_bn128_G2_precomp,
+use crate::algebra::curves::alt_bn128::{
+    alt_bn128_fields::{
+        alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT, alt_bn128_q_limbs,
+        init_alt_bn128_fields,
+    },
+    alt_bn128_init,
+    alt_bn128_pairing::{alt_bn128_G1_precomp, alt_bn128_G2_precomp},
 };
 
-use crate::algebra::curves::alt_bn128::alt_bn128_init;
-use ffec::field_utils::bigint::bigint;
-use ffec::{BigInt, MontFp};
+use ffec::{BigInt, MontFp, field_utils::bigint::bigint};
+
 pub const alt_bn128_coeff_b: alt_bn128_Fq = alt_bn128_Fq::const_new(BigInt!("3"));
 
 pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
     alt_bn128_Fq::const_new(BigInt!("9")),
     alt_bn128_Fq::const_new(BigInt!("1")),
 );
+
 #[inline(always)]
 pub fn alt_bn128_twist_coeff_b() -> alt_bn128_Fq2 {
     alt_bn128_twist.inverse() * alt_bn128_coeff_b

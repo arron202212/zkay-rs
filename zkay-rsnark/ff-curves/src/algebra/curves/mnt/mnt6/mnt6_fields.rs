@@ -3,18 +3,22 @@
 use crate::algebra::curves::mnt::mnt46_common::{
     mnt46_A_bitcount, mnt46_A_limbs, mnt46_B_bitcount, mnt46_B_limbs,
 };
-use ffec::field_utils::{
-    bigint::{GMP_NUMB_BITS, bigint},
-    field_utils::batch_invert,
-};
 use ffec::{
-    Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_model, Fp3_modelConfig,
-    Fp6_3over2_model, Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig,
-    Zero, fp6_2over3::Fp6_2over3_model,
+    field_utils::{
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils::batch_invert,
+    },
+    {
+        Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, Fp3_model, Fp3_modelConfig,
+        Fp6_3over2_model, Fp6_modelConfig, Fp12_2over3over2_model, Fp12_modelConfig, One, PpConfig,
+        Zero, fp6_2over3::Fp6_2over3_model,
+    },
 };
 
-use std::borrow::Borrow;
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{
+    borrow::Borrow,
+    ops::{Add, Mul, Neg, Sub},
+};
 
 pub const mnt6_r_bitcount: usize = mnt46_B_bitcount;
 pub const mnt6_q_bitcount: usize = mnt46_A_bitcount;
@@ -116,7 +120,7 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl Fp_modelConfig<mnt6_q_limbs> for Backend {}
 impl Fp2_modelConfig<mnt6_q_limbs, mnt6_q_limbs2> for Backend {

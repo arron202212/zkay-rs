@@ -1410,7 +1410,7 @@ where
         r1cs_to_qap_instance_map_with_evaluation(&pk.constraint_system, &t);
     assert!(qap_inst.is_satisfied(&qap_wit));
 
-    let mut g_A = pk.A_query[0] + pk.A_query[qap_wit.num_variables() + 1].clone() * d1;
+    let mut g_A = pk.A_query[0].clone() + pk.A_query[qap_wit.num_variables() + 1].clone() * d1;
     let mut g_B = pk.B_query[0].clone()
         + pk.B_query[qap_wit.num_variables() + 1].clone() * qap_wit.d2.clone();
     let mut g_C = pk.C_query[0].clone()

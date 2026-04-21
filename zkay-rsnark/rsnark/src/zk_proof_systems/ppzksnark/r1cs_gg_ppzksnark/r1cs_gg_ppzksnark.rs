@@ -574,8 +574,8 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     leave_block("Compute the polynomial H", false);
 
     let t = Fr::<ppT>::random_element();
-    let qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
-    debug_assert!(qap_inst.is_satisfied(qap_wit));
+    let qap_inst = r1cs_to_qap_instance_map_with_evaluation(&pk.constraint_system, &t);
+    debug_assert!(qap_inst.is_satisfied(&qap_wit));
 
     //Choose two random field elements for prover zero-knowledge.
     let r = Fr::<ppT>::random_element();

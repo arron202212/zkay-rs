@@ -1,17 +1,22 @@
 use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12};
-use ffec::field_utils::{BigInt, bigint::bigint};
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+
+use ffec::{
+    BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero,
+    field_utils::{BigInt, bigint::bigint},
+};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct bn128_GT {
     pub elem: Fp12,
 }
 impl PpConfig for bn128_GT {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl Default for bn128_GT {
     fn default() -> Self {

@@ -3,6 +3,7 @@ use super::pp::Fp;
 use super::variable_operators::*;
 use crate::gadgetlib2::protoboard::Protoboard;
 use enum_dispatch::enum_dispatch;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::HashMap;
 use std::collections::{BTreeMap, BTreeSet};

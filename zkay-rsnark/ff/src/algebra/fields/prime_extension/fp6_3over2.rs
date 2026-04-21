@@ -587,7 +587,8 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PpConfig
     for Fp6_3over2_model<N, N2, N6, T>
 {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
 }
 
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> One

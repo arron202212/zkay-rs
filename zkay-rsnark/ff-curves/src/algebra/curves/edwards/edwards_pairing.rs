@@ -1,17 +1,18 @@
-use crate::algebra::curves::edwards::edwards_fields::{
-    edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT,
+use crate::algebra::curves::edwards::{
+    edwards_fields::{edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT},
+    edwards_g1::edwards_G1,
+    edwards_g2::edwards_G2,
+    edwards_init::{
+        edwards_ate_loop_count, edwards_final_exponent_last_chunk_abs_of_w0,
+        edwards_final_exponent_last_chunk_is_w0_neg, edwards_final_exponent_last_chunk_w1,
+        edwards_modulus_r,
+    },
 };
-use crate::algebra::curves::edwards::edwards_g1::edwards_G1;
-use crate::algebra::curves::edwards::edwards_g2::edwards_G2;
-use crate::algebra::curves::edwards::edwards_init::{
-    edwards_ate_loop_count, edwards_final_exponent_last_chunk_abs_of_w0,
-    edwards_final_exponent_last_chunk_is_w0_neg, edwards_final_exponent_last_chunk_w1,
-    edwards_modulus_r,
+use ffec::{
+    common::profiling::{enter_block, leave_block},
+    field_utils::bigint::{BigIntegerT, bigint},
+    {FieldTConfig, PpConfig},
 };
-use ffec::PpConfig;
-
-use ffec::common::profiling::{enter_block, leave_block};
-use ffec::field_utils::bigint::bigint;
 
 //Tate pairing
 #[derive(Clone, Debug, Default, PartialEq)]

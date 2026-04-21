@@ -911,7 +911,8 @@ impl<
     T: Fp12_modelConfig<N, N2, N6, N12>,
 > PpConfig for Fp12_2over3over2_model<N, N2, N6, N12, T>
 {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
 }
 
 impl<

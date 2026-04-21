@@ -1,14 +1,22 @@
 //  Declaration of interfaces for the MNT4 G1 group.
 
-use crate::FpmConfig;
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{mnt4_Fq, mnt4_Fr};
-use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::bigint};
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+use crate::{
+    FpmConfig,
+    algebra::curves::mnt::mnt4::mnt4_fields::{mnt4_Fq, mnt4_Fr},
+};
+use ffec::{
+    field_utils::{
+        field_utils::batch_invert,
+        {BigInt, bigint::bigint},
+    },
+    {BigInt, FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero},
+};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 const mnt4_Fq_num_limbs: usize = 5;
 const mnt4_Fr_num_limbs: usize = 5;
@@ -22,7 +30,7 @@ pub struct mnt4_G1 {
     pub Z: mnt4_Fq,
 }
 impl PpConfig for mnt4_G1 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl FpmConfig for mnt4_G1 {
     type Fr = mnt4_Fq;

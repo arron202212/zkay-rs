@@ -16,7 +16,8 @@ pub struct Double {
 }
 impl FieldTConfig for Double {}
 impl PpConfig for Double {
-    type GType = Self;
+    
+    type BigIntT = bigint<1>;
 }
 impl Eq for Double {}
 impl AsMut<[u64]> for Double {

@@ -1,15 +1,21 @@
-use crate::FpmConfig;
-use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12};
-use crate::algebra::curves::bn128::bn128_fields::{bn128_Fq, bn128_Fr};
-use ffec::field_utils::{
-    BigInt,
-    bigint::{GMP_NUMB_BITS, bigint},
+use crate::{
+    FpmConfig,
+    algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, Fp12, bn128_Fq, bn128_Fr},
 };
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+
+use ffec::{
+    field_utils::{
+        BigInt,
+        bigint::{GMP_NUMB_BITS, bigint},
+    },
+    {BigInt, FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero},
+};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 const bn128_Fq_s: usize = 1;
 const bn128_Fq2_s: usize = 1;
@@ -29,7 +35,7 @@ pub struct bn128_G1 {
 }
 
 impl PpConfig for bn128_G1 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl FpmConfig for bn128_G1 {
     type Fr = bn128_Fq;

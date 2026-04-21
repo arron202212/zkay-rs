@@ -20,7 +20,8 @@ pub use self::algebra::*;
 pub mod common;
 pub use self::common::utils::*;
 const D: &'static [u64] = &[0];
-use crate::field_utils::bigint::bigint;
+use crate::field_utils::bigint::{bigint,BigIntegerT};
+
 pub trait PpConfig:
     Default
     + std::fmt::Debug
@@ -37,13 +38,14 @@ pub trait PpConfig:
     + std::ops::Mul<Self, Output = Self>
 {
     // type TT: AsRef<[u64]>;
-    type GType;
+    // type GType;
+    type BigIntT:BigIntegerT;
     const num_limbs: usize = 4;
     const coeff_a: i64 = 1;
     const coeff_b: i64 = 1;
 
-    fn as_bigint<const N: usize>(&self) -> bigint<N> {
-        bigint::<N>::default()
+    fn as_bigint(&self) -> Self::BigIntT{
+        Self::BigIntT::default()
     }
     fn dbl(&self) -> Self {
         self.clone()
@@ -57,7 +59,7 @@ pub trait PpConfig:
     fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
         vec![]
     }
-    fn batch_to_special_all_non_zeros(_: &mut std::vec::Vec<Self::GType>) {}
+    fn batch_to_special_all_non_zeros(_: &mut std::vec::Vec<Self>) {}
     fn to_special(&mut self) {}
     fn mixed_add(&self, other: &Self) -> Self {
         Default::default()

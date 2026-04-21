@@ -4,6 +4,7 @@
 // Tonelli-Shanks square root.
 
 use crate::bigint;
+use crate::algebra::field_utils::bigint::BigIntegerT;
 use num_traits::{One, Zero};
 use std::fmt::Debug;
 use std::ops::BitXor;

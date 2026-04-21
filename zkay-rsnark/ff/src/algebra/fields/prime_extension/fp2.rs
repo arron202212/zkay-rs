@@ -1,7 +1,7 @@
 // Implementation of arithmetic in the finite field F[p^2].
 
 use crate::{
-    Fp_model, Fp_modelConfig as FpmConfig, Fp3_modelConfig, PpConfig,
+    FieldTConfig, Fp_model, Fp_modelConfig as FpmConfig, Fp3_modelConfig, PpConfig,
     algebra::{
         field_utils::{
             BigInteger,
@@ -449,7 +449,8 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<bi
 //     }
 // }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PpConfig for Fp2_model<N, N2, T> {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
     fn dbl(&self) -> Self {
         self.clone()
     }

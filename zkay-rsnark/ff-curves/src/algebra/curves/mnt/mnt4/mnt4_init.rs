@@ -1,6 +1,8 @@
 //  Declaration of interfaces for initializing MNT4.
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{init_mnt4_fields, mnt4_q_limbs};
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{mnt4_Fq, mnt4_Fq2};
+
+use crate::algebra::curves::mnt::mnt4::mnt4_fields::{
+    init_mnt4_fields, mnt4_Fq, mnt4_Fq2, mnt4_q_limbs,
+};
 use ffec::field_utils::bigint::bigint;
 
 pub const mnt4_twist: mnt4_Fq2 = mnt4_Fq2::const_default();

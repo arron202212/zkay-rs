@@ -205,7 +205,7 @@ impl<FieldT: FieldTConfig, T: PBConfig> protoboard<FieldT, T> {
                 "{:<40} --> ",
                 self.constraint_system.variable_annotations[&i].to_string()
             ); //%-40s
-            self.values[i].as_bigint::<N>().print_hex();
+            self.values[i].as_bigint().print_hex();
         }
     }
 

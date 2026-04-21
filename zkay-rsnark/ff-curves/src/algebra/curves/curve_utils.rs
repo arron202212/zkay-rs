@@ -1,5 +1,5 @@
 use ffec::PpConfig;
-use ffec::algebra::field_utils::bigint::bigint;
+use ffec::algebra::field_utils::bigint::{BigIntegerT, bigint};
 // GroupT scalar_mul(base:&GroupT, scalar:&bigint<m>);
 
 pub fn scalar_mul<GroupT: PpConfig, const M: usize>(base: &GroupT, scalar: &bigint<M>) -> GroupT {

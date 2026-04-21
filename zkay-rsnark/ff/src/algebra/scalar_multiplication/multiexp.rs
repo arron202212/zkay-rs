@@ -715,7 +715,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: FieldTConfig>(
     res
 }
 
-pub fn batch_to_special<T: PpConfig<GType = T>>(vec: &mut Vec<T>) {
+pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {
     enter_block("Batch-convert elements to special form", false);
 
     let mut non_zero_vec = vec![];

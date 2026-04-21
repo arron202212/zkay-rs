@@ -491,12 +491,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, packing_gadget<Field
     pub fn generate_r1cs_witness_from_packed(&self) {
         self.t.packed.evaluate_pb(&self.pb);
         assert!(
-            self.pb
-                .borrow()
-                .lc_val(&self.t.packed)
-                .as_bigint::<4>()
-                .num_bits()
-                <= self.t.bits.len()
+            self.t.bits.len()
+                >= self
+                    .pb
+                    .borrow()
+                    .lc_val(&self.t.packed)
+                    .as_bigint()
+                    .num_bits()
         ); // `bits` is large enough to represent this packed value//4
         self.t
             .bits
@@ -1241,7 +1242,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
 
     pub fn generate_r1cs_witness(&self) {
         //assumes that idx can be fit in ulong; true for our purposes for now
-        let mut valint = self.pb.borrow().val(&self.t.index).as_bigint::<4>();
+        let mut valint = self.pb.borrow().val(&self.t.index).as_bigint();
         let mut idx = valint.as_ulong() as usize;
         let arrsize = bigint::<4>::new(self.t.arr.len() as u64);
 

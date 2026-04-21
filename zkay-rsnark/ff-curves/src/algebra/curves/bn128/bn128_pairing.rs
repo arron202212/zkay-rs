@@ -1,10 +1,12 @@
 //  Declares functions for computing Ate pairings over the bn128 curves, split into a
 //  offline and online stages.
 
-use crate::algebra::curves::bn128::bn128_fields::{Fp, Fp2, Fp6, bn128_Fq12};
-use crate::algebra::curves::bn128::bn128_g1::bn128_G1;
-use crate::algebra::curves::bn128::bn128_g2::bn128_G2;
-use crate::algebra::curves::bn128::bn128_gt::bn128_GT;
+use crate::algebra::curves::bn128::{
+    bn128_fields::{Fp, Fp2, Fp6, bn128_Fq12},
+    bn128_g1::bn128_G1,
+    bn128_g2::bn128_G2,
+    bn128_gt::bn128_GT,
+};
 use ffec::common::profiling::{enter_block, leave_block};
 
 #[derive(PartialEq, Clone, Default)]

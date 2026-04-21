@@ -39,6 +39,34 @@ use std::io::{self, Read, Write};
 use std::ops::{Index, IndexMut, MulAssign, Rem, Sub};
 use zeroize::Zeroize;
 
+pub trait BigIntegerT:
+     Clone
+    + Debug
+    + Default
+    + Display
+    + Eq
+    + Ord
+    + Send
+    + Sized
+    + Sync
+    + 'static
+    // + Zeroize
+    // + AsMut<[u64]>
+    + AsRef<[u64]>{
+    fn print_hex(&self) {
+    }
+
+    fn  num_bits(&self) -> usize {
+        0
+    }
+
+    fn  as_ulong(&self) -> u64 {
+0    }
+
+    fn  test_bit(&self, bitno: usize) -> bool {
+        false
+    }
+}
 // //
 // //  * Wrapper pub struct around GMP's MPZ long integers. It supports arithmetic operations,
 // //  * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
@@ -167,9 +195,7 @@ impl<const N: usize> bigint<N> {
         print!("{:N$?}\n", self.0);
     }
 
-    pub fn print_hex(&self) {
-        print!("{:N$x?}\n", self.0);
-    }
+   
 
     pub const fn clear(&mut self) {
         self.0.0 = [0; N];
@@ -186,18 +212,6 @@ impl<const N: usize> bigint<N> {
     }
     pub fn is_even(&self) -> bool {
         self.0.is_even()
-    }
-
-    pub fn num_bits(&self) -> usize {
-        self.0.num_bits() as _
-    }
-
-    pub fn as_ulong(&self) -> u64 {
-        self.0.0[0]
-    }
-
-    pub fn test_bit(&self, bitno: usize) -> bool {
-        self.0.get_bit(bitno)
     }
 
     pub fn randomize(&mut self) -> &Self {
@@ -237,7 +251,24 @@ impl<const N: usize> bigint<N> {
         )
     }
 }
+impl<const N: usize> BigIntegerT for bigint<N> {
 
+    fn  print_hex(&self) {
+        print!("{:N$x?}\n", self.0);
+    }
+    fn  num_bits(&self) -> usize {
+        self.0.num_bits() as _
+    }
+
+    fn  as_ulong(&self) -> u64 {
+        self.0.0[0]
+    }
+
+    fn  test_bit(&self, bitno: usize) -> bool {
+        self.0.get_bit(bitno)
+    }
+
+}
 impl<const N: usize> Index<usize> for bigint<N> {
     type Output = u64;
     #[inline(always)]

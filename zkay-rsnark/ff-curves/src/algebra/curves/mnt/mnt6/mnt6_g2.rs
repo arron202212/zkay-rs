@@ -1,23 +1,31 @@
 //  Declaration of interfaces for the MNT6 G2 group.
 
-use crate::FpmConfig;
-use crate::Fq2mConfig;
-use crate::algebra::curves::mnt::mnt6::mnt6_fields::{mnt6_Fq, mnt6_Fq3, mnt6_Fr};
-use crate::algebra::curves::mnt::mnt6::mnt6_init::{
-    mnt6_twist_coeff_a, mnt6_twist_coeff_b, mnt6_twist_mul_by_a_c0, mnt6_twist_mul_by_a_c1,
-    mnt6_twist_mul_by_a_c2, mnt6_twist_mul_by_b_c0, mnt6_twist_mul_by_b_c1, mnt6_twist_mul_by_b_c2,
-    mnt6_twist_mul_by_q_X, mnt6_twist_mul_by_q_Y,
+use crate::{
+    FpmConfig, Fq2mConfig,
+    algebra::curves::mnt::mnt6::{
+        mnt6_fields::{mnt6_Fq, mnt6_Fq3, mnt6_Fr},
+        mnt6_init::{
+            mnt6_twist_coeff_a, mnt6_twist_coeff_b, mnt6_twist_mul_by_a_c0, mnt6_twist_mul_by_a_c1,
+            mnt6_twist_mul_by_a_c2, mnt6_twist_mul_by_b_c0, mnt6_twist_mul_by_b_c1,
+            mnt6_twist_mul_by_b_c2, mnt6_twist_mul_by_q_X, mnt6_twist_mul_by_q_Y,
+        },
+    },
 };
-use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{
-    BigInt,
-    bigint::{GMP_NUMB_BITS, bigint},
+
+use ffec::{
+    field_utils::{
+        BigInt,
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils::batch_invert,
+    },
+    {BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero},
 };
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 type base_field = mnt6_Fq;
 type twist_field = mnt6_Fq3;
@@ -31,7 +39,7 @@ pub struct mnt6_G2 {
 }
 
 impl PpConfig for mnt6_G2 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl FpmConfig for mnt6_G2 {
     type Fr = mnt6_Fq;

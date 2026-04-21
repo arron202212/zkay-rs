@@ -1,34 +1,33 @@
-use crate::CoeffsConfig;
-use crate::affine_ate_G_precomp_typeConfig;
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_GT,
+use crate::{
+    CoeffsConfig, PublicParams, PublicParamsType, affine_ate_G_precomp_typeConfig,
+    algebra::curves::{
+        alt_bn128::{
+            alt_bn128_fields::{
+                alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_Fr, alt_bn128_GT,
+            },
+            alt_bn128_g1::alt_bn128_G1,
+            alt_bn128_g2::alt_bn128_G2,
+            alt_bn128_init::init_alt_bn128_params,
+            alt_bn128_pairing::{
+                alt_bn128_G1_precomp, alt_bn128_G2_precomp, alt_bn128_double_miller_loop,
+                alt_bn128_final_exponentiation, alt_bn128_miller_loop, alt_bn128_pairing,
+                alt_bn128_precompute_G1, alt_bn128_precompute_G2, alt_bn128_reduced_pairing,
+            },
+        },
+        public_params,
+    },
 };
-use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
-use crate::algebra::curves::alt_bn128::alt_bn128_init::init_alt_bn128_params;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::alt_bn128_precompute_G1;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::alt_bn128_precompute_G2;
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
-    alt_bn128_G1_precomp, alt_bn128_G2_precomp,
+
+use ffec::{
+    PpConfig,
+    field_utils::bigint::bigint,
+    {One, Zero},
 };
-use crate::algebra::curves::alt_bn128::alt_bn128_pairing::{
-    alt_bn128_double_miller_loop, alt_bn128_final_exponentiation, alt_bn128_miller_loop,
-    alt_bn128_pairing, alt_bn128_reduced_pairing,
+use std::{
+    fmt,
+    ops::{Add, Mul, Sub},
 };
-use crate::algebra::curves::public_params;
 
-// impl<EC_ppT:PublicParamsType> PublicParams<EC_ppT> for alt_bn128_pp{
-
-// }
-
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fr;
-
-use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
-use crate::{PublicParams, PublicParamsType};
-use ffec::PpConfig;
-use ffec::field_utils::bigint::bigint;
-use ffec::{One, Zero};
-use std::fmt;
-use std::ops::{Add, Mul, Sub};
 #[derive(Default, Clone, Debug, PartialEq)]
 pub struct alt_bn128_pp;
 
@@ -97,7 +96,7 @@ impl std::fmt::Display for alt_bn128_pp {
     }
 }
 impl PpConfig for alt_bn128_pp {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 #[derive(Clone, Default)]
 pub struct Coeffs;

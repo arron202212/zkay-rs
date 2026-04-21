@@ -1,15 +1,20 @@
-use crate::PublicParams;
-use crate::PublicParamsType;
-use crate::algebra::curves::alt_bn128::alt_bn128_pp::affine_ate_precomp;
-use crate::algebra::curves::bn128::bn128_fields::{bn128_Fq, bn128_Fq2, bn128_Fq12, bn128_Fr};
-use crate::algebra::curves::bn128::bn128_g1::bn128_G1;
-use crate::algebra::curves::bn128::bn128_g2::bn128_G2;
-use crate::algebra::curves::bn128::bn128_gt::bn128_GT;
-use crate::algebra::curves::bn128::bn128_init::init_bn128_params;
-
-use crate::algebra::curves::bn128::bn128_pairing::{
-    bn128_ate_G1_precomp, bn128_ate_G2_precomp, bn128_ate_miller_loop, bn128_ate_precompute_G1,
-    bn128_ate_precompute_G2, bn128_double_ate_miller_loop, bn128_final_exponentiation,
+use crate::{
+    PublicParams, PublicParamsType,
+    algebra::curves::{
+        alt_bn128::alt_bn128_pp::affine_ate_precomp,
+        bn128::{
+            bn128_fields::{bn128_Fq, bn128_Fq2, bn128_Fq12, bn128_Fr},
+            bn128_g1::bn128_G1,
+            bn128_g2::bn128_G2,
+            bn128_gt::bn128_GT,
+            bn128_init::init_bn128_params,
+            bn128_pairing::{
+                bn128_ate_G1_precomp, bn128_ate_G2_precomp, bn128_ate_miller_loop,
+                bn128_ate_precompute_G1, bn128_ate_precompute_G2, bn128_double_ate_miller_loop,
+                bn128_final_exponentiation,
+            },
+        },
+    },
 };
 use ffec::common::profiling::{enter_block, leave_block};
 

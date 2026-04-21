@@ -1,20 +1,25 @@
 //  Declaration of interfaces for pairing operations on MNT4.
 
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{
-    mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT,
+use crate::{
+    algebra::curves::mnt::mnt4::{
+        mnt4_fields::{mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT},
+        mnt4_g1::mnt4_G1,
+        mnt4_g2::mnt4_G2,
+        mnt4_init::{
+            mnt4_ate_is_loop_count_neg, mnt4_ate_loop_count,
+            mnt4_final_exponent_last_chunk_abs_of_w0, mnt4_final_exponent_last_chunk_is_w0_neg,
+            mnt4_final_exponent_last_chunk_w1, mnt4_twist, mnt4_twist_coeff_a,
+        },
+    },
+    {CoeffsConfig, affine_ate_G_precomp_typeConfig},
 };
-use crate::algebra::curves::mnt::mnt4::mnt4_g1::mnt4_G1;
-use crate::algebra::curves::mnt::mnt4::mnt4_g2::mnt4_G2;
-use crate::algebra::curves::mnt::mnt4::mnt4_init::{
-    mnt4_ate_is_loop_count_neg, mnt4_ate_loop_count, mnt4_final_exponent_last_chunk_abs_of_w0,
-    mnt4_final_exponent_last_chunk_is_w0_neg, mnt4_final_exponent_last_chunk_w1, mnt4_twist,
-    mnt4_twist_coeff_a,
+
+use ffec::{
+    PpConfig,
+    common::profiling::{enter_block, leave_block},
+    field_utils::bigint::{BigIntegerT, bigint},
+    scalar_multiplication::wnaf::find_wnaf,
 };
-use crate::{CoeffsConfig, affine_ate_G_precomp_typeConfig};
-use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block};
-use ffec::field_utils::bigint::bigint;
-use ffec::scalar_multiplication::wnaf::find_wnaf;
 
 //affine ate miller loop
 #[derive(Clone, Debug, Default, PartialEq)]

@@ -1,18 +1,18 @@
-use crate::CoeffsConfig;
-use crate::PublicParams;
-use crate::PublicParamsType;
-use crate::affine_ate_G_precomp_typeConfig;
-use crate::algebra::curves::edwards::edwards_fields::{
-    edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT,
+use crate::{
+    algebra::curves::edwards::{
+        edwards_fields::{edwards_Fq, edwards_Fq3, edwards_Fq6, edwards_Fr, edwards_GT},
+        edwards_g1::edwards_G1,
+        edwards_g2::edwards_G2,
+        edwards_init::init_edwards_params,
+        edwards_pairing::{
+            edwards_G1_precomp, edwards_G2_precomp, edwards_double_miller_loop,
+            edwards_final_exponentiation, edwards_miller_loop, edwards_pairing,
+            edwards_precompute_G1, edwards_precompute_G2, edwards_reduced_pairing,
+        },
+    },
+    {CoeffsConfig, PublicParams, PublicParamsType, affine_ate_G_precomp_typeConfig},
 };
-use crate::algebra::curves::edwards::edwards_g1::edwards_G1;
-use crate::algebra::curves::edwards::edwards_g2::edwards_G2;
-use crate::algebra::curves::edwards::edwards_init::init_edwards_params;
-use crate::algebra::curves::edwards::edwards_pairing::{
-    edwards_G1_precomp, edwards_G2_precomp, edwards_double_miller_loop,
-    edwards_final_exponentiation, edwards_miller_loop, edwards_pairing, edwards_precompute_G1,
-    edwards_precompute_G2, edwards_reduced_pairing,
-};
+
 #[derive(Default, Clone)]
 pub struct edwards_pp;
 impl PublicParamsType for edwards_pp {

@@ -1,16 +1,25 @@
-use crate::FpmConfig;
-use crate::algebra::curves::edwards::edwards_fields::{edwards_Fq, edwards_Fr};
-use crate::algebra::curves::edwards::edwards_init::{
-    edwards_coeff_d, edwards_twist_mul_by_a_c0, edwards_twist_mul_by_d_c1,
-    edwards_twist_mul_by_d_c2, edwards_twist_mul_by_q_Y, edwards_twist_mul_by_q_Z,
+use crate::{
+    FpmConfig,
+    algebra::curves::edwards::{
+        edwards_fields::{edwards_Fq, edwards_Fr},
+        edwards_init::{
+            edwards_coeff_d, edwards_twist_mul_by_a_c0, edwards_twist_mul_by_d_c1,
+            edwards_twist_mul_by_d_c2, edwards_twist_mul_by_q_Y, edwards_twist_mul_by_q_Z,
+        },
+    },
 };
-use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{BigInt, bigint::bigint};
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+
+use ffec::{
+    field_utils::{BigInt, bigint::bigint, field_utils::batch_invert},
+    {BigInt, FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero},
+};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct edwards_G1 {
     pub X: edwards_Fq,
@@ -18,7 +27,7 @@ pub struct edwards_G1 {
     pub Z: edwards_Fq,
 }
 impl PpConfig for edwards_G1 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl FpmConfig for edwards_G1 {
     type Fr = edwards_Fq;

@@ -116,7 +116,7 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl Fp_modelConfig<bn128_q_limbs> for Backend {}
 impl Fp2_modelConfig<bn128_q_limbs, bn128_q_limbs2> for Backend {

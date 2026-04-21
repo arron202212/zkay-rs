@@ -1,7 +1,7 @@
 //  Declaration of arithmetic in the finite  field F[p^3].
 
 use crate::{
-    Fp_model, Fp_modelConfig as FpmConfig, PpConfig,
+    FieldTConfig, Fp_model, Fp_modelConfig as FpmConfig, PpConfig,
     algebra::{
         field_utils::{
             BigInteger,
@@ -404,7 +404,8 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Neg for Fp3_mod
 }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PpConfig for Fp3_model<N, N3, T> {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
 }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Mul<bigint<N>>

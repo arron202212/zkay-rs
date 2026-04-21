@@ -1,21 +1,23 @@
 //  Declaration of interfaces for public parameters of MNT4.
 
-use crate::PublicParams;
-use crate::PublicParamsType;
-use crate::algebra::curves::mnt::mnt4::mnt4_g1::mnt4_G1;
-use crate::algebra::curves::mnt::mnt4::mnt4_g2::mnt4_G2;
-use crate::algebra::curves::mnt::mnt4::mnt4_init::init_mnt4_params;
+use crate::{
+    PublicParams, PublicParamsType,
+    algebra::curves::mnt::mnt4::{
+        mnt4_fields::{mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT},
+        mnt4_g1::mnt4_G1,
+        mnt4_g2::mnt4_G2,
+        mnt4_init::init_mnt4_params,
+        mnt4_pairing::{
+            mnt4_G1_precomp, mnt4_G2_precomp, mnt4_affine_ate_G1_precomputation,
+            mnt4_affine_ate_G2_precomputation, mnt4_affine_ate_miller_loop,
+            mnt4_affine_ate_precompute_G1, mnt4_affine_ate_precompute_G2,
+            mnt4_affine_reduced_pairing, mnt4_double_miller_loop, mnt4_final_exponentiation,
+            mnt4_miller_loop, mnt4_pairing, mnt4_precompute_G1, mnt4_precompute_G2,
+            mnt4_reduced_pairing,
+        },
+    },
+};
 
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{
-    mnt4_Fq, mnt4_Fq2, mnt4_Fq4, mnt4_Fr, mnt4_GT,
-};
-use crate::algebra::curves::mnt::mnt4::mnt4_pairing::{
-    mnt4_G1_precomp, mnt4_G2_precomp, mnt4_affine_ate_G1_precomputation,
-    mnt4_affine_ate_G2_precomputation, mnt4_affine_ate_miller_loop, mnt4_affine_ate_precompute_G1,
-    mnt4_affine_ate_precompute_G2, mnt4_affine_reduced_pairing, mnt4_double_miller_loop,
-    mnt4_final_exponentiation, mnt4_miller_loop, mnt4_pairing, mnt4_precompute_G1,
-    mnt4_precompute_G2, mnt4_reduced_pairing,
-};
 #[derive(Default, Clone)]
 pub struct mnt4_pp;
 impl PublicParamsType for mnt4_pp {

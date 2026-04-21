@@ -7,7 +7,7 @@ use crate::{
             algorithms::{
                 FPMConfig, FieldTForPowersConfig, PowerConfig, Powers, tonelli_shanks_sqrt,
             },
-            bigint::{GMP_NUMB_BITS, bigint},
+            bigint::{GMP_NUMB_BITS,BigIntegerT, bigint},
             field_utils, fp_aux, {BigInt, algorithms},
         },
         fields::{
@@ -98,10 +98,49 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> 
 //     }
 // }
 
-impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {}
+impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {
+    fn as_ulong(&self) -> usize {
+        self.as_bigint().as_ulong() as usize
+    }
+
+    fn geometric_generator() -> Self {
+        let mut res = Self::default();
+        res.mont_repr.0.0[0] = 2;
+        res.mul_reduce(&T::Rsquared);
+        res
+    }
+
+    fn arithmetic_generator() -> Self {
+        let mut res = Self::default();
+        res.mont_repr.0.0[0] = 1;
+        res.mul_reduce(&T::Rsquared);
+        res
+    }
+
+    fn squared(&self) -> Self {
+        cfg_if! {
+            if #[cfg(all(target_arch = "x86_64", feature = "asm"))]
+            {
+               let out= squared_n3(&self.mont_repr.0.0,&T::modulus.0,T::inv);
+                self.mont_repr.0.0.copy_from_slice(out);
+            }else{
+
+        let mut r: Self = self.clone();
+        r *= &r.clone();
+        r
+            }
+        }
+    }
+
+    fn inverse(&self) -> Self {
+        let mut r = self.clone();
+        r.invert()
+    }
+}
 
 impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
-    type GType = Self;
+    
+    type BigIntT = bigint<N>;
     const num_limbs: usize = N;
     fn size_in_bits() -> usize {
         T::num_bits
@@ -346,10 +385,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         res.mont_repr
     }
 
-    pub fn as_ulong(&self) -> u64 {
-        self.as_bigint().as_ulong()
-    }
-
     pub fn is_zero(&self) -> bool {
         self.mont_repr.is_zero() // zero maps to zero
     }
@@ -368,35 +403,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         res.mont_repr.0.0[0] = 1;
         res.mul_reduce(&T::Rsquared);
         res
-    }
-
-    pub fn geometric_generator() -> Self {
-        let mut res = Self::default();
-        res.mont_repr.0.0[0] = 2;
-        res.mul_reduce(&T::Rsquared);
-        res
-    }
-
-    pub fn arithmetic_generator() -> Self {
-        let mut res = Self::default();
-        res.mont_repr.0.0[0] = 1;
-        res.mul_reduce(&T::Rsquared);
-        res
-    }
-
-    pub fn squared(&self) -> Self {
-        cfg_if! {
-            if #[cfg(all(target_arch = "x86_64", feature = "asm"))]
-            {
-               let out= squared_n3(&self.mont_repr.0.0,&T::modulus.0,T::inv);
-                self.mont_repr.0.0.copy_from_slice(out);
-            }else{
-
-        let mut r: Self = self.clone();
-        r *= &r.clone();
-        r
-            }
-        }
     }
 
     pub fn square(&mut self) -> &Self {
@@ -440,11 +446,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 
         self.mont_repr = res;
         self.clone()
-    }
-
-    pub fn inverse(&self) -> Self {
-        let mut r = self.clone();
-        r.invert()
     }
 
     pub fn Frobenius_map(&self, _power: usize) -> Self {

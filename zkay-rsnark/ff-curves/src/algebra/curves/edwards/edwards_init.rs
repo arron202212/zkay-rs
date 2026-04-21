@@ -1,7 +1,7 @@
 use crate::algebra::curves::edwards::edwards_fields::{
-    edwards_Fq, edwards_Fq3, init_edwards_fields,
+    edwards_Fq, edwards_Fq3, edwards_q_limbs, edwards_r_limbs, init_edwards_fields,
 };
-use crate::algebra::curves::edwards::edwards_fields::{edwards_q_limbs, edwards_r_limbs};
+
 use ffec::field_utils::bigint::bigint;
 
 pub const edwards_modulus_r: bigint<edwards_r_limbs> = bigint::<edwards_r_limbs>::zero();

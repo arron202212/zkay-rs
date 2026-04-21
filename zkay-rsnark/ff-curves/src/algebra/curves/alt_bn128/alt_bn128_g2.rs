@@ -16,11 +16,11 @@ use crate::{
     },
     new_fq2,
 };
-// , pairing::Pairing
 
 use cfg_if::cfg_if;
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
+
 use ffec::{
+    BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero,
     common::serialization::{OUTPUT_NEWLINE, OUTPUT_SEPARATOR, consume_output_separator},
     field_utils::{
         BigInt,
@@ -231,10 +231,8 @@ impl From<BigUint> for alt_bn128_G2 {
 //     }
 // }
 impl PpConfig for alt_bn128_G2 {
-    type GType = Self;
-    fn as_bigint<const N: usize>(&self) -> bigint<N> {
-        bigint::<N>::default()
-    }
+    type BigIntT = bigint<1>;
+
     fn dbl(&self) -> Self {
         self.clone()
     }

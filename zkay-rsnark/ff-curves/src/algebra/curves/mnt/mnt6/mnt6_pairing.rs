@@ -1,19 +1,23 @@
 //  Declaration of interfaces for pairing operations on MNT6.
 
-use crate::algebra::curves::mnt::mnt6::mnt6_fields::{
-    mnt6_Fq, mnt6_Fq3, mnt6_Fq6, mnt6_Fr, mnt6_GT,
+use crate::{
+    algebra::curves::mnt::mnt6::{
+        mnt6_fields::{mnt6_Fq, mnt6_Fq3, mnt6_Fq6, mnt6_Fr, mnt6_GT},
+        mnt6_g1::mnt6_G1,
+        mnt6_g2::mnt6_G2,
+        mnt6_init::{
+            mnt6_ate_is_loop_count_neg, mnt6_ate_loop_count,
+            mnt6_final_exponent_last_chunk_abs_of_w0, mnt6_final_exponent_last_chunk_is_w0_neg,
+            mnt6_final_exponent_last_chunk_w1, mnt6_twist, mnt6_twist_coeff_a,
+        },
+    },
+    {CoeffsConfig, affine_ate_G_precomp_typeConfig},
 };
-use crate::algebra::curves::mnt::mnt6::mnt6_g1::mnt6_G1;
-use crate::algebra::curves::mnt::mnt6::mnt6_g2::mnt6_G2;
-use crate::algebra::curves::mnt::mnt6::mnt6_init::{
-    mnt6_ate_is_loop_count_neg, mnt6_ate_loop_count, mnt6_final_exponent_last_chunk_abs_of_w0,
-    mnt6_final_exponent_last_chunk_is_w0_neg, mnt6_final_exponent_last_chunk_w1, mnt6_twist,
-    mnt6_twist_coeff_a,
+use ffec::{
+    common::profiling::{enter_block, leave_block},
+    field_utils::bigint::{BigIntegerT, bigint},
+    scalar_multiplication::wnaf::find_wnaf,
 };
-use crate::{CoeffsConfig, affine_ate_G_precomp_typeConfig};
-use ffec::common::profiling::{enter_block, leave_block};
-use ffec::field_utils::bigint::bigint;
-use ffec::scalar_multiplication::wnaf::find_wnaf;
 
 const num_limbs: usize = 5;
 

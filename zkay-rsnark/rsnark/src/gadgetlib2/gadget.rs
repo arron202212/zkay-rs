@@ -37,6 +37,7 @@ use crate::gadgetlib2::variable::{
     sum,
 };
 use enum_dispatch::enum_dispatch;
+use ffec::FieldTConfig;
 use rccell::RcCell;
 
 //  Gadget class, representing the constraints and witness generation for a logical task.

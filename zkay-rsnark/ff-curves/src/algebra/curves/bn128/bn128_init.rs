@@ -1,11 +1,3 @@
-// use crate::algebra::curves::public_params;
-// use crate::algebra::curves::bn128::bn128_fields;
-
-// use crate::algebra::curves::bn128::bn128_g1;
-// use crate::algebra::curves::bn128::bn128_g2;
-// use crate::algebra::curves::bn128::bn128_gt;
-// use crate::algebra::curves::bn128::bn128_init;
-
 pub fn init_bn128_params() {}
 
 // use ark_bn254::{Config, Fq, Fq2, Fr, G1Projective, G2Projective};

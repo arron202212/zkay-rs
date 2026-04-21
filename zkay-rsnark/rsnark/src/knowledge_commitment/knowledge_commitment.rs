@@ -99,36 +99,57 @@ impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
     pub fn one() -> Self {
         Self::new(T::one(), T2::one())
     }
+    pub fn is_zero(&self) -> bool {
+        (self.g.is_zero() && self.h.is_zero())
+    }
+}
 
-    pub fn mixed_add(&self, other: &knowledge_commitment<T, T2>) -> Self {
+impl<T: PpConfig, T2: PpConfig> One for knowledge_commitment<T, T2> {
+    fn one() -> Self {
+        Default::default()
+    }
+}
+
+impl<T: PpConfig, T2: PpConfig> Zero for knowledge_commitment<T, T2> {
+    fn zero() -> Self {
+        Default::default()
+    }
+    fn is_zero(&self) -> bool {
+        false
+    }
+}
+
+impl<T: PpConfig, T2: PpConfig> PpConfig for knowledge_commitment<T, T2> {
+    type BigIntT = bigint<1>;
+    fn size_in_bits() -> usize {
+        T::size_in_bits() + T2::size_in_bits()
+    }
+
+    fn mixed_add(&self, other: &knowledge_commitment<T, T2>) -> Self {
         Self::new(self.g.mixed_add(&other.g), self.h.mixed_add(&other.h))
     }
 
-    pub fn dbl(&self) -> Self {
+    fn dbl(&self) -> Self {
         Self::new(self.g.dbl(), self.h.dbl())
     }
 
-    pub fn to_special(&self) {
+    fn to_special(&mut self) {
         self.g.to_special();
         self.h.to_special();
     }
 
-    pub fn is_special(&self) -> bool {
+    fn is_special(&self) -> bool {
         self.g.is_special() && self.h.is_special()
     }
 
-    pub fn is_zero(&self) -> bool {
-        (self.g.is_zero() && self.h.is_zero())
-    }
-
-    pub fn print(&self) {
+    fn print(&self) {
         print!("knowledge_commitment.g:\n");
         self.g.print();
         print!("knowledge_commitment.h:\n");
         self.h.print();
     }
 
-    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<Self>) {
+    fn batch_to_special_all_non_zeros(vec: &mut Vec<Self>) {
         // it is guaranteed that every vec[i] is non-zero,
         // but, for any i, *one* of vec[i].g and vec[i].h might still be zero,
         // so we still have to handle zeros separately
@@ -143,7 +164,7 @@ impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
             }
         }
 
-        T::batch_to_special_all_non_zeros(g_vec.clone());
+        T::batch_to_special_all_non_zeros(&mut g_vec);
         let mut g_it = g_vec.iter();
         let mut T1_zero_special = T::zero();
         T1_zero_special.to_special();
@@ -167,7 +188,7 @@ impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
             }
         }
 
-        T2::batch_to_special_all_non_zeros(h_vec.clone());
+        T2::batch_to_special_all_non_zeros(&mut h_vec);
         let mut h_it = h_vec.iter();
         let mut T2_zero_special = T2::zero();
         T2_zero_special.to_special();
@@ -181,29 +202,6 @@ impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
         }
 
         h_vec.clear();
-    }
-}
-
-impl<T: PpConfig, T2: PpConfig> One for knowledge_commitment<T, T2> {
-    fn one() -> Self {
-        Default::default()
-    }
-}
-
-impl<T: PpConfig, T2: PpConfig> Zero for knowledge_commitment<T, T2> {
-    fn zero() -> Self {
-        Default::default()
-    }
-    fn is_zero(&self) -> bool {
-        false
-    }
-}
-
-impl<T: PpConfig, T2: PpConfig> PpConfig for knowledge_commitment<T, T2> {
-    //type TT = bigint<1>; //BigInt;
-    // type Fr=Self;
-    fn size_in_bits() -> usize {
-        T::size_in_bits() + T2::size_in_bits()
     }
 }
 

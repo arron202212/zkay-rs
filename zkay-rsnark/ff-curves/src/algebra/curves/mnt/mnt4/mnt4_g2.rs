@@ -1,20 +1,31 @@
 //  Declaration of interfaces for the MNT4 G2 group.
-use crate::algebra::curves::mnt::mnt4::mnt4_fields::{mnt4_Fq, mnt4_Fq2, mnt4_Fr};
-use crate::algebra::curves::mnt::mnt4::mnt4_init::{
-    mnt4_twist_coeff_a, mnt4_twist_coeff_b, mnt4_twist_mul_by_a_c0, mnt4_twist_mul_by_a_c1,
-    mnt4_twist_mul_by_b_c0, mnt4_twist_mul_by_b_c1, mnt4_twist_mul_by_q_X, mnt4_twist_mul_by_q_Y,
+
+use crate::{
+    algebra::curves::mnt::mnt4::{
+        mnt4_fields::{mnt4_Fq, mnt4_Fq2, mnt4_Fr},
+        mnt4_init::{
+            mnt4_twist_coeff_a, mnt4_twist_coeff_b, mnt4_twist_mul_by_a_c0, mnt4_twist_mul_by_a_c1,
+            mnt4_twist_mul_by_b_c0, mnt4_twist_mul_by_b_c1, mnt4_twist_mul_by_q_X,
+            mnt4_twist_mul_by_q_Y,
+        },
+    },
+    {FpmConfig, Fq2mConfig},
 };
-use crate::{FpmConfig, Fq2mConfig};
-use ffec::field_utils::field_utils::batch_invert;
-use ffec::field_utils::{
-    BigInt,
-    bigint::{GMP_NUMB_BITS, bigint},
+
+use ffec::{
+    field_utils::{
+        BigInt,
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils::batch_invert,
+    },
+    {BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero},
 };
-use ffec::{BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 type base_field = mnt4_Fq;
 type twist_field = mnt4_Fq2;
@@ -27,7 +38,7 @@ pub struct mnt4_G2 {
     pub Z: mnt4_Fq2,
 }
 impl PpConfig for mnt4_G2 {
-    type GType = Self;
+    type BigIntT = bigint<1>;
 }
 impl FpmConfig for mnt4_G2 {
     type Fr = mnt4_Fq;
