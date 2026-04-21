@@ -46,7 +46,7 @@ use ffec::common::utils::{from_twos_complement, log2, to_twos_complement};
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-/* arithmetic gadgets */
+//arithmetic gadgets
 #[derive(Clone, Default)]
 pub struct ALU_arithmetic_gadget<FieldT: FieldTConfig, T: Default + Clone> {
     // : public tinyram_standard_gadget<FieldT>
@@ -294,7 +294,7 @@ impl<FieldT: FieldTConfig> ALU_xor_gadget<FieldT> {
 
 #[derive(Clone, Default)]
 pub struct ALU_not_gadget<FieldT: FieldTConfig> {
-    /* we do bitwise not, because we need to compute flag */
+    //we do bitwise not, because we need to compute flag
     res_word: pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,
     pack_result: RcCell<tinyram_packing_gadget<FieldT>>,
     not_all_zeros: RcCell<tinyram_disjunction_gadget<FieldT>>,
@@ -843,7 +843,7 @@ impl<FieldT: FieldTConfig> ALU_smul_gadget<FieldT> {
             pb.clone(),
             2 * pb.borrow().t.ap.w + 1,
             format!("{} mul_result", annotation_prefix),
-        ); /* see witness map for explanation for 2w+1 */
+        ); //see witness map for explanation for 2w+1
         let smulh_bits = pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
             mul_result.t.bits.contents[pb.borrow().t.ap.w..2 * pb.borrow().t.ap.w].to_vec(),
         );
@@ -1148,7 +1148,7 @@ pub fn brute_force_arithmetic_gadget<
     ResFn: Fn(usize, bool, usize, usize) -> usize,
     FlagFn: Fn(usize, bool, usize, usize) -> bool,
 {
-    /* parameters for res_function and flag_function are both desval, flag, arg1val, arg2val */
+    //parameters for res_function and flag_function are both desval, flag, arg1val, arg2val
 
     print!("testing on all {} bit inputs\n", w);
 
@@ -1252,7 +1252,7 @@ pub fn brute_force_arithmetic_gadget<
     }
 }
 
-/* and */
+//and
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
@@ -1266,7 +1266,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<Fi
             );
         }
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1282,7 +1282,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_and_gadgets<Fi
             .borrow()
             .generate_r1cs_constraints();
 
-        /* result_flag = 1 - not_all_zeros = result is 0^w */
+        //result_flag = 1 - not_all_zeros = result is 0^w
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -1357,7 +1357,7 @@ pub fn test_ALU_and_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("and tests successful");
 }
 
-/* or */
+//or
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
@@ -1380,7 +1380,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
             );
         }
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1396,7 +1396,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_or_gadgets<Fie
             .borrow()
             .generate_r1cs_constraints();
 
-        /* result_flag = 1 - not_all_zeros = result is 0^w */
+        //result_flag = 1 - not_all_zeros = result is 0^w
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -1470,11 +1470,11 @@ pub fn test_ALU_or_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("or tests successful");
 }
 
-/* xor */
+//xor
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
-            /* a = b ^ c <=> a = b + c - 2*b*c, (2*b)*c = b+c - a */
+            //a = b ^ c <=> a = b + c - 2*b*c, (2*b)*c = b+c - a
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                     vec![(self.t.t.t.arg1val.t.bits[i].clone() * 2.into()).into()],
@@ -1489,7 +1489,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
             );
         }
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1505,7 +1505,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_xor_gadgets<Fi
             .borrow()
             .generate_r1cs_constraints();
 
-        /* result_flag = 1 - not_all_zeros = result is 0^w */
+        //result_flag = 1 - not_all_zeros = result is 0^w
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -1579,7 +1579,7 @@ pub fn test_ALU_xor_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("xor tests successful");
 }
 
-/* not */
+//not
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         for i in 0..self.pb.borrow().t.ap.w {
@@ -1596,7 +1596,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
             );
         }
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1612,7 +1612,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_not_gadgets<Fi
             .borrow()
             .generate_r1cs_constraints();
 
-        /* result_flag = 1 - not_all_zeros = result is 0^w */
+        //result_flag = 1 - not_all_zeros = result is 0^w
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -1683,10 +1683,10 @@ pub fn test_ALU_not_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("not tests successful");
 }
 
-/* add */
+//add
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_add_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* addition_result = 1 * (arg1val + arg2val) */
+        //addition_result = 1 * (arg1val + arg2val)
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -1699,7 +1699,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_add_gadgets<Fi
             format!("{} addition_result", self.annotation_prefix),
         );
 
-        /* unpack into bits */
+        //unpack into bits
         self.t
             .t
             .t
@@ -1708,7 +1708,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_add_gadgets<Fi
             .borrow()
             .generate_r1cs_constraints(true);
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1774,10 +1774,10 @@ pub fn test_ALU_add_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("add tests successful");
 }
 
-/* sub */
+//sub
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* intermediate_result = 2^w + (arg1val - arg2val) */
+        //intermediate_result = 2^w + (arg1val - arg2val)
         let mut twoi = FieldT::one();
 
         let (mut a, mut b, mut c) = (
@@ -1800,7 +1800,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<Fi
             format!("{} main_constraint", self.annotation_prefix),
         );
 
-        /* unpack into bits */
+        //unpack into bits
         self.t
             .t
             .t
@@ -1809,7 +1809,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_sub_gadgets<Fi
             .borrow()
             .generate_r1cs_constraints(true);
 
-        /* generate result */
+        //generate result
         self.t
             .t
             .t
@@ -1899,7 +1899,7 @@ pub fn test_ALU_sub_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("sub tests successful");
 }
 
-/* mov */
+//mov
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_mov_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
@@ -1965,7 +1965,7 @@ pub fn test_ALU_mov_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("mov tests successful");
 }
 
-/* cmov */
+//cmov
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmov_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         /*
@@ -2043,7 +2043,7 @@ pub fn test_ALU_cmov_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("cmov tests successful");
 }
 
-/* unsigned comparison */
+//unsigned comparison
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         self.t.t.t.t.comparator.generate_r1cs_constraints();
@@ -2062,7 +2062,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<Fi
             format!("{} cmpa_result_flag", self.annotation_prefix),
         );
 
-        /* copy over results */
+        //copy over results
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -2256,10 +2256,10 @@ pub fn test_ALU_cmpae_gadget<FieldT: FieldTConfig>(w: usize) {
     print_time("cmpae tests successful");
 }
 
-/* signed comparison */
+//signed comparison
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* negate sign bits */
+        //negate sign bits
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -2285,7 +2285,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
             format!("{} negated_arg2val_sign", self.annotation_prefix),
         );
 
-        /* pack */
+        //pack
         self.t
             .t
             .t
@@ -2301,10 +2301,10 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /* compare */
+        //compare
         self.t.t.t.t.comparator.borrow().generate_r1cs_constraints();
 
-        /* copy over results */
+        //copy over results
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -2325,7 +2325,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
     }
 
     fn generate_r1cs_witness(&self) {
-        /* negate sign bits */
+        //negate sign bits
         *self
             .pb
             .borrow_mut()
@@ -2343,7 +2343,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
                 .borrow()
                 .val(&self.t.t.t.arg2val.t.bits[self.pb.borrow().t.ap.w - 1]);
 
-        /* pack */
+        //pack
         self.t
             .t
             .t
@@ -2359,7 +2359,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmps_gadgets<F
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* produce result */
+        //produce result
         self.t.t.t.t.comparator.borrow().generate_r1cs_witness();
 
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.cmpg_result) =
@@ -2454,7 +2454,7 @@ pub fn test_ALU_cmpge_gadget<FieldT: FieldTConfig>(w: usize) {
 
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* do multiplication */
+        //do multiplication
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.arg1val.t.packed.clone().into()],
@@ -2465,7 +2465,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
         );
         self.t.t.t.t.mul_result.generate_r1cs_constraints(true);
 
-        /* pack result */
+        //pack result
         self.t
             .t
             .t
@@ -2481,7 +2481,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /* compute flag */
+        //compute flag
         self.t
             .t
             .t
@@ -2510,7 +2510,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
     }
 
     fn generate_r1cs_witness(&self) {
-        /* do multiplication */
+        //do multiplication
         *self
             .pb
             .borrow_mut()
@@ -2519,7 +2519,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
                 * self.pb.borrow().val(&self.t.t.t.arg2val.t.packed);
         self.t.t.t.t.mul_result.generate_r1cs_witness_from_packed();
 
-        /* pack result */
+        //pack result
         self.t
             .t
             .t
@@ -2535,7 +2535,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_umul_gadgets<F
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* compute flag */
+        //compute flag
         self.t.t.t.t.compute_flag.borrow().generate_r1cs_witness();
 
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.mull_flag) =
@@ -2630,7 +2630,7 @@ pub fn test_ALU_umulh_gadget<FieldT: FieldTConfig>(w: usize) {
 
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* do multiplication */
+        //do multiplication
         /*
           from two's complement: (packed - 2^w * bits[w-1])
           to two's complement: lower order bits of 2^{2w} + result_of_*
@@ -2660,7 +2660,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
 
         self.t.t.t.t.mul_result.generate_r1cs_constraints(true);
 
-        /* pack result */
+        //pack result
         self.t
             .t
             .t
@@ -2669,7 +2669,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /* compute flag */
+        //compute flag
         self.t
             .t
             .t
@@ -2736,7 +2736,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
             format!("{} R*X=0 (is_top_full)", self.annotation_prefix),
         );
 
-        /* smulh_flag = 1 - (is_top_full + is_top_empty) */
+        //smulh_flag = 1 - (is_top_full + is_top_empty)
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![variable::<FieldT, pb_variable>::from(ONE).into()],
@@ -2752,7 +2752,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
     }
 
     fn generate_r1cs_witness(&self) {
-        /* do multiplication */
+        //do multiplication
         /*
           from two's complement: (packed - 2^w * bits[w-1])
           to two's complement: lower order bits of (2^{2w} + result_of_mul)
@@ -2777,7 +2777,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
 
         self.t.t.t.t.mul_result.generate_r1cs_witness_from_packed();
 
-        /* pack result */
+        //pack result
         self.t
             .t
             .t
@@ -2786,7 +2786,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* compute flag */
+        //compute flag
         self.t
             .t
             .t
@@ -2816,7 +2816,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
                 .inverse();
         }
 
-        /* smulh_flag = 1 - (is_top_full + is_top_empty) */
+        //smulh_flag = 1 - (is_top_full + is_top_empty)
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.smulh_flag) = FieldT::one()
             - (self.pb.borrow().val(&self.t.t.t.t.is_top_full)
                 + self.pb.borrow().val(&self.t.t.t.t.is_top_empty));
@@ -2869,7 +2869,7 @@ pub fn test_ALU_smulh_gadget<FieldT: FieldTConfig>(w: usize) {
 
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* B_inv * B = B_nonzero */
+        //B_inv * B = B_nonzero
         let (mut a1, mut b1, mut c1) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -2884,7 +2884,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
             format!("{} B_inv*B=B_nonzero", self.annotation_prefix),
         );
 
-        /* (1-B_nonzero) * B = 0 */
+        //(1-B_nonzero) * B = 0
         let (mut a2, mut b2, mut c2) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -2900,7 +2900,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
             format!("{} (1-B_nonzero)*B=0", self.annotation_prefix),
         );
 
-        /* B * q + r = A_aux = A * B_nonzero */
+        //B * q + r = A_aux = A * B_nonzero
         let (mut a3, mut b3, mut c3) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -2930,7 +2930,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
             format!("{} A_aux=A*B_nonzero", self.annotation_prefix),
         );
 
-        /* q * (1-B_nonzero) = 0 */
+        //q * (1-B_nonzero) = 0
         let (mut a5, mut b5, mut c5) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -2946,7 +2946,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_divmod_gadgets
             format!("{} q*B_nonzero=0", self.annotation_prefix),
         );
 
-        /* A<B_gadget<FieldT>(B, r, less=B_nonzero, leq=variable::<FieldT,pb_variable>::from(ONE).into()) */
+        //A<B_gadget<FieldT>(B, r, less=B_nonzero, leq=variable::<FieldT,pb_variable>::from(ONE).into())
         self.t.t.t.t.r_less_B.borrow().generate_r1cs_constraints();
     }
 
@@ -3114,7 +3114,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
           do logw iterations of barrel shifts
         */
         for i in 0..self.t.t.t.t.logw {
-            /* assert that shifted out part is bits */
+            //assert that shifted out part is bits
             for j in 0..1usize << i {
                 generate_boolean_r1cs_constraint::<FieldT, tinyram_protoboard<FieldT>>(
                     &self.pb,
@@ -3276,7 +3276,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
     }
 
     fn generate_r1cs_witness(&self) {
-        /* select the input for barrel shifter */
+        //select the input for barrel shifter
         self.t
             .t
             .t

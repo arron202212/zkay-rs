@@ -4,7 +4,7 @@ use std::collections::HashSet;
 #[derive(PartialEq)]
 pub struct integer_permutation {
     //
-    pub contents: Vec<usize>, /* offset by self.min_element */
+    pub contents: Vec<usize>, //offset by self.min_element
 
     //
     pub min_element: usize,

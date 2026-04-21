@@ -152,8 +152,8 @@ pub type tinyram_input_tape = Vec<usize>;
 #[derive(Default, Clone)]
 pub struct tinyram_architecture_params {
     //
-    pub w: reg_width_t, /* width of a register */
-    pub k: reg_count_t, /* number of registers */
+    pub w: reg_width_t, //width of a register
+    pub k: reg_count_t, //number of registers
 }
 //     tinyram_architecture_params() {};
 impl tinyram_architecture_params {
@@ -497,11 +497,11 @@ impl ArchitectureParamsTypeConfig for tinyram_architecture_params {
     }
 
     fn cpu_state_size(&self) -> usize {
-        return self.k * self.w + 2; /* + flag + tape1_exhausted */
+        return self.k * self.w + 2; //+ flag + tape1_exhausted
     }
 
     fn initial_pc_addr(&self) -> usize {
-        /* the initial PC address is memory units for the RAM reduction */
+        //the initial PC address is memory units for the RAM reduction
         let initial_pc_addr = generate_tinyram_prelude(self).len();
         return initial_pc_addr;
     }
@@ -542,7 +542,7 @@ impl ArchitectureParamsTypeConfig for tinyram_architecture_params {
     }
 
     fn opcode_width(&self) -> usize {
-        return log2(tinyram_opcode::tinyram_opcode_ANSWER as usize); /* assumption: answer is the last */
+        return log2(tinyram_opcode::tinyram_opcode_ANSWER as usize); //assumption: answer is the last
     }
 
     fn reg_arg_width(&self) -> usize {

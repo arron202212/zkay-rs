@@ -1,21 +1,33 @@
-use crate::algebra::curves::alt_bn128::alt_bn128_fields::{
-    alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_Fr, alt_bn128_GT,
+use crate::algebra::curves::{
+    alt_bn128::{
+        alt_bn128_fields::{
+            alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fq12, alt_bn128_Fr, alt_bn128_GT,
+        },
+        alt_bn128_g1::alt_bn128_G1,
+        alt_bn128_g2::alt_bn128_G2,
+        alt_bn128_init::{
+            alt_bn128_ate_is_loop_count_neg, alt_bn128_ate_loop_count,
+            alt_bn128_final_exponent_is_z_neg, alt_bn128_final_exponent_z, alt_bn128_twist,
+            alt_bn128_twist_coeff_b,
+        },
+        curves::{Bn254, Config, G1Affine, G2Affine},
+    },
+    pairing::{Pairing, prepare_g1, prepare_g2},
 };
-use crate::algebra::curves::alt_bn128::alt_bn128_g1::alt_bn128_G1;
-use crate::algebra::curves::alt_bn128::alt_bn128_g2::alt_bn128_G2;
-use crate::algebra::curves::alt_bn128::alt_bn128_init::{
-    alt_bn128_ate_is_loop_count_neg, alt_bn128_ate_loop_count, alt_bn128_final_exponent_is_z_neg,
-    alt_bn128_final_exponent_z, alt_bn128_twist, alt_bn128_twist_coeff_b,
+use ffec::{
+    common::serialization::{
+        OUTPUT_NEWLINE, OUTPUT_SEPARATOR, consume_newline, consume_output_newline,
+        consume_output_separator, read_line_as_usize,
+    },
+    {
+        One, PpConfig,
+        common::profiling::{enter_block, leave_block},
+        field_utils::bigint::bigint,
+    },
 };
-use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block};
-use ffec::field_utils::bigint::bigint;
+//ate pairing
 
-/* ate pairing */
-use crate::algebra::curves::alt_bn128::curves::{Bn254, Config, G1Affine, G2Affine};
-use crate::algebra::curves::pairing::{Pairing, prepare_g1, prepare_g2};
 // pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;
-use ffec::One;
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct alt_bn128_ate_G1_precomp {
@@ -46,116 +58,43 @@ pub struct alt_bn128_ate_G2_precomp {
 //     type T=bigint<N>;
 // }
 
-/* choice of pairing */
+//choice of pairing
 
 pub type alt_bn128_G1_precomp = alt_bn128_ate_G1_precomp;
 pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
 
-// bool alt_bn128_ate_G1_precomp::operator==(other:&alt_bn128_ate_G1_precomp) const
-// {
-//     return (self.PX == other.PX &&
-//             self.PY == other.PY);
-// }
-
-// std::ostream& operator<<(std::ostream &out, prec_P:&alt_bn128_ate_G1_precomp)
-// {
-//     out << prec_P.PX << OUTPUT_SEPARATOR << prec_P.PY;
-
-//    out
-// }
 use std::fmt;
 impl fmt::Display for alt_bn128_ate_G1_precomp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", 1)
+        write!(f, "{}{OUTPUT_SEPARATOR}{}", self.PX, self.PY)
     }
 }
-// std::istream& operator>>(std::istream &in, alt_bn128_ate_G1_precomp &prec_P)
-// {
-//     in >> prec_P.PX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_P.PY;
-
-//     in
-// }
-
-// bool  alt_bn128_ate_ell_coeffs::operator==(other:&alt_bn128_ate_ell_coeffs) const
-// {
-//     return (self.ell_0 == other.ell_0 &&
-//             self.ell_VW == other.ell_VW &&
-//             self.ell_VV == other.ell_VV);
-// }
-
-// std::ostream& operator<<(std::ostream &out, c:&alt_bn128_ate_ell_coeffs)
-// {
-//     out << c.ell_0 << OUTPUT_SEPARATOR << c.ell_VW << OUTPUT_SEPARATOR << c.ell_VV;
-//    out
-// }
-
 impl fmt::Display for alt_bn128_ate_ell_coeffs {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", 1)
+        write!(
+            f,
+            "{}{OUTPUT_SEPARATOR}{}{OUTPUT_SEPARATOR}{}",
+            self.ell_0, self.ell_VW, self.ell_VV
+        )
     }
 }
-// std::istream& operator>>(std::istream &in, c:&alt_bn128_ate_ell_coeffs)
-// {
-//     in >> c.ell_0;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> c.ell_VW;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> c.ell_VV;
-
-//     in
-// }
-
-// bool alt_bn128_ate_G2_precomp::operator==(other:&alt_bn128_ate_G2_precomp) const
-// {
-//     return (self.QX == other.QX &&
-//             self.QY == other.QY &&
-//             self.coeffs == other.coeffs);
-// }
-
-// std::ostream& operator<<(std::ostream& out, prec_Q:&alt_bn128_ate_G2_precomp)
-// {
-//     out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
-//     out << prec_Q.coeffs.len() << "\n";
-//     for c in &prec_Q.coeffs
-//     {
-//         out << c << OUTPUT_NEWLINE;
-//     }
-//    out
-// }
 impl fmt::Display for alt_bn128_ate_G2_precomp {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", 1)
+        write!(
+            f,
+            "{}{OUTPUT_SEPARATOR}{}\n{}\n{}",
+            self.QX,
+            self.QY,
+            self.coeffs.len(),
+            self.coeffs
+                .iter()
+                .map(|c| format!("{c}{OUTPUT_NEWLINE}"))
+                .collect::<String>()
+        )
     }
 }
-// std::istream& operator>>(std::istream& in, alt_bn128_ate_G2_precomp &prec_Q)
-// {
-//     in >> prec_Q.QX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in >> prec_Q.QY;
-//     consume_newline(in);
 
-//     prec_Q.coeffs.clear();
-//     usize s;
-//     in >> s;
-
-//     consume_newline(in);
-
-//     prec_Q.coeffs.reserve(s);
-
-//     for i in 0..s
-//     {
-//        let mut c=alt_bn128_ate_ell_coeffs::default();
-//         in >> c;
-//         consume_OUTPUT_NEWLINE(in);
-//         prec_Q.coeffs.push(c);
-//     }
-
-//     in
-// }
-
-/* final exponentiations */
+//final exponentiations
 
 pub fn alt_bn128_final_exponentiation_first_chunk(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
     enter_block("Call to alt_bn128_final_exponentiation_first_chunk", false);
@@ -273,7 +212,7 @@ pub fn alt_bn128_final_exponentiation(elt: &alt_bn128_Fq12) -> alt_bn128_GT {
     result
 }
 
-/* ate pairing */
+//ate pairing
 
 pub fn doubling_step_for_flipped_miller_loop(
     two_inv: alt_bn128_Fq,
@@ -282,13 +221,13 @@ pub fn doubling_step_for_flipped_miller_loop(
 ) {
     let (X, Y, Z) = (current.X.clone(), current.Y.clone(), current.Z.clone());
 
-    let A = &(X * Y) * &two_inv; // A = X1 * Y1 / 2
+    let A = (X * Y) * two_inv; // A = X1 * Y1 / 2
     let B = Y.squared(); // B = Y1^2
     let C = Z.squared(); // C = Z1^2
     let D = C + C + C; // D = 3 * C
     let E = alt_bn128_twist_coeff_b() * D; // E = twist_b * D
     let F = E + E + E; // F = 3 * E
-    let G = &(B + F) * &two_inv; // G = (B+F)/2
+    let G = (B + F) * two_inv; // G = (B+F)/2
     let H = (Y + Z).squared() - (B + C); // H = (Y1+Z1)^2-(B+C)
     let I = E - B; // I = E-B
     let J = X.squared(); // J = X1^2
@@ -364,7 +303,7 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
     for i in (0..=loop_count.max_bits()).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -379,7 +318,12 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
     }
 
     let mut Q1 = Qcopy.mul_by_q();
-    assert!(Q1.Z == alt_bn128_Fq2::one());
+    assert!(
+        Q1.Z == alt_bn128_Fq2::one(),
+        "==Qcopy.Z,Q1.Z==={:?},{:?}",
+        Qcopy.Z,
+        Q1.Z
+    );
     let mut Q2 = Q1.mul_by_q();
     assert!(Q2.Z == alt_bn128_Fq2::one());
 
@@ -415,7 +359,7 @@ pub fn alt_bn128_ate_miller_loop(
     for i in (0..=loop_count.max_bits() as usize).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -426,20 +370,12 @@ pub fn alt_bn128_ate_miller_loop(
         c = prec_Q.coeffs[idx].clone();
         idx += 1;
         f = f.squared();
-        f = f.mul_by_024(
-            &c.ell_0,
-            &(&c.ell_VW * &prec_P.PY),
-            &(&c.ell_VV * &prec_P.PX),
-        );
+        f = f.mul_by_024(&c.ell_0, &(c.ell_VW * prec_P.PY), &(c.ell_VV * prec_P.PX));
 
         if bit {
             c = prec_Q.coeffs[idx].clone();
             idx += 1;
-            f = f.mul_by_024(
-                &c.ell_0,
-                &(&c.ell_VW * &prec_P.PY),
-                &(&c.ell_VV * &prec_P.PX),
-            );
+            f = f.mul_by_024(&c.ell_0, &(c.ell_VW * prec_P.PY), &(c.ell_VV * prec_P.PX));
         }
     }
 
@@ -449,19 +385,11 @@ pub fn alt_bn128_ate_miller_loop(
 
     c = prec_Q.coeffs[idx].clone();
     idx += 1;
-    f = f.mul_by_024(
-        &c.ell_0,
-        &(&c.ell_VW * &prec_P.PY),
-        &(&c.ell_VV * &prec_P.PX),
-    );
+    f = f.mul_by_024(&c.ell_0, &(c.ell_VW * prec_P.PY), &(c.ell_VV * prec_P.PX));
 
     c = prec_Q.coeffs[idx].clone();
     idx += 1;
-    f = f.mul_by_024(
-        &c.ell_0,
-        &(&c.ell_VW * &prec_P.PY),
-        &(&c.ell_VV * &prec_P.PX),
-    );
+    f = f.mul_by_024(&c.ell_0, &(c.ell_VW * prec_P.PY), &(c.ell_VV * prec_P.PX));
 
     leave_block("Call to alt_bn128_ate_miller_loop", false);
     f
@@ -484,7 +412,7 @@ pub fn alt_bn128_ate_double_miller_loop(
     for i in (0..=loop_count.max_bits()).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -500,13 +428,13 @@ pub fn alt_bn128_ate_double_miller_loop(
 
         f = f.mul_by_024(
             &c1.ell_0,
-            &(&c1.ell_VW * &prec_P1.PY),
-            &(&c1.ell_VV * &prec_P1.PX),
+            &(c1.ell_VW * prec_P1.PY),
+            &(c1.ell_VV * prec_P1.PX),
         );
         f = f.mul_by_024(
             &c2.ell_0,
-            &(&c2.ell_VW * &prec_P2.PY),
-            &(&c2.ell_VV * &prec_P2.PX),
+            &(c2.ell_VW * prec_P2.PY),
+            &(c2.ell_VV * prec_P2.PX),
         );
 
         if bit {
@@ -516,13 +444,13 @@ pub fn alt_bn128_ate_double_miller_loop(
 
             f = f.mul_by_024(
                 &c1.ell_0,
-                &(&c1.ell_VW * &prec_P1.PY),
-                &(&c1.ell_VV * &prec_P1.PX),
+                &(c1.ell_VW * prec_P1.PY),
+                &(c1.ell_VV * prec_P1.PX),
             );
             f = f.mul_by_024(
                 &c2.ell_0,
-                &(&c2.ell_VW * &prec_P2.PY),
-                &(&c2.ell_VV * &prec_P2.PX),
+                &(c2.ell_VW * prec_P2.PY),
+                &(c2.ell_VV * prec_P2.PX),
             );
         }
     }
@@ -536,13 +464,13 @@ pub fn alt_bn128_ate_double_miller_loop(
     idx += 1;
     f = f.mul_by_024(
         &c1.ell_0,
-        &(&c1.ell_VW * &prec_P1.PY),
-        &(&c1.ell_VV * &prec_P1.PX),
+        &(c1.ell_VW * prec_P1.PY),
+        &(c1.ell_VV * prec_P1.PX),
     );
     f = f.mul_by_024(
         &c2.ell_0,
-        &(&c2.ell_VW * &prec_P2.PY),
-        &(&c2.ell_VV * &prec_P2.PX),
+        &(c2.ell_VW * prec_P2.PY),
+        &(c2.ell_VV * prec_P2.PX),
     );
 
     c1 = prec_Q1.coeffs[idx].clone();
@@ -550,13 +478,13 @@ pub fn alt_bn128_ate_double_miller_loop(
     idx += 1;
     f = f.mul_by_024(
         &c1.ell_0,
-        &(&c1.ell_VW * &prec_P1.PY),
-        &(&c1.ell_VV * &prec_P1.PX),
+        &(c1.ell_VW * prec_P1.PY),
+        &(c1.ell_VV * prec_P1.PX),
     );
     f = f.mul_by_024(
         &c2.ell_0,
-        &(&c2.ell_VW * &prec_P2.PY),
-        &(&c2.ell_VV * &prec_P2.PX),
+        &(c2.ell_VW * prec_P2.PY),
+        &(c2.ell_VV * prec_P2.PX),
     );
 
     leave_block("Call to alt_bn128_ate_double_miller_loop", false);
@@ -581,7 +509,7 @@ pub fn alt_bn128_ate_reduced_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_
     result
 }
 
-/* choice of pairing */
+//choice of pairing
 
 pub fn alt_bn128_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_G1_precomp {
     alt_bn128_ate_precompute_G1(P)
@@ -613,4 +541,84 @@ pub fn alt_bn128_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_Fq12 {
 
 pub fn alt_bn128_reduced_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_GT {
     alt_bn128_ate_reduced_pairing(P, Q)
+}
+use std::io::{self, Read, Write};
+
+impl alt_bn128_ate_G1_precomp {
+    pub fn write<W: Write>(&self, mut out: W) -> io::Result<()> {
+        write!(out, "{}", self.PX)?;
+        out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+        write!(out, "{}", self.PY)?;
+        Ok(())
+    }
+
+    pub fn read<R: Read>(mut input: R) -> io::Result<Self> {
+        let PX = alt_bn128_Fq::read(&mut input)?;
+        consume_output_separator(&mut input)?;
+        let PY = alt_bn128_Fq::read(&mut input)?;
+        Ok(Self { PX, PY })
+    }
+}
+
+impl alt_bn128_ate_ell_coeffs {
+    pub fn write<W: Write>(&self, mut out: W) -> io::Result<()> {
+        write!(out, "{}", self.ell_0)?;
+        out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+        write!(out, "{}", self.ell_VW)?;
+        out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+        write!(out, "{}", self.ell_VV)?;
+        Ok(())
+    }
+
+    pub fn read<R: Read + std::io::BufRead>(mut input: R) -> io::Result<Self> {
+        let ell_0 = alt_bn128_Fq2::read(&mut input)?;
+        consume_output_separator(&mut input)?;
+        let ell_VW = alt_bn128_Fq2::read(&mut input)?;
+        consume_output_separator(&mut input)?;
+        let ell_VV = alt_bn128_Fq2::read(&mut input)?;
+        Ok(Self {
+            ell_0,
+            ell_VW,
+            ell_VV,
+        })
+    }
+}
+
+impl alt_bn128_ate_G2_precomp {
+    pub fn write<W: Write>(&self, mut out: W) -> io::Result<()> {
+        // out << prec_Q.QX << OUTPUT_SEPARATOR << prec_Q.QY << "\n";
+        write!(out, "{}", self.QX)?;
+        out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+        write!(out, "{}\n", self.QY)?;
+
+        // out << prec_Q.coeffs.size() << "\n";
+        writeln!(out, "{}", self.coeffs.len())?;
+
+        // 遍历输出系数
+        for c in &self.coeffs {
+            c.write(&mut out)?;
+            out.write_all(OUTPUT_NEWLINE.as_bytes())?;
+        }
+        Ok(())
+    }
+
+    pub fn read<R: Read + std::io::BufRead>(mut input: R) -> io::Result<Self> {
+        // 读取 QX 和 QY
+        let QX = alt_bn128_Fq2::read(&mut input)?;
+        consume_output_separator(&mut input)?;
+        let QY = alt_bn128_Fq2::read(&mut input)?;
+        consume_newline(&mut input)?;
+
+        // 读取向量大小并初始化
+        let s: usize = read_line_as_usize(&mut input)?;
+        let mut coeffs = Vec::with_capacity(s);
+
+        for _ in 0..s {
+            let c = alt_bn128_ate_ell_coeffs::read(&mut input)?;
+            consume_output_newline(&mut input)?;
+            coeffs.push(c);
+        }
+
+        Ok(Self { QX, QY, coeffs })
+    }
 }

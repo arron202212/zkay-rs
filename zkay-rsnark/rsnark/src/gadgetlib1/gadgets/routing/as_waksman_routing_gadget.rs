@@ -101,7 +101,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
 
             for row_idx in 0..num_packets {
                 if neighbors[column_idx][row_idx].0 == neighbors[column_idx][row_idx].1 {
-                    /* This is a straight edge, so just copy over the previously allocated subpackets */
+                    //This is a straight edge, so just copy over the previously allocated subpackets
                     routed_packets[column_idx + 1][neighbors[column_idx][row_idx].0] =
                         routed_packets[column_idx][row_idx].clone();
                 } else {
@@ -127,12 +127,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
                             cross_edge,
                         ),
                     );
-                    // row_idx += 1; /* skip the next idx, as it to refers to the same packets */
+                    // row_idx += 1; //skip the next idx, as it to refers to the same packets
                 }
             }
         }
 
-        /* create packing/unpacking gadgets */
+        //create packing/unpacking gadgets
         let mut pack_inputs = Vec::with_capacity(num_packets);
         let mut unpack_outputs = Vec::with_capacity(num_packets);
         for packet_idx in 0..num_packets {
@@ -158,7 +158,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
             ));
         }
         let mut asw_switch_bits: Vec<BTreeMap<_, _>> = vec![];
-        /* allocate switch bits */
+        //allocate switch bits
         if num_subpackets > 1 {
             asw_switch_bits.resize(
                 num_columns,
@@ -180,7 +180,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
                                     row_idx,
                                 ),
                             );
-                        // row_idx += 1; /* next row_idx corresponds to the same switch, so skip it */
+                        // row_idx += 1; //next row_idx corresponds to the same switch, so skip it
                     }
                 }
             }
@@ -206,19 +206,19 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
 }
 impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
-        /* packing/unpacking */
+        //packing/unpacking
         for packet_idx in 0..self.t.num_packets {
             self.t.pack_inputs[packet_idx].generate_r1cs_constraints(false);
             self.t.unpack_outputs[packet_idx].generate_r1cs_constraints(true);
         }
 
-        /* actual routing constraints */
+        //actual routing constraints
         for column_idx in 0..self.t.num_columns {
             for row_idx in 0..self.t.num_packets {
                 if self.t.neighbors[column_idx][row_idx].0
                     == self.t.neighbors[column_idx][row_idx].1
                 {
-                    /* if there is no switch at this position, then just continue with next row_idx */
+                    //if there is no switch at this position, then just continue with next row_idx
                     continue;
                 }
 
@@ -263,7 +263,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                         );
                     }
                 } else {
-                    /* require switching bit to be boolean */
+                    //require switching bit to be boolean
                     generate_boolean_r1cs_constraint::<FieldT, PB>(
                         &self.pb,
                         &(self.t.asw_switch_bits[column_idx][&row_idx].clone().into()),
@@ -275,7 +275,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                         ),
                     );
 
-                    /* route forward according to the switch bit */
+                    //route forward according to the switch bit
                     for subpacket_idx in 0..self.t.num_subpackets {
                         /*
                          (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
@@ -327,19 +327,19 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                     }
                 }
 
-                /* we processed both switch inputs at once, so skip the next iteration */
+                //we processed both switch inputs at once, so skip the next iteration
                 // row_idx += 1;
             }
         }
     }
 
     pub fn generate_r1cs_witness(&self, permutation: &integer_permutation) {
-        /* pack inputs */
+        //pack inputs
         for packet_idx in 0..self.t.num_packets {
             self.t.pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
         }
 
-        /* do the routing */
+        //do the routing
         let routing = get_as_waksman_routing(permutation);
 
         for column_idx in 0..self.t.num_columns {
@@ -347,7 +347,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                 if self.t.neighbors[column_idx][row_idx].0
                     == self.t.neighbors[column_idx][row_idx].1
                 {
-                    /* this is a straight edge, so just pass the values forward */
+                    //this is a straight edge, so just pass the values forward
                     let next = self.t.neighbors[column_idx][row_idx].0;
 
                     for subpacket_idx in 0..self.t.num_subpackets {
@@ -361,7 +361,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                     }
                 } else {
                     if self.t.num_subpackets > 1 {
-                        /* update the switch bit */
+                        //update the switch bit
                         *self
                             .pb
                             .borrow_mut()
@@ -369,7 +369,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                             FieldT::from(if routing[column_idx][row_idx] { 1 } else { 0 });
                     }
 
-                    /* route according to the switch bit */
+                    //route according to the switch bit
                     let mut switch_val = routing[column_idx][row_idx];
 
                     for &switch_input in &[row_idx, row_idx + 1] {
@@ -392,13 +392,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                         }
                     }
 
-                    /* we processed both switch inputs at once, so skip the next iteration */
+                    //we processed both switch inputs at once, so skip the next iteration
                     // row_idx += 1;
                 }
             }
         }
 
-        /* unpack outputs */
+        //unpack outputs
         for packet_idx in 0..self.t.num_packets {
             self.t.unpack_outputs[packet_idx].generate_r1cs_witness_from_packed();
         }

@@ -136,7 +136,7 @@ where
             }
 
             tree_elems[node_idx] = rand::random::<usize>() % 100;
-            tree_arity[node_idx] = 1 + (rand::random::<usize>() % max_arity); /* we will just skip below this threshold */
+            tree_arity[node_idx] = 1 + (rand::random::<usize>() % max_arity); //we will just skip below this threshold
             print!("tree_types[{}] = {}\n", node_idx, tree_types[node_idx]);
             print!("tree_elems[{}] = {}\n", node_idx, tree_elems[node_idx]);
             print!("tree_arity[{}] = {}\n", node_idx, tree_arity[node_idx]);
@@ -156,7 +156,7 @@ where
         (BTreeSet::new(), BTreeSet::new());
     if test_same_type_optimization {
         if !test_multi_type {
-            /* only tally 1 is going to be used */
+            //only tally 1 is going to be used
             tally_1_accepted_types.insert(1);
         } else {
             tally_1_accepted_types.insert(2);
@@ -198,7 +198,7 @@ where
         leave_block("Test serialization of keys", false);
     }
 
-    let mut base_msg = tally_1.get_base_case_message(); /* we choose the base to always be tally_1 */
+    let mut base_msg = tally_1.get_base_case_message(); //we choose the base to always be tally_1
     nodes_in_layer /= max_arity;
     for layer in (0..=depth).rev() {
         for i in 0..nodes_in_layer {

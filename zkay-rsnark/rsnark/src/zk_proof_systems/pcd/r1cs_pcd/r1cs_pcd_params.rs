@@ -80,7 +80,7 @@ impl<FieldT: FieldTConfig, M: MessageConfig<FieldT = FieldT>, LD: LocalDataConfi
             result.extend(msg_as_r1cs_va);
         }
 
-        /* pad with dummy messages of appropriate size */
+        //pad with dummy messages of appropriate size
         for i in arity..max_arity {
             result.resize(
                 result.len() + (1 + incoming_message_payload_lengths[i]),

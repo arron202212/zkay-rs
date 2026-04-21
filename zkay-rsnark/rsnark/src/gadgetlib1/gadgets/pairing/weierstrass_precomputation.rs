@@ -253,7 +253,7 @@ impl<ppT: ppTConfig> G1_precomputation<ppT> {
 pub type precompute_G1_gadgets<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, precompute_G1_gadget<ppT>>;
 impl<ppT: ppTConfig> precompute_G1_gadget<ppT> {
-    /* two possible pre-computations one for mnt4 and one for mnt6 */
+    //two possible pre-computations one for mnt4 and one for mnt6
     pub fn new(
         pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
         P: G1_variables<ppT>,
@@ -323,11 +323,11 @@ impl<ppT: ppTConfig> precompute_G1_gadget<ppT> {
 
 impl<ppT: ppTConfig> precompute_G1_gadgets<ppT> {
     pub fn generate_r1cs_constraints(&self) {
-        /* the same for neither ppT = mnt4 nor ppT = mnt6 */
+        //the same for neither ppT = mnt4 nor ppT = mnt6
     }
 
     pub fn generate_r1cs_witness(&self) {
-        self.t.precomp.t.PY_twist_squared.borrow().evaluate(); /* the same for both ppT = mnt4 and ppT = mnt6 */
+        self.t.precomp.t.PY_twist_squared.borrow().evaluate(); //the same for both ppT = mnt4 and ppT = mnt6
     }
 }
 
@@ -822,7 +822,7 @@ impl<ppT: ppTConfig> precompute_G2_gadget<ppT> {
         let NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -864,7 +864,7 @@ impl<ppT: ppTConfig> precompute_G2_gadget<ppT> {
         found_nonzero = false;
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -967,7 +967,7 @@ impl<ppT: ppTConfig> precompute_G2_gadgets<ppT> {
         let NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }

@@ -164,7 +164,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadget<FieldT, PB> {
 }
 impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
-        /* packing/unpacking */
+        //packing/unpacking
         for packet_idx in 0..self.t.num_packets {
             self.t.pack_inputs[packet_idx].generate_r1cs_constraints(false);
             if packet_idx < self.t.lines_to_unpack {
@@ -192,13 +192,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
             }
         }
 
-        /* actual routing constraints */
+        //actual routing constraints
         for column_idx in 0..self.t.num_columns {
             for packet_idx in 0..self.t.num_packets {
                 let (straight_edge, cross_edge) = self.t.neighbors[column_idx][packet_idx];
 
                 if self.t.num_subpackets == 1 {
-                    /* easy case: (cur-next)*(cur-cross) = 0 */
+                    //easy case: (cur-next)*(cur-cross) = 0
                     self.pb.borrow_mut().add_r1cs_constraint(
                         r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                             (self.t.routed_packets[column_idx][packet_idx][0].clone()
@@ -223,7 +223,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
                         ),
                     );
                 } else {
-                    /* routing bit must be boolean */
+                    //routing bit must be boolean
                     generate_boolean_r1cs_constraint::<FieldT, PB>(
                         &self.pb,
                         &(self.t.benes_switch_bits[column_idx][packet_idx]
@@ -237,7 +237,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
                         ),
                     );
 
-                    /* route forward according to routing bits */
+                    //route forward according to routing bits
                     for subpacket_idx in 0..self.t.num_subpackets {
                         /*
                           (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
@@ -286,12 +286,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
     }
 
     pub fn generate_r1cs_witness(&self, permutation: &integer_permutation) {
-        /* pack inputs */
+        //pack inputs
         for packet_idx in 0..self.t.num_packets {
             self.t.pack_inputs[packet_idx].generate_r1cs_witness_from_bits();
         }
 
-        /* do the routing */
+        //do the routing
         let routing = get_benes_routing(permutation);
 
         for column_idx in 0..self.t.num_columns {
@@ -327,7 +327,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
             }
         }
 
-        /* unpack outputs */
+        //unpack outputs
         for packet_idx in 0..self.t.lines_to_unpack {
             self.t.unpack_outputs[packet_idx].generate_r1cs_witness_from_packed();
         }

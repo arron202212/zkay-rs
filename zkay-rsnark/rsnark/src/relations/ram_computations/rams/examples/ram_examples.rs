@@ -70,7 +70,7 @@ pub fn gen_ram_example_simple<RamT: ram_params_type>(
             if satisfiable { 0 } else { 1 },
         )
         .as_dword(&ap),
-    ); /* answer 0/1 depending on satisfiability */
+    ); //answer 0/1 depending on satisfiability
     boot_pos += 1;
     while (boot_pos < program_size) {
         result.boot_trace.set_trace_entry(

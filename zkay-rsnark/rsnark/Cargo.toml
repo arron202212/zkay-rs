@@ -48,6 +48,7 @@ rand_core={workspace = true}
 rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
 clap = { workspace = true }
+tracing={workspace = true}
 # [[example]]
 # name="pp"
 # path="src/main.rs"

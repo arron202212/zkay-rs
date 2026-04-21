@@ -97,8 +97,7 @@ impl std::fmt::Display for alt_bn128_pp {
     }
 }
 impl PpConfig for alt_bn128_pp {
-    type TT = bigint<4>;
-    // type Fr=Self;
+    type GType = Self;
 }
 #[derive(Clone, Default)]
 pub struct Coeffs;

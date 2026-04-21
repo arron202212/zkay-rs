@@ -48,10 +48,10 @@ use crate::common::utils::is_little_endian;
 //             rval.0.0[i] = hash[i];
 //         }
 
-//         /* clear all bits higher than MSB of modulus */
+//         //clear all bits higher than MSB of modulus
 //         let mut  bitno = GMP_NUMB_BITS * FieldT::num_limbs - 1;
 
-//         /* mod is non-zero so the loop will always terminate */
+//         //mod is non-zero so the loop will always terminate
 //         while !FieldT::mods.test_bit(bitno)
 //         {
 //             let  part = bitno/GMP_NUMB_BITS;
@@ -70,7 +70,7 @@ use crate::common::utils::is_little_endian;
 //         }
 //     }
 
-//     /* if r.0.0 is still >= modulus -- repeat (rejection sampling) */
+//     //if r.0.0 is still >= modulus -- repeat (rejection sampling)
 //     // while (mpn_cmp(rval.0.0, FieldT::mod.0.0, FieldT::num_limbs) >= 0);
 
 //     return FieldT::from(rval);

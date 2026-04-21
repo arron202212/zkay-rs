@@ -13,7 +13,7 @@ use std::marker::PhantomData;
 use std::ops::{Add, AddAssign, BitXorAssign, Mul, MulAssign, Neg, SubAssign};
 
 //
-/* curve-specific public parameters */
+//curve-specific public parameters
 // #[derive(Debug, Default, Clone, PartialOrd, Ord, Eq, PartialEq)]
 // pub struct default_ec_pp;
 

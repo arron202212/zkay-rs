@@ -142,7 +142,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
         }
     }
     for i in cs.num_constraints()..domain.borrow().m() {
-        Vt[0] += u[i].clone(); /* dummy constraint: 1^2 = 1 */
+        Vt[0] += u[i].clone(); //dummy constraint: 1^2 = 1
     }
     let mut ti = FieldT::one();
     for i in 0..domain.borrow().m() + 1 {
@@ -205,7 +205,7 @@ pub fn uscs_to_ssp_witness_map<
 ) -> ssp_witness<FieldT> {
     enter_block("Call to uscs_to_ssp_witness_map", false);
 
-    /* sanity check */
+    //sanity check
 
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
@@ -237,7 +237,7 @@ pub fn uscs_to_ssp_witness_map<
     // #ifdef MULTICORE
     //#pragma omp parallel for
 
-    /* add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) */
+    //add coefficients of the polynomial 2*d*V(z) + d*d*Z(z)
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = FieldT::from(2i64) * d.clone() * aA[i].clone();
     }

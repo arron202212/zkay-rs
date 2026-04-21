@@ -391,7 +391,7 @@ pub fn r1cs_to_sap_witness_map<
 ) -> sap_witness<FieldT> {
     enter_block("Call to r1cs_to_sap_witness_map", false);
 
-    /* sanity check */
+    // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
     let domain: RcCell<EvaluationDomainType<FieldT>> = r1cs_to_sap_get_domain(cs);
@@ -438,7 +438,7 @@ pub fn r1cs_to_sap_witness_map<
     enter_block("Compute evaluation of polynomial A on set S", false);
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
 
-    /* account for all constraints, as in r1cs_to_sap_instance_map */
+    // account for all constraints, as in r1cs_to_sap_instance_map
     for i in 0..cs.num_constraints() {
         aA[2 * i] += cs.constraints[i].a.evaluate(&full_variable_assignment);
         aA[2 * i] += cs.constraints[i].b.evaluate(&full_variable_assignment);
@@ -467,10 +467,8 @@ pub fn r1cs_to_sap_witness_map<
 
     enter_block("Compute ZK-patch", false);
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
-    /* add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z */
+
+    // add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = (d1.clone() * aA[i].clone()) + (d1.clone() * aA[i].clone());
     }
@@ -488,16 +486,14 @@ pub fn r1cs_to_sap_witness_map<
 
     enter_block("Compute evaluation of polynomial H on set T", false);
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
+
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aA[i].clone();
     }
 
     enter_block("Compute evaluation of polynomial C on set S", false);
     let mut aC = vec![FieldT::zero(); domain.borrow().m()];
-    /* again, accounting for all constraints */
+    // again, accounting for all constraints
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
         aC[2 * i] += times_four(cs.constraints[i].c.evaluate(&full_variable_assignment));
@@ -530,9 +526,6 @@ pub fn r1cs_to_sap_witness_map<
         .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial C on set T", false);
 
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
@@ -550,9 +543,7 @@ pub fn r1cs_to_sap_witness_map<
     leave_block("Compute coefficients of polynomial H", false);
 
     enter_block("Compute sum of H and ZK-patch", false);
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
+
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }

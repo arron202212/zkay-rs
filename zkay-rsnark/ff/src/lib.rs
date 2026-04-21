@@ -37,7 +37,7 @@ pub trait PpConfig:
     + std::ops::Mul<Self, Output = Self>
 {
     // type TT: AsRef<[u64]>;
-
+    type GType;
     const num_limbs: usize = 4;
     const coeff_a: i64 = 1;
     const coeff_b: i64 = 1;
@@ -57,12 +57,8 @@ pub trait PpConfig:
     fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
         vec![]
     }
-    fn batch_to_special_all_non_zeros<T>(_: std::vec::Vec<T>) {}
-    fn to_special(&self) {}
-    // type T = bigint<1>;
-    // fn zero() -> Self {
-    //     alt_bn128_G2::default()
-    // }
+    fn batch_to_special_all_non_zeros(_: &mut std::vec::Vec<Self::GType>) {}
+    fn to_special(&mut self) {}
     fn mixed_add(&self, other: &Self) -> Self {
         Default::default()
     }

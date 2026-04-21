@@ -501,7 +501,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     for cp in compliance_predicates {
         if cp.relies_on_same_type_inputs {
             for types in &cp.accepted_input_types {
-                assert!(type_counts[types] == 1); /* each of accepted_input_types must be unique */
+                assert!(type_counts[types] == 1); //each of accepted_input_types must be unique
             }
         } else {
             assert!(cp.accepted_input_types.is_empty());
@@ -761,7 +761,7 @@ where
         }
     }
 
-    /* pad with dummy vks/membership proofs */
+    //pad with dummy vks/membership proofs
     for i in arity..max_arity {
         print!("proof {} will be a dummy\n", arity);
         translation_step_vks.push(pk.translation_step_r1cs_vks[0].clone());

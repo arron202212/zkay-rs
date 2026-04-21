@@ -51,13 +51,13 @@ pub struct r1cs_constraint<
  * a candidate solution to a R1CS constraint system (see below).
  */
 
-/* TODO: specify that it does *NOT* include the constant 1 */
+//TODO: specify that it does *NOT* include the constant 1
 
 pub type r1cs_primary_input<FieldT> = Vec<FieldT>;
 
 pub type r1cs_auxiliary_input<FieldT> = Vec<FieldT>;
 
-pub type r1cs_variable_assignment<FieldT> = Vec<FieldT>; /* note the changed name! (TODO: remove this comment after primary_input transition is complete) */
+pub type r1cs_variable_assignment<FieldT> = Vec<FieldT>; //note the changed name! (TODO: remove this comment after primary_input transition is complete)
 
 /**
  * A system of R1CS constraints looks like

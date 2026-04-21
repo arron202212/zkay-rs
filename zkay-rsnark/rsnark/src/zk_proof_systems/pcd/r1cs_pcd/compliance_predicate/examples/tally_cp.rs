@@ -473,7 +473,7 @@ impl<CPH: TallyCPHConfig> tally_cp_handlers<CPH> {
             );
         }
 
-        /* constrain arity indicator variables so that arity_indicators[arity] = 1 and arity_indicators[i] = 0 for any other i */
+        //constrain arity indicator variables so that arity_indicators[arity] = 1 and arity_indicators[i] = 0 for any other i
         for i in 0..self.max_arity {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<CPH::FieldT, pb_variable, pb_linear_combination>::new(
@@ -500,7 +500,7 @@ impl<CPH: TallyCPHConfig> tally_cp_handlers<CPH> {
             "arity_indicators".to_owned(),
         );
 
-        /* require that types of messages that are past arity (i.e. unbound wires) carry 0 */
+        //require that types of messages that are past arity (i.e. unbound wires) carry 0
         for i in 0..self.max_arity {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<CPH::FieldT, pb_variable, pb_linear_combination>::new(
@@ -521,7 +521,7 @@ impl<CPH: TallyCPHConfig> tally_cp_handlers<CPH> {
             );
         }
 
-        /* sum_out = local_data + \sum_i.types[i] * sum_in[i] */
+        //sum_out = local_data + \sum_i.types[i] * sum_in[i]
         self.t
             .compute_type_val_inner_product
             .borrow()
@@ -540,7 +540,7 @@ impl<CPH: TallyCPHConfig> tally_cp_handlers<CPH> {
             "update_sum".to_owned(),
         );
 
-        /* count_out = 1 + \sum_i count_in[i] */
+        //count_out = 1 + \sum_i count_in[i]
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<CPH::FieldT, pb_variable, pb_linear_combination>::new(
                 linear_combination::<CPH::FieldT, pb_variable, pb_linear_combination>::from(

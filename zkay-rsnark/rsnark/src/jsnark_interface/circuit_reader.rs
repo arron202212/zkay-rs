@@ -34,27 +34,6 @@ use std::{
     process,
 };
 
-// use  <memory.h>
-// use  <iostream>
-// use  <sstream>
-// use  <fstream>
-// use  <list>
-//
-// use  <set>
-// use  <map>
-// use  <ctime>
-
-// use  <termios.h>
-// use  <unistd.h>
-// use  <stdio.h>
-
-//
-// use  <proc/readproc.h>
-//
-
-//
-// using namespace gadgetlib2;
-// using namespace std;
 use std::collections::BTreeMap;
 
 type Wire = u32;
@@ -106,27 +85,6 @@ pub struct CircuitReader {
 
     currentLinearCombinationIdx: u32,
     currentVariableIdx: u32,
-    // pub fn  parseAndEval(arithFilepath:&str, inputsFilepath:&str);
-    // pub fn  constructCircuit(const char*);  // Second Pass:
-    // pub fn  mapValuesToProtoboard();
-
-    // pub fn  find(unsigned int, LinearCombinationPtr&, bool intentionToEdit = false);
-    // pub fn  clean();
-
-    // pub fn  addMulConstraint(char*, char*);
-    // pub fn  addXorConstraint(char*, char*);
-
-    // pub fn  addOrConstraint(char*, char*);
-    // pub fn  addAssertionConstraint(char*, char*);
-
-    // pub fn  addSplitConstraint(char*, char*, unsigned short);
-    // // pub fn  addPackConstraint(char*, char*, unsigned short);
-    // pub fn  addNonzeroCheckConstraint(char*, char*);
-
-    // pub fn  handleAddition(char*, char*);
-    // pub fn  handlePackOperation(char*, char*, unsigned short);
-    // pub fn  handleMulConst(char*, char*, char*);
-    // pub fn  handleMulNegConst(char*, char*, char*);
 }
 
 impl CircuitReader {
@@ -153,8 +111,6 @@ impl CircuitReader {
         };
         let mut input = std::fs::read_to_string(arithFilepath).expect(arithFilepath);
         let gates = super::circuit_parser::parse(&input);
-        // _self.parseAndEval(arithFilepath, inputsFilepath);
-        // _self.constructCircuit(arithFilepath);
         _self.parse_and_eval(&gates, inputsFilepath);
         _self.construct_circuit(&gates);
         _self.mapValuesToProtoboard();
@@ -183,16 +139,10 @@ impl CircuitReader {
     pub fn parse_and_eval(&mut self, gates: &[Gate], inputsFilepath: &str) {
         enter_block("Parsing and Evaluating the circuit", false);
 
-        // let mut inputfs = fs::read_to_string(inputsFilepath);
-
         let Gate::Total(ret) = gates[0] else {
             panic!("total failed")
         }; //scan_fmt!(&line.unwrap(), "total {d}", u32);
 
-        // if ret.is_err() {
-        //     println!("File Format Does not Match\n");
-        //     process::exit(-1);
-        // }
         self.numWires = ret;
         self.wireValues
             .resize(self.numWires as usize, FieldT::zero());
@@ -206,25 +156,9 @@ impl CircuitReader {
             println!("Unable to open input file {} \n", inputsFilepath);
             process::exit(-1);
         };
-        // if inputfs.is_err() {
-        //     println!("Unable to open input file {} \n", inputsFilepath);
-        //     process::exit(-1);
-        // }
-        // let Ok(inputfs) = inputfs else { println!("Unable to open input file {} \n", inputsFilepath);
-        //     process::exit(-1); };
-        // let mut inputfs = inputfs.lines();
-        // let mut inputStr;
+
         for WireEntry { id, value } in inputfs {
-            // if line.is_empty() {
-            //     continue;
-            // }
-            // let mut wireId;
-            // if let Ok((wireId, inputStr)) = scan_fmt!(line, "{} {}", u32, String) {
             self.wireValues[id as usize] = value.into(); // read_field_element_from_hex(&inputStr);
-            // } else {
-            //     println!("Error in Input\n");
-            //     process::exit(-1);
-            // }
         }
 
         if self.wireValues[0] != FieldT::one() {
@@ -236,33 +170,18 @@ impl CircuitReader {
             );
         }
 
-        // char types[200];
         let mut inputStr: &str;
         let mut outputStr: &str;
         let (mut numGateInputs, mut numGateOutputs) = (0, 0);
-
-        // let mut wireId;
 
         let oneElement = FieldT::one();
         let zeroElement = FieldT::zero();
         let negOneElement = FieldT::from(-1);
 
-        // i64 evalTime;
-        // i64 begin, end;
-        // evalTime = 0;
-
         // Parse the circuit: few lines were imported from Pinocchio's code.
         use std::time::{Duration, Instant};
         let start = Instant::now();
         for line in &gates[..] {
-            // let line = line.unwrap();
-            // if line.is_empty() {
-            //     continue;
-            // }
-
-            // if line.as_bytes()[0] == b'#' {
-            //     continue;
-            // }
             match line {
                 Gate::Input(wireId) => {
                     self.numInputs += 1;
@@ -282,39 +201,16 @@ impl CircuitReader {
                     inputs,
                     outputs,
                 } => {
-                    // let ret = scan_fmt!(
-                    //     line.trim(),
-                    //     "{} in {} <{}> out {} <{}>",
-                    //     String,
-                    //     u32,
-                    //     String,
-                    //     u32,
-                    //     String
-                    // );
-                    // let mut ret1 = sscanf!(
-                    //     line.trim(),
-                    //     "{String} in {u32} <{String}> out {u32} <{String}>"
-                    // );
-                    // // println!("=ret==={ret:?}=={ret1:?}");
-                    // let re = Regex::new(r"(\S+) in (\d+) <([^>]+)> out (\d+) <([^>]+)>").unwrap();
-
-                    // let Some(caps) = re.captures(&line) else {
-                    //     panic!("Error: unrecognized line: {line}\n");
-                    // };
                     let (types, numGateInputs, inputStr, numGateOutputs, outputStr) =
                         (*typ, inputs.len(), inputs, outputs.len(), outputs);
 
-                    //   if let Some((types, numGateInputs, inputStr, numGateOutputs, outputStr)) = ret1 {
-                    // let mut iss_i = inputStr.lines();
                     let mut inValues = vec![];
                     let mut outWires = vec![];
 
                     for inWireId in inputStr {
-                        // let inWireId = s.parse::<u32>().unwrap() as usize;
                         self.wireUseCounters[*inWireId as usize] += 1;
                         inValues.push(self.wireValues[*inWireId as usize]);
                     }
-                    // readIds(&outputStr, &mut outWires);
                     outWires = outputStr.clone();
                     let mut opcode = OpCode::Zero;
                     let mut constant = FieldT::zero();
@@ -417,24 +313,16 @@ impl CircuitReader {
                         }
                         _ => {}
                     }
-                    //end =  get_nsec_time();
-                    //evalTime += (end - begin);
                 }
                 _ => {}
             }
         }
         println!("===eval==start=={:?}==", start.elapsed());
-        // println!("\t Evaluation Done in %lf seconds \n", (double) (evalTime) * 1e-9);
         leave_block("Parsing and Evaluating the circuit", false);
     }
 
     pub fn construct_circuit(&mut self, gates: &[Gate]) {
         println!("Translating Constraints ... ");
-
-        //
-        // struct proc_t usage1, usage2;
-        // look_up_our_self(&usage1);
-        //
 
         let (mut currentVariableIdx, mut currentLinearCombinationIdx) = (0, 0);
         for i in 0..self.numInputs as usize {

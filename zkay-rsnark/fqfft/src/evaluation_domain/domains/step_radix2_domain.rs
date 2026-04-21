@@ -10,7 +10,7 @@ use ffec::FieldTConfig;
 use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::utils::log2;
 
-#[derive(Default, Clone,Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct step_radix2_domain<FieldT: FieldTConfig> {
     //: public evaluation_domain<FieldT>
     big_m: usize,
@@ -80,9 +80,9 @@ impl<FieldT: FieldTConfig> step_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for step_radix2_domains<FieldT> {
-  fn m(&self) -> usize {
+    fn m(&self) -> usize {
         self.m
-    } 
+    }
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("step_radix2: expected a.len() == self.m");

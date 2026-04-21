@@ -576,7 +576,7 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
             prefix_format!(annotation_prefix, " compute_v1"),
         ));
 
-        /* we inline result.t.c0 in v0 as follows: v0 = (result.t.c0.t.c0 - Fp6T::non_residue * v1->c2, result.t.c0.t.c1 - v1->c0, result.t.c0.t.c2 - v1->c1) */
+        //we inline result.t.c0 in v0 as follows: v0 = (result.t.c0.t.c0 - Fp6T::non_residue * v1->c2, result.t.c0.t.c1 - v1->c0, result.t.c0.t.c2 - v1->c1)
         let v0 = RcCell::new(Fp3_variable::<Fp6T::Fp3T, FieldT, PB>::new(
             pb.clone(),
             prefix_format!(annotation_prefix, " v0"),

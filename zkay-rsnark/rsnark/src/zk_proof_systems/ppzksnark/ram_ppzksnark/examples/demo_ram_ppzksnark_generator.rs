@@ -96,7 +96,7 @@ fn main<default_ram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig + RamPptCon
 
     start_profiling();
 
-    /* load everything */
+    //load everything
     let mut ap = ram_ppzksnark_architecture_params::<default_ram_ppzksnark_pp>::default();
 
     // use std::io::{self, BufRead};

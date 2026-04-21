@@ -17,12 +17,19 @@ pub const edwards_q_bitcount: usize = 183;
 pub const edwards_r_limbs: usize = (edwards_r_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 pub const edwards_q_limbs: usize = (edwards_q_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
 const edwards_q_limbs2: usize = edwards_q_limbs * 2;
+const edwards_q_limbs3: usize = edwards_q_limbs * 3;
 const edwards_q_limbs6: usize = edwards_q_limbs * 6;
 const edwards_q_limbs12: usize = edwards_q_limbs * 12;
 pub type edwards_Fr = Fp_model<edwards_r_limbs, Backend>;
 pub type edwards_Fq = Fp_model<edwards_q_limbs, Backend>;
-pub type edwards_Fq3 = Fp3_model<edwards_q_limbs, Backend>;
-pub type edwards_Fq6 = Fp6_2over3_model<edwards_q_limbs, edwards_q_limbs2, Backend>;
+pub type edwards_Fq3 = Fp3_model<edwards_q_limbs, edwards_q_limbs3, Backend>;
+pub type edwards_Fq6 = Fp6_2over3_model<
+    edwards_q_limbs,
+    edwards_q_limbs2,
+    edwards_q_limbs3,
+    edwards_q_limbs6,
+    Backend,
+>;
 pub type edwards_GT = edwards_Fq6;
 
 #[derive(Default, Clone, Debug, Copy, PartialEq, Eq)]
@@ -110,21 +117,27 @@ impl Zero for Backend {
 
 impl PpConfig for Backend {
     const num_limbs: usize = edwards_q_limbs;
-    type TT = bigint<edwards_q_limbs>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl Fp_modelConfig<edwards_q_limbs> for Backend {}
 impl Fp2_modelConfig<edwards_q_limbs, edwards_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp3_modelConfig<edwards_q_limbs> for Backend {
+impl Fp3_modelConfig<edwards_q_limbs, edwards_q_limbs3> for Backend {
     type Fp_modelConfig = Self;
 }
 impl Fp6_modelConfig<edwards_q_limbs, edwards_q_limbs2, edwards_q_limbs6> for Backend {
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
 }
-impl ffec::fp6_2over3::Fp6_modelConfig<edwards_q_limbs, edwards_q_limbs2> for Backend {
+impl
+    ffec::fp6_2over3::Fp6_modelConfig<
+        edwards_q_limbs,
+        edwards_q_limbs2,
+        edwards_q_limbs3,
+        edwards_q_limbs6,
+    > for Backend
+{
     type Fp_modelConfig = Self;
     type Fp2_modelConfig = Self;
     type Fp3_modelConfig = Self;
@@ -143,21 +156,21 @@ pub fn init_edwards_fields() {}
 // pub struct FrConfig;
 // impl MontgomeryConfig<3> for FrConfig {
 
-//     const MODULUS: BigInt<3> = BigInt::new([/* limbs */]);
+//     const MODULUS: BigInt<3> = BigInt::new([//limbs]);
 
 //     const INVERSE: u64 = 0xdde553277fffffff;
 
-//     const RSQUARED: BigInt<3> = BigInt::new([/* 对应 Rsquared */]);
+//     const RSQUARED: BigInt<3> = BigInt::new([//对应 Rsquared]);
 // }
 
 // pub struct FqConfig;
 // impl MontgomeryConfig<3> for FqConfig {
 
-//     const MODULUS: BigInt<3> = BigInt::new([/* limbs */]);
+//     const MODULUS: BigInt<3> = BigInt::new([//limbs]);
 //     const INVERSE: u64 = 0x76eb690b7fffffff;
 
 //     const TWO_ADICITY: u32 = 31;
-//     const TRACE_MINUS_ONE_DIV_TWO: BigInt<3> = BigInt::new([/* t_minus_1_over_2 */]);
+//     const TRACE_MINUS_ONE_DIV_TWO: BigInt<3> = BigInt::new([//t_minus_1_over_2]);
 // }
 
 // pub type Fq3 = Fp3<Fq3Config>;

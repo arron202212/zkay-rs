@@ -12,7 +12,7 @@ use ffec::algebra::field_utils::field_utils::{coset_shift, get_root_of_unity_for
 use ffec::common::utils::log2;
 use std::ops::{BitXor, Mul};
 
-#[derive(Default, Clone,Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct extended_radix2_domain<FieldT: FieldTConfig> {
     // : public evaluation_domain<FieldT>
     small_m: usize,
@@ -80,9 +80,9 @@ impl<FieldT: FieldTConfig> extended_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for extended_radix2_domains<FieldT> {
-  fn m(&self) -> usize {
+    fn m(&self) -> usize {
         self.m
-    } 
+    }
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("extended_radix2: expected a.len() == self.m");

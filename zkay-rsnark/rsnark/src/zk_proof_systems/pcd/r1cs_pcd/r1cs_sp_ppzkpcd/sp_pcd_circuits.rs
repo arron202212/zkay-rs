@@ -161,7 +161,7 @@ pub struct sp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
 
 impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     pub fn new(compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>) -> Self {
-        /* calculate some useful sizes */
+        //calculate some useful sizes
         let pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
         assert!(compliance_predicate.is_well_formed());
         assert!(compliance_predicate.has_equal_input_and_output_lengths());
@@ -193,7 +193,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
         let block_size = msg_size_in_bits + sp_translation_step_vk_size_in_bits;
         CRH_with_bit_out_gadget::<ppT::FieldT, ppT::PB>::sample_randomness(block_size);
 
-        /* allocate input of the compliance PCD circuit */
+        //allocate input of the compliance PCD circuit
         let mut sp_compliance_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         sp_compliance_step_pcd_circuit_input.allocate(
@@ -202,7 +202,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             "sp_compliance_step_pcd_circuit_input",
         );
 
-        /* allocate inputs to the compliance predicate */
+        //allocate inputs to the compliance predicate
         let mut outgoing_message_type = variable::<ppT::FieldT, pb_variable>::default();
         outgoing_message_type.allocate(&pb, "outgoing_message_type".to_owned());
         let mut outgoing_message_payload = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
@@ -249,7 +249,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
         local_data.allocate(&pb, compliance_predicate.local_data_length, "local_data");
         cp_witness.allocate(&pb, compliance_predicate.witness_length, "cp_witness");
 
-        /* convert compliance predicate from a constraint system into a gadget */
+        //convert compliance predicate from a constraint system into a gadget
         let mut incoming_messages_concat = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         for i in 0..compliance_predicate_arity {
             incoming_messages_concat
@@ -271,7 +271,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
                 "compliance_predicate_as_gadget".to_owned(),
             ));
 
-        /* unpack messages to bits */
+        //unpack messages to bits
         let mut outgoing_message_bits = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         outgoing_message_bits.allocate(&pb, msg_size_in_bits, "outgoing_message_bits");
         let unpack_outgoing_message =
@@ -301,7 +301,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate digests */
+        //allocate digests
         let mut sp_translation_step_vk_and_incoming_message_payload_digests =
             vec![pb_variable_array::<ppT::FieldT, ppT::PB>::default(); compliance_predicate_arity];
         for i in 0..compliance_predicate_arity {
@@ -316,7 +316,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             );
         }
 
-        /* allocate blocks */
+        //allocate blocks
         let mut sp_translation_step_vk_bits = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         sp_translation_step_vk_bits.allocate(
             &pb,
@@ -344,7 +344,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate hash checkers */
+        //allocate hash checkers
         let hash_outgoing_message =
             RcCell::new(CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::new(
                 pb.clone(),
@@ -366,11 +366,11 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate useful zero variable */
+        //allocate useful zero variable
         let mut zero = variable::<ppT::FieldT, pb_variable>::default();
         zero.allocate(&pb, "zero".to_owned());
 
-        /* prepare arguments for the verifier */
+        //prepare arguments for the verifier
         let sp_translation_step_vk =
             RcCell::new(r1cs_ppzksnark_verification_key_variable::<ppT>::new(
                 pb.clone(),
@@ -587,7 +587,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
                 "verification_result".to_owned(),
             );
 
-            /* type * (1-verification_result) = 0 */
+            //type * (1-verification_result) = 0
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<ppT::FieldT, pb_variable, pb_linear_combination>::new(
                     self.incoming_message_types[0].clone().into(),
@@ -600,7 +600,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
                 "not_base_case_implies_valid_proofs".to_owned(),
             );
 
-            /* all types equal */
+            //all types equal
             for i in 1..self.compliance_predicate.max_arity {
                 self.pb.borrow_mut().add_r1cs_constraint(
                     r1cs_constraint::<ppT::FieldT, pb_variable, pb_linear_combination>::new(
@@ -741,7 +741,7 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
     pub fn new(sp_compliance_step_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>) -> Self
 // where <<P as pairing_selector<ppT>>::other_curve_type as ff_curves::PublicParams>::Fr: Mul<<ppT as ff_curves::PublicParams>::Fr,Output=<<P as pairing_selector<ppT>>::other_curve_type as ff_curves::PublicParams>::Fr>,
     {
-        /* allocate input of the translation PCD circuit */
+        //allocate input of the translation PCD circuit
         let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
         let mut sp_translation_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
@@ -751,7 +751,7 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
             "sp_translation_step_pcd_circuit_input",
         );
 
-        /* unpack translation step PCD circuit input */
+        //unpack translation step PCD circuit input
         let mut unpacked_sp_translation_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
 
@@ -771,7 +771,7 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
                 "unpack_sp_translation_step_pcd_circuit_input".to_owned(),
             ));
 
-        /* prepare arguments for the verifier */
+        //prepare arguments for the verifier
         let hardcoded_sp_compliance_step_vk = RcCell::new(
             r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(
                 pb.clone(),
@@ -784,7 +784,7 @@ impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
             "proof".to_owned(),
         ));
 
-        /* verify previous proof */
+        //verify previous proof
         let online_verifier = RcCell::new(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(
             pb.clone(),
             hardcoded_sp_compliance_step_vk.borrow().clone(),

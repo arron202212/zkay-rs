@@ -9,14 +9,12 @@
 // pub fn  _polynomial_xgcd(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&Vec<FieldT>, u:&Vec<FieldT>, v:&Vec<FieldT>);
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations;
-use ffec::FieldTConfig;
 use crate::polynomial_arithmetic::basic_operations::{
     _is_zero, _polynomial_division, _polynomial_multiplication, _polynomial_subtraction,
 };
+use ffec::FieldTConfig;
 
-pub fn _polynomial_xgcd<
-    FieldT: FieldTConfig,
->(
+pub fn _polynomial_xgcd<FieldT: FieldTConfig>(
     a: &Vec<FieldT>,
     b: &Vec<FieldT>,
     g: &mut Vec<FieldT>,

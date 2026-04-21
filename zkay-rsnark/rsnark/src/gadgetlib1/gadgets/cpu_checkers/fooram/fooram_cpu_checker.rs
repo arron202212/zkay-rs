@@ -150,7 +150,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
         next_has_accepted: variable<FieldT, pb_variable>,
         annotation_prefix: String,
     ) -> gadget<FieldT, fooram_protoboard<FieldT>, fooram_gadget<FieldT, Self>> {
-        /* increment PC */
+        //increment PC
         let mut packed_next_pc_addr = variable::<FieldT, pb_variable>::default();
         packed_next_pc_addr.allocate(&pb, format!("{annotation_prefix} packed_next_pc_addr"));
         let pack_next_pc_addr =
@@ -170,7 +170,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
             one_as_addr[i].assign(&pb, &(FieldT::from(0).into()));
         }
 
-        /* packed_next_pc_addr = prev_pc_addr + one_as_addr */
+        //packed_next_pc_addr = prev_pc_addr + one_as_addr
         let increment_pc = RcCell::new(bar_gadget::<FieldT, fooram_protoboard<FieldT>>::new(
             pb.clone(),
             prev_pc_addr.clone().into(),
@@ -181,7 +181,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
             format!("{annotation_prefix} increment_pc"),
         ));
 
-        /* packed_store_addr = prev_pc_addr + prev_pc_val */
+        //packed_store_addr = prev_pc_addr + prev_pc_val
         let mut packed_store_addr = variable::<FieldT, pb_variable>::default();
         packed_store_addr.allocate(&pb, format!("{annotation_prefix} packed_store_addr"));
         let mut compute_packed_store_addr =
@@ -195,7 +195,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
                 format!("{annotation_prefix} compute_packed_store_addr"),
             ));
 
-        /* packed_load_addr = 2 * x + next_pc_addr */
+        //packed_load_addr = 2 * x + next_pc_addr
         let mut packed_load_addr = variable::<FieldT, pb_variable>::default();
         packed_load_addr.allocate(&pb, format!("{annotation_prefix} packed_load_addr"));
         let compute_packed_load_addr =
@@ -222,7 +222,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
             " pack_ls_addr".to_owned(),
         ));
 
-        /* packed_store_val = prev_state_bits + prev_pc_addr */
+        //packed_store_val = prev_state_bits + prev_pc_addr
         let mut packed_store_val = variable::<FieldT, pb_variable>::default();
         packed_store_val.allocate(&pb, format!("{annotation_prefix} packed_store_val"));
         let compute_packed_store_val =
@@ -283,7 +283,7 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
                 " pack_next_state".to_owned(),
             ));
 
-        /* next_has_accepted = 1 */
+        //next_has_accepted = 1
         fooram_gadget::<FieldT, Self>::new(
             pb,
             annotation_prefix,
@@ -328,7 +328,7 @@ impl<FieldT: FieldTConfig>
     gadget<FieldT, fooram_protoboard<FieldT>, fooram_gadget<FieldT, fooram_cpu_checker<FieldT>>>
 {
     pub fn generate_r1cs_constraints(&self) {
-        /* packed_next_pc_addr = prev_pc_addr + one_as_addr */
+        //packed_next_pc_addr = prev_pc_addr + one_as_addr
         self.t
             .t
             .pack_next_pc_addr
@@ -336,14 +336,14 @@ impl<FieldT: FieldTConfig>
             .generate_r1cs_constraints(false);
         self.t.t.increment_pc.borrow().generate_r1cs_constraints();
 
-        /* packed_store_addr = prev_pc_addr + prev_pc_val */
+        //packed_store_addr = prev_pc_addr + prev_pc_val
         self.t
             .t
             .compute_packed_store_addr
             .borrow()
             .generate_r1cs_constraints();
 
-        /* packed_load_addr = 2 * x + next_pc_addr */
+        //packed_load_addr = 2 * x + next_pc_addr
         self.t
             .t
             .compute_packed_load_addr
@@ -373,7 +373,7 @@ impl<FieldT: FieldTConfig>
             format!("{} compute_ls_addr_packed", self.annotation_prefix),
         );
 
-        /* packed_store_val = prev_state_bits + prev_pc_addr */
+        //packed_store_val = prev_state_bits + prev_pc_addr
         self.t
             .t
             .compute_packed_store_val
@@ -437,7 +437,7 @@ impl<FieldT: FieldTConfig>
             format!("{} compute_packed_next_state", self.annotation_prefix),
         );
 
-        /* next_has_accepted = 1 */
+        //next_has_accepted = 1
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 FieldT::from(1).into(),
@@ -451,7 +451,7 @@ impl<FieldT: FieldTConfig>
     pub fn generate_r1cs_witness_address(&self) {
         self.t.t.one_as_addr.evaluate(&self.pb);
 
-        /* packed_next_pc_addr = prev_pc_addr + one_as_addr */
+        //packed_next_pc_addr = prev_pc_addr + one_as_addr
         self.t.t.increment_pc.borrow().generate_r1cs_witness();
         self.t
             .t
@@ -459,14 +459,14 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_witness_from_packed();
 
-        /* packed_store_addr = prev_pc_addr + prev_pc_val */
+        //packed_store_addr = prev_pc_addr + prev_pc_val
         self.t
             .t
             .compute_packed_store_addr
             .borrow()
             .generate_r1cs_witness();
 
-        /* packed_load_addr = 2 * x + next_pc_addr */
+        //packed_load_addr = 2 * x + next_pc_addr
         self.t
             .t
             .compute_packed_load_addr
@@ -492,9 +492,9 @@ impl<FieldT: FieldTConfig>
 
     pub fn generate_r1cs_witness_other(&self, aux: &[usize]) {
         //_fooram_input_tape
-        /* fooram memory contents do not depend on program/input. */
+        //fooram memory contents do not depend on program/input.
         // //ffec::UNUSED(aux_it, aux_end);
-        /* packed_store_val = prev_state_bits + prev_pc_addr */
+        //packed_store_val = prev_state_bits + prev_pc_addr
         self.t
             .t
             .compute_packed_store_val
@@ -544,7 +544,7 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_witness_from_packed();
 
-        /* next_has_accepted = 1 */
+        //next_has_accepted = 1
         *self.pb.borrow_mut().val_ref(&self.t.t.next_has_accepted) = FieldT::one();
     }
 

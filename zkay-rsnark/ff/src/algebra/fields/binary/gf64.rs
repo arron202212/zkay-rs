@@ -164,18 +164,18 @@
 //     let mul128= _mm_clmulepi64_si128(_mm_loadl_epi64((const __m128i*)&(this->value_)),
 //                                                 _mm_loadl_epi64((const __m128i*)&(other.value_)), 0);
 
-//     /* reduce the 64 higher order bits of mul128. Output is 96 bits since modulus < 2^64 */
-//     mul128:__m128i mul96 = _mm_clmulepi64_si128(modulus,, 0x10); /* use high half of mul128 */
+//     //reduce the 64 higher order bits of mul128. Output is 96 bits since modulus < 2^64
+//     mul128:__m128i mul96 = _mm_clmulepi64_si128(modulus,, 0x10); //use high half of mul128
 //     __m128i rem = _mm_xor_si128(mul128, mul96);
 
-//     /* reduce the 32 higher order bits of mul96 */
-//     mul96:__m128i mul64 = _mm_clmulepi64_si128(modulus,, 0x10); /* use high half of mul96 */
+//     //reduce the 32 higher order bits of mul96
+//     mul96:__m128i mul64 = _mm_clmulepi64_si128(modulus,, 0x10); //use high half of mul96
 //     rem = _mm_xor_si128(rem, mul64);
 //     this->value_ = (uint64_t)_mm_movepi64_pi64(rem);
 
 //     return (*this);
 // #else
-//     /* Slow, but straight-forward */
+//     //Slow, but straight-forward
 //     uint64_t result = 0;
 //     uint64_t shifted = this->value_;
 
@@ -238,7 +238,7 @@
 
 // gf64 gf64::operator-() const
 // {
-//     /* additive inverse matches the element itself */
+//     //additive inverse matches the element itself
 //     return gf64(*this);
 // }
 

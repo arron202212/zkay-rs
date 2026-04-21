@@ -27,51 +27,50 @@
 //  EUROCRYPT 2016,
 //  <https://eprint.iacr.org/2016/260>
 
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
-use crate::knowledge_commitment::kc_multiexp::{kc_batch_exp, kc_multi_exp_with_mixed_addition};
-use crate::knowledge_commitment::knowledge_commitment::{
-    knowledge_commitment, knowledge_commitment_vector,
+use crate::{
+    common::data_structures::accumulation_vector::accumulation_vector,
+    gadgetlib1::{
+        gadgets::pairing::pairing_params::ppTConfig,
+        pb_variable::{pb_linear_combination, pb_variable},
+    },
+    knowledge_commitment::{
+        kc_multiexp::{kc_batch_exp, kc_multi_exp_with_mixed_addition},
+        knowledge_commitment::{knowledge_commitment, knowledge_commitment_vector},
+    },
+    reductions::r1cs_to_qap::r1cs_to_qap::{
+        r1cs_to_qap_instance_map_with_evaluation, r1cs_to_qap_witness_map,
+    },
+    relations::arithmetic_programs::qap::qap::qap_instance_evaluation,
+    zk_proof_systems::ppzksnark::{
+        KeyPairTConfig, ProofTConfig, ProvingKeyTConfig, VerificationKeyTConfig,
+        r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::{
+            r1cs_gg_ppzksnark_auxiliary_input, r1cs_gg_ppzksnark_constraint_system,
+            r1cs_gg_ppzksnark_primary_input,
+        },
+    },
 };
-use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_instance_map_with_evaluation;
-use crate::reductions::r1cs_to_qap::r1cs_to_qap::r1cs_to_qap_witness_map;
-use crate::relations::arithmetic_programs::qap::qap::qap_instance_evaluation;
-use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_params::{
-    r1cs_gg_ppzksnark_auxiliary_input, r1cs_gg_ppzksnark_constraint_system,
-    r1cs_gg_ppzksnark_primary_input,
+
+use ffec::{
+    FieldTConfig, One, PpConfig, Zero,
+    common::{
+        profiling::{enter_block, leave_block, print_indent},
+        serialization::OUTPUT_NEWLINE,
+    },
+    scalar_multiplication::multiexp::{
+        KCConfig, batch_exp, batch_exp_with_coeff, get_exp_window_size, get_window_table,
+        inhibit_profiling_info, multi_exp, multi_exp_method, multi_exp_with_mixed_addition,
+    },
 };
-use crate::zk_proof_systems::ppzksnark::{
-    KeyPairTConfig, ProofTConfig, ProvingKeyTConfig, VerificationKeyTConfig,
-};
-use ffec::scalar_multiplication::multiexp::KCConfig;
-use ffec::{FieldTConfig, One, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 
-use ff_curves::{Fr, Fr_vector, G1, G2, GT};
-
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
-use ffec::scalar_multiplication::multiexp::{
-    batch_exp, batch_exp_with_coeff, get_exp_window_size, get_window_table, inhibit_profiling_info,
-    multi_exp, multi_exp_method, multi_exp_with_mixed_addition,
+use ff_curves::{
+    algebra::curves::public_params::{PublicParams, PublicParamsType},
+    {Fr, Fr_vector, G1, G1_vector, G2, G2_precomp, GT},
 };
 
-use crate::common::data_structures::accumulation_vector::accumulation_vector;
-use ffec::PpConfig;
-use ffec::common::serialization::OUTPUT_NEWLINE;
-
-use ff_curves::algebra::curves::public_params::{PublicParams, PublicParamsType};
-use ff_curves::{G1_vector, G2_precomp};
-const N: usize = 4;
 use std::ops::{Add, Mul};
 
-// pub type T1<PP> = <<PP as ppTConfig>::KC as KCConfig>::T;
-// pub type T2<PP> = <<PP as ppTConfig>::KC as KCConfig>::T2;
-// pub type FieldT<PP> = <<PP as ppTConfig>::KC as KCConfig>::FieldT;
-// pub type KnowledgeCommitmentVector<PP> = knowledge_commitment_vector<T1<PP>, T1<PP>>;
-// pub type KnowledgeCommitmentVector2<PP> = knowledge_commitment_vector<T2<PP>, T1<PP>>;
-// pub type KnowledgeCommitment<PP> = knowledge_commitment<T1<PP>, T1<PP>>;
-// pub type KnowledgeCommitment2<PP> = knowledge_commitment<T2<PP>, T1<PP>>;
-// pub type AccumulationVector<PP> = accumulation_vector<T1<PP>>;
+const N: usize = 4;
 
 /**
  * A proving key for the R1CS GG-ppzkSNARK.
@@ -160,10 +159,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proving_key<ppT> {
         print_indent();
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
-
-    // bool operator==(&other:r1cs_gg_ppzksnark_proving_key<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, &pk:r1cs_gg_ppzksnark_proving_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_proving_key<ppT> &pk);
 }
 
 /**
@@ -222,12 +217,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_verification_key<ppT> {
         print_indent();
         print!("* VK size in bits: {}\n", self.size_in_bits());
     }
-
-    // bool operator==(&other:r1cs_gg_ppzksnark_verification_key<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, &vk:r1cs_gg_ppzksnark_verification_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_verification_key<ppT> &vk);
-
-    // static r1cs_gg_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
 }
 
 /**
@@ -242,11 +231,7 @@ pub struct r1cs_gg_ppzksnark_processed_verification_key<ppT: PublicParams> {
     pub vk_alpha_g1_beta_g2: GT<ppT>,
     pub vk_gamma_g2_precomp: G2_precomp<ppT>,
     pub vk_delta_g2_precomp: G2_precomp<ppT>,
-
     pub gamma_ABC_g1: accumulation_vector<G1<ppT>>,
-    // bool operator==(&other:r1cs_gg_ppzksnark_processed_verification_key) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, &pvk:r1cs_gg_ppzksnark_processed_verification_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_processed_verification_key<ppT> &pvk);
 }
 
 /**
@@ -269,16 +254,12 @@ impl<ppT: PublicParams> KeyPairTConfig for r1cs_gg_ppzksnark_keypair<ppT> {
 }
 
 impl<ppT: PublicParams> r1cs_gg_ppzksnark_keypair<ppT> {
-    // r1cs_gg_ppzksnark_keypair() = default;
-    // r1cs_gg_ppzksnark_keypair(&other:r1cs_gg_ppzksnark_keypair<ppT>) = default;
     pub fn new(
         pk: r1cs_gg_ppzksnark_proving_key<ppT>,
         vk: r1cs_gg_ppzksnark_verification_key<ppT>,
     ) -> Self {
         Self { pk, vk }
     }
-
-    // r1cs_gg_ppzksnark_keypair(r1cs_gg_ppzksnark_keypair<ppT> &&other) = default;
 }
 
 /**
@@ -337,10 +318,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proof<ppT> {
             && self.g_B.is_well_formed()
             && self.g_C.is_well_formed());
     }
-
-    // bool operator==(&other:r1cs_gg_ppzksnark_proof<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, &proof:r1cs_gg_ppzksnark_proof<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, r1cs_gg_ppzksnark_proof<ppT> &proof);
 }
 
 /**
@@ -354,11 +331,11 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
 ) -> r1cs_gg_ppzksnark_keypair<ppT> {
     enter_block("Call to r1cs_gg_ppzksnark_generator", false);
 
-    /* Make the B_query "lighter" if possible */
+    //Make the B_query "lighter" if possible
     let mut r1cs_copy = r1cs.clone();
     r1cs_copy.swap_AB_if_beneficial();
 
-    /* Generate secret randomness */
+    //Generate secret randomness
     let t = Fr::<ppT>::random_element();
     let alpha = Fr::<ppT>::random_element();
     let beta = Fr::<ppT>::random_element();
@@ -367,7 +344,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     let gamma_inverse = gamma.inverse();
     let delta_inverse = delta.inverse();
 
-    /* A quadratic arithmetic program evaluated at t. */
+    //A quadratic arithmetic program evaluated at t.
     let qap = r1cs_to_qap_instance_map_with_evaluation::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &r1cs_copy, &t,
     );
@@ -394,13 +371,13 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     }
     leave_block("Compute query densities", false);
 
-    /* qap.{At,Bt,Ct,Ht} are now in unspecified state, but we do not use them later */
+    //qap.{At,Bt,Ct,Ht} are now in unspecified state, but we do not use them later
     let mut At = qap.At.clone();
     let mut Bt = qap.Bt.clone();
     let mut Ct = qap.Ct.clone();
     let mut Ht = qap.Ht.clone();
 
-    /* The gamma inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * gamma^{-1}. */
+    //The gamma inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * gamma^{-1}.
     enter_block("Compute gamma_ABC for R1CS verification key", false);
     let mut gamma_ABC = Fr_vector::<ppT>::default();
     gamma_ABC.reserve(qap.num_inputs());
@@ -416,7 +393,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     }
     leave_block("Compute gamma_ABC for R1CS verification key", false);
 
-    /* The delta inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * delta^{-1}. */
+    //The delta inverse product component: (beta*A_i(t) + alpha*B_i(t) + C_i(t)) * delta^{-1}.
     enter_block("Compute L query for R1CS proving key", false);
     let mut Lt = Fr_vector::<ppT>::default();
     Lt.reserve(qap.num_variables() - qap.num_inputs());
@@ -439,11 +416,7 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
      */
     Ht.resize(Ht.len() - 2, Fr::<ppT>::default());
 
-    // // #ifdef MULTICORE
-    //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-    // #else
     let chunks = 1;
-    //
 
     enter_block("Generating G1 MSM window table", false);
     let g1_generator = G1::<ppT>::random_element();
@@ -578,9 +551,10 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
 ) -> r1cs_gg_ppzksnark_proof<ppT> {
     enter_block("Call to r1cs_gg_ppzksnark_prover", false);
 
-    // // #ifdef DEBUG
-    //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
-    //
+    assert!(
+        pk.constraint_system
+            .is_satisfied(primary_input, auxiliary_input)
+    );
 
     enter_block("Compute the polynomial H", false);
     let qap_wit = r1cs_to_qap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
@@ -599,29 +573,21 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     assert!(qap_wit.coefficients_for_H[qap_wit.degree()].is_zero());
     leave_block("Compute the polynomial H", false);
 
-    // // #ifdef DEBUG
-    //     let t =Fr::<ppT>::random_element();
-    //     qap_instance_evaluation<Fr<ppT> > qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
-    //     assert!(qap_inst.is_satisfied(qap_wit));
-    //
+    let t = Fr::<ppT>::random_element();
+    let qap_inst = r1cs_to_qap_instance_map_with_evaluation(pk.constraint_system, t);
+    debug_assert!(qap_inst.is_satisfied(qap_wit));
 
-    /* Choose two random field elements for prover zero-knowledge. */
+    //Choose two random field elements for prover zero-knowledge.
     let r = Fr::<ppT>::random_element();
     let s = Fr::<ppT>::random_element();
 
-    // // #ifdef DEBUG
-    //     assert!(qap_wit.coefficients_for_ABCs.len() == qap_wit.num_variables());
-    //     assert!(pk.A_query.len() == qap_wit.num_variables()+1);
-    //     assert!(pk.B_query.domain_size() == qap_wit.num_variables()+1);
-    //     assert!(pk.H_query.len() == qap_wit.degree() - 1);
-    //     assert!(pk.L_query.len() == qap_wit.num_variables() - qap_wit.num_inputs());
-    //
+    debug_assert!(qap_wit.coefficients_for_ABCs.len() == qap_wit.num_variables());
+    debug_assert!(pk.A_query.len() == qap_wit.num_variables() + 1);
+    debug_assert!(pk.B_query.domain_size() == qap_wit.num_variables() + 1);
+    debug_assert!(pk.H_query.len() == qap_wit.degree() - 1);
+    debug_assert!(pk.L_query.len() == qap_wit.num_variables() - qap_wit.num_inputs());
 
-    // // #ifdef MULTICORE
-    //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-    // #else
     let chunks = 1;
-    //
 
     enter_block("Compute the proof", false);
 
@@ -676,14 +642,14 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     );
     leave_block("Compute evaluation to L-query", false);
 
-    /* A = alpha + sum_i(a_i*A_i(t)) + r*delta */
+    //A = alpha + sum_i(a_i*A_i(t)) + r*delta
     let g1_A = pk.alpha_g1.clone() + evaluation_At.clone() + pk.delta_g1.clone() * r.clone();
 
-    /* B = beta + sum_i(a_i*B_i(t)) + s*delta */
+    //B = beta + sum_i(a_i*B_i(t)) + s*delta
     let g1_B = pk.beta_g1.clone() + evaluation_Bt.h.clone() + pk.delta_g1.clone() * s.clone();
     let g2_B = pk.beta_g2.clone() + evaluation_Bt.g.clone() + pk.delta_g2.clone() * s.clone();
 
-    /* C = sum_i(a_i*((beta*A_i(t) + alpha*B_i(t) + C_i(t)) + H(t)*Z(t))/delta) + A*s + r*b - r*s*delta */
+    //C = sum_i(a_i*((beta*A_i(t) + alpha*B_i(t) + C_i(t)) + H(t)*Z(t))/delta) + A*s + r*b - r*s*delta
     let g1_C = evaluation_Ht.clone()
         + evaluation_Lt.clone()
         + g1_A.clone() * s.clone()

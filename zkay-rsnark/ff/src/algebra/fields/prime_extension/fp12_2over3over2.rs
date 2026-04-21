@@ -217,7 +217,7 @@ impl<
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring)
         let (a, b) = (self.c0, self.c1);
         let asq = a.squared();
         let bsq = b.squared();
@@ -232,7 +232,7 @@ impl<
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring)
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
 
@@ -246,7 +246,7 @@ impl<
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
 
-        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
+        //From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8
         let (a, b) = (self.c0, self.c1);
         let t0 = a.squared();
         let t1 = b.squared();
@@ -491,7 +491,7 @@ impl<
         res
     }
 
-    pub fn sqrt(&self) -> Self {
+    pub fn sqrt(&self) -> Option<Self> {
         tonelli_shanks_sqrt(&self)
     }
 
@@ -726,7 +726,7 @@ impl<
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
 //
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
+//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba)
 //     A:&my_Fp6<N,T::Fp6_modelConfig> = other.c0, &B = other.c1,
 //         &a = self.c0, &b = self.c1;
 //     let aA= a * A;
@@ -910,11 +910,8 @@ impl<
     const N12: usize,
     T: Fp12_modelConfig<N, N2, N6, N12>,
 > PpConfig for Fp12_2over3over2_model<N, N2, N6, N12, T>
-where
-    <T as Fp12_modelConfig<N, N2, N6, N12>>::Fp_modelConfig: PpConfig,
 {
-    //type TT = bigint<N>;
-    //  type Fr=T::Fp_modelConfig;
+    type GType = Self;
 }
 
 impl<

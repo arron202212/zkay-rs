@@ -73,7 +73,7 @@ use crate::kronecker_substitution::kronecker_substitution;
 use crate::polynomial_arithmetic::basic_operations::kronecker_substitution::kronecker_substitution;
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
 use crate::tools::exceptions;
- use ffec::FieldTConfig;
+use ffec::FieldTConfig;
 use ffec::algebra::field_utils::field_utils::get_root_of_unity_for_not_double;
 use ffec::common::utils::get_power_of_two;
 use ffec::common::utils::log2;
@@ -196,9 +196,7 @@ pub fn _polynomial_subtraction<
     _condense(c);
 }
 
-pub fn _polynomial_multiplication<
-    FieldT: FieldTConfig
->(
+pub fn _polynomial_multiplication<FieldT: FieldTConfig>(
     c: &mut Vec<FieldT>,
     a: &Vec<FieldT>,
     b: &Vec<FieldT>,
@@ -206,9 +204,7 @@ pub fn _polynomial_multiplication<
     _polynomial_multiplication_on_fft(c, a, b);
 }
 
-pub fn _polynomial_multiplication_on_fft<
-    FieldT: FieldTConfig,
->(
+pub fn _polynomial_multiplication_on_fft<FieldT: FieldTConfig>(
     c: &mut Vec<FieldT>,
     a: &Vec<FieldT>,
     b: &Vec<FieldT>,
@@ -263,9 +259,7 @@ pub fn _polynomial_multiplication_on_kronecker<
     kronecker_substitution(c, a, b);
 }
 
-pub fn _polynomial_multiplication_transpose<
-    FieldT: FieldTConfig,
->(
+pub fn _polynomial_multiplication_transpose<FieldT: FieldTConfig>(
     n: usize,
     a: &Vec<FieldT>,
     c: &Vec<FieldT>,
@@ -280,7 +274,7 @@ pub fn _polynomial_multiplication_transpose<
     let rr = r.clone();
     _polynomial_multiplication(&mut r, &rr, c);
 
-    /* Determine Middle Product */
+    //Determine Middle Product
     let mut result = vec![];
     for i in m..n + m {
         result.push(r[i].clone());
@@ -304,8 +298,8 @@ pub fn _polynomial_division<
     a: &Vec<FieldT>,
     b: &Vec<FieldT>,
 ) {
-    let d = b.len() - 1; /* Degree of B */
-    let c = FieldT::one(); //b.last().unwrap().inverse(); /* Inverse of Leading Coefficient of B */
+    let d = b.len() - 1; //Degree of B
+    let c = FieldT::one(); //b.last().unwrap().inverse(); //Inverse of Leading Coefficient of B
     *r = a.clone();
     *q = vec![FieldT::zero(); r.len()];
 

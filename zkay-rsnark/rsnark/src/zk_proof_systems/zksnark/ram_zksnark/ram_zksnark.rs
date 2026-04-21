@@ -347,7 +347,7 @@ where
     enter_block("Initialize the RAM computation", false);
     let mut cur_proof = r1cs_sp_ppzkpcd_proof::<pcdT<RamPpt>>::default(); // start out with an empty proof
 
-    /* initialize memory with the correct values */
+    //initialize memory with the correct values
     let num_addresses = 1usize << pk.ap.address_size();
     let value_size = pk.ap.value_size();
 

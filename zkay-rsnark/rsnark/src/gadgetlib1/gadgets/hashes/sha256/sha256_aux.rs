@@ -47,7 +47,7 @@ pub struct XOR3_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     _t: PhantomData<PB>,
 }
 
-/* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+//Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 #[derive(Clone, Default)]
 pub struct small_sigma_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget
@@ -58,7 +58,7 @@ pub struct small_sigma_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pack_result: RcCell<packing_gadgets<FieldT, PB>>,
 }
 
-/* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+//Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 #[derive(Clone, Default)]
 pub struct big_sigma_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget
@@ -69,7 +69,7 @@ pub struct big_sigma_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pack_result: RcCell<packing_gadgets<FieldT, PB>>,
 }
 
-/* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+//Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 #[derive(Clone, Default)]
 pub struct choice_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // // : public gadget
@@ -81,7 +81,7 @@ pub struct choice_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pack_result: RcCell<packing_gadgets<FieldT, PB>>,
 }
 
-/* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+//Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 #[derive(Clone, Default)]
 pub struct majority_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //  : public gadget
@@ -252,7 +252,7 @@ macro_rules! SHA256_GADGET_ROTR {
 
 pub type small_sigma_gadgets<FieldT, PB> = gadget<FieldT, PB, small_sigma_gadget<FieldT, PB>>;
 impl<FieldT: FieldTConfig, PB: PBConfig> small_sigma_gadget<FieldT, PB> {
-    /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+    //Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
@@ -392,7 +392,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> big_sigma_gadgets<FieldT, PB> {
 pub type choice_gadgets<FieldT, PB> = gadget<FieldT, PB, choice_gadget<FieldT, PB>>;
 
 impl<FieldT: FieldTConfig, PB: PBConfig> choice_gadget<FieldT, PB> {
-    /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+    //Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,
@@ -462,7 +462,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> choice_gadgets<FieldT, PB> {
 pub type majority_gadgets<FieldT, PB> = gadget<FieldT, PB, majority_gadget<FieldT, PB>>;
 
 impl<FieldT: FieldTConfig, PB: PBConfig> majority_gadget<FieldT, PB> {
-    /* Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf */
+    //Page 10 of http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
 
     pub fn new(
         pb: RcCell<protoboard<FieldT, PB>>,

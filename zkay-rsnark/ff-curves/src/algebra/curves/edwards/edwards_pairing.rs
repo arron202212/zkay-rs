@@ -13,7 +13,7 @@ use ffec::PpConfig;
 use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::bigint::bigint;
 
-/* Tate pairing */
+//Tate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 struct edwards_Fq_conic_coefficients {
     pub c_ZZ: edwards_Fq,
@@ -28,7 +28,7 @@ pub struct edwards_tate_G2_precomp {
     pub eta: edwards_Fq3,
 }
 
-/* ate pairing */
+//ate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct edwards_Fq3_conic_coefficients {
     pub c_ZZ: edwards_Fq3,
@@ -74,12 +74,12 @@ impl fmt::Display for edwards_tate_G2_precomp {
     }
 }
 
-/* choice of pairing */
+//choice of pairing
 
 pub type edwards_G1_precomp = edwards_ate_G1_precomp;
 pub type edwards_G2_precomp = edwards_ate_G2_precomp;
 
-/* final exponentiations */
+//final exponentiations
 pub fn edwards_final_exponentiation_last_chunk(
     elt: &edwards_Fq6,
     elt_inv: &edwards_Fq6,
@@ -104,15 +104,15 @@ pub fn edwards_final_exponentiation_first_chunk(
 ) -> edwards_Fq6 {
     enter_block("Call to edwards_final_exponentiation_first_chunk", false);
 
-    /* (q^3-1)*(q+1) */
+    //(q^3-1)*(q+1)
 
-    /* elt_q3 = elt^(q^3) */
+    //elt_q3 = elt^(q^3)
     let elt_q3 = elt.Frobenius_map(3);
-    /* elt_q3_over_elt = elt^(q^3-1) */
+    //elt_q3_over_elt = elt^(q^3-1)
     let elt_q3_over_elt = elt_q3 * elt_inv;
-    /* alpha = elt^((q^3-1) * q) */
+    //alpha = elt^((q^3-1) * q)
     let alpha = elt_q3_over_elt.Frobenius_map(1);
-    /* beta = elt^((q^3-1)*(q+1) */
+    //beta = elt^((q^3-1)*(q+1)
     let beta = alpha * elt_q3_over_elt;
     leave_block("Call to edwards_final_exponentiation_first_chunk", false);
     return beta;
@@ -287,7 +287,7 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
     for i in (0..=edwards_modulus_r.max_bits()).rev() {
         let mut bit = edwards_modulus_r.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -322,7 +322,7 @@ pub fn edwards_tate_miller_loop(
     for i in (0..=edwards_modulus_r.max_bits() - 1).rev() {
         let mut bit = edwards_modulus_r.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -540,7 +540,7 @@ pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
     for i in (0..=loop_count.max_bits() - 1).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -572,7 +572,7 @@ pub fn edwards_ate_miller_loop(
     for i in (0..=loop_count.max_bits() - 1).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -619,7 +619,7 @@ pub fn edwards_ate_double_miller_loop(
     for i in (0..=loop_count.max_bits() - 1).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }

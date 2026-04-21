@@ -81,7 +81,7 @@ pub fn get_nsec_time() -> i64 {
     0
 }
 
-// /* Return total CPU time consumsed by all threads of the process, in nanoseconds. */
+// //Return total CPU time consumsed by all threads of the process, in nanoseconds.
 pub fn get_nsec_cpu_time() -> i64 {
     // #if _MSC_VER
     return 0;

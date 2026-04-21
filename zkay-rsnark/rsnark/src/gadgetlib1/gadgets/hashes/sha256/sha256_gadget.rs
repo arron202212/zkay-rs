@@ -104,7 +104,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
         let mut reduced_output = pb_variable_array::<FieldT, PB>::default();
         let mut reduce_output = vec![];
 
-        /* message schedule and inputs for it */
+        //message schedule and inputs for it
         packed_W.allocate(&pb, 64, prefix_format!(annotation_prefix, " packed_W"));
         let message_schedule = RcCell::new(sha256_message_schedule_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -113,7 +113,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             prefix_format!(annotation_prefix, " message_schedule"),
         ));
 
-        /* initalize */
+        //initalize
         round_a.push(pb_linear_combination_array::<FieldT, PB>::new(
             prev_output
                 .iter()
@@ -186,7 +186,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
                 .collect::<Vec<_>>(),
         ));
 
-        /* do the rounds */
+        //do the rounds
         for i in 0..64 {
             round_h.push(round_g[i].clone());
             round_g.push(round_f[i].clone());
@@ -229,7 +229,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_compression_function_gadget<Fiel
             ));
         }
 
-        /* finalize */
+        //finalize
         unreduced_output.allocate(
             &pb,
             8,
@@ -385,7 +385,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
         output: digest_variables<FieldT, PB>,
         annotation_prefix: String,
     ) -> sha256_two_to_one_hash_gadgets<FieldT, PB> {
-        /* concatenate block = left || right */
+        //concatenate block = left || right
         let mut block = pb_variable_array::<FieldT, PB>::new(
             left.t
                 .bits
@@ -395,7 +395,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_two_to_one_hash_gadget<FieldT, P
                 .collect(),
         );
 
-        /* compute the hash itself */
+        //compute the hash itself
         let f = RcCell::new(sha256_compression_function_gadget::<FieldT, PB>::new(
             pb.clone(),
             SHA256_default_IV::<FieldT, PB>(&pb),
@@ -459,7 +459,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> HashTConfig
 
     fn expected_constraints(ensure_output_bitness: bool) -> usize {
         //ffec::UNUSED(ensure_output_bitness);
-        27280 /* hardcoded for now */
+        27280 //hardcoded for now
     }
 
     fn generate_r1cs_constraints(&self, ensure_output_bitness: bool) {

@@ -203,7 +203,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
         max_number_of_predicates: usize,
     ) -> Self {
         let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
-        /* calculate some useful sizes */
+        //calculate some useful sizes
         let digest_size = CRH_with_field_out_gadgets::<ppT::FieldT, ppT::PB>::get_digest_len();
         let outgoing_msg_size_in_bits =
             Self::field_logsize() * (1 + compliance_predicate.outgoing_message_payload_length);
@@ -234,7 +234,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             max_input_block_size,
         ));
 
-        /* allocate input of the compliance MP_PCD circuit */
+        //allocate input of the compliance MP_PCD circuit
         let mut mp_compliance_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         mp_compliance_step_pcd_circuit_input.allocate(
@@ -243,7 +243,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             "mp_compliance_step_pcd_circuit_input",
         );
 
-        /* allocate inputs to the compliance predicate */
+        //allocate inputs to the compliance predicate
         let mut outgoing_message_type = variable::<ppT::FieldT, pb_variable>::default();
         let mut outgoing_message_payload = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         outgoing_message_type.allocate(&pb, "outgoing_message_type");
@@ -294,7 +294,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
         let mut cp_witness = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         cp_witness.allocate(&pb, compliance_predicate.witness_length, "cp_witness");
 
-        /* convert compliance predicate from a constraint system into a gadget */
+        //convert compliance predicate from a constraint system into a gadget
         let mut incoming_messages_concat = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         for i in 0..compliance_predicate.max_arity {
             incoming_messages_concat
@@ -316,7 +316,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
                 "compliance_predicate_as_gadget".to_owned(),
             ));
 
-        /* unpack messages to bits */
+        //unpack messages to bits
         let mut outgoing_message_bits = pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         outgoing_message_bits.allocate(&pb, outgoing_msg_size_in_bits, "outgoing_message_bits");
         let unpack_outgoing_message =
@@ -351,7 +351,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate digests */
+        //allocate digests
         let mut commitment_and_incoming_message_digests =
             vec![
                 pb_variable_array::<ppT::FieldT, ppT::PB>::default();
@@ -365,7 +365,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             );
         }
 
-        /* allocate commitment, verification key(s) and membership checker(s)/proof(s) */
+        //allocate commitment, verification key(s) and membership checker(s)/proof(s)
         let commitment = RcCell::new(set_commitment_variable::<ppT::FieldT, ppT::PB>::new(
             pb.clone(),
             commitment_size,
@@ -389,7 +389,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
         let mut membership_proofs = vec![];
         let mut membership_checkers = vec![];
         if compliance_predicate.relies_on_same_type_inputs {
-            /* only one set_commitment_gadget is needed */
+            //only one set_commitment_gadget is needed
             common_type.allocate(&pb, "common_type");
             common_type_check_aux.allocate(
                 &pb,
@@ -429,7 +429,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
                 "membership_checker".to_owned(),
             ));
         } else {
-            /* check for max_arity possibly different VKs */
+            //check for max_arity possibly different VKs
             translation_step_vks_bits.resize(
                 compliance_predicate.max_arity,
                 pb_variable_array::<ppT::FieldT, ppT::PB>::default(),
@@ -472,7 +472,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             }
         }
 
-        /* allocate blocks */
+        //allocate blocks
         let block_for_outgoing_message = RcCell::new(block_variable::<ppT::FieldT, ppT::PB>::new2(
             pb.clone(),
             vec![
@@ -493,7 +493,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate hash checkers */
+        //allocate hash checkers
         let hash_outgoing_message =
             RcCell::new(CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::new(
                 pb.clone(),
@@ -514,11 +514,11 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             ));
         }
 
-        /* allocate useful zero variable */
+        //allocate useful zero variable
         let mut zero = variable::<ppT::FieldT, pb_variable>::default();
         zero.allocate(&pb, "zero");
 
-        /* prepare arguments for the verifier */
+        //prepare arguments for the verifier
         let mut translation_step_vks = vec![];
         if compliance_predicate.relies_on_same_type_inputs {
             translation_step_vks.push(r1cs_ppzksnark_verification_key_variable::<ppT>::new(
@@ -769,7 +769,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
                 }
             }
 
-            /* either type = 0 or proof verified w.r.t. a valid verification key */
+            //either type = 0 or proof verified w.r.t. a valid verification key
             PROFILE_CONSTRAINTS(
                 &self.pb,
                 "check that s messages have valid proofs (or are base case)",
@@ -964,7 +964,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
             .generate_r1cs_witness(&commitment_to_translation_step_r1cs_vks);
 
         if self.compliance_predicate.relies_on_same_type_inputs {
-            /* all messages (except base case) must be of the same type */
+            //all messages (except base case) must be of the same type
             *self.pb.borrow_mut().val_ref(&self.common_type) = ppT::FieldT::zero();
             let mut nonzero_type_idx = 0;
             for i in 0..self.compliance_predicate.max_arity {
@@ -1072,7 +1072,7 @@ impl<ppT: ppTConfig> mp_compliance_step_pcd_circuit_maker<ppT> {
 impl<ppT: ppTConfig> mp_translation_step_pcd_circuit_maker<ppT> {
     pub fn new(compliance_step_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>) -> Self {
         let pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
-        /* allocate input of the translation MP_PCD circuit */
+        //allocate input of the translation MP_PCD circuit
         let mut mp_translation_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         mp_translation_step_pcd_circuit_input.allocate(
@@ -1081,7 +1081,7 @@ impl<ppT: ppTConfig> mp_translation_step_pcd_circuit_maker<ppT> {
             "mp_translation_step_pcd_circuit_input",
         );
 
-        /* unpack translation step MP_PCD circuit input */
+        //unpack translation step MP_PCD circuit input
         let mut unpacked_mp_translation_step_pcd_circuit_input =
             pb_variable_array::<ppT::FieldT, ppT::PB>::default();
         unpacked_mp_translation_step_pcd_circuit_input.allocate(
@@ -1100,7 +1100,7 @@ impl<ppT: ppTConfig> mp_translation_step_pcd_circuit_maker<ppT> {
                 "unpack_mp_translation_step_pcd_circuit_input".to_owned(),
             ));
 
-        /* prepare arguments for the verifier */
+        //prepare arguments for the verifier
         let hardcoded_compliance_step_vk = RcCell::new(
             r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variable::<ppT>::new(
                 pb.clone(),
@@ -1113,7 +1113,7 @@ impl<ppT: ppTConfig> mp_translation_step_pcd_circuit_maker<ppT> {
             "proof".to_owned(),
         ));
 
-        /* verify previous proof */
+        //verify previous proof
         let online_verifier = RcCell::new(r1cs_ppzksnark_online_verifier_gadget::<ppT>::new(
             pb.clone(),
             hardcoded_compliance_step_vk.borrow().clone(),

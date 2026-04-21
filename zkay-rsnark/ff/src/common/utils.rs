@@ -34,14 +34,14 @@ pub type bit_vector = Vec<bool>;
 
 // std::usize bitreverse(std::usize n, const std::usize l);
 // bit_vector int_list_to_bits(l:&const std::initializer_list<u64>, const std::usize wordsize);
-// /* throws error if y = 0 */
+// //throws error if y = 0
 // i64 div_ceil(i64 x, i64 y);
 
 // bool is_little_endian();
 
 // String FORMAT(prefix:&format:String, const char*, ...);
 
-/* A variadic template to suppress unused argument warnings */
+//A variadic template to suppress unused argument warnings
 //
 // pub fn  UNUSED(Types&&...) {}
 
@@ -54,7 +54,7 @@ pub fn FMT(s: &str, c: &str) {}
 // pub fn  serialize_bit_vector(out:&String,v:& const bit_vector);
 // pub fn  deserialize_bit_vector(in:&mut String,v:& bit_vector);
 
-// /** Should not be used for fields, because the field function is named ceil_size_in_bits instead. */
+////Should not be used for fields, because the field function is named ceil_size_in_bits instead.
 //
 // std::usize curve_size_in_bits(v:&Vec <CurveT>);
 
@@ -117,7 +117,7 @@ pub fn get_power_of_two(mut n: usize) -> usize {
     return n;
 }
 
-/* If n is a power of 2, returns n */
+//If n is a power of 2, returns n
 pub fn round_to_next_power_of_2(n: usize) -> usize {
     1usize << log2(n)
 }
@@ -217,11 +217,6 @@ pub fn deserialize_bit_vector(ins: &String, v: &mut bit_vector) {
     }
 }
 
-// trait PpConfig {
-//     fn size_in_bits() -> usize;
-//     fn random_element<T>() -> T;
-//     fn is_zero(&self) -> bool;
-// }
 pub fn size_in_bits<CurveT: PpConfig>(v: &Vec<CurveT>) -> usize {
     v.len() * CurveT::size_in_bits()
 }

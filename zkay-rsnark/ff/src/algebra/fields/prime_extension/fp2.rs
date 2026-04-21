@@ -91,11 +91,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
         self.c0.clear();
         self.c1.clear();
     }
-    pub fn print(&self) {
-        print!("c0/c1:\n");
-        self.c0.print();
-        self.c1.print();
-    }
+
     pub fn is_zero(&self) -> bool {
         self.c0.is_zero() && self.c1.is_zero()
     }
@@ -156,16 +152,8 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
         )
     }
 
-    pub fn random_element() -> Self {
-        Self {
-            c0: my_Fp::<N, T::Fp_modelConfig>::random_element(),
-            c1: my_Fp::<N, T::Fp_modelConfig>::random_element(),
-            _t: PhantomData,
-        }
-    }
-
     pub fn randomize(&mut self) {
-        *self = Self::random_element();
+        *self = Fp2_model::<N, N2, T>::random_element();
     }
 
     pub fn squared(&self) -> Self {
@@ -178,7 +166,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
     }
 
     pub fn squared_karatsuba(&self) -> Self {
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba squaring)
         let (a, b) = (self.c0, self.c1);
         let asq = a.squared();
         let bsq = b.squared();
@@ -187,7 +175,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
     }
 
     pub fn squared_complex(&self) -> Self {
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex squaring)
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
 
@@ -200,7 +188,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
     pub fn inverse(&self) -> Self {
         let (a, b) = (self.c0, self.c1);
 
-        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
+        //From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8
         let t0 = a.squared();
         let t1 = b.squared();
         let t2 = t0 - T::non_residue * t1;
@@ -223,7 +211,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
         )
     }
 
-    pub fn sqrt(self) -> Self {
+    pub fn sqrt(self) -> Option<Self> {
         tonelli_shanks_sqrt(&self)
     }
 
@@ -315,7 +303,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, TC: FpmConfig<N
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
 //
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
+//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba)
 //     const my_Fp<N,T::Fp2_modelConfig>
 //         &A = other.c0, &B = other.c1,
 //         &a = self.c0, &b = self.c1;
@@ -460,12 +448,24 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<bi
 //         r
 //     }
 // }
-impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PpConfig for Fp2_model<N, N2, T>
-where
-    <T as Fp2_modelConfig<N, N2>>::Fp_modelConfig: PpConfig,
-{
-    //type TT = bigint<N>;
-    // type Fr=T::Fp_modelConfig;
+impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PpConfig for Fp2_model<N, N2, T> {
+    type GType = Self;
+    fn dbl(&self) -> Self {
+        self.clone()
+    }
+    fn random_element() -> Self {
+        Self {
+            c0: my_Fp::<N, T::Fp_modelConfig>::random_element(),
+            c1: my_Fp::<N, T::Fp_modelConfig>::random_element(),
+            _t: PhantomData,
+        }
+    }
+
+    fn print(&self) {
+        print!("c0/c1:\n");
+        self.c0.print();
+        self.c1.print();
+    }
 }
 
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> One for Fp2_model<N, N2, T> {
@@ -569,55 +569,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> From<&str>
         }
     }
 }
-
-//
-// std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
-// {
-//     in >> el.c0 >> el.c1;
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, v:&Vec<Fp2_model<n, modulus> >)
-// {
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
-//     }
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream& in, Vec<Fp2_model<n, modulus> > &v)
-// {
-//     v.clear();
-
-//     usize s;
-//     in >> s;
-
-//     char b;
-//     in.read(&b, 1);
-
-//     v.reserve(s);
-
-//     for i in 0..s
-//     {
-//         Fp2_model<n, modulus> el;
-//         in >> el;
-//         v.emplace_back(el);
-//     }
-
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream &out, el:&Fp2_model<n, modulus>)
-// {
-//     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
-//     return out;
-// }
 
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> fmt::Display
     for Fp2_model<N, N2, T>

@@ -48,7 +48,7 @@ pub struct pb_variable_array<FieldT: FieldTConfig, PB: PBConfig> {
     // FieldT get_field_element_from_bits(pb:&RcCell<protoboard<FieldT,PB>>) ;
 }
 
-/* index 0 corresponds to the constant term (used in legacy code) */
+//index 0 corresponds to the constant term (used in legacy code)
 // pub const  ONE<FieldT:FieldTConfig>:variable<FieldT,pb_variable>= <variable::<FieldT,pb_variable> as std::default::Default>::default();
 pub const ONE: usize = 0;
 
@@ -178,7 +178,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
     pub fn iter(&self) -> std::slice::Iter<variable<FieldT, pb_variable>> {
         self.contents.iter()
     }
-    /* allocates pb_variable<FieldT> array in MSB->LSB order */
+    //allocates pb_variable<FieldT> array in MSB->LSB order
     pub fn new(contents: Vec<variable<FieldT, pb_variable>>) -> Self {
         Self {
             contents,
@@ -270,7 +270,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_variable_array<FieldT, PB> {
         let mut result = FieldT::zero();
 
         for i in 0..self.contents.len() {
-            /* push in the new bit */
+            //push in the new bit
             let v = pb.borrow().val(&self.contents[self.contents.len() - 1 - i]);
             assert!(v == FieldT::zero() || v == FieldT::one());
             result += result.clone() + v.clone();
@@ -478,7 +478,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> pb_linear_combination_array<FieldT, PB>
         let mut result = FieldT::zero();
 
         for i in 0..self.contents.len() {
-            /* push in the new bit */
+            //push in the new bit
             let v = pb
                 .borrow()
                 .lc_val(&self.contents[self.contents.len() - 1 - i]);

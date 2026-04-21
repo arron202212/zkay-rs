@@ -110,7 +110,7 @@ pub struct ram_universal_gadget<RamT: ram_params_type> {
     pub boot_line_bits: Vec<pb_variable_array<FieldT<RamT>, RamT::PB>>,
     pub unpack_boot_lines: Vec<multipacking_gadgets<FieldT<RamT>, RamT::PB>>,
     pub load_instruction_lines: Vec<execution_line_variable_gadgets<RamT>>,
-    pub execution_lines: Vec<execution_line_variable_gadgets<RamT>>, /* including the initial execution line */
+    pub execution_lines: Vec<execution_line_variable_gadgets<RamT>>, //including the initial execution line
     pub unrouted_memory_lines: Vec<execution_line_variable_gadgets<RamT>>,
     pub routed_memory_lines: Vec<execution_line_variable_gadgets<RamT>>,
     pub execution_checkers: Vec<ram_cpu_checker<RamT>>,
@@ -134,10 +134,10 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         packed_input: pb_variable_array<FieldT<RamT>, RamT::PB>,
         annotation_prefix: String,
     ) -> ram_universal_gadgets<RamT> {
-        let num_memory_lines = boot_trace_size_bound + (time_bound + 1) + time_bound; /* boot lines, (time_bound + 1) execution lines (including initial) and time_bound load instruction lines */
+        let num_memory_lines = boot_trace_size_bound + (time_bound + 1) + time_bound; //boot lines, (time_bound + 1) execution lines (including initial) and time_bound load instruction lines
         let timestamp_size = log2(num_memory_lines);
 
-        /* allocate all lines on the execution side of the routing network */
+        //allocate all lines on the execution side of the routing network
         enter_block("Allocate initial state line", false);
         let mut unrouted_memory_lines = vec![];
         let mut execution_lines = Vec::with_capacity(1 + time_bound);
@@ -168,7 +168,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         leave_block("Allocate boot lines", false);
 
         enter_block("Allocate instruction fetch and execution lines", false);
-        let mut load_instruction_lines = Vec::with_capacity(time_bound + 1); /* the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC) */
+        let mut load_instruction_lines = Vec::with_capacity(time_bound + 1); //the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC)
         for i in 0..time_bound {
             load_instruction_lines.push(memory_line_variable_gadget::<
                 RamT,
@@ -202,7 +202,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         ));
         leave_block("Allocate instruction fetch and execution lines", false);
 
-        /* deal with packing of the input */
+        //deal with packing of the input
         enter_block("Pack input", false);
         let line_size_bits = pb
             .borrow()
@@ -218,7 +218,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
 
         let mut input_it = 0;
         for i in 0..boot_trace_size_bound {
-            /* note the reversed order */
+            //note the reversed order
             let mut boot_line_bits = pb_variable_array::<FieldT<RamT>, RamT::PB>::default();
             boot_line_bits.extend(
                 &boot_lines[boot_trace_size_bound - 1 - i]
@@ -253,7 +253,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         leave_block("Pack input", false);
 
-        /* deal with routing */
+        //deal with routing
         enter_block("Allocate routed memory lines", false);
         let mut routed_memory_lines = vec![];
         for i in 0..num_memory_lines {
@@ -291,7 +291,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
             ));
         leave_block("Allocate routing network", false);
 
-        /* deal with all checkers */
+        //deal with all checkers
         enter_block("Allocate execution checkers", false);
         let mut execution_checkers = Vec::with_capacity(time_bound);
         for i in 0..time_bound {
@@ -348,7 +348,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         leave_block("Allocate all memory checkers", false);
 
-        /* done */
+        //done
         gadget::<RamT::FieldT, RamT::PB, Self>::new(
             pb.borrow().clone().into_p(),
             annotation_prefix,
@@ -383,7 +383,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             self.t.unpack_boot_lines[i].generate_r1cs_constraints(false);
         }
 
-        /* ensure that we start with all zeros state */
+        //ensure that we start with all zeros state
         for i in 0..self
             .pb
             .borrow()
@@ -398,7 +398,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             );
         }
 
-        /* ensure increasing timestamps */
+        //ensure increasing timestamps
         for i in 0..self.t.num_memory_lines {
             generate_r1cs_equals_const_constraint::<FieldT<RamT>, RamT::PB>(
                 &self.pb,
@@ -415,7 +415,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             );
         }
 
-        /* ensure bitness of trace lines on the time side */
+        //ensure bitness of trace lines on the time side
         for i in 0..self.t.boot_trace_size_bound {
             self.t.boot_lines[i].generate_r1cs_constraints(true);
         }
@@ -426,12 +426,12 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             self.t.execution_lines[i + 1].generate_r1cs_constraints(true);
         }
 
-        /* ensure bitness of trace lines on the memory side */
+        //ensure bitness of trace lines on the memory side
         for i in 0..self.t.num_memory_lines {
             self.t.routed_memory_lines[i].generate_r1cs_constraints(true);
         }
 
-        /* ensure that load instruction lines really do loads */
+        //ensure that load instruction lines really do loads
         for i in 0..self.t.time_bound {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
@@ -459,19 +459,19 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             );
         }
 
-        /* ensure correct execution */
+        //ensure correct execution
         for i in 0..self.t.time_bound {
             self.t.execution_checkers[i].generate_r1cs_constraints();
         }
 
-        /* check memory */
+        //check memory
         self.t.routing_network.borrow().generate_r1cs_constraints();
 
         for i in 0..self.t.num_memory_lines {
             self.t.memory_checkers[i].generate_r1cs_constraints();
         }
 
-        /* ensure that PC started at the prescribed value */
+        //ensure that PC started at the prescribed value
         generate_r1cs_equals_const_constraint::<FieldT<RamT>, RamT::PB>(
             &self.pb,
             &(self.t.load_instruction_lines[0]
@@ -491,7 +491,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             String::new(),
         );
 
-        /* ensure that the last state was an accepting one */
+        //ensure that the last state was an accepting one
         generate_r1cs_equals_const_constraint::<FieldT<RamT>, RamT::PB>(
             &self.pb,
             &(self.t.execution_lines[self.t.time_bound]
@@ -504,7 +504,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             "last_state_must_be_accepting".to_owned(),
         );
 
-        /* print constraint profiling */
+        //print constraint profiling
         let num_constraints = self.pb.borrow().num_constraints();
         let num_variables = self.pb.borrow().num_variables();
 
@@ -536,7 +536,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
         boot_trace: &ram_boot_trace,
         auxiliary_input: &ram_input_tape,
     ) {
-        /* assign correct timestamps to all lines */
+        //assign correct timestamps to all lines
         for i in 0..self.t.num_memory_lines {
             *self.pb.borrow_mut().val_ref(
                 &self.t.unrouted_memory_lines[i]
@@ -553,7 +553,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 .generate_r1cs_witness_from_packed();
         }
 
-        /* fill in the initial state */
+        //fill in the initial state
         let initial_state = self
             .pb
             .borrow()
@@ -565,7 +565,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             .cpu_state
             .fill_with_bits(&self.pb, &initial_state);
 
-        /* fill in the boot section */
+        //fill in the boot section
         let mut memory_after_boot = memory_contents::new();
 
         for (&boot_pos, &(address, contents)) in boot_trace.get_all_trace_entries() {
@@ -588,7 +588,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             memory_after_boot.insert(address, contents);
         }
 
-        /* do the actual execution */
+        //do the actual execution
         let mut mem_backend = ra_memory::new3(
             1usize
                 << (self
@@ -621,7 +621,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             .generate_r1cs_witness_from_packed();
 
         for i in 0..self.t.time_bound {
-            /* load instruction */
+            //load instruction
             let pc_addr = self
                 .pb
                 .borrow()
@@ -647,7 +647,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             ) = FieldT::<RamT>::from(pc_val); //, true
             self.t.load_instruction_lines[i].generate_r1cs_witness_from_packed();
 
-            /* first fetch the address part of the memory */
+            //first fetch the address part of the memory
             self.t.execution_checkers[i].generate_r1cs_witness_address();
             self.t.execution_lines[i + 1]
                 .t
@@ -655,7 +655,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 .borrow()
                 .generate_r1cs_witness_from_bits();
 
-            /* fill it in */
+            //fill it in
             let load_store_addr = self
                 .pb
                 .borrow()
@@ -677,10 +677,10 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 .borrow()
                 .generate_r1cs_witness_from_packed();
 
-            /* then execute the rest of the instruction */
+            //then execute the rest of the instruction
             self.t.execution_checkers[i].generate_r1cs_witness_other(auxiliary_input);
 
-            /* update the memory possibly changed by the CPU checker */
+            //update the memory possibly changed by the CPU checker
             self.t.execution_lines[i + 1]
                 .t
                 .contents_after
@@ -700,7 +700,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 .as_ulong();
             mem_backend.set_value(load_store_addr, load_store_next_val);
 
-            /* the next PC address was passed in a bit form, so maintain packed form as well */
+            //the next PC address was passed in a bit form, so maintain packed form as well
             self.t.load_instruction_lines[i + 1]
                 .t
                 .address
@@ -720,7 +720,7 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
           property.
         */
 
-        // type mem_pair = std::pair<usize, usize>; /* a pair of address, timestamp */
+        // type mem_pair = std::pair<usize, usize>; //a pair of address, timestamp
         let mut mem_pairs = vec![];
 
         for i in 0..self.t.num_memory_lines {
@@ -770,24 +770,24 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
             pi.set(prev, i);
         }
 
-        /* route according to the memory permutation */
+        //route according to the memory permutation
         self.t.routing_network.borrow().generate_r1cs_witness(&pi);
 
         for i in 0..self.t.num_memory_lines {
             self.t.routed_memory_lines[i].generate_r1cs_witness_from_bits();
         }
 
-        /* generate witness for memory checkers */
+        //generate witness for memory checkers
         for i in 0..self.t.num_memory_lines {
             self.t.memory_checkers[i].generate_r1cs_witness();
         }
 
-        /* repack back the input */
+        //repack back the input
         for i in 0..self.t.boot_trace_size_bound {
             self.t.unpack_boot_lines[i].generate_r1cs_witness_from_bits();
         }
 
-        /* print debugging information */
+        //print debugging information
         if !inhibit_profiling_info {
             print_indent();
             print!(

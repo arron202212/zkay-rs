@@ -149,11 +149,11 @@ pub fn generate_r1cs_example_with_field_input<
     cs.add_constraint(r1cs_constraint::<FieldT, SV, SLC>::new(A, B, C));
     full_variable_assignment.push(fin.squared());
 
-    /* split variable assignment */
+    //split variable assignment
     let primary_input = full_variable_assignment[..num_inputs].to_vec();
     let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
-    /* sanity checks */
+    //sanity checks
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
@@ -179,7 +179,7 @@ pub fn generate_r1cs_example_with_binary_input<
 
     let mut cs = r1cs_constraint_system::<FieldT, SV, SLC>::default();
     cs.primary_input_size = num_inputs;
-    cs.auxiliary_input_size = num_constraints; /* we will add one auxiliary variable per constraint */
+    cs.auxiliary_input_size = num_constraints; //we will add one auxiliary variable per constraint
     let mut full_variable_assignment = r1cs_variable_assignment::<FieldT>::default();
     for i in 0..num_inputs {
         full_variable_assignment.push(FieldT::from(rand::random::<i64>() % 2));
@@ -226,11 +226,11 @@ pub fn generate_r1cs_example_with_binary_input<
         );
     }
 
-    /* split variable assignment */
+    //split variable assignment
     let primary_input = full_variable_assignment[..num_inputs].to_vec();
     let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
-    /* sanity checks */
+    //sanity checks
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);

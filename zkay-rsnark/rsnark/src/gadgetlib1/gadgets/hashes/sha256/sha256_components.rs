@@ -150,7 +150,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadget<FieldT, 
             ));
         }
 
-        /* NB: some of those will be un-allocated */
+        //NB: some of those will be un-allocated
         let mut sigma0 = vec![variable::<FieldT, pb_variable>::default(); 64];
         let mut sigma1 = vec![variable::<FieldT, pb_variable>::default(); 64];
         let mut compute_sigma0 =
@@ -161,11 +161,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadget<FieldT, 
         let mut mod_reduce_W = vec![RcCell::new(lastbits_gadgets::<FieldT, PB>::default()); 64];
 
         for i in 16..64 {
-            /* allocate result variables for sigma0/sigma1 invocations */
+            //allocate result variables for sigma0/sigma1 invocations
             sigma0[i].allocate(&pb, prefix_format!(annotation_prefix, " sigma0_{}", i));
             sigma1[i].allocate(&pb, prefix_format!(annotation_prefix, " sigma1_{}", i));
 
-            /* compute sigma0/sigma1 */
+            //compute sigma0/sigma1
             compute_sigma0[i] = RcCell::new(small_sigma_gadget::<FieldT, PB>::new(
                 pb.clone(),
                 W_bits[i - 15].clone(),
@@ -185,13 +185,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_message_schedule_gadget<FieldT, 
                 prefix_format!(annotation_prefix, " compute_sigma1_{}", i),
             ));
 
-            /* unreduced_W = sigma0(W_{i-15}) + sigma1(W_{i-2}) + W_{i-7} + W_{i-16} before modulo 2^32 */
+            //unreduced_W = sigma0(W_{i-15}) + sigma1(W_{i-2}) + W_{i-7} + W_{i-16} before modulo 2^32
             unreduced_W[i].allocate(&pb, prefix_format!(annotation_prefix, " unreduced_W_{}", i));
 
-            /* allocate the bit representation of packed_W[i] */
+            //allocate the bit representation of packed_W[i]
             W_bits[i].allocate(&pb, 32, prefix_format!(annotation_prefix, " W_bits_{}", i));
 
-            /* and finally reduce this into packed and bit representations */
+            //and finally reduce this into packed and bit representations
             mod_reduce_W[i] = RcCell::new(lastbits_gadget::<FieldT, PB>::new(
                 pb.clone(),
                 unreduced_W[i].clone(),
@@ -302,7 +302,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
         let mut packed_new_a = variable::<FieldT, pb_variable>::default();
         let mut packed_new_e = variable::<FieldT, pb_variable>::default();
 
-        /* compute sigma0 and sigma1 */
+        //compute sigma0 and sigma1
         sigma0.allocate(&pb, prefix_format!(annotation_prefix, " sigma0"));
         sigma1.allocate(&pb, prefix_format!(annotation_prefix, " sigma1"));
         let compute_sigma0 = RcCell::new(big_sigma_gadget::<FieldT, PB>::new(
@@ -324,7 +324,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
             prefix_format!(annotation_prefix, " compute_sigma1"),
         ));
 
-        /* compute choice */
+        //compute choice
         choice.allocate(&pb, prefix_format!(annotation_prefix, " choice"));
         let compute_choice = RcCell::new(choice_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -335,7 +335,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
             prefix_format!(annotation_prefix, " compute_choice"),
         ));
 
-        /* compute majority */
+        //compute majority
         majority.allocate(&pb, prefix_format!(annotation_prefix, " majority"));
         let compute_majority = RcCell::new(majority_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -346,7 +346,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
             prefix_format!(annotation_prefix, " compute_majority"),
         ));
 
-        /* pack d */
+        //pack d
         packed_d.allocate(&pb, prefix_format!(annotation_prefix, " packed_d"));
         let pack_d = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -355,7 +355,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
             prefix_format!(annotation_prefix, " pack_d"),
         ));
 
-        /* pack h */
+        //pack h
         packed_h.allocate(&pb, prefix_format!(annotation_prefix, " packed_h"));
         let pack_h = RcCell::new(packing_gadget::<FieldT, PB>::new(
             pb.clone(),
@@ -364,7 +364,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> sha256_round_function_gadget<FieldT, PB
             prefix_format!(annotation_prefix, " pack_h"),
         ));
 
-        /* compute the actual results for the round */
+        //compute the actual results for the round
         unreduced_new_a.allocate(&pb, prefix_format!(annotation_prefix, " unreduced_new_a"));
         unreduced_new_e.allocate(&pb, prefix_format!(annotation_prefix, " unreduced_new_e"));
 

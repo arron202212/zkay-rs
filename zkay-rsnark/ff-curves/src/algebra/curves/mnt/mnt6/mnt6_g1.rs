@@ -20,8 +20,7 @@ pub struct mnt6_G1 {
     pub Z: mnt6_Fq,
 }
 impl PpConfig for mnt6_G1 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for mnt6_G1 {
     type Fr = mnt6_Fq;

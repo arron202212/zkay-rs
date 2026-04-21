@@ -1,4 +1,4 @@
-/* ate pairing */
+//ate pairing
 
 struct bls12_381_ate_G1_precomp {
     pub PX: bls12_381_Fq,
@@ -17,12 +17,12 @@ struct bls12_381_ate_G2_precomp {
     pub coeffs: Vec<bls12_381_ate_ell_coeffs>,
 }
 
-/* choice of pairing */
+//choice of pairing
 
 type bls12_381_G1_precomp = bls12_381_ate_G1_precomp;
 type bls12_381_G2_precomp = bls12_381_ate_G2_precomp;
 
-/* final exponentiations */
+//final exponentiations
 
 pub fn bls12_381_final_exponentiation_first_chunk(elt: &bls12_381_Fq12) -> bls12_381_Fq12 {
     enter_block("Call to bls12_381_final_exponentiation_first_chunk",false);
@@ -107,7 +107,7 @@ pub fn bls12_381_final_exponentiation(elt: &bls12_381_Fq12) -> bls12_381_GT {
     result
 }
 
-/* ate pairing */
+//ate pairing
 
 pub fn doubling_step_for_miller_loop(
     two_inv: bls12_381_Fq,
@@ -203,7 +203,7 @@ pub fn bls12_381_ate_precompute_G2(Q: &bls12_381_G2) -> bls12_381_ate_G2_precomp
     for i in (0..=loop_count.max_bits()).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -238,7 +238,7 @@ pub fn bls12_381_ate_miller_loop(
     for i in (0..=loop_count.max_bits()).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -284,7 +284,7 @@ pub fn bls12_381_ate_double_miller_loop(
     for i in (0..=loop_count.max_bits()).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -338,7 +338,7 @@ pub fn bls12_381_ate_reduced_pairing(P: &bls12_381_G1, Q: &bls12_381_G2) -> bls1
     result
 }
 
-/* choice of pairing */
+//choice of pairing
 
 pub fn bls12_381_precompute_G1(P: &bls12_381_G1) -> bls12_381_G1_precomp {
     return bls12_381_ate_precompute_G1(P);

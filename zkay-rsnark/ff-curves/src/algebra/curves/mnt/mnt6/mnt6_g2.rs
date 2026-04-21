@@ -31,8 +31,7 @@ pub struct mnt6_G2 {
 }
 
 impl PpConfig for mnt6_G2 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for mnt6_G2 {
     type Fr = mnt6_Fq;

@@ -1105,7 +1105,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             " zero".to_owned(),
         );
 
-        /* recall that Booleanity of PCD messages has already been enforced by the PCD machine, which is explains the absence of Booleanity checks */
+        //recall that Booleanity of PCD messages has already been enforced by the PCD machine, which is explains the absence of Booleanity checks
         /*
           We need to perform the following checks:
 

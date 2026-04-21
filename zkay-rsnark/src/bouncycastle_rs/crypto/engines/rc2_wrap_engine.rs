@@ -19,24 +19,24 @@ import org.bouncycastle.util.Arrays;
 public class RC2WrapEngine
     implements Wrapper
 {
-   /** Field engine */
+  //Field engine
    private CBCBlockCipher engine;
 
-   /** Field param */
+  //Field param
    private CipherParameters param;
 
-   /** Field paramPlusIV */
+  //Field paramPlusIV
    private ParametersWithIV paramPlusIV;
 
-   /** Field iv */
+  //Field iv
    private byte[] iv;
 
-   /** Field forWrapping */
+  //Field forWrapping
    private boolean forWrapping;
    
    private SecureRandom sr;
 
-   /** Field IV2           */
+  //Field IV2          
    private static final byte[] IV2 = { (byte) 0x4a, (byte) 0xdd, (byte) 0xa2,
                                        (byte) 0x2c, (byte) 0x79, (byte) 0xe8,
                                        (byte) 0x21, (byte) 0x05 };

@@ -165,7 +165,7 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         // #ifdef PROFILE_OP_COUNTS
         // self.mul_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba)
         assert!(other.c0.c1.is_zero());
 
         let (A, B) = (other.c0, other.c1);
@@ -181,7 +181,7 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Complex)
         let (a, b) = (self.c0, self.c1);
         let ab = a * b;
 
@@ -200,7 +200,7 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
 
-        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8 */
+        //From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 8
         let (a, b) = (self.c0, self.c1);
         let t1 = b.squared();
         let t0 = a.squared() - Self::mul_by_non_residue(&t1);
@@ -263,7 +263,7 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         res
     }
 
-    pub fn sqrt(&self) -> Self {
+    pub fn sqrt(&self) -> Option<Self> {
         tonelli_shanks_sqrt(&self)
     }
 
@@ -282,18 +282,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
     }
 }
 
-//
-// bool Fp4_model<n,modulus>::operator==(other:&Fp4_model<n,modulus>) const
-// {
-//     return (self.c0 == other.c0 && self.c1 == other.c1);
-// }
-
-//
-// bool Fp4_model<n,modulus>::operator!=(other:&Fp4_model<n,modulus>) const
-// {
-//     return !(operator==(other));
-// }
-
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> PartialEq
     for Fp4_model<N, N2, N4, T>
 {
@@ -302,13 +290,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         self.c0 == other.c0 && self.c1 == other.c1
     }
 }
-
-//
-// Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator+=(const Fp4_model<n,modulus>& other)
-// {
-//     *self = *this + other;
-//     return *self;
-// }
 
 impl<
     const N: usize,
@@ -322,12 +303,6 @@ impl<
         *self = *self + other.borrow();
     }
 }
-//
-// Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator-=(const Fp4_model<n,modulus>& other)
-// {
-//     *self = *this - other;
-//     return *self;
-// }
 
 impl<
     const N: usize,
@@ -341,12 +316,7 @@ impl<
         *self = *self - *other.borrow();
     }
 }
-//
-// Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator*=(const Fp4_model<n,modulus>& other)
-// {
-//     *self = *this * other;
-//     return *self;
-// }
+
 impl<
     const N: usize,
     const N2: usize,
@@ -360,12 +330,6 @@ impl<
     }
 }
 
-//
-// Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator^=(const u64 pow)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>>
     BitXorAssign<u64> for Fp4_model<N, N2, N4, T>
 {
@@ -373,13 +337,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         *self = *self ^ other;
     }
 }
-//
-//
-// Fp4_model<n,modulus>& Fp4_model<n,modulus>::operator^=(pow:&bigint<m>)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>>
     BitXorAssign<bigint<N4>> for Fp4_model<N, N2, N4, T>
@@ -388,16 +345,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         *self = *self ^ other;
     }
 }
-
-//
-// Fp4_model<n,modulus> Fp4_model<n,modulus>::operator+(other:&Fp4_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-//
-//     Self::new(self.c0 + other.c0,
-//                                 self.c1 + other.c1);
-// }
 
 impl<
     const N: usize,
@@ -413,15 +360,7 @@ impl<
         Self::new(self.c0 + other.borrow().c0, self.c1 + other.borrow().c1)
     }
 }
-//
-// Fp4_model<n,modulus> Fp4_model<n,modulus>::operator-(other:&Fp4_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-//
-//     Self::new(self.c0 - other.c0,
-//                                 self.c1 - other.c1);
-// }
+
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> Sub
     for Fp4_model<N, N2, N4, T>
 {
@@ -431,43 +370,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         Self::new(self.c0 - other.borrow().c0, self.c1 - other.borrow().c1)
     }
 }
-
-//
-// Fp4_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp4_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     Self::new(lhs*rhs.c0,
-//                                 lhs*rhs.c1);
-// }
-
-//
-// Fp4_model<n,modulus> Fp4_model<n,modulus>::operator*(other:&Fp4_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-//
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-//     B:&my_Fp2 = other.c1, &A = other.c0,
-//         &b = self.c1, &a = self.c0;
-//     let aA= a*A;
-//     let bB= b*B;
-
-//     let beta_bB= Fp4_model<n,modulus>::mul_by_non_residue(bB);
-//     Self::new(aA + beta_bB,
-//                                 (a+b)*(A+B) - aA  - bB);
-// }
-
-//
-// Fp4_model<n, modulus> operator*(lhs:&Fp4_model<n, modulus>, rhs:&Fp4_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     Self::new(lhs*rhs.c0,
-//                                 lhs*rhs.c1);
-// }
 
 impl<
     const N: usize,
@@ -568,12 +470,8 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
 // }
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> PpConfig
     for Fp4_model<N, N2, N4, T>
-where
-    <<T as Fp4_modelConfig<N, N2, N4>>::Fp2_modelConfig as Fp2_modelConfig<N, N2>>::Fp_modelConfig:
-        PpConfig,
 {
-    //type TT = bigint<N>;
-    //  type Fr=<T::Fp2_modelConfig as Fp2_modelConfig<N,N2>>::Fp_modelConfig;
+    type GType = Self;
 }
 
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> One

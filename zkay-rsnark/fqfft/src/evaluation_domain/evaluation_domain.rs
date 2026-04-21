@@ -32,12 +32,12 @@ use enum_dispatch::enum_dispatch;
 use ffec::FieldTConfig;
 use std::fmt::Debug;
 
-#[derive(Default, Clone,Debug)]
-pub struct evaluation_domain<T: Default + Clone+Debug> {
+#[derive(Default, Clone, Debug)]
+pub struct evaluation_domain<T: Default + Clone + Debug> {
     pub m: usize,
     pub t: T,
 }
-impl<T: Default + Clone+Debug> evaluation_domain<T> {
+impl<T: Default + Clone + Debug> evaluation_domain<T> {
     pub fn new(m: usize, t: T) -> Self {
         Self { m, t }
     }
@@ -69,61 +69,51 @@ pub trait EvaluationDomainConfig<FieldT> {
     }
     // const M: usize = 0;
 
-    /**
-     * Construct an evaluation domain S of size m, if possible.
-     *
-     * (See the function get_evaluation_domain below.)
-     */
+    //Construct an evaluation domain S of size m, if possible.
+
+    //(See the function get_evaluation_domain below.)
+
     // evaluation_domain(m:usize)->Self m(m) {};
 
-    /**
-     * Get the idx-th element in S.
-     */
+    //Get the idx-th element in S.
+
     fn get_domain_element(&mut self, idx: usize) -> FieldT;
 
-    /**
-     * Compute the FFT, over the domain S, of the vector a.
-     */
+    //Compute the FFT, over the domain S, of the vector a.
+
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()>;
 
-    /**
-     * Compute the inverse FFT, over the domain S, of the vector a.
-     */
+    //Compute the inverse FFT, over the domain S, of the vector a.
+
     fn iFFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()>;
 
-    /**
-     * Compute the FFT, over the domain g*S, of the vector a.
-     */
+    //Compute the FFT, over the domain g*S, of the vector a.
+
     fn cosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()>;
 
-    /**
-     * Compute the inverse FFT, over the domain g*S, of the vector a.
-     */
+    //Compute the inverse FFT, over the domain g*S, of the vector a.
+
     fn icosetFFT(&mut self, a: &mut Vec<FieldT>, g: &FieldT) -> eyre::Result<()>;
 
-    /**
-     * Evaluate all Lagrange polynomials.
-     *
-     * The inputs are:
-     * - an integer m
-     * - an element t
-     * The output is a vector (b_{0},...,b_{m-1})
-     * where b_{i} is the evaluation of L_{i,S}(z) at z = t.
-     */
+    //Evaluate all Lagrange polynomials.
+
+    //The inputs are:
+    //- an integer m
+    //- an element t
+    //The output is a vector (b_{0},...,b_{m-1})
+    //where b_{i} is the evaluation of L_{i,S}(z) at z = t.
+
     fn evaluate_all_lagrange_polynomials(&mut self, t: &FieldT) -> Vec<FieldT>;
 
-    /**
-     * Evaluate the vanishing polynomial of S at the field element t.
-     */
+    //Evaluate the vanishing polynomial of S at the field element t.
+
     fn compute_vanishing_polynomial(&mut self, t: &FieldT) -> FieldT;
 
-    /**
-     * Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
-     */
+    //Add the coefficients of the vanishing polynomial of S to the coefficients of the polynomial H.
+
     fn add_poly_Z(&mut self, coeff: &FieldT, H: &mut Vec<FieldT>) -> eyre::Result<()>;
 
-    /**
-     * Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
-     */
+    //Multiply by the evaluation, on a coset of S, of the inverse of the vanishing polynomial of S.
+
     fn divide_by_Z_on_coset(&self, P: &mut Vec<FieldT>);
 }

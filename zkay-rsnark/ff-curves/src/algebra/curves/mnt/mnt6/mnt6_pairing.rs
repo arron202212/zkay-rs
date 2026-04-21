@@ -17,7 +17,7 @@ use ffec::scalar_multiplication::wnaf::find_wnaf;
 
 const num_limbs: usize = 5;
 
-/* affine ate miller loop */
+//affine ate miller loop
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct mnt6_affine_ate_G1_precomputation {
     pub PX: mnt6_Fq,
@@ -40,7 +40,7 @@ pub struct mnt6_affine_ate_G2_precomputation {
     pub coeffs: Vec<mnt6_affine_ate_coeffs>,
 }
 
-/* ate pairing */
+//ate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct mnt6_ate_G1_precomp {
     pub PX: mnt6_Fq,
@@ -73,7 +73,7 @@ pub struct mnt6_ate_G2_precomp {
     pub add_coeffs: Vec<mnt6_ate_add_coeffs>,
 }
 
-/* choice of pairing */
+//choice of pairing
 
 pub type mnt6_G1_precomp = mnt6_ate_G1_precomp;
 pub type mnt6_G2_precomp = mnt6_ate_G2_precomp;
@@ -126,7 +126,7 @@ impl fmt::Display for mnt6_ate_G2_precomp {
     }
 }
 
-/* final exponentiations */
+//final exponentiations
 
 pub fn mnt6_final_exponentiation_last_chunk(elt: &mnt6_Fq6, elt_inv: &mnt6_Fq6) -> mnt6_Fq6 {
     enter_block("Call to mnt6_final_exponentiation_last_chunk", false);
@@ -146,15 +146,15 @@ pub fn mnt6_final_exponentiation_last_chunk(elt: &mnt6_Fq6, elt_inv: &mnt6_Fq6) 
 pub fn mnt6_final_exponentiation_first_chunk(elt: &mnt6_Fq6, elt_inv: &mnt6_Fq6) -> mnt6_Fq6 {
     enter_block("Call to mnt6_final_exponentiation_first_chunk", false);
 
-    /* (q^3-1)*(q+1) */
+    //(q^3-1)*(q+1)
 
-    /* elt_q3 = elt^(q^3) */
+    //elt_q3 = elt^(q^3)
     let elt_q3 = elt.Frobenius_map(3);
-    /* elt_q3_over_elt = elt^(q^3-1) */
+    //elt_q3_over_elt = elt^(q^3-1)
     let elt_q3_over_elt = elt_q3 * elt_inv;
-    /* alpha = elt^((q^3-1) * q) */
+    //alpha = elt^((q^3-1) * q)
     let alpha = elt_q3_over_elt.Frobenius_map(1);
-    /* beta = elt^((q^3-1)*(q+1) */
+    //beta = elt^((q^3-1)*(q+1)
     let beta = alpha * elt_q3_over_elt;
     leave_block("Call to mnt6_final_exponentiation_first_chunk", false);
     return beta;
@@ -171,7 +171,7 @@ pub fn mnt6_final_exponentiation(elt: &mnt6_Fq6) -> mnt6_GT {
     result
 }
 
-/* affine ate miller loop */
+//affine ate miller loop
 
 pub fn mnt6_affine_ate_precompute_G1(P: &mnt6_G1) -> mnt6_affine_ate_G1_precomputation {
     enter_block("Call to mnt6_affine_ate_precompute_G1", false);
@@ -207,7 +207,7 @@ pub fn mnt6_affine_ate_precompute_G2(Q: &mnt6_G2) -> mnt6_affine_ate_G2_precompu
     let NAF = find_wnaf(1, loop_count);
     for i in (0..=NAF.len() - 1).rev() {
         if !found_nonzero {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_nonzero |= (NAF[i] != 0);
             continue;
         }
@@ -277,7 +277,7 @@ pub fn mnt6_affine_ate_miller_loop(
     let mut NAF = find_wnaf(1, loop_count);
     for i in (0..=NAF.len() - 1).rev() {
         if !found_nonzero {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_nonzero |= (NAF[i] != 0);
             continue;
         }
@@ -329,7 +329,7 @@ pub fn mnt6_affine_ate_miller_loop(
     f
 }
 
-/* ate pairing */
+//ate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_mnt6_G2_projective {
     pub X: mnt6_Fq3,
@@ -460,7 +460,7 @@ pub fn mnt6_ate_precompute_G2(Q: &mnt6_G2) -> mnt6_ate_G2_precomp {
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -525,7 +525,7 @@ pub fn mnt6_ate_miller_loop(
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -593,7 +593,7 @@ pub fn mnt6_ate_double_miller_loop(
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }

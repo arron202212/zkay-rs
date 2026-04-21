@@ -137,7 +137,7 @@ fn main<default_tinyram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig>(
     print!("TinyRAM example loader\n");
     print!("================================================================================\n\n");
 
-    /* load everything */
+    //load everything
     let mut ap = ram_architecture_params::<default_ram<default_tinyram_ppzksnark_pp>>::default();
     let mut f_ap = (architecture_params_fn);
     // f_ap >> ap;

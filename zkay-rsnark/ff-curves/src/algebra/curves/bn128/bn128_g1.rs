@@ -29,8 +29,7 @@ pub struct bn128_G1 {
 }
 
 impl PpConfig for bn128_G1 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for bn128_G1 {
     type Fr = bn128_Fq;

@@ -237,7 +237,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 
     pub fn expected_constraints(tree_depth: usize) -> usize {
-        /* NB: this includes path constraints */
+        //NB: this includes path constraints
         let prev_hasher_constraints = tree_depth * HashT::expected_constraints(false);
         let next_hasher_constraints = tree_depth * HashT::expected_constraints(true);
         let prev_authentication_path_constraints = 2 * tree_depth * HashT::get_digest_len();
@@ -260,19 +260,19 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     merkle_tree_check_update_gadgets<FieldT, PB, HashT>
 {
     pub fn generate_r1cs_constraints(&self) {
-        /* ensure correct hash computations */
+        //ensure correct hash computations
         for i in 0..self.t.tree_depth {
             self.t.prev_hashers[i].generate_r1cs_constraints(false); // we check root outside and prev_left/prev_right above
             self.t.next_hashers[i].generate_r1cs_constraints(true); // however we must check right side hashes
         }
 
-        /* ensure consistency of internal_left/internal_right with internal_output */
+        //ensure consistency of internal_left/internal_right with internal_output
         for i in 0..self.t.tree_depth {
             self.t.prev_propagators[i].generate_r1cs_constraints();
             self.t.next_propagators[i].generate_r1cs_constraints();
         }
 
-        /* ensure that prev auxiliary input and next auxiliary input match */
+        //ensure that prev auxiliary input and next auxiliary input match
         for i in 0..self.t.tree_depth {
             for j in 0..self.t.digest_size {
                 /*
@@ -313,9 +313,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* do the hash computations bottom-up */
+        //do the hash computations bottom-up
         for i in (0..=self.t.tree_depth - 1).rev() {
-            /* ensure consistency of prev_path and next_path */
+            //ensure consistency of prev_path and next_path
             if self
                 .pb
                 .borrow()
@@ -329,11 +329,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
                     .generate_r1cs_witness(&self.t.prev_path.t.right_digests[i].get_digest());
             }
 
-            /* propagate previous input */
+            //propagate previous input
             self.t.prev_propagators[i].generate_r1cs_witness();
             self.t.next_propagators[i].generate_r1cs_witness();
 
-            /* compute hash */
+            //compute hash
             self.t.prev_hashers[i].generate_r1cs_witness();
             self.t.next_hashers[i].generate_r1cs_witness();
         }
@@ -347,7 +347,7 @@ pub fn test_merkle_tree_check_update_gadget<
     PB: PBConfig,
     HashT: HashTConfig,
 >() {
-    /* prepare test */
+    //prepare test
     let digest_len = HashT::get_digest_len();
 
     let tree_depth = 16;
@@ -404,7 +404,7 @@ pub fn test_merkle_tree_check_update_gadget<
     let mut load_root = prev_load_hash.clone();
     let mut store_root = prev_store_hash.clone();
 
-    /* execute the test */
+    //execute the test
     let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
     let mut address_bits_va = pb_variable_array::<FieldT, PB>::default();
     address_bits_va.allocate(&pb, tree_depth, "address_bits");
@@ -451,7 +451,7 @@ pub fn test_merkle_tree_check_update_gadget<
     address_bits_va.fill_with_bits(&pb, &address_bits);
     mls.generate_r1cs_witness();
 
-    /* make sure that update check will check for the right things */
+    //make sure that update check will check for the right things
     prev_leaf_digest.generate_r1cs_witness(&loaded_leaf);
     next_leaf_digest.generate_r1cs_witness(&stored_leaf);
     prev_root_digest.generate_r1cs_witness(&load_root);

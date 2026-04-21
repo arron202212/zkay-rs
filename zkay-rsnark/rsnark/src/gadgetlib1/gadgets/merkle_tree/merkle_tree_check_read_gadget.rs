@@ -191,7 +191,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 
     pub fn expected_constraints(tree_depth: usize) -> usize {
-        /* NB: this includes path constraints */
+        //NB: this includes path constraints
         let hasher_constraints = tree_depth * HashT::expected_constraints(false);
         let propagator_constraints = tree_depth * HashT::get_digest_len();
         let authentication_path_constraints = 2 * tree_depth * HashT::get_digest_len();
@@ -208,13 +208,13 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     merkle_tree_check_read_gadgets<FieldT, PB, HashT>
 {
     pub fn generate_r1cs_constraints(&self) {
-        /* ensure correct hash computations */
+        //ensure correct hash computations
         for i in 0..self.t.tree_depth {
             // Note that we check root outside and have enforced booleanity of path.left_digests/path.right_digests outside in path.generate_r1cs_constraints
             self.t.hashers[i].generate_r1cs_constraints(false);
         }
 
-        /* ensure consistency of path.left_digests/path.right_digests with internal_output */
+        //ensure consistency of path.left_digests/path.right_digests with internal_output
         for i in 0..self.t.tree_depth {
             self.t.propagators[i].generate_r1cs_constraints();
         }
@@ -226,12 +226,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* do the hash computations bottom-up */
+        //do the hash computations bottom-up
         for i in (0..=self.t.tree_depth - 1).rev() {
-            /* propagate previous input */
+            //propagate previous input
             self.t.propagators[i].generate_r1cs_witness();
 
-            /* compute hash */
+            //compute hash
             self.t.hashers[i].generate_r1cs_witness();
         }
 
@@ -244,7 +244,7 @@ pub fn test_merkle_tree_check_read_gadget<
     PB: PBConfig,
     HashT: HashTConfig,
 >() {
-    /* prepare test */
+    //prepare test
     let digest_len = HashT::get_digest_len();
     let tree_depth = 16;
     let mut path = vec![merkle_authentication_node::new(); tree_depth];
@@ -284,7 +284,7 @@ pub fn test_merkle_tree_check_read_gadget<
     }
     let mut root = prev_hash.clone();
 
-    /* execute test */
+    //execute test
     let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
     let mut address_bits_va = pb_variable_array::<FieldT, PB>::default();
     address_bits_va.allocate(&pb, tree_depth, "address_bits");
@@ -317,7 +317,7 @@ pub fn test_merkle_tree_check_read_gadget<
     path_var.generate_r1cs_witness(address as usize, path);
     ml.generate_r1cs_witness();
 
-    /* make sure that read checker didn't accidentally overwrite anything */
+    //make sure that read checker didn't accidentally overwrite anything
     address_bits_va.fill_with_bits(&pb, &address_bits);
     leaf_digest.generate_r1cs_witness(&leaf);
     root_digest.generate_r1cs_witness(&root);

@@ -79,7 +79,7 @@
 // //     friend std::ostream& operator<<(std::ostream &out, el:&gf128);
 // //     friend std::istream& operator>>(std::istream &in, gf128 &el);
 // //
-// //     /* little-endian */
+// //     //little-endian
 // //     uint64_t value_[2];
 // // };
 
@@ -169,30 +169,30 @@
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
-//     /* load the two operands and the modulus into 128-bit registers */
+//     //load the two operands and the modulus into 128-bit registers
 //     let a= _mm_loadu_si128((const __m128i*) &(this->value_));
 //     let b= _mm_loadu_si128((const __m128i*) &(other.value_));
 //     let modulus= _mm_loadl_epi64((const __m128i*) &(gf128::modulus_));
 
 //     /* compute the 256-bit result of a * b with the 64x64-bit multiplication
 //        intrinsic */
-//     __m128i mul256_high = _mm_clmulepi64_si128(a, b, 0x11); /* high of both */
-//     __m128i mul256_low = _mm_clmulepi64_si128(a, b, 0x00); /* low of both */
-//     __m128i mul256_mid1 = _mm_clmulepi64_si128(a, b, 0x01); /* low of a, high of b */
-//     __m128i mul256_mid2 = _mm_clmulepi64_si128(a, b, 0x10); /* high of a, low of b */
-//     /* Add the 4 terms together */
+//     __m128i mul256_high = _mm_clmulepi64_si128(a, b, 0x11); //high of both
+//     __m128i mul256_low = _mm_clmulepi64_si128(a, b, 0x00); //low of both
+//     __m128i mul256_mid1 = _mm_clmulepi64_si128(a, b, 0x01); //low of a, high of b
+//     __m128i mul256_mid2 = _mm_clmulepi64_si128(a, b, 0x10); //high of a, low of b
+//     //Add the 4 terms together
 //     __m128i mul256_mid = _mm_xor_si128(mul256_mid1, mul256_mid2);
-//     /* lower 64 bits of mid don't intersect with high, and upper 64 bits don't intersect with low */
+//     //lower 64 bits of mid don't intersect with high, and upper 64 bits don't intersect with low
 //     mul256_high = _mm_xor_si128(mul256_high, _mm_srli_si128(mul256_mid, 8));
 //     mul256_low = _mm_xor_si128(mul256_low, _mm_slli_si128(mul256_mid, 8));
 
-//     /* done computing mul256_low and mul256_high, time to reduce */
-//     /* reduce w.r.t. high half of mul256_high */
+//     //done computing mul256_low and mul256_high, time to reduce
+//     //reduce w.r.t. high half of mul256_high
 //     __m128i tmp = _mm_clmulepi64_si128(mul256_high, modulus, 0x01);
 //     mul256_low = _mm_xor_si128(mul256_low, _mm_slli_si128(tmp, 8));
 //     mul256_high = _mm_xor_si128(mul256_high, _mm_srli_si128(tmp, 8));
 
-//     /* reduce w.r.t. low half of mul256_high */
+//     //reduce w.r.t. low half of mul256_high
 //     tmp = _mm_clmulepi64_si128(mul256_high, modulus, 0x00);
 //     mul256_low = _mm_xor_si128(mul256_low, tmp);
 
@@ -200,7 +200,7 @@
 
 //     return (*this);
 // #else
-//     /* Slow, but straight-forward */
+//     //Slow, but straight-forward
 //     uint64_t shifted[2] = {this->value_[0], this->value_[1]};
 //     uint64_t result[2] = {0, 0};
 
@@ -305,15 +305,15 @@
 //     gf128 result(0);
 //     for i in 0..=6
 //     {
-//         /* entering the loop a = el^{2^{2^i}-1} */
+//         //entering the loop a = el^{2^{2^i}-1}
 //         gf128 b = a;
 //         for j in 0..(1UL<<i)
 //         {
 //             b.square();
 //         }
-//         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
+//         //after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)}
 //         a *= b;
-//         /* now a = el^{2^{2^{i+1}}-1} */
+//         //now a = el^{2^{2^{i+1}}-1}
 //         if i == 0
 //         {
 //             result = b;
@@ -323,7 +323,7 @@
 //             result *= b;
 //         }
 //     }
-//     /* now result = el^{2^128-2} */
+//     //now result = el^{2^128-2}
 //     return result;
 // }
 

@@ -219,7 +219,7 @@ unsafe fn montgomery_finalize_3_limbs(res_hi: &mut [u64; 3], modulus: &[u64; 3])
     let m_ptr = modulus.as_ptr();
 
     core::arch::asm!(
-        /* 1. MONT_CMP: 从高位到低位比较 (16, 8, 0 字节偏移) */
+        //1. MONT_CMP: 从高位到低位比较 (16, 8, 0 字节偏移)
         "mov {tmp}, [{m_ptr} + 16]",
         "cmp [{r_ptr} + 16], {tmp}",
         "jb 3f", // res < mod, 跳转到 done (2f)
@@ -234,7 +234,7 @@ unsafe fn montgomery_finalize_3_limbs(res_hi: &mut [u64; 3], modulus: &[u64; 3])
         "cmp [{r_ptr}], {tmp}",
         "jb 3f",
 
-        /* 2. MONT_SUB: 结果大于等于模数，执行减法 */
+        //2. MONT_SUB: 结果大于等于模数，执行减法
         "2:", // subtract 标签
         "mov {tmp}, [{m_ptr}]",
         "sub [{r_ptr}], {tmp}",
@@ -456,12 +456,12 @@ pub fn squared_nn3(a: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
         // --- 第一阶段：Comba Squaring (3x3 平方) ---
         // 这里简化展示逻辑，实际会利用 rdx:rax 进行大量累加
         core::arch::asm!(
-            /* 伪代码逻辑：计算 a[0..3] * a[0..3] 得到 res[0..6] */
+            //伪代码逻辑：计算 a[0..3] * a[0..3] 得到 res[0..6]
             // 实际上会包含大量的 mulq, add, adc 指令来最小化寄存器溢出
             // ... (此处省略复杂的 Comba 进位链，通常由脚本生成)
 
             // --- 第二阶段：Montgomery Reduction (约减) ---
-            /* 使用 REDUCE_6_LIMB_PRODUCT 逻辑 */
+            //使用 REDUCE_6_LIMB_PRODUCT 逻辑
             // 将 res[0..6] 约减为 res[3..6] (即 res+n)
 
             // --- 第三阶段：条件减法 (MONT_CMP & MONT_SUB) ---
@@ -1229,7 +1229,7 @@ macro_rules! sub_320 {
 //             // ... 后续循环逻辑类似 C++ 宏展开 ...
 
 //             // --- 最后的溢出检查与减法 ---
-//             "/* check for overflow */",
+//             "//check for overflow",
 //             "movq 24({M}), %rax", "cmpq %rax, 24({tmp})", "jb 2f", "ja 1f",
 //             "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
 //             "movq 8({M}), %rax",  "cmpq %rax, 8({tmp})",  "jb 2f", "ja 1f",
@@ -1347,7 +1347,7 @@ macro_rules! sub_320 {
 //             // --- 此处应重复 MONT_ITERFIRST 和 MONT_ITERITER (i=1, 2, 3) ---
 //             // 篇幅限制，此处展示核心规约后的减法判断逻辑
 
-//             "/* 最终减法判定: MONT_CMP & SUBTRACT */",
+//             "//最终减法判定: MONT_CMP & SUBTRACT",
 //             "mov 24({M}), %rax", "cmp %rax, 24({tmp})", "jb 2f", "ja 1f",
 //             "mov 16({M}), %rax", "cmp %rax, 16({tmp})", "jb 2f", "ja 1f",
 //             "mov 8({M}), %rax",  "cmp %rax, 8({tmp})",  "jb 2f", "ja 1f",
@@ -1400,7 +1400,7 @@ pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv:
     let mut u: u64;
 
     core::arch::asm!(
-        /* --- MONT_PRECOMPUTE --- */
+        //--- MONT_PRECOMPUTE ---
         "xorq {cy}, {cy}",
         "movq 0({A}), %rax",
         "mulq 0({B})",
@@ -1413,19 +1413,19 @@ pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv:
         "adcq %rdx, {T1}",
         "adcq $0, {cy}",
 
-        /* --- MONT_FIRSTITER(1) --- */
+        //--- MONT_FIRSTITER(1) ---
         "xorq {T0}, {T0}", "movq 0({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}",
         "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}",
-        /* --- MONT_FIRSTITER(2) --- */
+        //--- MONT_FIRSTITER(2) ---
         "xorq {T0}, {T0}", "movq 0({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}",
         "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}",
-        /* --- MONT_FIRSTITER(3) --- */
+        //--- MONT_FIRSTITER(3) ---
         "xorq {T0}, {T0}", "movq 0({A}), %rax", "mulq 24({B})", "addq {T1}, %rax", "movq %rax, 16({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}",
         "movq 24({M}), %rax", "mulq {u}", "addq %rax, 16({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}",
 
         "movq {T1}, 24({tmp})", "movq {cy}, 32({tmp})", // MONT_FINALIZE(3)
 
-        /* --- MONT_ITER(i=1) --- */
+        //--- MONT_ITER(i=1) ---
         "xorq {cy}, {cy}", "movq 8({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         // j=1, 2, 3
         "xorq {T0}, {T0}", "movq 8({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
@@ -1433,21 +1433,21 @@ pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv:
         "xorq {T0}, {T0}", "movq 8({A}), %rax", "mulq 24({B})", "addq {T1}, %rax", "movq %rax, 16({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 24({M}), %rax", "mulq {u}", "addq %rax, 16({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 32({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 24({tmp})", "movq {cy}, 32({tmp})",
 
-        /* --- MONT_ITER(i=2) --- */
+        //--- MONT_ITER(i=2) ---
         "xorq {cy}, {cy}", "movq 16({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 24({B})", "addq {T1}, %rax", "movq %rax, 16({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 24({M}), %rax", "mulq {u}", "addq %rax, 16({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 32({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 24({tmp})", "movq {cy}, 32({tmp})",
 
-        /* --- MONT_ITER(i=3) --- */
+        //--- MONT_ITER(i=3) ---
         "xorq {cy}, {cy}", "movq 24({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 24({B})", "addq {T1}, %rax", "movq %rax, 16({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 24({M}), %rax", "mulq {u}", "addq %rax, 16({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 32({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 24({tmp})", "movq {cy}, 32({tmp})",
 
-        /* --- 溢出检查与条件减法 --- */
+        //--- 溢出检查与条件减法 ---
         "movq 24({M}), %rax", "cmpq %rax, 24({tmp})", "jb 2f", "ja 1f",
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
         "movq 8({M}), %rax",  "cmpq %rax, 8({tmp})",  "jb 2f", "ja 1f",
@@ -1485,7 +1485,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
     let mut u: u64;
 
     core::arch::asm!(
-        /* ======================== i = 0 ======================== */
+        //======================== i = 0 ========================
         "xorq {cy}, {cy}", "movq 0({A}), %rax", "mulq 0({B})", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         // j=1
         "xorq {T0}, {T0}", "movq 0({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}",
@@ -1497,7 +1497,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 0({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        /* ======================== i = 1 ======================== */
+        //======================== i = 1 ========================
         "xorq {cy}, {cy}", "movq 8({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 8({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 8({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
@@ -1505,7 +1505,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 8({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 40({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        /* ======================== i = 2 ======================== */
+        //======================== i = 2 ========================
         "xorq {cy}, {cy}", "movq 16({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
@@ -1513,7 +1513,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 16({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 40({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        /* ======================== i = 3 ======================== */
+        //======================== i = 3 ========================
         "xorq {cy}, {cy}", "movq 24({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
@@ -1521,7 +1521,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 40({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        /* ======================== i = 4 ======================== */
+        //======================== i = 4 ========================
         "xorq {cy}, {cy}", "movq 32({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 32({A}), %rax", "mulq 8({B})", "addq {T1}, %rax", "movq %rax, 0({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 8({M}), %rax", "mulq {u}", "addq %rax, 0({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 16({tmp}), {T1}", "adcq $0, {cy}",
         "xorq {T0}, {T0}", "movq 32({A}), %rax", "mulq 16({B})", "addq {T1}, %rax", "movq %rax, 8({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 16({M}), %rax", "mulq {u}", "addq %rax, 8({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 24({tmp}), {T1}", "adcq $0, {cy}",
@@ -1529,7 +1529,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 32({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 40({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        /* ======================== 溢出修正 ======================== */
+        //======================== 溢出修正 ========================
         "movq 32({M}), %rax", "cmpq %rax, 32({tmp})", "jb 2f", "ja 1f",
         "movq 24({M}), %rax", "cmpq %rax, 24({tmp})", "jb 2f", "ja 1f",
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
@@ -1562,7 +1562,7 @@ pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv
     let mut u: u64;
 
     core::arch::asm!(
-        /* ======================== i = 0 (MONT_PRECOMPUTE) ======================== */
+        //======================== i = 0 (MONT_PRECOMPUTE) ========================
         "xorq {cy}, {cy}",
         "movq 0({A}), %rax",
         "mulq 0({B})",
@@ -1585,7 +1585,7 @@ pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv
 
         "movq {T1}, 16({tmp})", "movq {cy}, 24({tmp})", // MONT_FINALIZE(2)
 
-        /* ======================== i = 1 (MONT_ITERFIRST + ITERITER) ======================== */
+        //======================== i = 1 (MONT_ITERFIRST + ITERITER) ========================
         "xorq {cy}, {cy}", "movq 8({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
 
         // j=1
@@ -1596,7 +1596,7 @@ pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv
 
         "movq {T1}, 16({tmp})", "movq {cy}, 24({tmp})",
 
-        /* ======================== i = 2 (MONT_ITERFIRST + ITERITER) ======================== */
+        //======================== i = 2 (MONT_ITERFIRST + ITERITER) ========================
         "xorq {cy}, {cy}", "movq 16({A}), %rax", "mulq 0({B})", "addq 0({tmp}), %rax", "adcq 8({tmp}), %rdx", "adcq $0, {cy}", "movq %rax, {T0}", "movq %rdx, {T1}", "mulq {inv}", "movq %rax, {u}", "mulq 0({M})", "addq {T0}, %rax", "adcq %rdx, {T1}", "adcq $0, {cy}",
 
         // j=1
@@ -1607,7 +1607,7 @@ pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv
 
         "movq {T1}, 16({tmp})", "movq {cy}, 24({tmp})",
 
-        /* ======================== 溢出判定与条件减法 ======================== */
+        //======================== 溢出判定与条件减法 ========================
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
         "movq 8({M}), %rax",  "cmpq %rax, 8({tmp})",  "jb 2f", "ja 1f",
         "movq 0({M}), %rax",  "cmpq %rax, 0({tmp})",  "jb 2f", "ja 1f",

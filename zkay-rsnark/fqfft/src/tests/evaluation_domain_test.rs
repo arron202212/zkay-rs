@@ -27,7 +27,7 @@ mod test {
         //   }
     }
 
-    //   type FieldT=::testing::Types<Fr<mnt4_pp>, Double>; /* List Extend Here */
+    //   type FieldT=::testing::Types<Fr<mnt4_pp>, Double>; //List Extend Here
     //   TYPED_TEST_CASE(EvaluationDomainTest, FieldT);
     type TypeParam = Double;
     #[test]

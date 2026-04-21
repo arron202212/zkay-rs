@@ -1,6 +1,6 @@
 //  Implementation of functions for profiling menu.
 
-// /* Level 2: Profile */
+// //Level 2: Profile
 // pub fn  profile()
 // {
 //   std::cout << "\n\033[1;32mChoose Profile Type:\033[0m\n";
@@ -16,7 +16,7 @@
 //     std::cout << "> ";
 //     getline(std::cin, profile_type);
 
-//     /* Check Input Validity */
+//     //Check Input Validity
 //     int n;
 //     valid_input = 1;
 //     std::stringstream stream(profile_type);
@@ -27,7 +27,7 @@
 //     }
 //   } while (!valid_input);
 
-//   /* Level 3: Choose Domain Type */
+//   //Level 3: Choose Domain Type
 //   if valid_input == 1
 //   {
 //     std::cout << "\n\033[1;32mChoose Domain Type:\033[0m\n\n";
@@ -53,10 +53,10 @@
 //     } while (!valid_input);
 //     int domain_type = atoi(domain);
 
-//     /* Level 4: Choose Domain Sizes */
+//     //Level 4: Choose Domain Sizes
 //     if valid_input == 1
 //     {
-//       /* Built-in domain size choices */
+//       //Built-in domain size choices
 //       Vec<String> domains(3);
 //       domains[0] = "32768 65536 131072 262144";
 //       domains[1] = "131072 262144 524288 1048576";
@@ -78,7 +78,7 @@
 
 //       if domain_choice >= 0 && domain_choice < 3
 //       {
-//         /* Level 5: Custom Domain Choice */
+//         //Level 5: Custom Domain Choice
 //         if domain_choice == 2
 //         {
 //           std::cout << "\n\033[1;32mEnter Custom Domain:\033[0m\n";
@@ -89,7 +89,7 @@
 //             std::cout << "> ";
 //             getline(std::cin, custom_dom);
 
-//             /* Check Input Validity */
+//             //Check Input Validity
 //             if strcmp(custom_dom, "") && strcmp(custom_dom, " ")
 //             {
 //               std::stringstream stream(custom_dom);
@@ -101,7 +101,7 @@
 //           domains[2] = custom_dom;
 //         }
 
-//         /* Get Current Timestamp */
+//         //Get Current Timestamp
 //         time_t rawtime;
 //         time(&rawtime);
 //         struct tm* timeinfo = localtime(&rawtime);
@@ -109,7 +109,7 @@
 //         strftime(buffer, 40, "%m-%d_%I:%M", timeinfo);
 //         String datetime(buffer);
 
-//         /* Perform Profiling */
+//         //Perform Profiling
 //         std::cout << "\n\033[1;32mStarting Profiling:\033[0m\n";
 // // #ifdef PROF_DOUBLE
 //         print!("Profiling with Double\n");
@@ -118,7 +118,7 @@
 //
 //         for threads in 0..4
 //         {
-//           for key in 0..4 /* Change key to 5 for arithmetic domain */
+//           for key in 0..4 //Change key to 5 for arithmetic domain
 //           {
 //             if key > 2 && domain_type == 2 continue;
 //             if key < 3 && domain_type == 3 continue;
@@ -137,7 +137,7 @@
 //   }
 // }
 
-// /* Level 2: Plot */
+// //Level 2: Plot
 // pub fn  plot()
 // {
 //   std::cout << "\n\033[1;32mChoose Profile:\033[0m\n\n";
@@ -154,10 +154,10 @@
 //     type = atoi(res);
 //   } while (type < 1 || type > 4);
 
-//   /* If not (back) option */
+//   //If not (back) option
 //   if type > 0 && type < 4
 //   {
-//     /* Source Directory */
+//     //Source Directory
 //     Vec< String > path (3);
 //     path[0] = "libfqfft/profiling/logs/operators/";
 //     path[1] = "libfqfft/profiling/logs/runtime/";
@@ -168,7 +168,7 @@
 //     gnufile[1] = "libfqfft/profiling/plot/runtime_plot.gp";
 //     gnufile[2] = "libfqfft/profiling/plot/memory_plot.gp";
 
-//     /* Level 3: File to Plot */
+//     //Level 3: File to Plot
 //     DIR *dir;
 //     if (dir = opendir(path[type - 1])) != NULL
 //     {
@@ -188,7 +188,7 @@
 //       std::cout << "\033[1;36m " << count << ": (Back)\033[0m\n\n";
 //       closedir(dir);
 
-//       /* Select File to Plot */
+//       //Select File to Plot
 //       int file_number;
 //       String file;
 //       loop {
@@ -202,9 +202,9 @@
 
 //       if file_number < count
 //       {
-//         /* Log Files Path */
+//         //Log Files Path
 //         String log_path = path[type - 1] + files[file_number - 1];
-//         /* System Call */
+//         //System Call
 //         String cmd = "gnuplot -e \"input_directory=\'" + log_path + "\'\" " + gnufile[type - 1];
 //         if system(cmd) == 0 {print!("Plotted in {}\n", log_path);}
 //       }
@@ -212,7 +212,7 @@
 //   }
 // }
 
-// /* Level 1: Choose to Profile or Plot */
+// //Level 1: Choose to Profile or Plot
 // int main()
 // {
 //   bool resume = 1;

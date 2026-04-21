@@ -171,7 +171,7 @@ impl tbcs_gate {
             input[self.right_wire - 1]
         };
 
-        let pos = 3 - ((if X { 2 } else { 0 }) + (if Y { 1 } else { 0 })); /* 3 - ... inverts position */
+        let pos = 3 - ((if X { 2 } else { 0 }) + (if Y { 1 } else { 0 })); //3 - ... inverts position
         let t: usize = self.types.clone() as usize;
         (t & (1usize << pos)) != 0
     }

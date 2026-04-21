@@ -277,7 +277,7 @@ pub fn tbcs_to_uscs_instance_map<
     }
 
     for i in 0..circuit.primary_input_size + circuit.auxiliary_input_size + circuit.gates.len() {
-        /* require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1} */
+        //require that 2 * wire - 1 \in {-1,1}, that is wire \in {0,1}
         result.add_constraint(
             linear_combination::<FieldT, SV, SLC>::from(
                 variable::<FieldT, SV>::new(i, SV::default()) * FieldT::from(2),
@@ -288,7 +288,7 @@ pub fn tbcs_to_uscs_instance_map<
 
     for g in &circuit.gates {
         if g.is_circuit_output {
-            /* require that output + FieldT::from(1) \in {-1,1}, this together with output binary (above) enforces output = 0 */
+            //require that output + FieldT::from(1) \in {-1,1}, this together with output binary (above) enforces output = 0
             result.add_constraint(
                 variable::<FieldT, SV>::new(g.output, SV::default()) + FieldT::from(1i64).into(),
                 &format!("output_{}", g.output),

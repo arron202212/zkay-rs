@@ -196,7 +196,7 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2)
         let (a, b, c) = (self.c0, self.c1, self.c2);
         let s0 = a.squared();
         let ab = a * b;
@@ -222,7 +222,7 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         // #ifdef PROFILE_OP_COUNTS
         // self.inv_cnt++;
 
-        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
+        //From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17
         let (a, b, c) = (self.c0, self.c1, self.c2);
         let t0 = a.squared();
         let t1 = b.squared();
@@ -250,7 +250,7 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         )
     }
 
-    pub fn sqrt(&self) -> Self {
+    pub fn sqrt(&self) -> Option<Self> {
         tonelli_shanks_sqrt(&self)
     }
 
@@ -399,7 +399,7 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 // // #ifdef PROFILE_OP_COUNTS
 //     self.mul_cnt++;
 //
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
+//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba)
 //     A:&my_Fp2<N,T::Fp2_modelConfig> = other.c0, &B = other.c1, &C = other.c2,
 //                  &a = self.c0, &b = self.c1, &c = self.c2;
 //     let aA= a*A;
@@ -586,11 +586,8 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PpConfig
     for Fp6_3over2_model<N, N2, N6, T>
-where
-    <T as Fp6_modelConfig<N, N2, N6>>::Fp_modelConfig: PpConfig,
 {
-    //type TT = bigint<N>;
-    //  type Fr=T::Fp_modelConfig;
+    type GType = Self;
 }
 
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> One

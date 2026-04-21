@@ -268,7 +268,7 @@ pub struct G1Projective {
 }
 
 impl G1Projective {
-    pub fn zero() -> Self { /* ... */
+    pub fn zero() -> Self { //...
     }
     pub fn is_zero(&self) -> bool {
         self.z.is_zero()

@@ -14,7 +14,7 @@ use ffec::common::utils::log2;
 use num_traits::One;
 use std::ops::Sub;
 
-#[derive(Default, Clone,Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct arithmetic_sequence_domain<FieldT: FieldTConfig> {
     //   : public evaluation_domain<FieldT>
     precomputation_sentinel: bool,
@@ -77,9 +77,9 @@ impl<FieldT: FieldTConfig> arithmetic_sequence_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequence_domains<FieldT> {
-  fn m(&self) -> usize {
+    fn m(&self) -> usize {
         self.m
-    } 
+    }
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("arithmetic: expected a.len() == self.m");
@@ -89,11 +89,11 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
             self.do_precomputation();
         }
 
-        /* Monomial to Newton */
+        //Monomial to Newton
         monomial_to_newton_basis(a, &self.t.subproduct_tree, self.m);
 
-        /* Newton to Evaluation */
-        let mut S = vec![FieldT::zero(); self.m]; /* i! * arithmetic_generator */
+        //Newton to Evaluation
+        let mut S = vec![FieldT::zero(); self.m]; //i! * arithmetic_generator 
         S[0] = FieldT::one();
 
         let mut factorial = FieldT::one();
@@ -124,8 +124,8 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
             self.do_precomputation();
         }
 
-        /* Interpolation to Newton */
-        let mut S = vec![FieldT::zero(); self.m]; /* i! * arithmetic_generator */
+        //Interpolation to Newton
+        let mut S = vec![FieldT::zero(); self.m]; //i! * arithmetic_generator 
         S[0] = FieldT::one();
 
         let mut W = vec![FieldT::zero(); self.m];
@@ -144,7 +144,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
         _polynomial_multiplication(a, &W, &S);
         a.resize(self.m, FieldT::zero());
 
-        /* Newton to Monomial */
+        //Newton to Monomial
         newton_to_monomial_basis(a, &self.t.subproduct_tree, self.m);
         Ok(())
     }
@@ -161,18 +161,17 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
     }
 
     fn evaluate_all_lagrange_polynomials(&mut self, t: &FieldT) -> Vec<FieldT> {
-        /* Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m) */
-        /* Evaluate for x = t */
-        /* Return coeffs for each l_j(x) = (l / l_i[j]) * w[j] */
+        //Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m)
+        //Evaluate for x = t
+        //Return coeffs for each l_j(x) = (l / l_i[j]) * w[j]
 
         if !self.t.precomputation_sentinel {
             self.do_precomputation();
         }
 
-        /**
-         * If t equals one of the arithmetic progression values,
-         * then output 1 at the right place, and 0 elsewhere.
-         */
+        // If t equals one of the arithmetic progression values,
+        // then output 1 at the right place, and 0 elsewhere.
+
         for i in 0..self.m {
             if &self.t.arithmetic_sequence[i] == t
             // i.e., t equals self.arithmetic_sequence[i]
@@ -183,10 +182,9 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
             }
         }
 
-        /**
-         * Otherwise, if t does not equal any of the arithmetic progression values,
-         * then compute each Lagrange coefficient.
-         */
+        // Otherwise, if t does not equal any of the arithmetic progression values,
+        // then compute each Lagrange coefficient.
+
         let mut l = vec![FieldT::zero(); self.m];
         let l0: FieldT = t.clone() - self.t.arithmetic_sequence[0].clone();
         l[0] = l0;
@@ -226,7 +224,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
             self.do_precomputation();
         }
 
-        /* Notes: Z = prod_{i = 0 to m} (t - a[i]) */
+        //Notes: Z = prod_{i = 0 to m} (t - a[i])
         let mut Z = FieldT::one();
         for i in 0..self.m {
             let tt: FieldT = t.clone() - self.t.arithmetic_sequence[i].clone();
@@ -267,7 +265,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for arithmetic_sequenc
     }
 
     fn divide_by_Z_on_coset(&self, P: &mut Vec<FieldT>) {
-        let coset = self.t.arithmetic_generator.clone(); /* coset in arithmetic sequence? */
+        let coset = self.t.arithmetic_generator.clone(); //coset in arithmetic sequence? 
         //   let  Z_inverse_at_coset = self.compute_vanishing_polynomial(&coset).inverse();
         //   for i in 0..self.m
         //   {

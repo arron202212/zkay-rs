@@ -113,7 +113,7 @@ pub fn generate_bacs_example<
         gate.output = variable::<FieldT, SV>::new(num_variables + 1, SV::default());
 
         if i >= num_gates - num_outputs {
-            /* make gate a circuit output and fix */
+            //make gate a circuit output and fix
             gate.is_circuit_output = true;
             let var_idx = rand::random::<usize>()
                 % (1 + primary_input_size + std::cmp::min(num_gates - num_outputs, i));

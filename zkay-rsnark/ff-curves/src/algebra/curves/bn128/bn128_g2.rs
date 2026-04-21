@@ -35,11 +35,10 @@ pub struct bn128_G2 {
     Z: Fp2,
 }
 impl PpConfig for bn128_G2 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl Fq2mConfig for bn128_G2 {
-    // type TT = bigint<1>;
+    // //type TT = bigint<1>;
     type Fr = Self;
 }
 impl FpmConfig for bn128_G2 {
@@ -481,7 +480,7 @@ impl Zero for bn128_G2 {
 // }
 
 // impl Bn128G2 {
-//     pub fn zero() -> Self { /* ... */
+//     pub fn zero() -> Self { //...
 //     }
 //     pub fn is_zero(&self) -> bool {
 //         self.z.is_zero()
@@ -508,11 +507,11 @@ impl Zero for bn128_G2 {
 //     }
 
 //     pub fn dbl(&self) -> Self {
-//         /* 倍点实现 */
+//         //倍点实现
 //         todo!()
 //     }
 //     pub fn add_nodeck(&self, other: &Self) -> Self {
-//         /* 点加实现 */
+//         //点加实现
 //         todo!()
 //     }
 // }

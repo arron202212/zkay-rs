@@ -26,7 +26,7 @@ use ffec::FieldTConfig;
 use ffec::common::profiling::print_time;
 use rccell::RcCell;
 use std::marker::PhantomData;
-/* control flow gadgets */
+//control flow gadgets
 #[derive(Clone, Default)]
 pub struct ALU_control_flow_gadget<FieldT: FieldTConfig, T: Default + Clone> {
     // : public tinyram_standard_gadget<FieldT>
@@ -147,7 +147,7 @@ impl<FieldT: FieldTConfig> ALU_cnjmp_gadget<FieldT> {
     }
 }
 
-/* jmp */
+//jmp
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_jmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         self.pb.borrow_mut().add_r1cs_constraint(
@@ -210,7 +210,7 @@ pub fn test_ALU_jmp_gadget<FieldT: FieldTConfig>() {
     print_time("negative jmp test successful");
 }
 
-/* cjmp */
+//cjmp
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cjmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         /*
@@ -319,7 +319,7 @@ pub fn test_ALU_cjmp_gadget<FieldT: FieldTConfig>() {
     print_time("negative cjmp test successful");
 }
 
-/* cnjmp */
+//cnjmp
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cnjmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         /*

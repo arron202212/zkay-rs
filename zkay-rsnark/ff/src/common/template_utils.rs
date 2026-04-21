@@ -2,7 +2,7 @@
 
 // #define TEMPLATE_UTILS_HPP_
 
-/* A commonly used SFINAE helper type */
+//A commonly used SFINAE helper type
 
 // struct void_type
 // {

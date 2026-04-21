@@ -111,7 +111,7 @@ pub fn r1cs_to_qap_instance_map<
     for i in 0..=cs.num_inputs() {
         A_in_Lagrange_basis[i].insert(cs.num_constraints() + i, FieldT::one());
     }
-    /* process all other constraints */
+    // process all other constraints
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
             *A_in_Lagrange_basis[cs.constraints[i].a.terms[j].index.index]
@@ -195,7 +195,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     for i in 0..=cs.num_inputs() {
         At[i] = u[cs.num_constraints() + i].clone();
     }
-    /* process all other constraints */
+    // process all other constraints
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
             At[cs.constraints[i].a.terms[j].index.index] +=
@@ -279,7 +279,7 @@ pub fn r1cs_to_qap_witness_map<
 ) -> qap_witness<FieldT> {
     enter_block("Call to r1cs_to_qap_witness_map", false);
 
-    /* sanity check */
+    // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
 
     let domain =
@@ -297,7 +297,7 @@ pub fn r1cs_to_qap_witness_map<
         vec![FieldT::zero(); domain.borrow().m()],
     );
 
-    /* account for the additional constraints input_i * 0 = 0 */
+    // account for the additional constraints input_i * 0 = 0
     for i in 0..=cs.num_inputs() {
         aA[i + cs.num_constraints()] = if i > 0 {
             full_variable_assignment[i - 1].clone()
@@ -305,7 +305,7 @@ pub fn r1cs_to_qap_witness_map<
             FieldT::one()
         };
     }
-    /* account for all other constraints */
+    // account for all other constraints
     for i in 0..cs.num_constraints() {
         aA[i] += cs.constraints[i].a.evaluate(&full_variable_assignment);
         aB[i] += cs.constraints[i].b.evaluate(&full_variable_assignment);
@@ -322,10 +322,8 @@ pub fn r1cs_to_qap_witness_map<
 
     enter_block("Compute ZK-patch", false);
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
-    /* add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z */
+
+    // add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] = d2.clone() * aA[i].clone() + d1.clone() * aB[i].clone();
     }
@@ -349,9 +347,7 @@ pub fn r1cs_to_qap_witness_map<
 
     enter_block("Compute evaluation of polynomial H on set T", false);
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
+
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aB[i].clone();
     }
@@ -374,9 +370,6 @@ pub fn r1cs_to_qap_witness_map<
         .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
     leave_block("Compute evaluation of polynomial C on set T", false);
 
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
@@ -394,9 +387,7 @@ pub fn r1cs_to_qap_witness_map<
     leave_block("Compute coefficients of polynomial H", false);
 
     enter_block("Compute sum of H and ZK-patch", false);
-    // // #ifdef MULTICORE
-    // //#pragma omp parallel for
-    //
+
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }

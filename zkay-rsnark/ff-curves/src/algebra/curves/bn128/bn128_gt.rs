@@ -11,8 +11,7 @@ pub struct bn128_GT {
     pub elem: Fp12,
 }
 impl PpConfig for bn128_GT {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl Default for bn128_GT {
     fn default() -> Self {

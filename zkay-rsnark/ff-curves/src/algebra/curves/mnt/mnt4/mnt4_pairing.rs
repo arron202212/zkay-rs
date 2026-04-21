@@ -16,7 +16,7 @@ use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::bigint::bigint;
 use ffec::scalar_multiplication::wnaf::find_wnaf;
 
-/* affine ate miller loop */
+//affine ate miller loop
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct mnt4_affine_ate_G1_precomputation {
     pub PX: mnt4_Fq,
@@ -39,7 +39,7 @@ pub struct mnt4_affine_ate_G2_precomputation {
     pub coeffs: Vec<mnt4_affine_ate_coeffs>,
 }
 
-/* ate pairing */
+//ate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct mnt4_ate_G1_precomp {
     pub PX: mnt4_Fq,
@@ -70,7 +70,7 @@ pub struct mnt4_ate_G2_precomp {
     pub add_coeffs: Vec<mnt4_ate_add_coeffs>,
 }
 
-/* choice of pairing */
+//choice of pairing
 
 pub type mnt4_G1_precomp = mnt4_ate_G1_precomp;
 pub type mnt4_G2_precomp = mnt4_ate_G2_precomp;
@@ -122,7 +122,7 @@ impl fmt::Display for mnt4_ate_G2_precomp {
         write!(f, "{}", 1)
     }
 }
-/* final exponentiations */
+//final exponentiations
 
 pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
     enter_block("Call to mnt4_final_exponentiation_last_chunk", false);
@@ -142,11 +142,11 @@ pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) 
 pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
     enter_block("Call to mnt4_final_exponentiation_first_chunk", false);
 
-    /* (q^2-1) */
+    //(q^2-1)
 
-    /* elt_q2 = elt^(q^2) */
+    //elt_q2 = elt^(q^2)
     let elt_q2 = elt.Frobenius_map(2);
-    /* elt_q3_over_elt = elt^(q^2-1) */
+    //elt_q3_over_elt = elt^(q^2-1)
     let elt_q2_over_elt = elt_q2 * elt_inv;
 
     leave_block("Call to mnt4_final_exponentiation_first_chunk", false);
@@ -164,7 +164,7 @@ pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
     result
 }
 
-/* affine ate miller loop */
+//affine ate miller loop
 
 pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precomputation {
     enter_block("Call to mnt4_affine_ate_precompute_G1", false);
@@ -175,7 +175,7 @@ pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precompu
     let mut result = mnt4_affine_ate_G1_precomputation::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PY_twist_squared = &mnt4_twist.squared() * &Pcopy.Y;
+    result.PY_twist_squared = mnt4_twist.squared() * Pcopy.Y;
 
     leave_block("Call to mnt4_affine_ate_precompute_G1", false);
     result
@@ -200,7 +200,7 @@ pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precompu
     let NAF = find_wnaf(1, loop_count);
     for i in (0..=NAF.len() - 1).rev() {
         if !found_nonzero {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_nonzero |= (NAF[i] != 0);
             continue;
         }
@@ -270,7 +270,7 @@ pub fn mnt4_affine_ate_miller_loop(
     let NAF = find_wnaf(1, loop_count);
     for i in (0..=NAF.len() - 1).rev() {
         if !found_nonzero {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_nonzero |= (NAF[i] != 0);
             continue;
         }
@@ -282,7 +282,7 @@ pub fn mnt4_affine_ate_miller_loop(
         idx += 1;
         let g_RR_at_P = mnt4_Fq4::new(
             prec_P.PY_twist_squared,
-            &c.gamma_twist * &(-prec_P.PX) + c.gamma_X - c.old_RY,
+            c.gamma_twist * (-prec_P.PX) + c.gamma_X - c.old_RY,
         );
         f = f.squared().mul_by_023(&g_RR_at_P);
 
@@ -292,12 +292,12 @@ pub fn mnt4_affine_ate_miller_loop(
             let g_RQ_at_P = if NAF[i] > 0 {
                 mnt4_Fq4::new(
                     prec_P.PY_twist_squared,
-                    &c.gamma_twist * &(-prec_P.PX) + c.gamma_X - prec_Q.QY,
+                    c.gamma_twist * (-prec_P.PX) + c.gamma_X - prec_Q.QY,
                 )
             } else {
                 mnt4_Fq4::new(
                     prec_P.PY_twist_squared,
-                    &c.gamma_twist * &(-prec_P.PX) + c.gamma_X + prec_Q.QY,
+                    c.gamma_twist * (-prec_P.PX) + c.gamma_X + prec_Q.QY,
                 )
             };
             f = f.mul_by_023(&g_RQ_at_P);
@@ -320,7 +320,7 @@ pub fn mnt4_affine_ate_miller_loop(
     f
 }
 
-/* ate pairing */
+//ate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct extended_mnt4_G2_projective {
     pub X: mnt4_Fq2,
@@ -360,7 +360,7 @@ pub fn doubling_step_for_flipped_miller_loop(
     let G = F.squared(); // G = F^2
 
     current.X = -(E + E + E + E) + G; // X3 = -4*E+G
-    current.Y = &D * &(-mnt4_Fq::from("8")) + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
+    current.Y = D * (-mnt4_Fq::from("8")) + F * (E + E - current.X); // Y3 = -8*D+F*(2*E-X3)
     current.Z = (Y + Z).squared() - C - Z.squared(); // Z3 = (Y1+Z1)^2-C-Z1^2
     current.T = current.Z.squared(); // T3 = Z3^2
 
@@ -416,8 +416,8 @@ pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
     let mut result = mnt4_ate_G1_precomp::default();
     result.PX = Pcopy.X;
     result.PY = Pcopy.Y;
-    result.PX_twist = &mnt4_twist * &Pcopy.X;
-    result.PY_twist = &mnt4_twist * &Pcopy.Y;
+    result.PX_twist = mnt4_twist * Pcopy.X;
+    result.PY_twist = mnt4_twist * Pcopy.Y;
 
     leave_block("Call to mnt4_ate_precompute_G1", false);
     result
@@ -448,7 +448,7 @@ pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
     for i in (0..=loop_count.max_bits() as usize - 1).rev() {
         let mut bit = loop_count.test_bit(i);
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -506,7 +506,7 @@ pub fn mnt4_ate_miller_loop(
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }
@@ -569,7 +569,7 @@ pub fn mnt4_ate_double_miller_loop(
         let mut bit = loop_count.test_bit(i);
 
         if !found_one {
-            /* this skips the MSB itself */
+            //this skips the MSB itself
             found_one |= bit;
             continue;
         }

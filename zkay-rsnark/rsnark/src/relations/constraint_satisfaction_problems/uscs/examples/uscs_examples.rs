@@ -130,12 +130,12 @@ pub fn generate_uscs_example_with_field_input<
         cs.add_constraint0(constr);
     }
 
-    /* split variable assignment */
+    //split variable assignment
     //uscs_primary_input<FieldT>
     let primary_input = full_variable_assignment[..num_inputs].to_vec();
     let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
-    /* sanity checks */
+    //sanity checks
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);
@@ -172,7 +172,7 @@ pub fn generate_uscs_example_with_binary_input<
     for i in 0..num_constraints {
         lastvar += 1;
 
-        /* chose two random bits and XOR them together */
+        //chose two random bits and XOR them together
         let u = if i == 0 {
             rand::random::<usize>() % num_inputs
         } else {
@@ -198,11 +198,11 @@ pub fn generate_uscs_example_with_binary_input<
         );
     }
 
-    /* split variable assignment */
+    //split variable assignment
     let primary_input = full_variable_assignment[..num_inputs].to_vec();
     let auxiliary_input = full_variable_assignment[num_inputs..].to_vec();
 
-    /* sanity checks */
+    //sanity checks
     assert!(cs.num_variables() == full_variable_assignment.len());
     assert!(cs.num_variables() >= num_inputs);
     assert!(cs.num_inputs() == num_inputs);

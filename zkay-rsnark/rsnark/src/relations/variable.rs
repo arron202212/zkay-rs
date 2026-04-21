@@ -195,7 +195,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 //     linear_combination(&lt:linear_term<FieldT>);
 //     linear_combination(&all_terms:Vec<linear_term<FieldT> >);
 
-//     /* for supporting range-based for loops over linear_combination */
+//     //for supporting range-based for loops over linear_combination
 //     Vec<linear_term<FieldT> >::const_iterator begin() const;
 //     Vec<linear_term<FieldT> >::const_iterator end() const;
 
@@ -695,7 +695,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 
     pub fn is_valid(&self, num_variables: usize) -> bool {
-        /* check that all terms in linear combination are sorted */
+        //check that all terms in linear combination are sorted
         for i in 1..self.terms.len() {
             if self.terms[i - 1].index.index >= self.terms[i].index.index {
                 return false;
@@ -908,7 +908,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 //     auto it1 = self.terms.begin();
 //     auto it2 = other.terms.begin();
 
-//     /* invariant: it1 and it2 always point to unprocessed items in the corresponding linear combinations */
+//     //invariant: it1 and it2 always point to unprocessed items in the corresponding linear combinations
 //     while (it1 != self.terms.end() && it2 != other.terms.end())
 //     {
 //         if it1->index < it2->index
@@ -923,7 +923,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 //         }
 //         else
 //         {
-//             /* it1->index == it2->index */
+//             //it1->index == it2->index
 //             result.terms.push(variable<FieldT,T>(it1->index), it1->coeff + it2->coeff);
 //             it1+=1;
 //             it2+=1;

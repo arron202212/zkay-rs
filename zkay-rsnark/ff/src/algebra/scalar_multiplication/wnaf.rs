@@ -8,39 +8,16 @@
 #![allow(warnings, unused)]
 
 // Declaration of interfaces for wNAF ("width-w Non-Adjacent Form") exponentiation routines.
-use crate::FieldTConfig;
-use crate::PpConfig;
-use crate::Zero;
-use crate::algebra::field_utils::bigint::bigint;
-use crate::field_utils::BigInteger;
-use crate::scalar_multiplication::multiexp::KCConfig;
+use crate::{
+    FieldTConfig, PpConfig, Zero, algebra::field_utils::bigint::bigint, field_utils::BigInteger,
+    scalar_multiplication::multiexp::KCConfig,
+};
 use std::ops::Mul;
 
-// /**
-//  * Find the wNAF representation of the given scalar relative to the given window size.
-//  */
-//
-// Vec<long> find_wnaf(window_size:std::usize, scalar:&bigint<N>);
-
-// /**
-//  * In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
-//  */
-//
-// T fixed_window_wnaf_exp(window_size:std::usize, base:&T, scalar:&bigint<N>);
-
-// /**
-//  * In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar * base.
-//  */
-//
-// T opt_window_wnaf_exp(base:&T, scalar:&bigint<N>, const std::usize scalar_bits);
-
-// pub trait Config {
-//     fn wnaf_window_table() -> Vec<usize>;
-//     fn dbl<T:Zero>(&self) -> T;
-// }
 pub fn find_wnaf_u(window_size: usize, scalar: u128) -> Vec<i64> {
     find_wnaf(window_size, &[0u64])
 }
+//Find the wNAF representation of the given scalar relative to the given window size.
 pub fn find_wnaf(window_size: usize, scalar: impl AsRef<[u64]>) -> Vec<i64> {
     let length = scalar.as_ref().len() as usize; // upper bound
     let mut res = Vec::with_capacity(length + 1);
@@ -71,6 +48,7 @@ pub fn find_wnaf(window_size: usize, scalar: impl AsRef<[u64]>) -> Vec<i64> {
     res
 }
 
+// In additive notation, use wNAF exponentiation (with the given window size) to compute scalar * base.
 pub fn fixed_window_wnaf_exp<T: PpConfig, FieldT: FieldTConfig>(
     window_size: usize,
     base: &T,
@@ -105,13 +83,12 @@ pub fn fixed_window_wnaf_exp<T: PpConfig, FieldT: FieldTConfig>(
     res
 }
 
+// In additive notation, use wNAF exponentiation (with the window size determined by T) to compute scalar * base.
 pub fn opt_window_wnaf_exp<T: PpConfig, FieldT: FieldTConfig>(
     base: &T,
     scalar: &FieldT,
     scalar_bits: usize,
-) -> T
-// where for<'a> &'a T: Mul<&'a bigint<N>, Output = T>
-{
+) -> T {
     let mut best = 0;
     for i in (0..T::wnaf_window_table().len()).rev() {
         if scalar_bits >= T::wnaf_window_table()[i] {

@@ -570,11 +570,11 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 ) -> uscs_ppzksnark_keypair<ppT> {
     enter_block("Call to uscs_ppzksnark_generator", false);
 
-    /* draw random element at which the SSP is evaluated */
+    //draw random element at which the SSP is evaluated
 
     let t = Fr::<ppT>::random_element();
 
-    /* perform USCS-to-SSP reduction */
+    //perform USCS-to-SSP reduction
 
     let mut ssp_inst = uscs_to_ssp_instance_map_with_evaluation(cs, &t);
 
@@ -590,7 +590,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
         ssp_inst.num_inputs()
     );
 
-    /* construct various tables of FieldT elements */
+    //construct various tables of FieldT elements
 
     let mut Vt_table = (ssp_inst.Vt.clone()); // ssp_inst.Vt is now in unspecified state, but we do not use it later
     let mut Ht_table = (ssp_inst.Ht.clone()); // ssp_inst.Ht is now in unspecified state, but we do not use it later
@@ -600,7 +600,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     let mut Xt_table = Vt_table[..ssp_inst.num_inputs() + 1].to_vec();
     let mut Vt_table_minus_Xt_table = Vt_table[ssp_inst.num_inputs() + 1..].to_vec();
 
-    /* sanity checks */
+    //sanity checks
 
     assert!(Vt_table.len() == ssp_inst.num_variables() + 2);
     print!(
@@ -745,7 +745,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
         uscs_to_ssp_witness_map(&pk.constraint_system, primary_input, auxiliary_input, &d);
     leave_block("Compute the polynomial H", false);
 
-    /* sanity checks */
+    //sanity checks
     assert!(
         pk.constraint_system
             .is_satisfied(primary_input, auxiliary_input)

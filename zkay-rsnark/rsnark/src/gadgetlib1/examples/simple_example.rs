@@ -1,4 +1,4 @@
-/* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
+//NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP
 use crate::gadgetlib1::gadgets::basic_gadgets::inner_product_gadget;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable, pb_variable_array};
 use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
@@ -12,7 +12,7 @@ pub fn gen_r1cs_example_from_protoboard<FieldT: FieldTConfig, PB: PBConfig>(
 ) -> r1cs_example<FieldT, pb_variable, pb_linear_combination> {
     let new_num_constraints = num_constraints - 1;
 
-    /* construct dummy example: inner products of two vectors */
+    //construct dummy example: inner products of two vectors
     let mut pb = RcCell::new(protoboard::<FieldT, PB>::default());
     let mut A = pb_variable_array::<FieldT, PB>::default();
     let mut B = pb_variable_array::<FieldT, PB>::default();
@@ -32,7 +32,7 @@ pub fn gen_r1cs_example_from_protoboard<FieldT: FieldTConfig, PB: PBConfig>(
     );
     compute_inner_product.generate_r1cs_constraints();
 
-    /* fill in random example */
+    //fill in random example
     for i in 0..new_num_constraints {
         *pb.borrow_mut().val_ref(&A[i]) = FieldT::random_element();
         *pb.borrow_mut().val_ref(&B[i]) = FieldT::random_element();

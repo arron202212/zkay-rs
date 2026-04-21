@@ -177,7 +177,7 @@ pub trait LocalDataVariableConfig: Default + Clone {
 // }
 impl<T: LocalDataVariableConfig> r1cs_pcd_local_data_variables<T> {
     pub fn update_all_vars(&mut self) {
-        /* (the same NOTE as for r1cs_message_variable applies) */
+        //(the same NOTE as for r1cs_message_variable applies)
         for var_idx in self.t.num_vars_at_construction + 1..=self.pb.borrow().num_variables() {
             self.t
                 .all_vars

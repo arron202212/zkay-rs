@@ -15,27 +15,27 @@ use crate::algebra::field_utils::bigint;
 
 
 
-/* The type parameter T is intended to be set to the child class
- * when this pub struct is extended. For example,
- * pub struct gf32 : public BinaryField<gf32> ...
- */
+//  The type parameter T is intended to be set to the child class
+// when this pub struct is extended. For example,
+// pub struct gf32 : public BinaryField<gf32> ...
+
 
 pub trait BinaryField<T>:Fields<T>{
 
-    /* Functions unique to binary fields */
+    //Functions unique to binary fields
 
     // TODO: add documentation about how moduli are represented.
      const modulus_:u64,
      const num_bits:u64,
 
-    /** generator of gf2^n */
+   //generator of gf2^n
      fn multiplicative_generator()->T;
 
-    /** If extension field, returns the base field's characteristic. */
+   //If extension field, returns the base field's characteristic.
     
      fn field_char<const N:usize>() {  bigint::<N>::new(2) }
 
-    /* Functions common to all finite fields */
+    //Functions common to all finite fields
 
 // #ifdef PROFILE_OP_COUNTS // NOTE: op counts are affected when you exponentiate with ^
     //  i64 add_cnt;
@@ -65,19 +65,19 @@ pub trait BinaryField<T>:Fields<T>{
 
 //      fn squared()->T ;
 //      fn inverse()->T ;
-//     /** Always works. */
+//    //Always works.
 //      fn sqrt()->T ;
 
    
 //     fn is_zero()->bool ;
 
 //     fn  print() ;
-//     /**
+//     
 //      * Returns the constituent bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 //      */
 //     fn to_words()->Vec<u64>;
-//     /**
+//     
 //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 //      * Should always return true since the right-most bits are always valid.
@@ -92,7 +92,7 @@ pub trait BinaryField<T>:Fields<T>{
 //        fn zero()->T;
 //      fn one()->T;
 //      fn random_element()->T;
-//     /** Equals 1 for prime field Fp. */
+//    //Equals 1 for prime field Fp.
 //      fn  extension_degree()->usize;
 //      fn ceil_size_in_bits()->usize { return num_bits; }
 //      fn floor_size_in_bits()->usize { return num_bits; }

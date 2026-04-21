@@ -31,56 +31,6 @@ use ark_std::{
 pub use num_traits::{One, Zero};
 use zeroize::Zeroize;
 
-/* The type parameter T is intended to be set to the child class
-when this pub struct is extended. For example,
-pub struct Fp_model : public Field<Fp_model> ... */
-//
-// pub trait Field<T> {
-
-//      fn square()->T ;
-//      fn invert()->T ;
-
-//      fn squared()->T ;
-//      fn inverse()->T ;
-//     /** HAS TO BE A SQUARE (else does not terminate). */
-//      fn sqrt()->T ;
-
-//     //  T operator^(:u64 pow),
-
-//     //  T operator^(pow:&bigint<m>) ;
-
-//     // bool operator==(other:&T) ,
-//     // bool operator!=(other:&T) ,
-//     fn is_zero()->bool ;
-
-//     fn  print() ;
-//     /**
-//      * Returns the ituent bits in 64 bit words, in little-endian order.
-//      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
-//      */
-//     fn to_words()->Vec<u64>;
-//     /**
-//      * Sets the field element from the given bits in 64 bit words, in little-endian order.
-//      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
-//      * Returns true when the right-most bits represent a value less than the modulus.
-//      */
-//     fn from_words(words:Vec<u64>)->bool ;
-
-//     fn  randomize() ;
-//     fn  clear() ;
-
-//     /* The  functions should be defined in field classes, but are  so they
-//        can't be inherited. */
-//      fn zero()->T;
-//      fn one()->T;
-//      fn random_element()->T;
-//     /** Equals 1 for prime field Fp. */
-//      fn  extension_degree()->usize;
-//      fn ceil_size_in_bits()->usize;
-//      fn floor_size_in_bits()->usize;
-
-// }
-
 // #[cfg(feature = "parallel")]
 // use ark_std::cmp::max;
 // #[cfg(feature = "parallel")]

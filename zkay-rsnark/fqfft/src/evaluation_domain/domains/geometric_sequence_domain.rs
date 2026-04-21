@@ -10,41 +10,14 @@ use crate::polynomial_arithmetic::basis_change::monomial_to_newton_basis_geometr
 use crate::polynomial_arithmetic::basis_change::newton_to_monomial_basis_geometric;
 use ffec::FieldTConfig;
 
-#[derive(Default, Clone,Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct geometric_sequence_domain<FieldT: FieldTConfig> {
-    //   : public evaluation_domain<FieldT>
     precomputation_sentinel: bool,
     geometric_sequence: Vec<FieldT>,
     geometric_triangular_sequence: Vec<FieldT>,
     m: usize,
 }
 
-//     pub fn  do_precomputation();
-
-//     geometric_sequence_domain(m:usize);
-
-//     pub fn  FFT(a:&Vec<FieldT>);
-//     pub fn  iFFT(a:&Vec<FieldT>);
-//     pub fn  cosetFFT(a:&Vec<FieldT>, g:&FieldT);
-//     pub fn  icosetFFT(a:&Vec<FieldT>, g:&FieldT);
-//     Vec<FieldT> evaluate_all_lagrange_polynomials(t:&FieldT);
-//     FieldT get_domain_element(idx:usize);
-//     FieldT compute_vanishing_polynomial(t:&FieldT);
-//     pub fn  add_poly_Z(coeff:&FieldT, H:&Vec<FieldT>);
-//     pub fn  divide_by_Z_on_coset(P:&Vec<FieldT>);
-
-//   };
-
-//  num_traits::Zero
-//         + Clone
-//         + num_traits::One
-//         + std::default::Default
-//         + std::convert::From<usize>
-//         + std::ops::MulAssign
-//         + std::ops::AddAssign
-//         + std::ops::Sub<Output = FieldT>
-//         + std::cmp::PartialEq
-//         + std::ops::Neg<Output = FieldT>,
 pub type geometric_sequence_domains<FieldT> = evaluation_domain<geometric_sequence_domain<FieldT>>;
 impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
     pub fn new(m: usize) -> eyre::Result<geometric_sequence_domains<FieldT>> {
@@ -69,9 +42,9 @@ impl<FieldT: FieldTConfig> geometric_sequence_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence_domains<FieldT> {
-  fn m(&self) -> usize {
+    fn m(&self) -> usize {
         self.m
-    } 
+    }
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("geometric: expected a.len() == self.m");
@@ -88,7 +61,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
             self.m,
         );
 
-        /* Newton to Evaluation */
+        // Newton to Evaluation
         let mut T = vec![FieldT::zero(); self.m];
         T[0] = FieldT::one();
 
@@ -121,7 +94,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
             self.do_precomputation();
         }
 
-        /* Interpolation to Newton */
+        // Interpolation to Newton
         let mut T = vec![FieldT::zero(); self.m];
         T[0] = FieldT::one();
 
@@ -170,34 +143,32 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
     }
 
     fn evaluate_all_lagrange_polynomials(&mut self, t: &FieldT) -> Vec<FieldT> {
-        /* Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m) */
-        /* Evaluate for x = t */
-        /* Return coeffs for each l_j(x) = (l / l_i[j]) * w[j] */
+        // Compute Lagrange polynomial of size m, with m+1 points (x_0, y_0), ... ,(x_m, y_m)
+        // Evaluate for x = t
+        // Return coeffs for each l_j(x) = (l / l_i[j]) * w[j]
 
-        /* for all i: w[i] = (1 / r) * w[i-1] * (1 - a[i]^m-i+1) / (1 - a[i]^-i) */
+        // for all i: w[i] = (1 / r) * w[i-1] * (1 - a[i]^m-i+1) / (1 - a[i]^-i)
 
         if !self.t.precomputation_sentinel {
             self.do_precomputation();
         }
 
-        /**
-         * If t equals one of the geometric progression values,
-         * then output 1 at the right place, and 0 elsewhere.
-         */
+        //  * If t equals one of the geometric progression values,
+        //  * then output 1 at the right place, and 0 elsewhere.
+
         for i in 0..self.m {
-            if &self.t.geometric_sequence[i] == t
-            // i.e., t equals a[i]
-            {
+            if &self.t.geometric_sequence[i] == t {
+                // i.e., t equals a[i]
+
                 let mut res = vec![FieldT::zero(); self.m];
                 res[i] = FieldT::one();
                 return res;
             }
         }
 
-        /**
-         * Otherwise, if t does not equal any of the geometric progression values,
-         * then compute each Lagrange coefficient.
-         */
+        //  * Otherwise, if t does not equal any of the geometric progression values,
+        //  * then compute each Lagrange coefficient.
+
         let mut l = vec![FieldT::zero(); self.m];
         let tt: FieldT = t.clone();
         l[0] = tt.clone() - self.t.geometric_sequence[0].clone();
@@ -244,8 +215,8 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
             self.do_precomputation();
         }
 
-        /* Notes: Z = prod_{i = 0 to m} (t - a[i]) */
-        /* Better approach: Montgomery Trick + Divide&Conquer/FFT */
+        // Notes: Z = prod_{i = 0 to m} (t - a[i])
+        // Better approach: Montgomery Trick + Divide&Conquer/FFT
         let mut Z = FieldT::one();
         let tt: FieldT = t.clone();
         for i in 0..self.m {
@@ -284,7 +255,7 @@ impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for geometric_sequence
     }
 
     fn divide_by_Z_on_coset(&self, P: &mut Vec<FieldT>) {
-        let coset = FieldT::one(); //multiplicative_generator.clone(); /* coset in geometric sequence? */
+        let coset = FieldT::one(); //multiplicative_generator.clone(); // coset in geometric sequence?
         //   let  Z_inverse_at_coset = self.compute_vanishing_polynomial(coset).inverse();
         for i in 0..self.m {
             // P[i] *= Z_inverse_at_coset;

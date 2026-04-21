@@ -200,7 +200,7 @@ impl<T: PpConfig, T2: PpConfig> Zero for knowledge_commitment<T, T2> {
 }
 
 impl<T: PpConfig, T2: PpConfig> PpConfig for knowledge_commitment<T, T2> {
-    type TT = bigint<1>; //BigInt;
+    //type TT = bigint<1>; //BigInt;
     // type Fr=Self;
     fn size_in_bits() -> usize {
         T::size_in_bits() + T2::size_in_bits()

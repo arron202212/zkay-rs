@@ -27,8 +27,7 @@ pub struct mnt4_G2 {
     pub Z: mnt4_Fq2,
 }
 impl PpConfig for mnt4_G2 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for mnt4_G2 {
     type Fr = mnt4_Fq;
@@ -265,8 +264,8 @@ impl mnt4_G2 {
 
     pub fn mul_by_q(&self) -> mnt4_G2 {
         return mnt4_G2::new(
-            &(self.X).Frobenius_map(1) * &mnt4_twist_mul_by_q_X,
-            &(self.Y).Frobenius_map(1) * &mnt4_twist_mul_by_q_Y,
+            (self.X).Frobenius_map(1) * mnt4_twist_mul_by_q_X,
+            (self.Y).Frobenius_map(1) * mnt4_twist_mul_by_q_Y,
             (self.Z).Frobenius_map(1),
         );
     }
@@ -452,7 +451,7 @@ impl Zero for mnt4_G2 {
 //             return (Fq2::zero(), Fq2::zero(), true);
 //         }
 //         let z_inv = self.z.inverse().unwrap();
-//         (self.x * &z_inv, self.y * &z_inv, false)
+//         (self.x * z_inv, self.y*z_inv, false)
 //     }
 
 //     fn mul_by_a(val: &Fq2) -> Fq2 {
@@ -518,7 +517,7 @@ impl Zero for mnt4_G2 {
 
 //         Mnt4G2 {
 //             x: v * &a,
-//             y: u * &(r - &a) - &(vvv * &y1z2),
+//             y: u * (r - &a) - &(vvv*y1z2),
 //             z: vvv * &z1z2,
 //         }
 //     }

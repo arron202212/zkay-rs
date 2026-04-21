@@ -31,24 +31,24 @@ pub fn kronecker_substitution<
     v1: &Vec<FieldT>,
     v2: &Vec<FieldT>,
 ) {
-    /* Initialize */
+    //Initialize
     let mut square = if v1 == v2 { 1 } else { 0 };
 
-    /* Polynomial length */
+    //Polynomial length
     let n1 = v1.len();
     let n2 = v2.len();
     let n3 = n1 + n2 - 1;
 
-    /* Determine number of bits needed */
+    //Determine number of bits needed
     let v1_max = v1.iter().max().unwrap().clone();
     let v2_max = v2.iter().max().unwrap().clone();
     let b = 2; //* (v1_max * v2_max).as_bigint().num_bits() + 1;
 
-    /* Number of limbs needed in total */
+    //Number of limbs needed in total
     let k1 = div_ceil((n1 * b), GMP_NUMB_BITS).unwrap();
     let k2 = div_ceil((n2 * b), GMP_NUMB_BITS).unwrap();
 
-    /* Output polynomial */
+    //Output polynomial
     v3.resize(n3, FieldT::zero());
 
     /*
@@ -61,7 +61,7 @@ pub fn kronecker_substitution<
     //     let p2 = p1 + k1;
     //     let p3 = p2 + k2;
 
-    //     /* Helper variables */
+    //     //Helper variables
     //     let refs;
     //     let limb;
     //    let val;
@@ -70,7 +70,7 @@ pub fn kronecker_substitution<
     //     let  delta;
     //     let  delta_b;
 
-    //     /* Construct P1 limb */
+    //     //Construct P1 limb
     //     let sref = p1;
     //     limb = 0;
     //     limb_b = 0;
@@ -95,7 +95,7 @@ pub fn kronecker_substitution<
     //     }
     //     if limb_b!=0{ refs = limb;refs+=1;}
 
-    //     /* Construct P2 limb. If V2 == V1, then P2 = P1 - square case. */
+    //     //Construct P2 limb. If V2 == V1, then P2 = P1 - square case.
     //     if square!=0{p2 = p1;}
     //     else
     //     {
@@ -124,17 +124,17 @@ pub fn kronecker_substitution<
     //         if limb_b!=0 {refs = limb;refs+=1;}
     //     }
 
-    //     /* Multiply P1 and P2 limbs and store result in P3 limb. */
+    //     //Multiply P1 and P2 limbs and store result in P3 limb.
     //     let  (p3, p1, k1, p2, k2);//mpn_mul
 
-    //     /* Perfect alignment case: bits B is equivalent to GMP_LIMB_BITS */
+    //     //Perfect alignment case: bits B is equivalent to GMP_LIMB_BITS
     //     if b == GMP_LIMB_BITS {
     //         for i in 0..n3 {v3[i] = FieldT::from(*p3);p3+=FieldT::from(1);}
     //     }
 
     //     else
-    //     {/* Non-alignment case */
-    //         /* Mask of 2^b - 1 */
+    //     {//Non-alignment case
+    //         //Mask of 2^b - 1
     //         mask = (1u64 << b) - 1;
 
     //         limb = 0;
@@ -175,7 +175,7 @@ pub fn kronecker_substitution<
     //         }
     //     }
 
-    /* Free memory */
+    //Free memory
     // free (m1);
 
     _condense(v3);

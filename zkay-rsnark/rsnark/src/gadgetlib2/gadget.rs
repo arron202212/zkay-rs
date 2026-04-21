@@ -1241,7 +1241,7 @@ impl GadgetConfig for Gadget<R1P_LooseMUX_Gadget> {
 
     fn generateWitness(&self) {
         let n = self.t.inputs_.len();
-        /* assumes that idx can be fit in ulong; true for our purposes for now */
+        //assumes that idx can be fit in ulong; true for our purposes for now
         let index = self.val(&self.t.index_).asLong() as usize;
         let arraySize = n;
         for i in 0..n {

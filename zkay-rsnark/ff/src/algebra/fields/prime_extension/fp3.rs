@@ -174,7 +174,7 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3
         // #ifdef PROFILE_OP_COUNTS
         // self.sqr_cnt++;
 
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
+        //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2)
 
         let (a, b, c) = (self.c0, self.c1, self.c2);
         let s0: my_Fp<N, T::Fp_modelConfig> = a.squared();
@@ -203,7 +203,7 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3
 
         let (a, b, c) = (self.c0, self.c1, self.c2);
 
-        /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
+        //From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17
         let t0 = a.squared();
         let t1 = b.squared();
         let t2 = c.squared();
@@ -230,7 +230,7 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3
         )
     }
 
-    pub fn sqrt(&self) -> Self {
+    pub fn sqrt(&self) -> Option<Self> {
         tonelli_shanks_sqrt(&self)
     }
 
@@ -253,36 +253,12 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3
     }
 }
 
-//
-// std::ostream& operator<<(std::ostream &out, el:&Fp3_model<n, modulus>)
-// {
-//     out << el.c0 << OUTPUT_SEPARATOR << el.c1 << OUTPUT_SEPARATOR << el.c2;
-//     return out;
-// }
-
-//
-// bool Fp3_model<n,modulus>::operator==(other:&Fp3_model<n,modulus>) const
-// {
-//     return (self.c0 == other.c0 && self.c1 == other.c1 && self.c2 == other.c2);
-// }
-
-//
-// bool Fp3_model<n,modulus>::operator!=(other:&Fp3_model<n,modulus>) const
-// {
-//     return !(operator==(other));
-// }
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PartialEq for Fp3_model<N, N3, T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.c0 == other.c0 && self.c1 == other.c1 && self.c2 == other.c2
     }
 }
-//
-// Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator+=(const Fp3_model<n,modulus>& other)
-// {
-//     *self = *this + other;
-//     return *self;
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>> AddAssign<O>
     for Fp3_model<N, N3, T>
@@ -291,12 +267,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>
         *self = *self + other.borrow();
     }
 }
-//
-// Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator-=(const Fp3_model<n,modulus>& other)
-// {
-//     *self = *this - other;
-//     return *self;
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>> SubAssign<O>
     for Fp3_model<N, N3, T>
@@ -305,12 +275,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>
         *self = *self - *other.borrow();
     }
 }
-//
-// Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator*=(const Fp3_model<n,modulus>& other)
-// {
-//     *self = *this * other;
-//     return *self;
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>> MulAssign<O>
     for Fp3_model<N, N3, T>
@@ -319,12 +283,7 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>
         *self = *self * other.borrow();
     }
 }
-//
-// Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator^=(const u64 pow)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
+
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXorAssign<u64>
     for Fp3_model<N, N3, T>
 {
@@ -332,13 +291,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXorAssign<u6
         *self = *self ^ rhs;
     }
 }
-//
-//
-// Fp3_model<n,modulus>& Fp3_model<n,modulus>::operator^=(pow:&bigint<m>)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXorAssign<bigint<N3>>
     for Fp3_model<N, N3, T>
@@ -347,17 +299,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXorAssign<bi
         *self = *self ^ rhs;
     }
 }
-
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator+(other:&Fp3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-//
-//     return Fp3_model<n,modulus>(self.c0 + other.c0,
-//                                 self.c1 + other.c1,
-//                                 self.c2 + other.c2);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>> Add<O>
     for Fp3_model<N, N3, T>
@@ -387,17 +328,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, TC: FpmConfig<N
     }
 }
 
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator-(other:&Fp3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-//
-//     return Fp3_model<n,modulus>(self.c0 - other.c0,
-//                                 self.c1 - other.c1,
-//                                 self.c2 - other.c2);
-// }
-
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Sub for Fp3_model<N, N3, T> {
     type Output = Self;
 
@@ -405,16 +335,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Sub for Fp3_mod
         Self::new(self.c0 - other.c0, self.c1 - other.c1, self.c2 - other.c2)
     }
 }
-//
-// Fp3_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp3_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     return Fp3_model<n,modulus>(lhs*rhs.c0,
-//                                 lhs*rhs.c1,
-//                                 lhs*rhs.c2);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, TC: FpmConfig<N>>
     Mul<Fp_model<N, TC>> for Fp3_model<N, N3, T>
@@ -429,25 +349,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, TC: FpmConfig<N
         )
     }
 }
-
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator*(other:&Fp3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-//
-//     /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba) */
-//     const my_Fp<N,T::Fp3_modelConfig>
-//         &A = other.c0, &B = other.c1, &C = other.c2,
-//         &a = self.c0, &b = self.c1, &c = self.c2;
-//     let aA= a*A;
-//     let bB= b*B;
-//     let cC= c*C;
-
-//     return Fp3_model<n,modulus>(aA + T::non_residue*((b+c)*(B+C)-bB-cC),
-//                                 (a+b)*(A+B)-aA-bB+T::non_residue*cC,
-//                                 (a+c)*(A+C)-aA+bB-cC);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>> Mul<O>
     for Fp3_model<N, N3, T>
@@ -471,11 +372,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>, O: Borrow<Self>
         )
     }
 }
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator^(const u64 pow) const
-// {
-//     return power<Fp3_model<n, modulus> >(*this, pow);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXor<u64>
     for Fp3_model<N, N3, T>
@@ -487,12 +383,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXor<u64>
         Powers::power::<Fp3_model<N, N3, T>>(&self, rhs)
     }
 }
-//
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator^(pow:&bigint<m>) const
-// {
-//     return power<Fp3_model<n, modulus> >(*this, pow);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXor<bigint<N3>>
     for Fp3_model<N, N3, T>
@@ -504,13 +394,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> BitXor<bigint<N
         Powers::power::<Fp3_model<N, N3, T>>(&self, rhs)
     }
 }
-//
-// Fp3_model<n,modulus> Fp3_model<n,modulus>::operator-() const
-// {
-//     return Fp3_model<n,modulus>(-self.c0,
-//                                 -self.c1,
-//                                 -self.c2);
-// }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Neg for Fp3_model<N, N3, T> {
     type Output = Self;
@@ -520,12 +403,8 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Neg for Fp3_mod
     }
 }
 
-impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PpConfig for Fp3_model<N, N3, T>
-where
-    <T as Fp3_modelConfig<N, N3>>::Fp_modelConfig: PpConfig,
-{
-    //type TT = bigint<N>;
-    //  type Fr=T::Fp_modelConfig;
+impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PpConfig for Fp3_model<N, N3, T> {
+    type GType = Self;
 }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Mul<bigint<N>>
@@ -654,47 +533,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> FromStr for Fp3
         Ok(Self::default())
     }
 }
-
-//
-// std::istream& operator>>(std::istream &in, Fp3_model<n, modulus> &el)
-// {
-//     in >> el.c0 >> el.c1 >> el.c2;
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, v:&Vec<Fp3_model<n, modulus> >)
-// {
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
-//     }
-
-//     return out;
-// }
-//
-// std::istream& operator>>(std::istream& in, Vec<Fp3_model<n, modulus> > &v)
-// {
-//     v.clear();
-
-//     usize s;
-//     in >> s;
-
-//     char b;
-//     in.read(&b, 1);
-
-//     v.reserve(s);
-
-//     for i in 0..s
-//     {
-//         Fp3_model<n, modulus> el;
-//         in >> el;
-//         v.emplace_back(el);
-//     }
-
-//     return in;
-// }
 
 use super::cubic_extension::{CubicExtConfig, CubicExtField};
 use crate::algebra::fields::cyclotomic::CyclotomicMultSubgroup;

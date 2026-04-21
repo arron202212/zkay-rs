@@ -1,6 +1,6 @@
 //  Declaration of GF(2^256) finite field.
 
-// /* x^256 + x^10 + x^5 + x^2 + 1 */
+// //x^256 + x^10 + x^5 + x^2 + 1
 // /* gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
 //    Elements are represented internally with four uint64s */
 // pub struct gf256 {
@@ -81,7 +81,7 @@
 //     friend std::ostream& operator<<(std::ostream &out, el:&gf256);
 //     friend std::istream& operator>>(std::istream &in, gf256 &el);
 //
-//     /* little-endian */
+//     //little-endian
 //     uint64_t value_[4];
 // };
 
@@ -216,7 +216,7 @@
 //     let ab2= _mm_set_epi64x(this->value_[2], other.value_[2]);
 //     let ab3= _mm_set_epi64x(this->value_[3], other.value_[3]);
 //     let modulus= _mm_loadl_epi64((const __m128i*) &(this->modulus_));
-//     __m128i c0 = _mm_clmulepi64_si128(ab0, ab0, 0x01); /* multiply low and high halves */
+//     __m128i c0 = _mm_clmulepi64_si128(ab0, ab0, 0x01); //multiply low and high halves
 //     __m128i c6 = _mm_clmulepi64_si128(ab3, ab3, 0x01);
 
 //     __m128i t = _mm_clmulepi64_si128(ab1, ab1, 0x01);
@@ -293,32 +293,32 @@
 //     __m128i d2 = _mm_xor_si128(_mm_xor_si128(c4, _mm_srli_si128(c3, 8)), _mm_slli_si128(c5, 8));
 //     __m128i d3 = _mm_xor_si128(c6, _mm_srli_si128(c5, 8));
 
-//     /* done with the multiplication, time to reduce */
-//     /* reduce w.r.t. high half of d3 */
+//     //done with the multiplication, time to reduce
+//     //reduce w.r.t. high half of d3
 //     __m128i tmp = _mm_clmulepi64_si128(d3, modulus, 0x01);
 //     d2 = _mm_xor_si128(d2, _mm_srli_si128(tmp, 8));
 //     d1 = _mm_xor_si128(d1, _mm_slli_si128(tmp, 8));
 
-//     /* reduce w.r.t. low half of d3 */
+//     //reduce w.r.t. low half of d3
 //     tmp = _mm_clmulepi64_si128(d3, modulus, 0x00);
 //     d1 = _mm_xor_si128(d1, tmp);
 
-//     /* reduce w.r.t. high half of d2 */
+//     //reduce w.r.t. high half of d2
 //     tmp = _mm_clmulepi64_si128(d2, modulus, 0x01);
 //     d1 = _mm_xor_si128(d1, _mm_srli_si128(tmp, 8));
 //     d0 = _mm_xor_si128(d0, _mm_slli_si128(tmp, 8));
 
-//     /* reduce w.r.t. low half of d2 */
+//     //reduce w.r.t. low half of d2
 //     tmp = _mm_clmulepi64_si128(d2, modulus, 0x00);
 //     d0 = _mm_xor_si128(d0, tmp);
 
-//     /* done, now just store everything back into this->value_ */
+//     //done, now just store everything back into this->value_
 //     _mm_storeu_si128((__m128i*) &this->value_[0], d0);
 //     _mm_storeu_si128((__m128i*) &this->value_[2], d1);
 
 //     return (*this);
 // #else
-//     /* Slow, but straight-forward */
+//     //Slow, but straight-forward
 //     uint64_t shifted[4] = {this->value_[0], this->value_[1],
 //                            this->value_[2], this->value_[3]};
 //     uint64_t result[4] = {0, 0, 0, 0};
@@ -431,15 +431,15 @@
 //     gf256 result(0);
 //     for i in 0..=7
 //     {
-//         /* entering the loop a = el^{2^{2^i}-1} */
+//         //entering the loop a = el^{2^{2^i}-1}
 //         gf256 b = a;
 //         for j in 0..(1UL<<i)
 //         {
 //             b.square();
 //         }
-//         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
+//         //after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)}
 //         a *= b;
-//         /* now a = el^{2^{2^{i+1}}-1} */
+//         //now a = el^{2^{2^{i+1}}-1}
 //         if i == 0
 //         {
 //             result = b;
@@ -449,7 +449,7 @@
 //             result *= b;
 //         }
 //     }
-//     /* now result = el^{2^256-2} */
+//     //now result = el^{2^256-2}
 //     return result;
 // }
 

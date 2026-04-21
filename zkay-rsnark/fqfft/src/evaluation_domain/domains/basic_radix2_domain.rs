@@ -14,7 +14,7 @@ use num_traits::One;
 use std::ops::BitXor;
 use std::ops::Sub;
 
-#[derive(Default, Clone,Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct basic_radix2_domain<FieldT: FieldTConfig> {
     // : public evaluation_domain<FieldT>
     pub omega: FieldT,
@@ -76,9 +76,9 @@ impl<FieldT: FieldTConfig> basic_radix2_domain<FieldT> {
 }
 
 impl<FieldT: FieldTConfig> EvaluationDomainConfig<FieldT> for basic_radix2_domains<FieldT> {
-     fn m(&self) -> usize {
+    fn m(&self) -> usize {
         self.m
-    } 
+    }
     fn FFT(&mut self, a: &mut Vec<FieldT>) -> eyre::Result<()> {
         if a.len() != self.m {
             eyre::bail!("basic_radix2: expected a.len() == self.m");

@@ -25,12 +25,14 @@ pub const mnt4_q_bitcount: usize = mnt46_B_bitcount;
 pub const mnt4_r_limbs: usize = mnt46_A_limbs;
 pub const mnt4_q_limbs: usize = mnt46_B_limbs;
 const mnt4_q_limbs2: usize = mnt4_q_limbs * 2;
+const mnt4_q_limbs3: usize = mnt4_q_limbs * 3;
+const mnt4_q_limbs4: usize = mnt4_q_limbs * 4;
 const mnt4_q_limbs6: usize = mnt4_q_limbs * 6;
 const mnt4_q_limbs12: usize = mnt4_q_limbs * 12;
 pub type mnt4_Fr = Fp_model<mnt4_r_limbs, Backend>;
 pub type mnt4_Fq = Fp_model<mnt4_q_limbs, Backend>;
 pub type mnt4_Fq2 = Fp2_model<mnt4_q_limbs, mnt4_q_limbs2, Backend>;
-pub type mnt4_Fq4 = Fp4_model<mnt4_q_limbs, mnt4_q_limbs2, Backend>;
+pub type mnt4_Fq4 = Fp4_model<mnt4_q_limbs, mnt4_q_limbs2, mnt4_q_limbs4, Backend>;
 pub type mnt4_GT = mnt4_Fq4;
 
 pub type mp_limb_t = u64;
@@ -121,17 +123,16 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
-    type TT = bigint<mnt4_q_limbs>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl Fp_modelConfig<mnt4_q_limbs> for Backend {}
 impl Fp2_modelConfig<mnt4_q_limbs, mnt4_q_limbs2> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp3_modelConfig<mnt4_q_limbs> for Backend {
+impl Fp3_modelConfig<mnt4_q_limbs, mnt4_q_limbs3> for Backend {
     type Fp_modelConfig = Self;
 }
-impl Fp4_modelConfig<mnt4_q_limbs, mnt4_q_limbs2> for Backend {
+impl Fp4_modelConfig<mnt4_q_limbs, mnt4_q_limbs2, mnt4_q_limbs4> for Backend {
     type Fp2_modelConfig = Self;
 }
 impl Fp6_modelConfig<mnt4_q_limbs, mnt4_q_limbs2, mnt4_q_limbs6> for Backend {

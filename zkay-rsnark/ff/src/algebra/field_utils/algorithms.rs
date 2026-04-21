@@ -37,36 +37,36 @@ pub trait FieldTForPowersConfig<const N: usize>:
     }
 }
 
-// /** Repeated squaring. */
+////Repeated squaring.
 //
 // FieldT power(base:&FieldT, exponent:&bigint<m>);
 
-// /** Repeated squaring. */
+////Repeated squaring.
 //
 // FieldT power(base:&FieldT, const u64 exponent);
 
-// /**
+//
 //  * The u64 long versions exist because libiop tends to use usize instead
 //  * of u64, and usize may be the same size as ul or ull.
-//  */
+//
 //
 // FieldT power(base:&FieldT, const u64  exponent);
 
 //
 // FieldT power(base:&FieldT, const Vec<u64> exponent);
 
-// /**
+//
 //  * Tonelli-Shanks square root with given s, t, and quadratic non-residue.
 //  * Only terminates if there is a square root. Only works if required parameters
 //  * are set in the field class.
-//  */
+//
 //
 // FieldT tonelli_shanks_sqrt<(value:&FieldT);
 
 // use crate::common::utils;
 
 pub struct Powers;
-// using std::usize;
+
 pub trait PowerConfig<const N: usize, T = Self> {
     fn power<FieldT: FieldTForPowersConfig<N>>(base: &FieldT, exponent: T) -> FieldT;
 }
@@ -149,14 +149,14 @@ impl<const N: usize> PowerConfig<N, Vec<u128>> for Powers {
 
 pub fn tonelli_shanks_sqrt<const N: usize, FieldT: FieldTForPowersConfig<N, FPM = FieldT>>(
     value: &FieldT,
-) -> FieldT {
+) -> Option<FieldT> {
     // A few assertions to make sure s, t, and nqr are initialized.
     assert!(FieldT::s != 0);
     assert!(!FieldT::t.is_even()); // Check that t is odd.
     assert!(!FieldT::nqr.is_zero());
 
     if value.is_zero() {
-        return FieldT::zero();
+        return Some(FieldT::zero());
     }
 
     let mut one = FieldT::one();
@@ -182,7 +182,7 @@ pub fn tonelli_shanks_sqrt<const N: usize, FieldT: FieldTForPowersConfig<N, FPM 
         let mut m = 0;
         let mut b2m = b;
         while (b2m != one) {
-            /* invariant: b2m = b^(2^m) after entering this loop */
+            //invariant: b2m = b^(2^m) after entering this loop
             b2m = b2m.squared_();
             m += 1;
         }
@@ -200,5 +200,5 @@ pub fn tonelli_shanks_sqrt<const N: usize, FieldT: FieldTForPowersConfig<N, FPM 
         v = m;
     }
 
-    x
+    Some(x)
 }

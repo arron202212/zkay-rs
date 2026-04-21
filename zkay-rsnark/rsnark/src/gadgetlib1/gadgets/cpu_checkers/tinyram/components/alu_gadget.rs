@@ -91,7 +91,7 @@ impl<FieldT: FieldTConfig> ALU_gadget<FieldT> {
     ) -> ALU_gadgets<FieldT> {
         let mut components =
             vec![RcCell::new(Default::default()); 1usize << pb.borrow().t.ap.opcode_width()];
-        /* arithmetic */
+        //arithmetic
         components[tinyram_opcode::tinyram_opcode_AND.usize()] =
             RcCell::new(ArithmeticOps::And(ALU_and_gadget::<FieldT>::new(
                 pb.clone(),
@@ -286,7 +286,7 @@ impl<FieldT: FieldTConfig> ALU_gadget<FieldT> {
                 format!("{} SHR_SHL", annotation_prefix),
             )));
 
-        /* control flow */
+        //control flow
         components[tinyram_opcode::tinyram_opcode_JMP.usize()] =
             RcCell::new(ArithmeticOps::Jmp(ALU_jmp_gadget::<FieldT>::new(
                 pb.clone(),

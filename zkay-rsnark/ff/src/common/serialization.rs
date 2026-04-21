@@ -8,14 +8,7 @@
 #![allow(warnings, unused)]
 
 // Declaration of serialization routines and constants.
-
-// #define SERIALIZATION_HPP_
-
-//#include <istream>
-//#include <map>
-//#include <ostream>
-//#include <set>
-//#include <vector>
+use std::io::{self, Read};
 
 /*
  * @todo
@@ -68,36 +61,6 @@ pub const OUTPUT_NEWLINE:&str= "\n";
 pub const OUTPUT_SEPARATOR:&str= " ";
 }
 }
-// inline pub fn  consume_newline(ins:&impl BufRead);
-// inline pub fn  consume_OUTPUT_NEWLINE(ins:&impl BufRead);
-// inline pub fn  consume_OUTPUT_SEPARATOR(ins:&impl BufRead);
-
-// inline pub fn  output_bool(out:& BufWriter, b:bool);
-// inline pub fn  input_bool(ins:&impl BufRead, bool &b);
-
-// inline pub fn  output_bool_vector(out:& BufWriter, v:&Vec<bool>);
-// inline pub fn  input_bool_vector(ins:&impl BufRead, Vec<bool> &v);
-
-//
-// T reserialize(obj:&T);
-
-//
-// std::ostream& operator<<(std::ostream& out, v:&Vec<T>);
-
-//
-// std::istream& operator>>(std::ostream& out, Vec<T> &v);
-
-//
-// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>);
-
-//
-// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m);
-
-//
-// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>);
-
-//
-// std::istream& operator>>(std::istream& in, BTreeSet<T> &s);
 
 use crate::common::utils;
 use std::io::BufRead;
@@ -107,31 +70,43 @@ use std::io::Write;
 // using std::usize;
 
 #[inline]
-pub fn consume_newline(ins: &impl BufRead) {
+pub fn consume_newline<R: Read>(ins: &mut R) -> io::Result<()> {
     // let mut c;
     // ins.read(&c, 1);
+    Ok(())
 }
 
 #[inline]
-pub fn consume_OUTPUT_NEWLINE(ins: &impl BufRead) {
+pub fn consume_output_newline<R: Read>(ins: &mut R) -> io::Result<()> {
     // #ifdef BINARY_OUTPUT
     // nothing to consume
     // UNUSED(in);
     // #else
     // let mut c;
     // in.read(&c, 1);
+    Ok(())
 }
 
 #[inline]
-pub fn consume_OUTPUT_SEPARATOR(ins: &impl BufRead) {
+pub fn consume_output_separator<R: Read>(ins: &mut R) -> io::Result<()> {
     // #ifdef BINARY_OUTPUT
     // nothing to consume
     //     UNUSED(in);
     // #else
     // char c;
     // ins.read(&c, 1);
+    Ok(())
 }
-
+#[inline]
+pub fn read_line_as_usize<R: Read>(ins: &mut R) -> io::Result<usize> {
+    // #ifdef BINARY_OUTPUT
+    // nothing to consume
+    //     UNUSED(in);
+    // #else
+    // char c;
+    // ins.read(&c, 1);
+    Ok(0)
+}
 #[inline]
 pub fn output_bool<W: ?Sized + Write>(out: &mut BufWriter<W>, b: bool) {
     write!(out, "{}\n", b as u8);
@@ -179,106 +154,3 @@ pub fn reserialize<T: Clone>(obj: &T) -> T {
     // return tmp;
     obj.clone()
 }
-
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, v:&Vec<T>)
-// {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
-//     }
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream& in, Vec<T> &v)
-// {
-//     assert!(!std::is_same<T, bool>::value, "this does not work for Vec<bool>");
-//     usize size;
-//     in >> size;
-//     consume_newline(in);
-
-//     v.resize(0);
-//     for i in 0..size
-//     {
-//         T elt;
-//         in >> elt;
-//         consume_OUTPUT_NEWLINE(in);
-//         v.push_back(elt);
-//     }
-
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, m:&BTreeMap<T1, T2>)
-// {
-//     out << m.len() << "\n";
-
-//     for it in &m
-//     {
-//         out << it.first << "\n";
-//         out << it.second << "\n";
-//     }
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream& in, BTreeMap<T1, T2> &m)
-// {
-//     m.clear();
-//     usize size;
-//     in >> size;
-//     consume_newline(in);
-
-//     for i in 0..size
-//     {
-//         T1 k;
-//         T2 v;
-//         in >> k;
-//         consume_newline(in);
-//         in >> v;
-//         consume_newline(in);
-//         m[k] = v;
-//     }
-
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, s:&BTreeSet<T>)
-// {
-//     out << s.len() << "\n";
-
-//     for el in &s
-//     {
-//         out << el << "\n";
-//     }
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream& in, BTreeSet<T> &s)
-// {
-//     s.clear();
-//     usize size;
-//     in >> size;
-//     consume_newline(in);
-
-//     for i in 0..size
-//     {
-//         T el;
-//         in >> el;
-//         consume_newline(in);
-//         s.insert(el);
-//     }
-
-//     return in;
-// }

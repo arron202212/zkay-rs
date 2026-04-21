@@ -33,24 +33,24 @@ public class Poly1305
 
     // Initialised state
 
-    /** Polynomial key */
+   //Polynomial key
     private int r0, r1, r2, r3, r4;
 
-    /** Precomputed 5 * r[1..4] */
+   //Precomputed 5 * r[1..4]
     private int s1, s2, s3, s4;
 
-    /** Encrypted nonce */
+   //Encrypted nonce
     private int k0, k1, k2, k3;
 
     // Accumulating state
 
-    /** Current block of buffered input */
+   //Current block of buffered input
     private final byte[] currentBlock = new byte[BLOCK_SIZE];
 
-    /** Current offset in input buffer */
+   //Current offset in input buffer
     private int currentBlockOffset = 0;
 
-    /** Polynomial accumulator */
+   //Polynomial accumulator
     private int h0, h1, h2, h3, h4;
 
     /**

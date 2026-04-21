@@ -163,7 +163,7 @@
 //     }
 // }
 
-// /* calculate el^{-1} as el^{2^{32}-2}. */
+// //calculate el^{-1} as el^{2^{32}-2}.
 // pub fn inverse()->gf32
 // {
 // // #ifdef PROFILE_OP_COUNTS
@@ -177,15 +177,15 @@
 //     gf32 result(0);
 //     for i in 0..=4
 //     {
-//         /* entering the loop a = el^{2^{2^i}-1} */
+//         //entering the loop a = el^{2^{2^i}-1}
 //         gf32 b = a;
 //         for j in 0..(1UL<<i)
 //         {
 //             b.square();
 //         }
-//         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
+//         //after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)}
 //         a *= b;
-//         /* now a = el^{2^{2^{i+1}}-1} */
+//         //now a = el^{2^{2^{i+1}}-1}
 //         if i == 0
 //         {
 //             result = b;
@@ -195,7 +195,7 @@
 //             result *= b;
 //         }
 //     }
-//     /* now result = el^{2^32-2} */
+//     //now result = el^{2^32-2}
 //     return result;
 // }
 
@@ -267,7 +267,7 @@
 //
 //     /* Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
-//     /* Slow, but straight-forward */
+//     //Slow, but straight-forward
 //     uint32_t result = 0;
 //     uint32_t shifted = this->value_;
 
@@ -313,7 +313,7 @@
 
 // gf32 gf32::operator-() const
 // {
-//     /* additive inverse matches the element itself */
+//     //additive inverse matches the element itself
 //     return gf32(*this);
 // }
 

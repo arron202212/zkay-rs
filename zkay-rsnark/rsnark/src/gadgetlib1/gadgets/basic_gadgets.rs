@@ -30,7 +30,7 @@ macro_rules! prefix_format {
 
 }
 
-/* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
+//forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0
 //
 // pub fn generate_boolean_r1cs_constraint(pb:&RcCell<protoboard<FieldT,PB>> , lc:&linear_combination<FieldT,pb_variable,pb_linear_combination>, annotation_prefix:&String);
 
@@ -38,7 +38,7 @@ macro_rules! prefix_format {
 // pub fn generate_r1cs_equals_const_constraint(pb:&RcCell<protoboard<FieldT,PB>> , lc:&linear_combination<FieldT,pb_variable,pb_linear_combination>, annotation_prefix:&FieldT& c,  String);
 #[derive(Clone, Default)]
 pub struct packing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
-    /* no internal variables */
+    //no internal variables
     pub bits: pb_linear_combination_array<FieldT, PB>,
     pub packed: linear_combination<FieldT, pb_variable, pb_linear_combination>,
 }
@@ -54,7 +54,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> packing_gadget<FieldT, PB> {
     }
 
     // pub fn generate_r1cs_constraints(enforce_bitness:bool);
-    // /* adds constraint result = \sum  bits[i] * 2^i */
+    // //adds constraint result = \sum  bits[i] * 2^i
     // pub fn generate_r1cs_witness_from_packed();
     // pub fn generate_r1cs_witness_from_bits();
 }
@@ -353,7 +353,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> comparison_gadget<FieldT, PB> {
 }
 #[derive(Clone, Default)]
 pub struct inner_product_gadget<FieldT: FieldTConfig, PB: PBConfig> {
-    /* S_i = \sum_{k=0}^{i+1} A[i] * B[i] */
+    //S_i = \sum_{k=0}^{i+1} A[i] * B[i]
     pub S: pb_variable_array<FieldT, PB>,
     pub A: pb_linear_combination_array<FieldT, PB>,
     pub B: pb_linear_combination_array<FieldT, PB>,
@@ -438,7 +438,7 @@ pub fn generate_boolean_r1cs_constraint<FieldT: FieldTConfig, PB: PBConfig>(
     lc: &linear_combination<FieldT, pb_variable, pb_linear_combination>,
     annotation_prefix: String,
 ) {
-    /* forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0 */
+    //forces lc to take value 0 or 1 by adding constraint lc * (1-lc) = 0
     pb.borrow_mut().add_r1cs_constraint(
         r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
             lc.clone(),
@@ -467,7 +467,7 @@ pub fn generate_r1cs_equals_const_constraint<FieldT: FieldTConfig, PB: PBConfig>
 
 impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, packing_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self, enforce_bitness: bool) {
-        /* adds constraint result = \sum  bits[i] * 2^i */
+        //adds constraint result = \sum  bits[i] * 2^i
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 FieldT::from(1).into(),
@@ -756,7 +756,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone>
 }
 impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, disjunction_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self) {
-        /* inv * sum = output */
+        //inv * sum = output
         let (mut a1, mut b1, mut c1) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -773,7 +773,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, disjunction_gadget<F
             prefix_format!(self.annotation_prefix, " inv*sum=output"),
         );
 
-        /* (1-output) * sum = 0 */
+        //(1-output) * sum = 0
         let (mut a2, mut b2, mut c2) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -864,7 +864,7 @@ pub fn test_disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
 impl<FieldT: FieldTConfig, PB: PBConfig> conjunction_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
-        /* inv * (n-sum) = 1-output */
+        //inv * (n-sum) = 1-output
         let (mut a1, mut b1, mut c1) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -883,7 +883,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> conjunction_gadgets<FieldT, PB> {
             prefix_format!(self.annotation_prefix, " inv*(n-sum)=(1-output)"),
         );
 
-        /* output * (n-sum) = 0 */
+        //output * (n-sum) = 0
         let (mut a2, mut b2, mut c2) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -993,14 +993,14 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
          therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
         */
 
-        /* not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget */
+        //not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget
         generate_boolean_r1cs_constraint::<FieldT, PB>(
             &self.pb,
             &self.t.not_all_zeros.clone().into(),
             prefix_format!(self.annotation_prefix, " not_all_zeros"),
         );
 
-        /* constraints for packed(alpha) = 2^n + B - A */
+        //constraints for packed(alpha) = 2^n + B - A
         self.t.pack_alpha.borrow().generate_r1cs_constraints(true);
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -1011,7 +1011,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
             prefix_format!(self.annotation_prefix, " main_constraint"),
         );
 
-        /* compute result */
+        //compute result
         self.t.all_zeros_test.borrow().generate_r1cs_constraints();
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -1027,7 +1027,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
         self.t.A.evaluate_pb(&self.pb);
         self.t.B.evaluate_pb(&self.pb);
 
-        /* unpack 2^n + B - A into alpha_packed */
+        //unpack 2^n + B - A into alpha_packed
         *self.pb.borrow_mut().val_ref(&self.t.alpha_packed) = (FieldT::from(2) ^ self.t.n)
             + self.pb.borrow().lc_val(&self.t.B)
             - self.pb.borrow().lc_val(&self.t.A);
@@ -1036,7 +1036,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
             .borrow()
             .generate_r1cs_witness_from_packed();
 
-        /* compute result */
+        //compute result
         self.t.all_zeros_test.borrow().generate_r1cs_witness();
         *self.pb.borrow_mut().val_ref(&self.t.less) =
             self.pb.borrow().val(&self.t.less_or_eq) * self.pb.borrow().val(&self.t.not_all_zeros);
@@ -1199,7 +1199,7 @@ pub fn test_inner_product_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
 impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self) {
-        /* \alpha_i (index - i) = 0 */
+        //\alpha_i (index - i) = 0
         for i in 0..self.t.arr.len() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -1211,7 +1211,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
             );
         }
 
-        /* 1 * (\sum \alpha_i) = success_flag */
+        //1 * (\sum \alpha_i) = success_flag
         let (mut a, mut b, mut c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -1235,12 +1235,12 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
             prefix_format!(self.annotation_prefix, " success_flag"),
         );
 
-        /* compute result */
+        //compute result
         self.t.compute_result.borrow().generate_r1cs_constraints();
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* assumes that idx can be fit in ulong; true for our purposes for now */
+        //assumes that idx can be fit in ulong; true for our purposes for now
         let mut valint = self.pb.borrow().val(&self.t.index).as_bigint::<4>();
         let mut idx = valint.as_ulong() as usize;
         let arrsize = bigint::<4>::new(self.t.arr.len() as u64);

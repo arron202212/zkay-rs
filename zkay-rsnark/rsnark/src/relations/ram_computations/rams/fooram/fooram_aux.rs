@@ -66,7 +66,7 @@ impl ArchitectureParamsTypeConfig for fooram_architecture_params {
         primary_input: &fooram_input_tape,
     ) -> memory_contents {
         let m = memory_contents::new();
-        /* fooram memory contents do not depend on program/input. */
+        //fooram memory contents do not depend on program/input.
         // //ffec::UNUSED(program, primary_input);
         m
     }

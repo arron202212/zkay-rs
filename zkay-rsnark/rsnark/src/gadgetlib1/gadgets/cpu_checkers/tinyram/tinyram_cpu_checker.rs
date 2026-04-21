@@ -150,7 +150,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
 
         assert!(pc_val_it == prev_pc_val_contents.len());
 
-        /* parse state as registers + flags */
+        //parse state as registers + flags
         let (mut packed_prev_registers, mut packed_next_registers) = (
             pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default(),
             pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default(),
@@ -186,7 +186,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         let prev_tape1_exhausted = prev_state.iter().last().unwrap().clone();
         let next_tape1_exhausted = next_state.iter().last().unwrap().clone();
 
-        /* decode arguments */
+        //decode arguments
         let prev_pc_addr_as_word_variable =
             RcCell::new(word_variable_gadget::<FieldT>::new_with_bits(
                 pb.clone(),
@@ -219,7 +219,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             format!("{annotation_prefix} decode_arguments"),
         ));
 
-        /* create indicator variables for opcodes */
+        //create indicator variables for opcodes
         let mut opcode_indicators =
             pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         opcode_indicators.allocate(
@@ -228,7 +228,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             format!("{annotation_prefix} opcode_indicators"),
         );
 
-        /* perform the ALU operations */
+        //perform the ALU operations
         let mut instruction_results =
             pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         instruction_results.allocate(
@@ -257,7 +257,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             format!("{annotation_prefix} ALU"),
         ));
 
-        /* check correctness of memory operations */
+        //check correctness of memory operations
         let ls_prev_val_as_doubleword_variable =
             RcCell::new(doubleword_variable_gadget::<FieldT>::new_with_bits(
                 pb.clone(),
@@ -312,11 +312,11 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
             format!("{annotation_prefix} check_memory"),
         ));
 
-        /* handle reads */
+        //handle reads
         let mut read_not1 = variable::<FieldT, pb_variable>::default();
         read_not1.allocate(&pb, format!("{annotation_prefix} read_not1"));
 
-        /* check consistency of the states according to the ALU results */
+        //check consistency of the states according to the ALU results
         let next_pc_addr_as_word_variable =
             RcCell::new(word_variable_gadget::<FieldT>::new_with_bits(
                 pb.clone(),
@@ -397,7 +397,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_constraints();
 
-        /* generate indicator variables for opcode */
+        //generate indicator variables for opcode
         for i in 0..1usize << self.pb.borrow().t.ap.opcode_width() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -421,7 +421,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             format!("{} opcode_indicators_sum_to_1", self.annotation_prefix),
         );
 
-        /* consistency checks for repacked variables */
+        //consistency checks for repacked variables
         for i in 0..self.pb.borrow().t.ap.k {
             self.t.t.t.prev_registers[i].generate_r1cs_constraints(true);
             self.t.t.t.next_registers[i].generate_r1cs_constraints(true);
@@ -451,7 +451,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_constraints(true);
 
-        /* main consistency checks */
+        //main consistency checks
         self.t
             .t
             .t
@@ -466,7 +466,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_constraints();
 
-        /* check correct access to memory */
+        //check correct access to memory
         self.t
             .t
             .t
@@ -613,7 +613,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             ),
         );
 
-        /* specify that accepting state implies opcode = answer && arg2val == 0 */
+        //specify that accepting state implies opcode = answer && arg2val == 0
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.next_has_accepted.clone().into(),
@@ -686,7 +686,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
                 self.t.t.t.read_not1.clone().into(),
             ),
             format!("{} read_not1", self.annotation_prefix),
-        ); /* will be nonzero for read X for X != 1 */
+        ); //will be nonzero for read X for X != 1
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.read_not1.clone().into(),
@@ -715,7 +715,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
     }
 
     pub fn generate_r1cs_witness_address(&self) {
-        /* decode instruction and arguments */
+        //decode instruction and arguments
         self.t
             .t
             .t
@@ -747,7 +747,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_witness_from_packed();
 
-        /* clear out ls_addr and fill with everything of arg2val except the subaddress */
+        //clear out ls_addr and fill with everything of arg2val except the subaddress
         self.t.t.t.ls_addr.fill_with_bits_of_field_element(
             &self.pb,
             &FieldT::from(
@@ -770,7 +770,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* fill in the opcode indicators */
+        //fill in the opcode indicators
         let opcode_val = self
             .t
             .t
@@ -789,10 +789,10 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             };
         }
 
-        /* execute the ALU */
+        //execute the ALU
         self.t.t.t.ALU.borrow().generate_r1cs_witness();
 
-        /* fill memory_subaddress */
+        //fill memory_subaddress
         self.t.t.t.memory_subaddress.borrow().t.bits.fill_with_bits(
             &self.pb,
             &pb_variable_array::<FieldT, tinyram_protoboard<FieldT>>::new(
@@ -891,7 +891,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             *self.pb.borrow_mut().val_ref(
                 &self.t.t.t.instruction_results
                     [tinyram_opcode::tinyram_opcode_LOADW.clone() as usize],
-            ) = FieldT::from(loaded_word); /* does not hurt even for non-memory instructions */
+            ) = FieldT::from(loaded_word); //does not hurt even for non-memory instructions
             *self.pb.borrow_mut().val_ref(&self.t.t.t.memory_subcontents) =
                 FieldT::from(loaded_word);
         }
@@ -901,7 +901,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
 
         self.t.t.t.check_memory.borrow().generate_r1cs_witness();
 
-        /* handle reads */
+        //handle reads
         if self.pb.borrow().val(&self.t.t.t.prev_tape1_exhausted) == FieldT::one() {
             /* if tape was exhausted before, it will always be
             exhausted. we also need to only handle reads from tape 1,
@@ -920,30 +920,30 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
         ) * (FieldT::one()
             - self.pb.borrow().val(&self.t.t.t.arg2val.borrow().t.packed));
         if self.pb.borrow().val(&self.t.t.t.read_not1) != FieldT::one() {
-            /* reading from tape other than 0 raises the flag */
+            //reading from tape other than 0 raises the flag
             *self.pb.borrow_mut().val_ref(
                 &self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
             ) = FieldT::one();
         } else {
-            /* otherwise perform the actual read */
+            //otherwise perform the actual read
             if !aux.is_empty() {
                 *self.pb.borrow_mut().val_ref(
                     &self.t.t.t.instruction_results
                         [tinyram_opcode::tinyram_opcode_READ.clone() as usize],
                 ) = FieldT::from(aux[0]);
                 if aux.len() == 1 {
-                    /* tape has ended! */
+                    //tape has ended!
                     *self
                         .pb
                         .borrow_mut()
                         .val_ref(&self.t.t.t.next_tape1_exhausted) = FieldT::one();
                 }
             } else {
-                /* handled above, so nothing to do here */
+                //handled above, so nothing to do here
             }
         }
 
-        /* flag implies result zero */
+        //flag implies result zero
         if self.pb.borrow().val(
             &self.t.t.t.instruction_flags[tinyram_opcode::tinyram_opcode_READ.clone() as usize],
         ) == FieldT::one()
@@ -954,7 +954,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             ) = FieldT::zero();
         }
 
-        /* execute consistency enforcer */
+        //execute consistency enforcer
         self.t
             .t
             .t
@@ -972,7 +972,7 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             self.t.t.t.next_registers[i].generate_r1cs_witness_from_packed();
         }
 
-        /* finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0 */
+        //finally set has_accepted to 1 if both the opcode is ANSWER and arg2val is 0
         *self.pb.borrow_mut().val_ref(&self.t.t.t.next_has_accepted) = if (self.pb.borrow().val(
             &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_ANSWER.clone() as usize],
         ) == FieldT::one()

@@ -79,7 +79,7 @@ pub fn _basic_serial_radix2_FFT<FieldT: FieldTConfig>(
         eyre::bail!("expected n == (1usize << logn)");
     }
 
-    /* swapping in place (from Storer's book) */
+    //swapping in place (from Storer's book)
     for k in 0..n {
         let rk = bitreverse(k, logn);
         if k < rk {
@@ -93,7 +93,7 @@ pub fn _basic_serial_radix2_FFT<FieldT: FieldTConfig>(
         // w_m is 2^s-th root of unity now
         let w_m: FieldT = omega.clone() ^ nm;
 
-        // asm volatile  ("/* pre-inner */");
+        // asm volatile  ("//pre-inner");
         for k in 0..n {
             let mut w = FieldT::one();
             for j in 0..m {
@@ -103,7 +103,7 @@ pub fn _basic_serial_radix2_FFT<FieldT: FieldTConfig>(
                 w *= w_m.clone();
             }
         }
-        // asm volatile ("/* post-inner */");
+        // asm volatile ("//post-inner");
         m *= 2;
     }
     Ok(())

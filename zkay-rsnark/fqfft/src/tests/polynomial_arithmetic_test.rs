@@ -11,7 +11,7 @@ mod test {
     use super::*;
     //   template <T>
     pub struct PolynomialArithmeticTest; //::testing::Test};
-    //   type FieldT=::testing::Types<Double>; /* List Extend Here */
+    //   type FieldT=::testing::Types<Double>; //List Extend Here
     //   TYPED_TEST_CASE(PolynomialArithmeticTest, FieldT);
     type TypeParam = Double;
     #[test]

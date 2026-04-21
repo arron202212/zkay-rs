@@ -1062,7 +1062,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
 
     tmp_exponents.reserve(sap_inst.degree() + 1);
 
-    /* Compute the vector G_gamma2_Z_t := Z(t) * t^i * gamma^2 * G */
+    // Compute the vector G_gamma2_Z_t := Z(t) * t^i * gamma^2 * G
     let mut gamma2_Z_t = gamma.squared() * sap_inst.Zt.clone();
     for i in 0..sap_inst.degree() + 1 {
         tmp_exponents.push(gamma2_Z_t.clone());

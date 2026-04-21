@@ -116,7 +116,7 @@ fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptCo
 
     start_profiling();
 
-    /* load everything */
+    //load everything
     let mut pk = ram_ppzksnark_proving_key::<default_tinyram_ppzksnark_pp>::default();
     let mut pk_file = proving_key_fn.lines();
     // pk_file >> pk;

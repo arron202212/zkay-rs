@@ -221,7 +221,7 @@ pub struct mnt_e_times_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
   (later in Miller loop: f = f.squared() * g_RR_at_P)
 */
 
-/* Note the slight interface change: this gadget will allocate g_RR_at_P inside itself (!) */
+//Note the slight interface change: this gadget will allocate g_RR_at_P inside itself (!)
 pub type mnt_miller_loop_dbl_line_evals<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, mnt_miller_loop_dbl_line_eval<ppT>>;
 impl<ppT: ppTConfig> mnt_miller_loop_dbl_line_eval<ppT> {
@@ -334,7 +334,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_dbl_line_evals<ppT> {
   If invert_Q is set to true: use -QY in place of QY everywhere above.
 */
 
-/* Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!) */
+//Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
 pub type mnt_miller_loop_add_line_evals<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, mnt_miller_loop_add_line_eval<ppT>>;
 impl<ppT: ppTConfig> mnt_miller_loop_add_line_eval<ppT> {
@@ -478,7 +478,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadget<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -521,7 +521,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadget<ppT> {
         found_nonzero = false;
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -642,7 +642,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadgets<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -759,7 +759,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadget<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -809,7 +809,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadget<ppT> {
         found_nonzero = false;
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -980,7 +980,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadgets<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -1162,7 +1162,7 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadget<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -1219,7 +1219,7 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadget<ppT> {
         found_nonzero = false;
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }
@@ -1439,7 +1439,7 @@ impl<ppT: ppTConfig> mnt_e_times_e_over_e_miller_loop_gadgets<ppT> {
         let mut NAF = find_wnaf_u(1, loop_count);
         for i in (0..=NAF.len() - 1).rev() {
             if !found_nonzero {
-                /* this skips the MSB itself */
+                //this skips the MSB itself
                 found_nonzero |= (NAF[i] != 0);
                 continue;
             }

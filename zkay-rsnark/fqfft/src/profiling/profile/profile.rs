@@ -10,7 +10,7 @@
 // use crate::evaluation_domain::domains::geometric_sequence_domain;
 // use crate::evaluation_domain::domains::step_radix2_domain;
 
-// /* https://stackoverflow.com/questions/26237419/faster-than-rand */
+// //https://stackoverflow.com/questions/26237419/faster-than-rand
 // 5149:  seed :u32=,
 // #[inline]
 // pub fn  fastrand()->u32
@@ -41,7 +41,7 @@
 //              num_threads:i32,
 //              key:i32)
 // {
-//   /* Determine domain sizes and precompute domain vectors */
+//   //Determine domain sizes and precompute domain vectors
 //   let  dom_sizes:Vec<_>=domain_sizes.split_ascii_whitespace().map(|s| s.parse::<usize>().unwrap()).collect();
 
 //   let mut  domain=vec![vec![];dom_sizes.len()];
@@ -53,21 +53,21 @@
 //     domain[i] = temp;
 //   }
 
-// //   /* Runtime File */
+// //   //Runtime File
 //   let mut  runtime_file="";
 // //   if profiling_type[0]
 // //   {
 // //     runtime_file.open(path[0] + types[key] + "-" + std::to_string(num_threads) + ".csv");
 // //     runtime_file << "size, time (in sec) \n";
 // //   }
-// //   /* Memory File */
+// //   //Memory File
 // //   std::ofstream memory_file;
 // //   if profiling_type[1]
 // //   {
 // //     memory_file.open(path[1] + types[key] + "-" + std::to_string(num_threads) + ".csv");
 // //     memory_file << "size, memory (in kilobytes) \n";
 // //   }
-// //   /* Operators File (only on single-thread case) */
+// //   //Operators File (only on single-thread case)
 //   let mut  operators_file;
 // //   if profiling_type[2] && num_threads == 1
 // //   {
@@ -77,9 +77,9 @@
 
 //   print!("\n{}-{}\n", types[key as usize], num_threads);
 
-//   /* Assess on varying domain sizes */
+//   //Assess on varying domain sizes
 //   for s in 0..domain.len() {
-//     /* Initialization */
+//     //Initialization
 //     let mut a=&domain[s];
 //     let  n = a.len();
 
@@ -91,10 +91,10 @@
 //     //   FieldT::inv_cnt = 0;
 //     }
 
-//     /* Start time */
+//     //Start time
 //     let  start = omp_get_wtime();
 
-//     /* Perform operation */
+//     //Perform operation
 //     match key {
 //      0=> {basic_radix2_domain::<FieldT>(n).FFT(a);}
 //    1=>{ extended_radix2_domain::<FieldT>(n).FFT(a);}
@@ -105,17 +105,17 @@
 //         println!("key");
 //     }
 // }
-//     /* End time */
+//     //End time
 //     let  runtime = (omp_get_wtime() - start) as f64;
 //     if profiling_type[0] { println!("{runtime_file} {n} , {runtime} \n");}
 
-//     /* Memory usage */
+//     //Memory usage
 //     struct rusage;
 //     let mut  r_usage=rusage;
 //     // getrusage(RUSAGE_SELF, &r_usage);
 //     // if profiling_type[1] {println!("{memory_file}  {n} , {r_usage.ru_maxrss} \n");}
 
-//     /* Operator count */
+//     //Operator count
 //     if profiling_type[2] && num_threads == 1
 //       {
 //         write!(operators_file,  "{n}  ,
@@ -128,7 +128,7 @@
 //     print!("{}: {} seconds, {} kilobytes\n", n, runtime, r_usage.ru_maxrss);
 //   }
 
-//   /* Close files */
+//   //Close files
 // //   if profiling_type[0]) runtime_file.close(;
 // //   if profiling_type[1]) memory_file.close(;
 // //   if profiling_type[2] && num_threads == 1) operators_file.close(;
@@ -144,20 +144,20 @@
 //     process::exit(0);
 //   }
 
-//   /* Parse input arguments */
+//   //Parse input arguments
 //   let  key = argv[1].parse::<i32>().unwrap();
 //   let num_threads = argv[2].parse::<i32>().unwrap();
 //   let  datetime = argv[3];
 //   let profile_type = argv[4];
 //   let domain_sizes = argv[5];
 
-//   /* Make log file directories */
+//   //Make log file directories
 //   let mut  path=vec![String::new();3];
 //   path[0] = format!("libfqfft/profiling/logs/runtime/{datetime}/");
 //   path[1] = format!("libfqfft/profiling/logs/memory/{datetime}/");
 //   path[2] = format!("libfqfft/profiling/logs/operators/{datetime}/");
 
-//   /* Determine profiling type */
+//   //Determine profiling type
 //   let mut  m=0;
 //   let mut  profiling_type =vec![false;3];
 //   for m in profile_type.split_ascii_whitespace()
@@ -169,7 +169,7 @@
 //   if profiling_type[2]
 //     {if system( ("mkdir -p " + path[2]) ) {return 0;}}
 
-//   /* Domain types */
+//   //Domain types
 //   let mut  types=vec![];
 //   types.push("basic-radix2-fft");
 //   types.push("extended-radix2-fft");
@@ -177,11 +177,11 @@
 //   types.push("geometric-fft");
 //   // types.push("arithmetic-fft");
 
-//   /* Profile on 1, 2, 4, or 8 threads */
+//   //Profile on 1, 2, 4, or 8 threads
 //   let  max_threads = omp_get_max_threads();
 //   if num_threads >= 1 && num_threads <= max_threads
 //   {
-//     /* Fix number of threads, no dynamic adjustment */
+//     //Fix number of threads, no dynamic adjustment
 //     omp_set_dynamic(0);
 //     omp_set_num_threads(num_threads);
 

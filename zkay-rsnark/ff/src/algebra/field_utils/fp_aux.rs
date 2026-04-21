@@ -6,7 +6,7 @@
 // #define STR_HELPER(x) #x
 // #define STR(x) STR_HELPER(x)
 
-/* addq is faster than adcq, even if preceded by clc */
+//addq is faster than adcq, even if preceded by clc
 // // #define ADD_FIRSTADD                            \
 //     "movq    (%[B]), %%rax           \n\t"      \
 //     "addq    %%rax, (%[A])           \n\t"

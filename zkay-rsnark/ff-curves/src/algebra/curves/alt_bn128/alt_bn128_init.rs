@@ -17,7 +17,7 @@ pub const alt_bn128_twist: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
 );
 #[inline(always)]
 pub fn alt_bn128_twist_coeff_b() -> alt_bn128_Fq2 {
-    &alt_bn128_twist.inverse() * &alt_bn128_coeff_b
+    alt_bn128_twist.inverse() * alt_bn128_coeff_b
 }
 
 #[inline(always)]
@@ -45,7 +45,6 @@ pub const alt_bn128_twist_mul_by_q_Y: alt_bn128_Fq2 = alt_bn128_Fq2::const_new(
     )),
 );
 
-
 pub const alt_bn128_ate_loop_count: bigint<alt_bn128_q_limbs> =
     bigint::<alt_bn128_q_limbs>(BigInt!("29793968203157093288"));
 pub const alt_bn128_ate_is_loop_count_neg: bool = false;
@@ -56,7 +55,7 @@ pub const alt_bn128_final_exponent_is_z_neg: bool = false;
 pub fn init_alt_bn128_params() {
     init_alt_bn128_fields();
 
-    /* choice of short Weierstrass curve and its twist */
+    //choice of short Weierstrass curve and its twist
 
     // alt_bn128_twist = alt_bn128_Fq2(alt_bn128_Fq("9"), alt_bn128_Fq("1"));
     // alt_bn128_twist_coeff_b = alt_bn128_coeff_b * alt_bn128_twist.inverse();
@@ -67,7 +66,7 @@ pub fn init_alt_bn128_params() {
     // alt_bn128_twist_mul_by_q_Y = alt_bn128_Fq2(alt_bn128_Fq("2821565182194536844548159561693502659359617185244120367078079554186484126554"),
     //                                        alt_bn128_Fq("3505843767911556378687030309984248845540243509899259641013678093033130930403"));
 
-    // /* choice of group G1 */
+    // //choice of group G1
     // alt_bn128_G1::G1_zero = alt_bn128_G1(alt_bn128_Fq::zero(),
     //                                  alt_bn128_Fq::one(),
     //                                  alt_bn128_Fq::zero());
@@ -108,7 +107,7 @@ pub fn init_alt_bn128_params() {
         34552892,
     ];
 
-    // /* choice of group G2 */
+    // //choice of group G2
     // alt_bn128_G2::G2_zero = alt_bn128_G2(alt_bn128_Fq2::zero(),
     //                                  alt_bn128_Fq2::one(),
     //                                  alt_bn128_Fq2::zero());
@@ -158,7 +157,7 @@ pub fn init_alt_bn128_params() {
         31673815,
     ];
 
-    // /* pairing parameters */
+    // //pairing parameters
 
     // alt_bn128_ate_loop_count = bigint<alt_bn128_q_limbs>("29793968203157093288");
     // alt_bn128_ate_is_loop_count_neg = false;

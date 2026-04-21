@@ -1062,11 +1062,11 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
 {
     enter_block("Call to r1cs_ppzkadsnark_generator", false);
 
-    /* make the B_query "lighter" if possible */
+    //make the B_query "lighter" if possible
     let mut cs_copy = cs.clone();
     cs_copy.swap_AB_if_beneficial();
 
-    /* draw random element at which the QAP is evaluated */
+    //draw random element at which the QAP is evaluated
     let mut t = Fr::<snark_pp<PP>>::random_element();
 
     let mut qap_inst: qap_instance_evaluation<_> = r1cs_to_qap_instance_map_with_evaluation::<
@@ -1115,7 +1115,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let mut Ct = (qap_inst.Ct.clone()); // qap_inst.Ct is now in unspecified state, but we do not use it later
     let mut Ht = (qap_inst.Ht.clone()); // qap_inst.Ht is now in unspecified state, but we do not use it later
 
-    /* append Zt to At,Bt,Ct with */
+    //append Zt to At,Bt,Ct with
     At.push(qap_inst.Zt.clone());
     Bt.push(qap_inst.Zt.clone());
     Ct.push(qap_inst.Zt.clone());
@@ -1410,8 +1410,7 @@ where
         r1cs_to_qap_instance_map_with_evaluation(&pk.constraint_system, &t);
     assert!(qap_inst.is_satisfied(&qap_wit));
 
-    let mut g_A =
-        /* pk.A_query[0] + */ pk.A_query[qap_wit.num_variables()+1].clone()*d1;
+    let mut g_A = pk.A_query[0] + pk.A_query[qap_wit.num_variables() + 1].clone() * d1;
     let mut g_B = pk.B_query[0].clone()
         + pk.B_query[qap_wit.num_variables() + 1].clone() * qap_wit.d2.clone();
     let mut g_C = pk.C_query[0].clone()

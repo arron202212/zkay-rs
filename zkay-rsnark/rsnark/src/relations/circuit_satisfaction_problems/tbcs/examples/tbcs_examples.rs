@@ -82,7 +82,7 @@ pub fn generate_tbcs_example(
         gate.output = num_variables + 1;
 
         if i >= num_gates - num_outputs {
-            /* make gate a circuit output and fix */
+            //make gate a circuit output and fix
             loop {
                 gate.types = tbcs_gate_type::from(rand::random::<u8>() % num_tbcs_gate_types);
                 if !gate.evaluate(&all_vals) {

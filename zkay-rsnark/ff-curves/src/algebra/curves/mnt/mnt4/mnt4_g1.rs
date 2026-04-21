@@ -22,8 +22,7 @@ pub struct mnt4_G1 {
     pub Z: mnt4_Fq,
 }
 impl PpConfig for mnt4_G1 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for mnt4_G1 {
     type Fr = mnt4_Fq;

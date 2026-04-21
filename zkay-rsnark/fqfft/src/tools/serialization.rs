@@ -40,13 +40,6 @@
  * portable between machines of different word sizes.
  */
 
-// #ifdef BINARY_OUTPUT
-// #define OUTPUT_NEWLINE ""
-// #define OUTPUT_SEPARATOR ""
-// #else
-// #define OUTPUT_NEWLINE "\n"
-// #define OUTPUT_SEPARATOR " "
-
 cfg_if::cfg_if! {
  if #[cfg(feature="BINARY_OUTPUT")]
 {const OUTPUT_NEWLINE:&str= "";

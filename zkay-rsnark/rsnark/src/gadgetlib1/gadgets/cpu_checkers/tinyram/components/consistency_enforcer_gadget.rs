@@ -200,7 +200,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadget<FieldT> {
 }
 impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
     pub fn generate_r1cs_constraints(&self) {
-        /* pack destination index */
+        //pack destination index
         self.t
             .t
             .t
@@ -208,7 +208,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /* demux result register */
+        //demux result register
         self.t
             .t
             .t
@@ -216,7 +216,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_constraints();
 
-        /* is_register_instruction */
+        //is_register_instruction
         let (mut reg_a, mut reg_b, mut reg_c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -235,7 +235,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             format!("{} is_register_instruction", self.annotation_prefix),
         );
 
-        /* is_control_flow_instruction */
+        //is_control_flow_instruction
         let (mut cf_a, mut cf_b, mut cf_c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -255,7 +255,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             format!("{} is_control_flow_instruction", self.annotation_prefix),
         );
 
-        /* is_stall_instruction */
+        //is_stall_instruction
         let (mut stall_a, mut stall_b, mut stall_c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -276,7 +276,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             format!("{} is_stall_instruction", self.annotation_prefix),
         );
 
-        /* compute actual result/actual flag */
+        //compute actual result/actual flag
         self.t
             .t
             .t
@@ -393,7 +393,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* pack destination index */
+        //pack destination index
         self.t
             .t
             .t
@@ -401,7 +401,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* is_register_instruction */
+        //is_register_instruction
         *self
             .pb
             .borrow_mut()
@@ -417,7 +417,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
                 .val(&self.t.t.t.opcode_indicators[tinyram_opcodes_register[i].clone() as usize]);
         }
 
-        /* is_control_flow_instruction */
+        //is_control_flow_instruction
         *self
             .pb
             .borrow_mut()
@@ -432,7 +432,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             );
         }
 
-        /* is_stall_instruction */
+        //is_stall_instruction
         *self
             .pb
             .borrow_mut()
@@ -448,7 +448,7 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
                 .val(&self.t.t.t.opcode_indicators[tinyram_opcodes_stall[i].clone() as usize]);
         }
 
-        /* compute actual result/actual flag */
+        //compute actual result/actual flag
         self.t
             .t
             .t

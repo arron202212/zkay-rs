@@ -52,7 +52,7 @@ impl<RamT: ram_params_type> memory_checker_gadget<RamT> {
         line2: memory_line_variable_gadgets<RamT, execution_line_variable_gadget<RamT>>,
         annotation_prefix: String,
     ) -> memory_checker_gadgets<RamT> {
-        /* compare the two timestamps */
+        //compare the two timestamps
         let mut timestamps_leq = variable::<FieldT<RamT>, pb_variable>::default();
         let mut timestamps_less = variable::<FieldT<RamT>, pb_variable>::default();
         let mut addresses_eq = variable::<FieldT<RamT>, pb_variable>::default();
@@ -81,7 +81,7 @@ impl<RamT: ram_params_type> memory_checker_gadget<RamT> {
             prefix_format!(annotation_prefix, " compare_ts"),
         ));
 
-        /* compare the two addresses */
+        //compare the two addresses
         let address_size = pb
             .borrow()
             .ap::<ram_architecture_params<RamT>>()
@@ -154,13 +154,13 @@ impl<RamT: ram_params_type> memory_checker_gadget<RamT> {
 }
 impl<RamT: ram_params_type> memory_checker_gadgets<RamT> {
     pub fn generate_r1cs_constraints(&self) {
-        /* compare the two timestamps */
+        //compare the two timestamps
         self.t
             .compare_timestamps
             .borrow()
             .generate_r1cs_constraints();
 
-        /* compare the two addresses */
+        //compare the two addresses
         self.t
             .compare_addresses
             .borrow()
@@ -308,13 +308,13 @@ impl<RamT: ram_params_type> memory_checker_gadgets<RamT> {
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* compare the two addresses */
+        //compare the two addresses
         self.t.compare_addresses.borrow().generate_r1cs_witness();
         *self.pb.borrow_mut().val_ref(&self.t.addresses_eq) =
             self.pb.borrow().val(&self.t.addresses_leq)
                 * (FieldT::<RamT>::one() - self.pb.borrow().val(&self.t.addresses_less));
 
-        /* compare the two timestamps */
+        //compare the two timestamps
         self.t.compare_timestamps.borrow().generate_r1cs_witness();
 
         /*

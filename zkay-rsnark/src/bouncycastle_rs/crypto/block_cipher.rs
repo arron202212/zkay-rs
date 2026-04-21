@@ -130,7 +130,7 @@ impl BlockCipher for AesEngine {
         Ok(block_size)
     }
 
-    fn reset(&mut self) { /* 清除敏感數據或恢復初始向量 */ }
+    fn reset(&mut self) { //清除敏感數據或恢復初始向量 }
 
     fn get_algorithm_name(&self) -> &str { "AES" }
 }

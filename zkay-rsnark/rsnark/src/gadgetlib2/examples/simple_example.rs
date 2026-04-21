@@ -17,7 +17,7 @@ use ff_curves::{Fr, default_ec_pp};
 use ffec::FieldTConfig;
 type FieldT = Fr<default_ec_pp>;
 
-/* NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP */
+//NOTE: all examples here actually generate one constraint less to account for soundness constraint in QAP
 pub fn gen_r1cs_example_from_gadgetlib2_protoboard<
     SV: SubVariableConfig,
     SLC: SubLinearCombinationConfig,

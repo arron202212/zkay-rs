@@ -18,7 +18,7 @@ use fqfft::evaluation_domain::evaluation_domain::{
 };
 use rccell::RcCell;
 use std::collections::BTreeMap;
-/* forward declaration */
+//forward declaration
 //
 // pub struct sap_witness;
 

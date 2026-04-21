@@ -11,7 +11,7 @@ mod test {
 
     //   template <T>
     pub struct KroneckerSubstitutionTest; //::testing::Test};
-    //   type FieldT=::testing::Types<Double>; /* List Extend Here */
+    //   type FieldT=::testing::Types<Double>; //List Extend Here
     //   TYPED_TEST_CASE(KroneckerSubstitutionTest, FieldT);
     type TypeParam = Double;
 

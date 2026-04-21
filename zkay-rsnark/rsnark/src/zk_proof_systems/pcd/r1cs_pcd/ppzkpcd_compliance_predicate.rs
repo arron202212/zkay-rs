@@ -8,7 +8,7 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::compliance_pre
 use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::FieldTConfig;
-/* template aliasing for R1CS (multi-predicate) ppzkPCD: */
+//template aliasing for R1CS (multi-predicate) ppzkPCD:
 pub trait PcdPptConfig: ppTConfig {
     type curve_A_pp: ppTConfig<
             P = Self::AP,

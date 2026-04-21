@@ -79,7 +79,7 @@
 //     friend std::ostream& operator<<(std::ostream &out, el:&gf192);
 //     friend std::istream& operator>>(std::istream &in, gf192 &el);
 //
-//     /* little-endian */
+//     //little-endian
 //     uint64_t value_[3];
 // };
 
@@ -195,7 +195,7 @@
 //       4. c1 = (a0 + a1) * (b0 + b1) - c0 - t
 //       5. c3 = (a1 + a2) * (b1 + b2) - c4 - t
 //       6. c2 = (a0 + a2) * (b0 + b2) - c0 - c4 + t */
-//     __m128i c0 = _mm_clmulepi64_si128(ab0, ab0, 0x01); /* multiply low and high halves */
+//     __m128i c0 = _mm_clmulepi64_si128(ab0, ab0, 0x01); //multiply low and high halves
 //     __m128i c4 = _mm_clmulepi64_si128(ab2, ab2, 0x01);
 
 //     __m128i t = _mm_clmulepi64_si128(ab1, ab1, 0x01);
@@ -220,27 +220,27 @@
 //     __m128i d1 = _mm_xor_si128(_mm_xor_si128(c2, _mm_srli_si128(c1, 8)),
 //                                 _mm_slli_si128(c3, 8));
 
-//     /* done with the multiplication, time to reduce */
-//     /* reduce w.r.t. high half of d2 */
+//     //done with the multiplication, time to reduce
+//     //reduce w.r.t. high half of d2
 //     __m128i tmp = _mm_clmulepi64_si128(d2, modulus, 0x01);
 //     d1 = _mm_xor_si128(d1, tmp);
 
-//     /* reduce w.r.t. low half of d2 */
+//     //reduce w.r.t. low half of d2
 //     tmp = _mm_clmulepi64_si128(d2, modulus, 0x00);
 //     d1 = _mm_xor_si128(d1, _mm_srli_si128(tmp, 8));
 //     d0 = _mm_xor_si128(d0, _mm_slli_si128(tmp, 8));
 
-//     /* reduce w.r.t. high half of d1 */
+//     //reduce w.r.t. high half of d1
 //     tmp = _mm_clmulepi64_si128(d1, modulus, 0x01);
 //     d0 = _mm_xor_si128(d0, tmp);
 
-//     /* done, now just store everything back into this->value_ */
+//     //done, now just store everything back into this->value_
 //     _mm_storeu_si128((__m128i*) &this->value_[0], d0);
 //     _mm_storel_epi64((__m128i*) &this->value_[2], d1);
 
 //     return (*this);
 // #else
-//     /* Slow, but straight-forward */
+//     //Slow, but straight-forward
 //     uint64_t shifted[3] = {this->value_[0], this->value_[1], this->value_[2]};
 //     uint64_t result[3] = {0, 0, 0};
 
@@ -350,15 +350,15 @@
 //     gf192 prev_result(0);
 //     for i in 0..=6
 //     {
-//         /* entering the loop a = el^{2^{2^i}-1} */
+//         //entering the loop a = el^{2^{2^i}-1}
 //         gf192 b = a;
 //         for j in 0..(1UL<<i)
 //         {
 //             b.square();
 //         }
-//         /* after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)} */
+//         //after the loop b = a^{2^i} = el^{2^{2^i}*(2^{2^i}-1)}
 //         a *= b;
-//         /* now a = el^{2^{2^{i+1}}-1} */
+//         //now a = el^{2^{2^{i+1}}-1}
 //         prev_result = result;
 //         if i == 0
 //         {
@@ -370,7 +370,7 @@
 //         }
 //     }
 
-//     /* now result = el^{2^128-2}, prev_result = el^{2^64-2} */
+//     //now result = el^{2^128-2}, prev_result = el^{2^64-2}
 //     for i in 0..(1UL<<6)
 //         result.square();
 //     }

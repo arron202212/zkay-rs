@@ -1,47 +1,46 @@
-// use crate::algebra::curves::alt_bn128::alt_bn128_init;
-// use crate::algebra::curves::curve_utils;
+use crate::{
+    FpmConfig,
+    algebra::curves::{
+        alt_bn128::{
+            alt_bn128_fields::{alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr},
+            alt_bn128_init::{
+                alt_bn128_coeff_b, alt_bn128_twist_mul_by_b_c0, alt_bn128_twist_mul_by_b_c1,
+            },
+            curves::Bn254,
+        },
+        curve_utils::scalar_mul,
+        pairing::Pairing,
+    },
+};
 
-use crate::FpmConfig;
-use ffec::BigInt;
-use crate::algebra::curves::alt_bn128::{
-    alt_bn128_fields::{alt_bn128_Fq, alt_bn128_Fq2, alt_bn128_Fr},
-    alt_bn128_init::{alt_bn128_coeff_b, alt_bn128_twist_mul_by_b_c0, alt_bn128_twist_mul_by_b_c1},
-    curves::Bn254,
+use cfg_if::cfg_if;
+use ffec::{
+    BigInt, Fp_model, Fp_modelConfig, One, PpConfig, Zero,
+    common::serialization::{
+        OUTPUT_NEWLINE, OUTPUT_SEPARATOR, consume_output_newline, consume_output_separator,
+        read_line_as_usize,
+    },
+    field_utils::{
+        BigInteger,
+        bigint::{GMP_NUMB_BITS, bigint},
+        field_utils::batch_invert,
+    },
 };
-use crate::algebra::curves::pairing::Pairing;
-use ffec::field_utils::{
-    BigInteger,
-    bigint::{GMP_NUMB_BITS, bigint},
-    field_utils::batch_invert,
-};
-use ffec::{Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use num_bigint::BigUint;
-use std::borrow::Borrow;
-use std::fmt::Debug;
-use std::ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::{
+    borrow::Borrow,
+    fmt::Debug,
+    ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 // pub type alt_bn128_G1 = <Bn254 as Pairing>::G1;
 
-// pub struct alt_bn128_G1;
-// std::ostream& operator<<(std::ostream &, const alt_bn128_G1&);
-// std::istream& operator>>(std::istream &, alt_bn128_G1&);
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, Debug)]
 pub struct alt_bn128_G1 {
     pub X: alt_bn128_Fq,
     pub Y: alt_bn128_Fq,
     pub Z: alt_bn128_Fq,
 }
-// impl alt_bn128_G1 {
-//     pub fn size_in_bits() -> usize {
-//         return base_field::ceil_size_in_bits() + 1;
-//     }
-//     pub fn field_char() -> bigint<{ base_field::num_limbs }> {
-//         return base_field::field_char();
-//     }
-//     pub fn order() -> bigint<{ scalar_field::num_limbs }> {
-//         return scalar_field::field_char();
-//     }
-// }
 
 // alt_bn128_G1 operator*(lhs:&bigint<m>, rhs:&alt_bn128_G1)
 // {
@@ -77,133 +76,78 @@ impl From<BigUint> for alt_bn128_G1 {
 //     }
 // }
 
-impl PpConfig for alt_bn128_G1 {    
-    type TT = bigint<1>;
-    // type Fr=Self;
-}
+impl PpConfig for alt_bn128_G1 {
+    type GType = Self;
+    fn size_in_bits() -> usize {
+        base_field::ceil_size_in_bits() + 1
+    }
+    fn as_bigint<const N: usize>(&self) -> bigint<N> {
+        self.as_bigint()
+    }
+    fn dbl(&self) -> Self {
+        // #ifdef PROFILE_OP_COUNTS
+        // self.dbl_cnt+=1;
 
-impl alt_bn128_G1Config for alt_bn128_G1 {
- 
-    const wnaf_window_table: &'static [usize] = &[11, 24, 60, 127];
-
-    // alt_bn128_G1::fixed_base_exp_window_table.resize(0);
-    const fixed_base_exp_window_table: &'static [usize] = &[
-        // window 1 is unbeaten in [-inf, 4.99]
-        1,       // window 2 is unbeaten in [4.99, 10.99]
-        5,       // window 3 is unbeaten in [10.99, 32.29]
-        11,      // window 4 is unbeaten in [32.29, 55.23]
-        32,      // window 5 is unbeaten in [55.23, 162.03]
-        55,      // window 6 is unbeaten in [162.03, 360.15]
-        162,     // window 7 is unbeaten in [360.15, 815.44]
-        360,     // window 8 is unbeaten in [815.44, 2373.07]
-        815,     // window 9 is unbeaten in [2373.07, 6977.75]
-        2373,    // window 10 is unbeaten in [6977.75, 7122.23]
-        6978,    // window 11 is unbeaten in [7122.23, 57818.46]
-        7122,    // window 12 is never the best
-        0,       // window 13 is unbeaten in [57818.46, 169679.14]
-        57818,   // window 14 is never the best
-        0,       // window 15 is unbeaten in [169679.14, 439758.91]
-        169679,  // window 16 is unbeaten in [439758.91, 936073.41]
-        439759,  // window 17 is unbeaten in [936073.41, 4666554.74]
-        936073,  // window 18 is never the best
-        0,       // window 19 is unbeaten in [4666554.74, 7580404.42]
-        4666555, // window 20 is unbeaten in [7580404.42, 34552892.20]
-        7580404, // window 21 is never the best
-        0,       // window 22 is unbeaten in [34552892.20, inf]
-        34552892,
-    ];
-}
-impl alt_bn128_G1 {
-    const h_bitcount: usize = 254;
-    const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
-    const h:bigint<{alt_bn128_G1::h_limbs}> = bigint::<{alt_bn128_G1::h_limbs}>(BigInt!("1"));
-    pub fn size_in_bits() -> usize {
-        return base_field::ceil_size_in_bits() + 1;
-    }
-    pub fn field_char() -> bigint<{ base_field::num_limbs }> {
-        return base_field::field_char();
-    }
-    pub fn order() -> bigint<{ scalar_field::num_limbs }> {
-        return scalar_field::field_char();
-    }
-    fn G1_zero() -> Self {
-        Self::new(
-            alt_bn128_Fq::zero(),
-            alt_bn128_Fq::one(),
-            alt_bn128_Fq::zero(),
-        )
-    }
-    fn G1_one() -> Self {
-        Self::new(
-            alt_bn128_Fq::one(),
-            alt_bn128_Fq::const_new(BigInt!("2")),
-            alt_bn128_Fq::one(),
-        )
-    }
-    pub fn new(X: alt_bn128_Fq, Y: alt_bn128_Fq, Z: alt_bn128_Fq) -> Self {
-        Self { X, Y, Z }
-    }
-    pub fn print(&self) {
+        // handle point at infinity
         if self.is_zero() {
-            print!("O\n");
-        } else {
-            let mut copy = self.clone(); //alt_bn128_G1
-            copy.to_affine_coordinates();
-            print!(
-                "({:N$} , {:N$})\n",
-                copy.X.as_bigint().0,
-                copy.Y.as_bigint().0,
-                N = alt_bn128_Fq::num_limbs
-            );
+            return self.clone();
+        }
+
+        // no need to handle points of order 2,4
+        // (they cannot exist in a prime-order subgroup)
+
+        // using Jacobian coordinates according to
+        // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
+
+        let A = self.X.squared(); // A = X1^2
+        let B = self.Y.squared(); // B = Y1^2
+        let C = B.squared(); // C = B^2
+        let mut D = (self.X + B).squared() - A - C;
+        D = D + D; // D = 2 * ((X1 + B)^2 - A - C)
+        let E = A + A + A; // E = 3 * A
+        let F = E.squared(); // F = E^2
+        let X3 = F - (D + D); // X3 = F - 2 D
+        let mut eightC = C + C;
+        eightC = eightC + eightC;
+        eightC = eightC + eightC;
+        let Y3 = E * (D - X3) - eightC; // Y3 = E * (D - X3) - 8 * C
+        let Y1Z1 = self.Y * self.Z;
+        let Z3 = Y1Z1 + Y1Z1; // Z3 = 2 * Y1 * Z1
+
+        alt_bn128_G1::new(X3, Y3, Z3)
+    }
+    fn random_element() -> Self {
+        Self::G1_one() * (scalar_field::random_element().as_bigint())
+    }
+    fn wnaf_window_table() -> Vec<usize> {
+        <alt_bn128_G1 as alt_bn128_G1Config>::wnaf_window_table.to_vec()
+    }
+    fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
+        <alt_bn128_G1 as alt_bn128_G1Config>::fixed_base_exp_window_table.to_vec()
+    }
+    fn batch_to_special_all_non_zeros(vec: &mut Vec<alt_bn128_G1>) {
+        let mut Z_vec = Vec::with_capacity(vec.len());
+
+        for el in vec.iter() {
+            Z_vec.push(el.Z);
+        }
+        batch_invert::<alt_bn128_Fq>(&mut Z_vec);
+
+        let one = alt_bn128_Fq::one();
+
+        for i in 0..vec.len() {
+            let Z2 = Z_vec[i].squared();
+            let Z3 = Z_vec[i] * Z2;
+
+            vec[i].X = vec[i].X * Z2;
+            vec[i].Y = vec[i].Y * Z3;
+            vec[i].Z = one;
         }
     }
-
-    pub fn print_coordinates(&self) {
-        if self.is_zero() {
-            print!("O\n");
-        } else {
-            print!(
-                "({:N$} : {:N$} : {:N$})\n",
-                self.X.as_bigint().0,
-                self.Y.as_bigint().0,
-                self.Z.as_bigint().0,
-                N = alt_bn128_Fq::num_limbs
-            );
-        }
-    }
-
-    pub fn to_affine_coordinates(&mut self) {
-        if self.is_zero() {
-            self.X = alt_bn128_Fq::zero();
-            self.Y = alt_bn128_Fq::one();
-            self.Z = alt_bn128_Fq::zero();
-        } else {
-            let Z_inv = self.Z.inverse();
-            let Z2_inv = Z_inv.squared();
-            let Z3_inv = Z2_inv * Z_inv;
-            self.X = self.X * Z2_inv;
-            self.Y = self.Y * Z3_inv;
-            self.Z = alt_bn128_Fq::one();
-        }
-    }
-
-    pub fn to_special(&mut self) {
+    fn to_special(&mut self) {
         self.to_affine_coordinates();
     }
-
-    pub fn is_special(&self) -> bool {
-        return (self.is_zero() || self.Z == alt_bn128_Fq::one());
-    }
-
-    pub fn is_zero(&self) -> bool {
-        self.Z.is_zero()
-    }
-
-    pub fn add(&self, other: &alt_bn128_G1) -> Self {
-        self.clone() //+ other
-    }
-
-    pub fn mixed_add(&self, other: &alt_bn128_G1) -> Self {
+    fn mixed_add(&self, other: &alt_bn128_G1) -> Self {
         // #ifdef DEBUG
         assert!(other.is_special());
 
@@ -252,56 +196,38 @@ impl alt_bn128_G1 {
         let mut I = HH + HH; // I = 4*HH
         I = I + I;
         let J = H * I; // J = H*I
-        let mut r = S2 - (self.Y); // r = 2*(S2-Y1)
+        let mut r = S2 - self.Y; // r = 2*(S2-Y1)
         r = r + r;
-        let V = (self.X) * I; // V = X1*I
+        let V = self.X * I; // V = X1*I
         let X3 = r.squared() - J - V - V; // X3 = r^2-J-2*V
         let mut Y3 = (self.Y) * J; // Y3 = r*(V-X3)-2*Y1*J
         Y3 = r * (V - X3) - Y3 - Y3;
-        let Z3 = ((self.Z) + H).squared() - Z1Z1 - HH; // Z3 = (Z1+H)^2-Z1Z1-HH
+        let Z3 = (self.Z + H).squared() - Z1Z1 - HH; // Z3 = (Z1+H)^2-Z1Z1-HH
 
         alt_bn128_G1::new(X3, Y3, Z3)
     }
-
-    pub fn dbl(&self) -> Self {
-        // #ifdef PROFILE_OP_COUNTS
-        // self.dbl_cnt+=1;
-
-        // handle point at infinity
+    fn unitary_inverse(&self) -> Self {
+        Default::default()
+    }
+    fn is_special(&self) -> bool {
+        self.is_zero() || self.Z == alt_bn128_Fq::one()
+    }
+    fn print(&self) {
         if self.is_zero() {
-            return self.clone();
+            print!("O\n");
+        } else {
+            let mut copy = self.clone(); //alt_bn128_G1
+            copy.to_affine_coordinates();
+            print!(
+                "({:N$} , {:N$})\n",
+                copy.X.as_bigint().0,
+                copy.Y.as_bigint().0,
+                N = alt_bn128_Fq::num_limbs
+            );
         }
-
-        // no need to handle points of order 2,4
-        // (they cannot exist in a prime-order subgroup)
-
-        // using Jacobian coordinates according to
-        // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#doubling-dbl-2009-l
-
-        let A = (self.X).squared(); // A = X1^2
-        let B = (self.Y).squared(); // B = Y1^2
-        let C = B.squared(); // C = B^2
-        let mut D = (self.X + B).squared() - A - C;
-        D = D + D; // D = 2 * ((X1 + B)^2 - A - C)
-        let E = A + A + A; // E = 3 * A
-        let F = E.squared(); // F = E^2
-        let X3 = F - (D + D); // X3 = F - 2 D
-        let mut eightC = C + C;
-        eightC = eightC + eightC;
-        eightC = eightC + eightC;
-        let Y3 = E * (D - X3) - eightC; // Y3 = E * (D - X3) - 8 * C
-        let Y1Z1 = (self.Y) * (self.Z);
-        let Z3 = Y1Z1 + Y1Z1; // Z3 = 2 * Y1 * Z1
-
-        alt_bn128_G1::new(X3, Y3, Z3)
     }
 
-    pub fn mul_by_cofactor(&self) -> Self {
-        // Cofactor = 1
-        self.clone()
-    }
-
-    pub fn is_well_formed(&self) -> bool {
+    fn is_well_formed(&self) -> bool {
         if self.is_zero() {
             return true;
         }
@@ -325,95 +251,213 @@ impl alt_bn128_G1 {
         return (Y2 == X3 + alt_bn128_coeff_b * Z6);
     }
 
+    fn to_affine_coordinates(&mut self) {
+        if self.is_zero() {
+            self.X = alt_bn128_Fq::zero();
+            self.Y = alt_bn128_Fq::one();
+            self.Z = alt_bn128_Fq::zero();
+        } else {
+            let Z_inv = self.Z.inverse();
+            let Z2_inv = Z_inv.squared();
+            let Z3_inv = Z2_inv * Z_inv;
+            self.X = self.X * Z2_inv;
+            self.Y = self.Y * Z3_inv;
+            self.Z = alt_bn128_Fq::one();
+        }
+    }
+}
+
+impl alt_bn128_G1Config for alt_bn128_G1 {
+    const wnaf_window_table: &'static [usize] = &[11, 24, 60, 127];
+
+    // alt_bn128_G1::fixed_base_exp_window_table.resize(0);
+    const fixed_base_exp_window_table: &'static [usize] = &[
+        // window 1 is unbeaten in [-inf, 4.99]
+        1,       // window 2 is unbeaten in [4.99, 10.99]
+        5,       // window 3 is unbeaten in [10.99, 32.29]
+        11,      // window 4 is unbeaten in [32.29, 55.23]
+        32,      // window 5 is unbeaten in [55.23, 162.03]
+        55,      // window 6 is unbeaten in [162.03, 360.15]
+        162,     // window 7 is unbeaten in [360.15, 815.44]
+        360,     // window 8 is unbeaten in [815.44, 2373.07]
+        815,     // window 9 is unbeaten in [2373.07, 6977.75]
+        2373,    // window 10 is unbeaten in [6977.75, 7122.23]
+        6978,    // window 11 is unbeaten in [7122.23, 57818.46]
+        7122,    // window 12 is never the best
+        0,       // window 13 is unbeaten in [57818.46, 169679.14]
+        57818,   // window 14 is never the best
+        0,       // window 15 is unbeaten in [169679.14, 439758.91]
+        169679,  // window 16 is unbeaten in [439758.91, 936073.41]
+        439759,  // window 17 is unbeaten in [936073.41, 4666554.74]
+        936073,  // window 18 is never the best
+        0,       // window 19 is unbeaten in [4666554.74, 7580404.42]
+        4666555, // window 20 is unbeaten in [7580404.42, 34552892.20]
+        7580404, // window 21 is never the best
+        0,       // window 22 is unbeaten in [34552892.20, inf]
+        34552892,
+    ];
+}
+impl alt_bn128_G1 {
+    const h_bitcount: usize = 254;
+    const h_limbs: usize = (Self::h_bitcount + GMP_NUMB_BITS - 1) / GMP_NUMB_BITS;
+    const h: bigint<{ alt_bn128_G1::h_limbs }> = bigint::<{ alt_bn128_G1::h_limbs }>(BigInt!("1"));
+    pub fn field_char() -> bigint<{ base_field::num_limbs }> {
+        base_field::field_char()
+    }
+    pub fn order() -> bigint<{ scalar_field::num_limbs }> {
+        scalar_field::field_char()
+    }
+    fn G1_zero() -> Self {
+        Self::new(
+            alt_bn128_Fq::zero(),
+            alt_bn128_Fq::one(),
+            alt_bn128_Fq::zero(),
+        )
+    }
+    fn G1_one() -> Self {
+        Self::new(
+            alt_bn128_Fq::one(),
+            alt_bn128_Fq::const_new(BigInt!("2")),
+            alt_bn128_Fq::one(),
+        )
+    }
+    pub fn new(X: alt_bn128_Fq, Y: alt_bn128_Fq, Z: alt_bn128_Fq) -> Self {
+        Self { X, Y, Z }
+    }
+
+    pub fn print_coordinates(&self) {
+        if self.is_zero() {
+            print!("O\n");
+        } else {
+            print!(
+                "({:N$} : {:N$} : {:N$})\n",
+                self.X.as_bigint().0,
+                self.Y.as_bigint().0,
+                self.Z.as_bigint().0,
+                N = alt_bn128_Fq::num_limbs
+            );
+        }
+    }
+
+    pub fn is_zero(&self) -> bool {
+        self.Z.is_zero()
+    }
+
+    pub fn add(&self, other: &alt_bn128_G1) -> Self {
+        self.clone() + other
+    }
+
+    pub fn mul_by_cofactor(&self) -> Self {
+        // Cofactor = 1
+        self.clone()
+    }
+
     fn zero() -> Self {
         Self::G1_zero()
     }
 
     fn one() -> Self {
-        Self::G1_zero()
-    }
-
-    fn random_element() -> Self {
-        Self::G1_one() * (scalar_field::random_element().as_bigint())
-    }
-
-    pub fn batch_to_special_all_non_zeros(vec: &mut Vec<alt_bn128_G1>) {
-        let mut Z_vec = Vec::with_capacity(vec.len());
-
-        for el in vec.iter() {
-            Z_vec.push(el.Z);
-        }
-        batch_invert::<alt_bn128_Fq>(&mut Z_vec);
-
-        let one = alt_bn128_Fq::one();
-
-        for i in 0..vec.len() {
-            let Z2 = Z_vec[i].squared();
-            let Z3 = Z_vec[i] * Z2;
-
-            vec[i].X = vec[i].X * Z2;
-            vec[i].Y = vec[i].Y * Z3;
-            vec[i].Z = one;
-        }
+        Self::G1_one()
     }
 }
 
-// bool alt_bn128_G1::operator==(other:&alt_bn128_G1)
-// {
-//     if self.is_zero()
-//     {
-//         return other.is_zero();
-//     }
+impl PartialEq for alt_bn128_G1 {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        if self.is_zero() {
+            return other.is_zero();
+        }
 
-//     if other.is_zero()
-//     {
-//         return false;
-//     }
+        if other.is_zero() {
+            return false;
+        }
 
-//     /* now neither is O */
-//     // using Jacobian coordinates so:
-//     // (X1:Y1:Z1) = (X2:Y2:Z2)
-//     // iff
-//     // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
-//     // iff
-//     // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
+        //now neither is O
+        // using Jacobian coordinates so:
+        // (X1:Y1:Z1) = (X2:Y2:Z2)
+        // iff
+        // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
+        // iff
+        // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
 
-//     alt_bn128_Fq Z1_squared = (self.Z).squared();
-//     alt_bn128_Fq Z2_squared = (other.Z).squared();
+        let Z1_squared = self.Z.squared();
+        let Z2_squared = other.Z.squared();
 
-//     if (self.X * Z2_squared) != (other.X * Z1_squared)
-//     {
-//         return false;
-//     }
+        if self.X * Z2_squared != other.X * Z1_squared {
+            return false;
+        }
 
-//     alt_bn128_Fq Z1_cubed = (self.Z) * Z1_squared;
-//     alt_bn128_Fq Z2_cubed = (other.Z) * Z2_squared;
+        let Z1_cubed = (self.Z) * Z1_squared;
+        let Z2_cubed = (other.Z) * Z2_squared;
 
-//     return !((self.Y * Z2_cubed) != (other.Y * Z1_cubed));
-// }
-
-// bool alt_bn128_G1::operator!=(other:&alt_bn128_G1)
-// {
-//     return !(operator==(other));
-// }
-
-impl Add<i32> for alt_bn128_G1 {
-    type Output = alt_bn128_G1;
-
-    fn add(self, other: i32) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
+        self.Y * Z2_cubed == other.Y * Z1_cubed
     }
 }
+
+// impl Add<i32> for alt_bn128_G1 {
+//     type Output = alt_bn128_G1;
+
+//     fn add(self, other: i32) -> Self::Output {
+
+//     }
+// }
 
 impl<O: Borrow<Self>> Add<O> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
     fn add(self, other: O) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
+        let other = other.borrow().clone();
+        // handle special cases having to do with O
+        if self.is_zero() {
+            return other.clone();
+        }
+
+        if other.is_zero() {
+            return self.clone();
+        }
+
+        // no need to handle points of order 2,4
+        // (they cannot exist in a prime-order subgroup)
+
+        // using Jacobian coordinates according to
+        // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
+        // Note: (X1:Y1:Z1) = (X2:Y2:Z2)
+        // iff
+        // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
+        // iff
+        // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
+
+        let Z1Z1 = self.Z.squared();
+        let Z2Z2 = other.Z.squared();
+
+        let U1 = self.X * Z2Z2;
+        let U2 = other.X * Z1Z1;
+
+        let Z1_cubed = self.Z * Z1Z1;
+        let Z2_cubed = other.Z * Z2Z2;
+
+        let S1 = self.Y * Z2_cubed; // S1 = Y1 * Z2 * Z2Z2
+        let S2 = other.Y * Z1_cubed; // S2 = Y2 * Z1 * Z1Z1
+
+        // check for doubling case
+        if U1 == U2 && S1 == S2 {
+            // dbl case; nothing of above can be reused
+            return self.dbl();
+        }
+
+        // rest of add case
+        let H = U2 - U1; // H = U2-U1
+        let S2_minus_S1 = S2 - S1;
+        let I = (H + H).squared(); // I = (2 * H)^2
+        let J = H * I; // J = H * I
+        let r = S2_minus_S1 + S2_minus_S1; // r = 2 * (S2-S1)
+        let V = U1 * I; // V = U1 * I
+        let X3 = r.squared() - J - (V + V); // X3 = r^2 - J - 2 * V
+        let S1_J = S1 * J;
+        let Y3 = r * (V - X3) - (S1_J + S1_J); // Y3 = r * (V-X3)-2 S1 J
+        let Z3 = ((self.Z + other.Z).squared() - Z1Z1 - Z2Z2) * H; // Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2) * H
+
+        alt_bn128_G1::new(X3, Y3, Z3)
     }
 }
 
@@ -421,9 +465,7 @@ impl Sub for alt_bn128_G1 {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self::Output {
-        let mut r = self;
-        // r -= other;
-        r
+        self + (-other)
     }
 }
 
@@ -431,9 +473,7 @@ impl<const N: usize> Mul<bigint<N>> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
     fn mul(self, rhs: bigint<N>) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
+        scalar_mul::<alt_bn128_G1, N>(&self, &rhs)
     }
 }
 
@@ -441,28 +481,25 @@ impl<const N: usize, T: Fp_modelConfig<N>> Mul<Fp_model<N, T>> for alt_bn128_G1 
     type Output = alt_bn128_G1;
 
     fn mul(self, rhs: Fp_model<N, T>) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
+        scalar_mul::<alt_bn128_G1, N>(&self, &rhs.as_bigint())
     }
 }
 
-impl Mul<i32> for alt_bn128_G1 {
-    type Output = alt_bn128_G1;
+// impl Mul<i32> for alt_bn128_G1 {
+//     type Output = alt_bn128_G1;
 
-    fn mul(self, other: i32) -> Self::Output {
-        let mut r = self;
-        // r += *other.borrow();
-        r
-    }
-}
+//     fn mul(self, other: i32) -> Self::Output {
+//         let mut r = self;
+//         // r += *other.borrow();
+//         r
+//     }
+// }
 impl<O: Borrow<Self>> Mul<O> for alt_bn128_G1 {
     type Output = alt_bn128_G1;
 
     fn mul(self, rhs: O) -> Self::Output {
-        let mut r = self;
-        // r *= *rhs.borrow();
-        r
+        panic!("MYTODO");
+        self
     }
 }
 
@@ -470,7 +507,7 @@ impl Neg for alt_bn128_G1 {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        self
+        alt_bn128_G1::new(self.X, -self.Y, self.Z)
     }
 }
 
@@ -492,175 +529,109 @@ impl Zero for alt_bn128_G1 {
         Self::zero()
     }
     fn is_zero(&self) -> bool {
-        false
+        self == &Self::zero()
     }
 }
 impl FpmConfig for alt_bn128_G1 {
     type Fr = alt_bn128_Fq;
 }
-// alt_bn128_G1 alt_bn128_G1::operator+(other:&alt_bn128_G1)
-// {
-//     // handle special cases having to do with O
-//     if self.is_zero()
-//     {
-//         return other.clone()
-//     }
 
-//     if other.is_zero()
-//     {
-//         return self.clone();
-//     }
+use std::io::{self, Read, Write};
 
-//     // no need to handle points of order 2,4
-//     // (they cannot exist in a prime-order subgroup)
+// 模拟 C++ 的输出流操作符 <<
+pub fn write_alt_bn128_g1<W: Write>(mut out: W, g: &alt_bn128_G1) -> io::Result<()> {
+    let mut copy = g.clone();
+    copy.to_affine_coordinates();
 
-//     // using Jacobian coordinates according to
-//     // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-0.html#addition-add-2007-bl
-//     // Note: (X1:Y1:Z1) = (X2:Y2:Z2)
-//     // iff
-//     // X1/Z1^2 == X2/Z2^2 and Y1/Z1^3 == Y2/Z2^3
-//     // iff
-//     // X1 * Z2^2 == X2 * Z1^2 and Y1 * Z2^3 == Y2 * Z1^3
+    // 输出是否为零点的标志 (1 为零点, 0 为非零)
+    let is_zero = if copy.is_zero() { b'1' } else { b'0' };
+    out.write_all(&[is_zero])?;
+    out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+    cfg_if! {
+       if #[cfg(feature = "no_pt_compression")]
+        {
+            // 非压缩模式：输出 X 和 Y
+            write!(out, "{}{}{}", copy.X, OUTPUT_SEPARATOR, copy.Y)?;
+        }
+       else
+        {
+            // 压缩模式：输出 X 和 Y 的最低有效位 (LSB)
+            let y_lsb = (copy.Y.as_bigint().0.0[0] & 1) as u8 + b'0';
+            write!(out, "{}", copy.X)?;
+            out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
+            out.write_all(&[y_lsb])?;
+        }
+    }
+    Ok(())
+}
 
-//     alt_bn128_Fq Z1Z1 = (self.Z).squared();
-//     alt_bn128_Fq Z2Z2 = (other.Z).squared();
+// 模拟 C++ 的输入流操作符 >>
+pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
+    let mut is_zero_buf = [0u8; 1];
+    input.read_exact(&mut is_zero_buf)?;
+    let is_zero = is_zero_buf[0] - b'0';
 
-//     alt_bn128_Fq U1 = self.X * Z2Z2;
-//     alt_bn128_Fq U2 = other.X * Z1Z1;
+    cfg_if! { if #[cfg(feature = "no_pt_compression")]
+        {
+            consume_output_separator(&mut input)?;
+            let tx: alt_bn128_Fq = alt_bn128_Fq::read(&mut input)?;
+            consume_output_separator(&mut input)?;
+            let ty: alt_bn128_Fq = alt_bn128_Fq::read(&mut input)?;
 
-//     alt_bn128_Fq Z1_cubed = (self.Z) * Z1Z1;
-//     alt_bn128_Fq Z2_cubed = (other.Z) * Z2Z2;
+            if is_zero == 0 {
+                Ok(alt_bn128_G1 { X: tx, Y: ty, Z: alt_bn128_Fq::one() })
+            } else {
+                Ok(alt_bn128_G1::zero())
+            }
+        }
+    else
 
-//     alt_bn128_Fq S1 = (self.Y) * Z2_cubed;      // S1 = Y1 * Z2 * Z2Z2
-//     alt_bn128_Fq S2 = (other.Y) * Z1_cubed;      // S2 = Y2 * Z1 * Z1Z1
+        {
+            consume_output_separator(&mut input)?;
+            let tx: alt_bn128_Fq = alt_bn128_Fq::read(&mut input)?;
+            consume_output_separator(&mut input)?;
 
-//     // check for doubling case
-//     if U1 == U2 && S1 == S2
-//     {
-//         // dbl case; nothing of above can be reused
-//         return self.dbl();
-//     }
+            let mut y_lsb_buf = [0u8; 1];
+            input.read_exact(&mut y_lsb_buf)?;
+            let y_lsb = y_lsb_buf[0] - b'0';
 
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt+=1;
-//
+            if is_zero == 0 {
+                // y = +/- sqrt(x^3 + b)
+                let tx2 = tx.squared();
+                let ty2 = tx2 * tx + alt_bn128_coeff_b;
+                let mut ty = ty2.sqrt().ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
 
-//     // rest of add case
-//     alt_bn128_Fq H = U2 - U1;                            // H = U2-U1
-//     alt_bn128_Fq S2_minus_S1 = S2-S1;
-//     alt_bn128_Fq I = (H+H).squared();                    // I = (2 * H)^2
-//     alt_bn128_Fq J = H * I;                              // J = H * I
-//     alt_bn128_Fq r = S2_minus_S1 + S2_minus_S1;          // r = 2 * (S2-S1)
-//     alt_bn128_Fq V = U1 * I;                             // V = U1 * I
-//     alt_bn128_Fq X3 = r.squared() - J - (V+V);           // X3 = r^2 - J - 2 * V
-//     alt_bn128_Fq S1_J = S1 * J;
-//     alt_bn128_Fq Y3 = r * (V-X3) - (S1_J+S1_J);          // Y3 = r * (V-X3)-2 S1 J
-//     alt_bn128_Fq Z3 = ((self.Z+other.Z).squared()-Z1Z1-Z2Z2) * H; // Z3 = ((Z1+Z2)^2-Z1Z1-Z2Z2) * H
+                // 检查 LSB 是否匹配，不匹配则取相反数
+                if (ty.as_bigint().0.0[0] & 1) as u8 != y_lsb {
+                    ty = -ty;
+                }
+                Ok(alt_bn128_G1 { X: tx, Y: ty, Z: alt_bn128_Fq::one() })
+            } else {
+                Ok(alt_bn128_G1::zero())
+            }
+        }}
+}
 
-//     return alt_bn128_G1(X3, Y3, Z3);
-// }
+// 向量序列化
+pub fn write_vector_g1<W: Write>(mut out: W, v: &[alt_bn128_G1]) -> io::Result<()> {
+    writeln!(out, "{}", v.len())?;
+    for g in v {
+        write_alt_bn128_g1(&mut out, g)?;
+        out.write_all(OUTPUT_NEWLINE.as_bytes())?;
+    }
+    Ok(())
+}
 
-// alt_bn128_G1 alt_bn128_G1::operator-()
-// {
-//     return alt_bn128_G1(self.X, -(self.Y), self.Z);
-// }
-
-// alt_bn128_G1 alt_bn128_G1::operator-(other:&alt_bn128_G1)
-// {
-//     return self.clone() + (-other);
-// }
-
-// std::ostream& operator<<(std::ostream &out, g:&alt_bn128_G1)
-// {
-//     alt_bn128_G1 copy(g);
-//     copy.to_affine_coordinates();
-
-//     out << if copy.is_zero() {1} else{0} << OUTPUT_SEPARATOR;
-// // #ifdef NO_PT_COMPRESSION
-//     out << copy.X << OUTPUT_SEPARATOR << copy.Y;
-// #else
-//     /* storing LSB of Y */
-//     out << copy.X << OUTPUT_SEPARATOR << (copy.Y.as_bigint().0.0[0] & 1);
-//
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, alt_bn128_G1 &g)
-// {
-//     char is_zero;
-//     alt_bn128_Fq tX, tY;
-
-// // #ifdef NO_PT_COMPRESSION
-//     in >> is_zero >> tX >> tY;
-//     is_zero -= '0';
-// #else
-//     in.read((char*)&is_zero, 1); // this reads is_zero;
-//     is_zero -= '0';
-//     consume_OUTPUT_SEPARATOR(in);
-
-//     unsigned char Y_lsb;
-//     in >> tX;
-//     consume_OUTPUT_SEPARATOR(in);
-//     in.read((char*)&Y_lsb, 1);
-//     Y_lsb -= '0';
-
-//     // y = +/- sqrt(x^3 + b)
-//     if is_zero == 0
-//     {
-//         alt_bn128_Fq tX2 = tX.squared();
-//         alt_bn128_Fq tY2 = tX2*tX + alt_bn128_coeff_b;
-//         tY = tY2.sqrt();
-
-//         if (tY.as_bigint().0.0[0] & 1) != Y_lsb
-//         {
-//             tY = -tY;
-//         }
-//     }
-//
-//     // using Jacobian coordinates
-//     if is_zero == 0
-//     {
-//         g.X = tX;
-//         g.Y = tY;
-//         g.Z = alt_bn128_Fq::one();
-//     }
-//     else
-//     {
-//         g = alt_bn128_G1::zero();
-//     }
-
-//     return in;
-// }
-
-// std::ostream& operator<<(std::ostream& out, v:&Vec<alt_bn128_G1>)
-// {
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
-//     }
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream& in, Vec<alt_bn128_G1> &v)
-// {
-//     v.clear();
-
-//     usize s;
-//     in >> s;
-//     consume_newline(in);
-
-//     v.reserve(s);
-
-//     for i in 0..s
-//     {
-//         alt_bn128_G1 g;
-//         in >> g;
-//         consume_OUTPUT_NEWLINE(in);
-//         v.push(g);
-//     }
-
-//     return in;
-// }
+// 向量反序列化
+pub fn read_vector_g1<R: Read>(mut input: R) -> io::Result<Vec<alt_bn128_G1>> {
+    let mut s_str = String::new();
+    // 简化处理：读取一行作为 size
+    let s: usize = read_line_as_usize(&mut input)?;
+    let mut v = Vec::with_capacity(s);
+    for _ in 0..s {
+        let g = read_alt_bn128_g1(&mut input)?;
+        consume_output_newline(&mut input)?;
+        v.push(g);
+    }
+    Ok(v)
+}

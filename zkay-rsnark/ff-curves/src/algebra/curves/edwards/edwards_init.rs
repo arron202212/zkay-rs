@@ -33,7 +33,7 @@ pub const edwards_final_exponent_last_chunk_w1: bigint<edwards_q_limbs> =
 pub fn init_edwards_params() {
     init_edwards_fields();
 
-    /* choice of Edwards curve and its twist */
+    //choice of Edwards curve and its twist
 }
 
 // use ark_ec::edwards::{EdwardsConfig, Projective};

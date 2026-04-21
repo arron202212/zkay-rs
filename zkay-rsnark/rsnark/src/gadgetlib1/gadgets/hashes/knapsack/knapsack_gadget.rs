@@ -342,7 +342,7 @@ impl<FieldT: FieldTConfig, PB: PBConfig> HashTConfig
     fn generate_r1cs_witness(&self) {
         self.t.hasher.borrow().generate_r1cs_witness();
 
-        /* do unpacking in place */
+        //do unpacking in place
         let input = self.t.input_block.t.bits.get_bits(&self.pb);
         for i in 0..self.t.dimension {
             let mut va = pb_variable_array::<FieldT, PB>::new(

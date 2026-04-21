@@ -18,7 +18,7 @@ public class Salsa20Engine
 {
     public final static int DEFAULT_ROUNDS = 20;
 
-    /** Constants */
+   //Constants
     private final static int STATE_SIZE = 16; // 16, 32 bit ints = 64 bytes
 
     private final static int[] TAU_SIGMA = Pack.littleEndianToInt(Strings.toByteArray("expand 16-byte k" + "expand 32-byte k"), 0, 8);
@@ -32,7 +32,7 @@ public class Salsa20Engine
         state[stateOffset + 3] = TAU_SIGMA[tsOff + 3];
     }
 
-    /** @deprecated */
+   //@deprecated
     protected final static byte[]
         sigma = Strings.toByteArray("expand 32-byte k"),
         tau   = Strings.toByteArray("expand 16-byte k");

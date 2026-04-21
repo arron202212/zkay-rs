@@ -39,7 +39,7 @@ impl ra_memory {
         contents_as_vector: Vec<usize>,
     ) -> memory_base<Self> {
         // memory_interface(num_addresses, value_size)
-        /* copy Vec into BTreeMap */
+        //copy Vec into BTreeMap
         memory_base::new(
             num_addresses,
             value_size,

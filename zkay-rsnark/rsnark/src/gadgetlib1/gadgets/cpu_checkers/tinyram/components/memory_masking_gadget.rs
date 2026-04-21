@@ -181,7 +181,7 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
         );
 
         for i in 0..2 * pb.borrow().t.ap.bytes_in_word() {
-            /* just subtract out the byte to be masked */
+            //just subtract out the byte to be masked
             masked_out_bytes[i].assign(
                 &pb,
                 &(linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
@@ -300,7 +300,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             format!("{} is_subaddress", self.annotation_prefix),
         );
 
-        /* get indicator variables is_byte_X */
+        //get indicator variables is_byte_X
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -312,7 +312,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             );
         }
 
-        /* get indicator variables is_word_0/is_word_1 */
+        //get indicator variables is_word_0/is_word_1
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.access_is_word.clone().into(),
@@ -334,7 +334,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             format!("{} is_word_1", self.annotation_prefix),
         );
 
-        /* compute masked_out_dw_contents_prev */
+        //compute masked_out_dw_contents_prev
         self.t
             .t
             .t
@@ -358,7 +358,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
     }
 
     fn generate_r1cs_witness(&self) {
-        /* get indicator variables is_subaddress */
+        //get indicator variables is_subaddress
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             *self.pb.borrow_mut().val_ref(&self.t.t.t.is_subaddress[i]) =
                 if (self.pb.borrow().val(&self.t.t.t.subaddress.t.packed) == FieldT::from(i)) {
@@ -368,14 +368,14 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
                 };
         }
 
-        /* get indicator variables is_byte_X */
+        //get indicator variables is_byte_X
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             *self.pb.borrow_mut().val_ref(&self.t.t.t.is_byte[i]) =
                 self.pb.borrow().val(&self.t.t.t.is_subaddress[i])
                     * self.pb.borrow().lc_val(&self.t.t.t.access_is_byte);
         }
 
-        /* get indicator variables is_word_0/is_word_1 */
+        //get indicator variables is_word_0/is_word_1
         *self.pb.borrow_mut().val_ref(&self.t.t.t.is_word0) = (FieldT::one()
             - self
                 .pb
@@ -388,13 +388,13 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             .val(&self.t.t.t.subaddress.t.bits[self.pb.borrow().t.ap.subaddr_len() - 1])
             * self.pb.borrow().lc_val(&self.t.t.t.access_is_word);
 
-        /* calculate shift and masked out words/bytes */
+        //calculate shift and masked out words/bytes
         self.t.t.t.shift.evaluate_pb(&self.pb);
         self.t.t.t.masked_out_word0.evaluate_pb(&self.pb);
         self.t.t.t.masked_out_word1.evaluate_pb(&self.pb);
         self.t.t.t.masked_out_bytes.evaluate(&self.pb);
 
-        /* get masked_out dw/word0/word1/bytes */
+        //get masked_out dw/word0/word1/bytes
         self.t
             .t
             .t
@@ -402,7 +402,7 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             .borrow()
             .generate_r1cs_witness();
 
-        /* compute dw_contents_next */
+        //compute dw_contents_next
         *self
             .pb
             .borrow_mut()

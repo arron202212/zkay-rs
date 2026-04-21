@@ -158,7 +158,7 @@ pub fn as_waksman_switch_input(
     row_idx: usize,
     use_top: bool,
 ) -> usize {
-    /* Due to symmetry, this function equals as_waksman_switch_output. */
+    // Due to symmetry, this function equals as_waksman_switch_output.
     return as_waksman_switch_output(num_packets, row_offset, row_idx, use_top);
 }
 
@@ -220,7 +220,7 @@ pub fn construct_as_waksman_inner(
 
         construct_as_waksman_inner(left + 1, right - 1, lo, hi, new_rhs_dests, neighbors);
     } else if subnetwork_size == 2 {
-        /* Non-trivial base case: routing a 2-element permutation. */
+        // Non-trivial base case: routing a 2-element permutation.
         (neighbors[left][lo].0, neighbors[left][hi].1) = (rhs_dests[0], rhs_dests[0]);
         (neighbors[left][lo].1, neighbors[left][hi].0) = (rhs_dests[1], rhs_dests[1]);
     } else {
@@ -322,7 +322,7 @@ pub fn generate_as_waksman_topology(num_packets: usize) -> as_waksman_topology {
  * column_idx.
  */
 pub fn as_waksman_get_canonical_row_idx(row_offset: usize, row_idx: usize) -> usize {
-    /* translate back relative to row_offset, clear LSB, and then translate forward */
+    // translate back relative to row_offset, clear LSB, and then translate forward
     return (((row_idx - row_offset) & !1) + row_offset);
 }
 
@@ -378,7 +378,7 @@ pub fn as_waksman_other_output_position(row_offset: usize, packet_idx: usize) ->
  * position of the other wire also connected to this switch.
  */
 pub fn as_waksman_other_input_position(row_offset: usize, packet_idx: usize) -> usize {
-    /* Due to symmetry, this function equals as_waksman_other_output_position. */
+    // Due to symmetry, this function equals as_waksman_other_output_position.
     return as_waksman_other_output_position(row_offset, packet_idx);
 }
 
@@ -453,7 +453,7 @@ pub fn as_waksman_route_inner(
          */
         let mut new_permutation = integer_permutation::new2(lo, hi);
         let mut new_permutation_inv = integer_permutation::new2(lo, hi);
-        let mut lhs_routed = vec![false; subnetwork_size]; /* offset by lo, i.e. lhs_routed[packet_idx-lo] is set if packet packet_idx is routed */
+        let mut lhs_routed = vec![false; subnetwork_size]; // offset by lo, i.e. lhs_routed[packet_idx-lo] is set if packet packet_idx is routed
 
         let mut to_route;
         let mut max_unrouted;
@@ -513,7 +513,7 @@ pub fn as_waksman_route_inner(
              * resp., RHS (if route_left = false) can be routed.
              */
             if route_left {
-                /* If switch value has not been assigned, assign it arbitrarily. */
+                // If switch value has not been assigned, assign it arbitrarily.
                 let lhs_switch = as_waksman_get_canonical_row_idx(lo, to_route);
                 if routing[left].get(lhs_switch).is_none() {
                     routing[left].resize(lhs_switch, false);
@@ -578,7 +578,7 @@ pub fn as_waksman_route_inner(
                     use_top,
                 );
 
-                /* The value on the left-hand side is either the same or not set. */
+                // The value on the left-hand side is either the same or not set.
                 let it = routing[left].get(lhs_switch);
                 assert!(it.is_none() || *it.unwrap() == lhs_switch_setting);
                 routing[left][lhs_switch] = lhs_switch_setting;
@@ -593,20 +593,20 @@ pub fn as_waksman_route_inner(
                 route_left = true;
             }
 
-            /* If the next packet to be routed hasn't been routed before, then try routing it. */
+            // If the next packet to be routed hasn't been routed before, then try routing it.
             if !route_left || !lhs_routed[to_route - lo] {
                 continue;
             }
 
-            /* Otherwise just find the next unrouted packet. */
+            // Otherwise just find the next unrouted packet.
             while (max_unrouted > lo && lhs_routed[max_unrouted - lo]) {
                 max_unrouted -= 1;
             }
 
             if max_unrouted < lo || (max_unrouted == lo && lhs_routed[0])
-            /* lhs_routed[0] = corresponds to lo shifted by lo */
+            // lhs_routed[0] = corresponds to lo shifted by lo
             {
-                /* All routed! */
+                // All routed!
                 break;
             } else {
                 to_route = max_unrouted;
@@ -615,7 +615,7 @@ pub fn as_waksman_route_inner(
         }
 
         if subnetwork_size % 2 == 0 {
-            /* Remove the AS-Waksman switch with the fixed value. */
+            // Remove the AS-Waksman switch with the fixed value.
             routing[left].remove(hi - 1);
         }
 

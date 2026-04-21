@@ -156,12 +156,12 @@ pub fn log_of_field_size_helper_is_additive<FieldT>(field_elem: FieldT) -> usize
 
 pub fn soundness_log_of_field_size_helper<FieldT>(field_elem: FieldT) -> usize {
     //UNUSED(field_elem);
-    /** size in bits is the number of bits needed to represent a field element.
-     *  However there isn't perfect alignment between the number of bits and the number of field elements,
-     *  there could be a factor of two difference.
-     *  For calculating soundness, we use the log of field size as number of bits - 1,
-     *  as (2 << returned) size lower bounds the actual size.
-     */
+    //  size in bits is the number of bits needed to represent a field element.
+    //  *  However there isn't perfect alignment between the number of bits and the number of field elements,
+    //  *  there could be a factor of two difference.
+    //  *  For calculating soundness, we use the log of field size as number of bits - 1,
+    //  *  as (2 << returned) size lower bounds the actual size.
+
     // return FieldT::ceil_size_in_bits() - 1;
     0
 }

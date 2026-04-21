@@ -430,11 +430,11 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
 {
     enter_block("Call to r1cs_ppzksnark_generator", false);
 
-    /* make the B_query "lighter" if possible */
+    //make the B_query "lighter" if possible
     let mut cs_copy = cs.clone();
     cs_copy.swap_AB_if_beneficial();
 
-    /* draw random element at which the QAP is evaluated */
+    //draw random element at which the QAP is evaluated
     let t = Fr::<ppT>::random_element();
 
     let qap_inst: qap_instance_evaluation<_> =
@@ -479,7 +479,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     let mut Ct = qap_inst.Ct.clone(); // qap_inst.Ct is now in unspecified state, but we do not use it later
     let mut Ht = qap_inst.Ht.clone(); // qap_inst.Ht is now in unspecified state, but we do not use it later
 
-    /* append Zt to At,Bt,Ct with */
+    //append Zt to At,Bt,Ct with
     At.push(qap_inst.Zt.clone());
     Bt.push(qap_inst.Zt.clone());
     Ct.push(qap_inst.Zt.clone());
@@ -510,7 +510,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     Kt.push(beta.clone() * rB.clone() * qap_inst.Zt.clone());
     Kt.push(beta.clone() * rC.clone() * qap_inst.Zt.clone());
 
-    /* zero out prefix of At and stick it into IC coefficients */
+    //zero out prefix of At and stick it into IC coefficients
     let mut IC_coefficients = Fr_vector::<ppT>::default();
     IC_coefficients.reserve(qap_inst.num_inputs() + 1);
     for i in 0..qap_inst.num_inputs() + 1 {

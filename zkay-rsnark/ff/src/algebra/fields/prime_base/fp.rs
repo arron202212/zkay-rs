@@ -22,6 +22,7 @@ use crate::{
 use cfg_if::cfg_if;
 use educe::Educe;
 use num_bigint::BigUint;
+use num_integer::{ExtendedGcd, Integer};
 use num_traits::{Num, One, Signed, Zero};
 use std::{
     borrow::Borrow,
@@ -62,6 +63,9 @@ pub trait Fp_modelConfig<const N: usize>:
     const inv: u64 = 0xc2e1f593efffffff; // modulus^(-1) mod W, where W = 2^(word size)
     const Rsquared: bigint<N> = bigint::<N>::one(); // R^2, where R = W^k, where k = ??
     const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
+    fn from_bigint(r: bigint<N>) -> Option<Self> {
+        None //P::from_bigint(r)
+    }
 }
 
 #[derive(Educe)]
@@ -97,12 +101,54 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> 
 impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {}
 
 impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
-    //type TT = bigint<N>;
+    type GType = Self;
     const num_limbs: usize = N;
     fn size_in_bits() -> usize {
         T::num_bits
     }
-    // type Fr=Self;
+
+    fn dbl(&self) -> Self {
+        self.clone()
+    }
+    fn random_element() -> Self {
+        // 1. 定义随机元素 r
+        let mut r_data = [0u64; N];
+        let mut rng = rand::thread_rng();
+        loop {
+            // 2. 随机填充所有位 (randomize)
+            rng.fill(&mut r_data[..]);
+
+            // 3. 清除模数最高位以上的无效位
+            // 找到模数最高有效位（MSB）以上的 0 的个数
+            let unused_bits = T::modulus[N - 1].leading_zeros();
+            if unused_bits > 0 {
+                // 创建掩码，例如 unused_bits 为 3，则掩码为 000111...1
+                let mask = u64::MAX >> unused_bits;
+                r_data[N - 1] &= mask;
+            }
+
+            // 4. 拒绝采样 (mpn_cmp)
+            // 如果生成的数仍然大于等于模数，则重新循环
+            if r_data < T::modulus.0.0 {
+                break;
+            }
+        }
+
+        // 5. 返回结果
+        Fp_model::new(bigint::<N>(BigInt::<N>(r_data)))
+    }
+
+    fn print(&self) {
+        let mut tmp = Self::zero();
+        tmp.mont_repr.0.0[0] = 1;
+        tmp.mul_reduce(&self.mont_repr);
+
+        tmp.mont_repr.print();
+    }
+
+    fn num_bits() -> usize {
+        T::num_bits
+    }
 }
 impl<const N: usize, T: Fp_modelConfig<N>> AsMut<[u64]> for Fp_model<N, T> {
     fn as_mut(&mut self) -> &mut [u64] {
@@ -229,7 +275,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
                 self.mont_repr.0.0.copy_from_slice(&data[N..N*2]);
             }else{
                let data= mul_reduce_portable::<N>(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv);
-                self.mont_repr.0.0.copy_from_slice(&data[N..N*2]);
+                self.mont_repr.0.0.copy_from_slice(&data);
             }
         }
     }
@@ -292,10 +338,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         self.mont_repr.clear();
     }
 
-    pub fn randomize(&mut self) {
-        *self = Self::random_element();
-    }
-
     pub fn as_bigint(&self) -> bigint<N> {
         let mut one = bigint::<N>::one();
         let mut res = self.clone();
@@ -311,13 +353,8 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     pub fn is_zero(&self) -> bool {
         self.mont_repr.is_zero() // zero maps to zero
     }
-
-    pub fn print(&self) {
-        let mut tmp = Self::zero();
-        tmp.mont_repr.0.0[0] = 1;
-        tmp.mul_reduce(&self.mont_repr);
-
-        tmp.mont_repr.print();
+    fn randomize(&mut self) {
+        *self = Self::random_element();
     }
 
     pub const fn zero() -> Self {
@@ -372,27 +409,31 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         debug_assert!(!self.is_zero());
 
         // 2. 准备变量 (Rust 中通常使用 Vec 或固定长度数组)
-        let mut v = T::modulus;
-        let mut u = self.mont_repr;
+        let mut v = num_bigint::BigInt::from(T::modulus);
+        let mut u = num_bigint::BigInt::from(self.mont_repr);
 
         // 3. 计算 GCD (对应 mpn_gcdext)
         // Rust 的 BigInt 库通常返回 (gcd, s, t)
-        let (g, s, _t) = u.extended_gcd(&v);
+        let ExtendedGcd::<num_bigint::BigInt> {
+            gcd: g,
+            x: s,
+            y: _t,
+        } = u.extended_gcd(&v);
 
         // 4. 验证逆元存在 (gn == 1 && g == 1)
         debug_assert!(g.is_one(), "Inverse does not exist");
 
         // 5. 处理符号和模还原 (对应 if (sn < 0) 和 mpn_sub_n)
-        let mut res = if num_bigint::BigInt::from(s).is_negative() {
+        let mut res = if s.is_negative() {
             // 如果 s 是负数，加上模数: res = modulus - |s|
-            let mut tmp = T::modulus;
-            tmp.sub(s.abs()); //sub_noborrow
+            let mut tmp = num_bigint::BigInt::from(T::modulus);
+            tmp.clone().sub(s.abs()); //sub_noborrow
             tmp
         } else {
             // 如果 s 超过模数，进行取模 (对应 mpn_tdiv_qr)
-            s % T::modulus
+            s % num_bigint::BigInt::from(T::modulus)
         };
-
+        let mut res: bigint<N> = BigUint::try_from(res).unwrap().try_into().unwrap();
         // 6. Montgomery 修正 (对应 mul_reduce(Rcubed))
         // 注意：在 Montgomery 空间求逆后，结果需要乘以 R^3 (或 R^2 再 reduce)
         res.mul_assign(&T::Rcubed);
@@ -410,35 +451,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         self.clone()
     }
 
-    pub fn random_element() -> Self {
-        // 1. 定义随机元素 r
-        let mut r_data = [0u64; N];
-        let mut rng = rand::thread_rng();
-        loop {
-            // 2. 随机填充所有位 (randomize)
-            rng.fill(&mut r_data[..]);
-
-            // 3. 清除模数最高位以上的无效位
-            // 找到模数最高有效位（MSB）以上的 0 的个数
-            let unused_bits = T::modulus[N - 1].leading_zeros();
-            if unused_bits > 0 {
-                // 创建掩码，例如 unused_bits 为 3，则掩码为 000111...1
-                let mask = u64::MAX >> unused_bits;
-                r_data[N - 1] &= mask;
-            }
-
-            // 4. 拒绝采样 (mpn_cmp)
-            // 如果生成的数仍然大于等于模数，则重新循环
-            if r_data < T::modulus.0.0 {
-                break;
-            }
-        }
-
-        // 5. 返回结果
-        Fp_model::new(bigint::<N>(BigInt::<N>(r_data)))
-    }
-
-    pub fn sqrt(&self) -> Self {
+    pub fn sqrt(&self) -> Option<Self> {
         tonelli_shanks_sqrt(self)
     }
 
@@ -543,6 +556,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
           }
     }
 }
+
 use rand::Rng;
 use rand::distributions::{Distribution, Standard};
 
@@ -946,6 +960,117 @@ impl<const N: usize, T: Fp_modelConfig<N>> FromStr for Fp_model<N, T> {
         Ok(Self::default())
     }
 }
+
+// impl {
+// fn from_le_bytes_mod_order(bytes: &[u8]) -> Self {
+//         let num_modulus_bytes = ((Self::num_bits + 7) / 8) as usize;
+//         let num_bytes_to_directly_convert = bytes.len().min(num_modulus_bytes - 1 );
+//         // Copy the leading little-endian bytes directly into a field element.
+//         // The number of bytes directly converted must be less than the
+//         // number of bytes needed to represent the modulus, as we must begin
+//         // modular reduction once the data is of the same number of bytes as the
+//         // modulus.
+//         let (bytes, bytes_to_directly_convert) =
+//             bytes.split_at(bytes.len() - num_bytes_to_directly_convert);
+//         // Guaranteed to not be None, as the input is less than the modulus size.
+//         let mut res = Self::from_random_bytes(bytes_to_directly_convert).unwrap();
+
+//         // Update the result, byte by byte.
+//         // We go through existing field arithmetic, which handles the reduction.
+//         // TODO: If we need higher speeds, parse more bytes at once, or implement
+//         // modular multiplication by a u64
+//         let window_size = Self::from(256u64);
+//         for byte in bytes.iter().rev() {
+//             res *= window_size;
+//             res += Self::from(*byte);
+//         }
+//         res
+//     }
+//   fn from_random_bytes(bytes: &[u8]) -> Option<Self> {
+//         Self::from_random_bytes_with_flags::<EmptyFlags>(bytes).map(|f| f.0)
+//     }
+
+//     #[inline]
+//     fn from_random_bytes_with_flags<F: Flags>(bytes: &[u8]) -> Option<(Self, F)> {
+//         if F::BIT_SIZE > 8 {
+//             None
+//         } else {
+//             let shave_bits = Self::num_bits_to_shave();
+//             let mut result_bytes = const_helpers::SerBuffer::<N>::zeroed();
+//             // Copy the input into a temporary buffer.
+//             result_bytes.copy_from_u8_slice(bytes);
+//             // This mask retains everything in the last limb
+//             // that is below `P::MODULUS_BIT_SIZE`.
+//             let last_limb_mask =
+//                 (u64::MAX.checked_shr(shave_bits as u32).unwrap_or(0)).to_le_bytes();
+//             let mut last_bytes_mask = [0u8; 9];
+//             last_bytes_mask[..8].copy_from_slice(&last_limb_mask);
+
+//             // Length of the buffer containing the field element and the flag.
+//             let output_byte_size = buffer_byte_size(Self::MODULUS_BIT_SIZE as usize + F::BIT_SIZE);
+//             // Location of the flag is the last byte of the serialized
+//             // form of the field element.
+//             let flag_location = output_byte_size - 1;
+
+//             // At which byte is the flag located in the last limb?
+//             let flag_location_in_last_limb = flag_location.saturating_sub(8 * (N - 1));
+
+//             // Take all but the last 9 bytes.
+//             let last_bytes = result_bytes.last_n_plus_1_bytes_mut();
+
+//             // The mask only has the last `F::BIT_SIZE` bits set
+//             let flags_mask = u8::MAX.checked_shl(8 - (F::BIT_SIZE as u32)).unwrap_or(0);
+
+//             // Mask away the remaining bytes, and try to reconstruct the
+//             // flag
+//             let mut flags: u8 = 0;
+//             for (i, (b, m)) in last_bytes.zip(&last_bytes_mask).enumerate() {
+//                 if i == flag_location_in_last_limb {
+//                     flags = *b & flags_mask
+//                 }
+//                 *b &= m;
+//             }
+//             Self::deserialize_compressed(&result_bytes.as_slice()[..(N * 8)])
+//                 .ok()
+//                 .and_then(|f| F::from_u8(flags).map(|flag| (f, flag)))
+//         }
+//     }
+// }
+// impl<P: FpConfig<N>, const N: usize> CanonicalDeserializeWithFlags for Fp<P, N> {
+//     fn deserialize_with_flags<R: ark_std::io::Read, F: Flags>(
+//         reader: R,
+//     ) -> Result<(Self, F), SerializationError> {
+//         // All reasonable `Flags` should be less than 8 bits in size
+//         // (256 values are enough for anyone!)
+//         if F::BIT_SIZE > 8 {
+//             return Err(SerializationError::NotEnoughSpace);
+//         }
+//         // Calculate the number of bytes required to represent a field element
+//         // serialized with `flags`.
+//         let output_byte_size = Self::zero().serialized_size_with_flags::<F>();
+
+//         let mut masked_bytes = const_helpers::SerBuffer::zeroed();
+//         masked_bytes.read_exact_up_to(reader, output_byte_size)?;
+//         let flags = F::from_u8_remove_flags(&mut masked_bytes[output_byte_size - 1])
+//             .ok_or(SerializationError::UnexpectedFlags)?;
+
+//         let self_integer = masked_bytes.to_bigint();
+//         Self::from_bigint(self_integer)
+//             .map(|v| (v, flags))
+//             .ok_or(SerializationError::InvalidData)
+//     }
+// }
+
+// impl<P: FpConfig<N>, const N: usize> CanonicalDeserializeWithFlags for Fp<P, N>
+// { #[inline]
+//     fn from_bigint(r: BigInt<N>) -> Option<Self> {
+//         P::from_bigint(r)
+//     }
+
+//     fn into_bigint(self) -> BigInt<N> {
+//         P::into_bigint(self)
+//     }
+// }
 
 /// A trait that specifies the configuration of a prime field.
 /// Also specifies how to perform arithmetic on field elements.

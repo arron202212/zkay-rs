@@ -39,7 +39,7 @@ use std::io::{self, Read, Write};
 use std::ops::{Index, IndexMut, MulAssign, Rem, Sub};
 use zeroize::Zeroize;
 
-// // /**
+// //
 // //  * Wrapper pub struct around GMP's MPZ long integers. It supports arithmetic operations,
 // //  * serialization and randomization. Serialization is fragile, see common/serialization.hpp.
 // //  */
@@ -95,6 +95,30 @@ impl<const N: usize> From<bigint<N>> for num_bigint::BigInt {
             Sign::Plus
         };
         num_bigint::BigInt::from_bytes_le(sign, &val.0.to_bytes_le())
+    }
+}
+
+impl<const N: usize> TryFrom<BigUint> for bigint<N> {
+    type Error = ();
+
+    /// Returns `Err(())` if the bit size of `val` is more than `N * 64`.
+    #[inline]
+    fn try_from(val: num_bigint::BigUint) -> Result<bigint<N>, Self::Error> {
+        let bytes = val.to_bytes_le();
+
+        if bytes.len() > N * 8 {
+            Err(())
+        } else {
+            let mut limbs = [0u64; N];
+
+            bytes.chunks(8).enumerate().for_each(|(i, chunk)| {
+                let mut chunk_padded = [0u8; 8];
+                chunk_padded[..chunk.len()].copy_from_slice(chunk);
+                limbs[i] = u64::from_le_bytes(chunk_padded)
+            });
+
+            Ok(Self(BigInt::<N>(limbs)))
+        }
     }
 }
 

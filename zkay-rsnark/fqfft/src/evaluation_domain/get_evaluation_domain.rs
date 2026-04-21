@@ -27,50 +27,50 @@ pub fn get_evaluation_domain<FieldT: FieldTConfig>(
 
     let result = basic_radix2_domain::<FieldT>::new(min_size);
     if result.is_ok() {
-        return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = extended_radix2_domain::<FieldT>::new(min_size);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = step_radix2_domain::<FieldT>::new(min_size);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = basic_radix2_domain::<FieldT>::new(big + rounded_small);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = extended_radix2_domain::<FieldT>::new(big + rounded_small);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = step_radix2_domain::<FieldT>::new(big + rounded_small);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = geometric_sequence_domain::<FieldT>::new(min_size);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
     let result = arithmetic_sequence_domain::<FieldT>::new(min_size);
     if result.is_ok() {
-         return result.map(|res|RcCell::new(res.into()));
-    }else{
+        return result.map(|res| RcCell::new(res.into()));
+    } else {
         eprintln!("{result:?}");
     }
 

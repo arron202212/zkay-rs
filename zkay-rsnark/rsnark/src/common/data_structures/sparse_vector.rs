@@ -30,7 +30,7 @@ pub struct sparse_vector<T: PpConfig> {
     // sparse_vector() = default;
     // sparse_vector(&other:sparse_vector<T>) = default;
     // sparse_vector(sparse_vector<T> &&other) = default;
-    // pub fn new(v:Vec<T>); /* constructor from Vec */
+    // pub fn new(v:Vec<T>); //constructor from Vec
 
     // sparse_vector<T>& operator=(&other:sparse_vector<T>) = default;
     // sparse_vector<T>& operator=(sparse_vector<T> &&other) = default;
@@ -47,7 +47,7 @@ pub struct sparse_vector<T: PpConfig> {
     // usize size() const; // return the number of indices (representing the number of non-zero entries)
     //  pub fn size_in_bits(&self)->usize; // return the number bits needed to store the sparse vector
 
-    // /* return a pair consisting of the accumulated value and the sparse vector of non-accumulated values */
+    // //return a pair consisting of the accumulated value and the sparse vector of non-accumulated values
     //
     // std::pair<T, sparse_vector<T> > accumulate(it_begin:&Vec<FieldT>::const_iterator
     //                                            it_end:&Vec<FieldT>::const_iterator
@@ -228,7 +228,7 @@ impl<T: PpConfig> PartialEq for sparse_vector<T> {
             }
         }
 
-        /* at least one of the vectors has been exhausted, so other must be empty */
+        //at least one of the vectors has been exhausted, so other must be empty
         while this_pos < self.indices.len() {
             if !self.values[this_pos].is_zero() {
                 return false;

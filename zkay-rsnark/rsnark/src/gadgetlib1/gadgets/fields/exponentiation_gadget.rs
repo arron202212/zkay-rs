@@ -125,7 +125,7 @@ impl<FpkT: ppTConfig> exponentiation_gadget<FpkT> {
                 found_nonzero = true;
 
                 if NAF[i] > 0 {
-                    /* next = cur * elt */
+                    //next = cur * elt
                     addition_steps[add_id] = RcCell::new(Fpk_mul_gadgetT::<FpkT>::new(
                         pb.clone(),
                         intermediate[intermed_id].borrow().clone(),
@@ -140,7 +140,7 @@ impl<FpkT: ppTConfig> exponentiation_gadget<FpkT> {
                     add_id += 1;
                     intermed_id += 1;
                 } else {
-                    /* next = cur / elt, i.e. next * elt = cur */
+                    //next = cur / elt, i.e. next * elt = cur
                     subtraction_steps[sub_id] = RcCell::new(Fpk_mul_gadgetT::<FpkT>::new(
                         pb.clone(),
                         if intermed_id + 1 == intermed_count {

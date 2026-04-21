@@ -95,7 +95,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadget<FieldT> {
         assert!(arg1idx.len() == pb.borrow().t.ap.reg_arg_width());
         assert!(arg2idx.len() == pb.borrow().t.ap.reg_arg_or_imm_width());
 
-        /* decode accordingly */
+        //decode accordingly
         let mut packed_desidx = variable::<FieldT, pb_variable>::default();
         packed_desidx.allocate(&pb, format!("{} packed_desidx", annotation_prefix));
         let mut packed_arg1idx = variable::<FieldT, pb_variable>::default();
@@ -188,7 +188,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadget<FieldT> {
 }
 impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
     pub fn generate_r1cs_constraints(&self) {
-        /* pack */
+        //pack
         self.t
             .t
             .t
@@ -208,12 +208,12 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_constraints(true);
 
-        /* demux */
+        //demux
         self.t.t.t.demux_des.borrow().generate_r1cs_constraints();
         self.t.t.t.demux_arg1.borrow().generate_r1cs_constraints();
         self.t.t.t.demux_arg2.borrow().generate_r1cs_constraints();
 
-        /* enforce correct handling of arg2val */
+        //enforce correct handling of arg2val
 
         /* it is false that arg2 is reg and demux failed:
         (1 - arg2_is_imm) * (1 - arg2_demux_success) = 0 */
@@ -255,7 +255,7 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
     }
 
     pub fn generate_r1cs_witness(&self) {
-        /* pack */
+        //pack
         self.t
             .t
             .t
@@ -275,12 +275,12 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* demux */
+        //demux
         self.t.t.t.demux_des.borrow().generate_r1cs_witness();
         self.t.t.t.demux_arg1.borrow().generate_r1cs_witness();
         self.t.t.t.demux_arg2.borrow().generate_r1cs_witness();
 
-        /* handle arg2val */
+        //handle arg2val
         *self.pb.borrow_mut().val_ref(&self.t.t.t.packed_arg2val) =
             (if self.pb.borrow().val(&self.t.t.t.arg2_is_imm) == FieldT::one() {
                 self.pb.borrow().val(&self.t.t.t.packed_arg2idx)

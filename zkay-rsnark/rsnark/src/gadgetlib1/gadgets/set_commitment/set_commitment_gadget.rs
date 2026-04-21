@@ -209,7 +209,7 @@ pub fn test_set_commitment_gadget<FieldT: FieldTConfig, PB: PBConfig, HashT: Has
     );
     sc.generate_r1cs_constraints();
 
-    /* test all elements from set */
+    //test all elements from set
     for i in 0..max_set_size {
         element_bits.fill_with_bits(&pb, &set_elems[i]);
         *pb.borrow_mut().val_ref(&check_succesful) = FieldT::one();
@@ -220,21 +220,21 @@ pub fn test_set_commitment_gadget<FieldT: FieldTConfig, PB: PBConfig, HashT: Has
     }
     print!("membership tests OK\n");
 
-    /* test an element not in set */
+    //test an element not in set
     for i in 0..value_size {
         *pb.borrow_mut().val_ref(&element_bits[i]) = FieldT::from(rand::random::<usize>() % 2);
     }
 
-    *pb.borrow_mut().val_ref(&check_succesful) = FieldT::zero(); /* do not require the check result to be successful */
-    proof.generate_r1cs_witness(&accumulator.get_membership_proof(&set_elems[0])); /* try it with invalid proof */
+    *pb.borrow_mut().val_ref(&check_succesful) = FieldT::zero(); //do not require the check result to be successful
+    proof.generate_r1cs_witness(&accumulator.get_membership_proof(&set_elems[0])); //try it with invalid proof
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(&accumulator.get_commitment());
     assert!(pb.borrow().is_satisfied());
 
-    *pb.borrow_mut().val_ref(&check_succesful) = FieldT::one(); /* now require the check result to be succesful */
-    proof.generate_r1cs_witness(&accumulator.get_membership_proof(&set_elems[0])); /* try it with invalid proof */
+    *pb.borrow_mut().val_ref(&check_succesful) = FieldT::one(); //now require the check result to be succesful
+    proof.generate_r1cs_witness(&accumulator.get_membership_proof(&set_elems[0])); //try it with invalid proof
     sc.generate_r1cs_witness();
     root_digest.generate_r1cs_witness(&accumulator.get_commitment());
-    assert!(!pb.borrow().is_satisfied()); /* the protoboard should be unsatisfied */
+    assert!(!pb.borrow().is_satisfied()); //the protoboard should be unsatisfied
     print!("non-membership test OK\n");
 }

@@ -157,7 +157,7 @@ pub fn benes_rhs_packet_source(
     row_idx: usize,
     use_top: bool,
 ) -> usize {
-    return benes_lhs_packet_destination(dimension, column_idx - 1, row_idx, use_top); /* by symmetry */
+    return benes_lhs_packet_destination(dimension, column_idx - 1, row_idx, use_top); // by symmetry
 }
 
 /**
@@ -196,7 +196,7 @@ pub fn benes_packet_cross_destination(
  * "cross" source packet.
  */
 pub fn benes_packet_cross_source(dimension: usize, column_idx: usize, packet_idx: usize) -> usize {
-    return benes_packet_cross_destination(dimension, column_idx - 1, packet_idx); /* by symmetry */
+    return benes_packet_cross_destination(dimension, column_idx - 1, packet_idx); // by symmetry
 }
 
 pub fn benes_num_columns(num_packets: usize) -> usize {
@@ -251,12 +251,12 @@ pub fn route_benes_inner(
     assert!(&permutation.inverse() == permutation_inv);
 
     if column_idx_start == column_idx_end {
-        /* nothing to route */
+        // nothing to route
         return;
     }
-    let mut lhs_routed = vec![false; subnetwork_size]; /* adjusted by subnetwork_offset */
+    let mut lhs_routed = vec![false; subnetwork_size]; // adjusted by subnetwork_offset
 
-    let mut w = subnetwork_offset; /* left-hand-side vertex to be routed. */
+    let mut w = subnetwork_offset; // left-hand-side vertex to be routed.
     let mut last_unrouted = subnetwork_offset;
 
     let mut new_permutation =
@@ -270,10 +270,10 @@ pub fn route_benes_inner(
          * node w from left hand side can always be routed
          * to the right-hand side using the upper network.
          */
-        /* route w to its target on RHS, wprime = pi[w], using upper network */
+        // route w to its target on RHS, wprime = pi[w], using upper network
         let wprime = permutation.get(w);
 
-        /* route (column_idx_start, w) forward via top subnetwork */
+        // route (column_idx_start, w) forward via top subnetwork
         routing[column_idx_start][w] =
             benes_get_switch_setting_from_subnetwork(dimension, column_idx_start, w, true);
         new_permutation.set(
@@ -282,7 +282,7 @@ pub fn route_benes_inner(
         );
         lhs_routed[w - subnetwork_offset] = true;
 
-        /* route (column_idx_end, wprime) backward via top subnetwork */
+        // route (column_idx_end, wprime) backward via top subnetwork
         routing[column_idx_end - 1]
             [benes_rhs_packet_source(dimension, column_idx_end, wprime, true)] =
             benes_get_switch_setting_from_subnetwork(dimension, column_idx_end - 1, wprime, true);
@@ -291,12 +291,12 @@ pub fn route_benes_inner(
             benes_lhs_packet_destination(dimension, column_idx_start, w, true),
         );
 
-        /* now the other neighbor of wprime must be back-routed via the lower network, so get vprime, the neighbor on RHS and v, its target on LHS */
+        // now the other neighbor of wprime must be back-routed via the lower network, so get vprime, the neighbor on RHS and v, its target on LHS
         let vprime = benes_packet_cross_source(dimension, column_idx_end, wprime);
         let v = permutation_inv.get(vprime);
         assert!(!lhs_routed[v - subnetwork_offset]);
 
-        /* back-route (column_idx_end, vprime) using the lower subnetwork */
+        // back-route (column_idx_end, vprime) using the lower subnetwork
         routing[column_idx_end - 1]
             [benes_rhs_packet_source(dimension, column_idx_end, vprime, false)] =
             benes_get_switch_setting_from_subnetwork(dimension, column_idx_end - 1, vprime, false);
@@ -305,7 +305,7 @@ pub fn route_benes_inner(
             benes_lhs_packet_destination(dimension, column_idx_start, v, false),
         );
 
-        /* forward-route (column_idx_start, v) using the lower subnetwork */
+        // forward-route (column_idx_start, v) using the lower subnetwork
         routing[column_idx_start][v] =
             benes_get_switch_setting_from_subnetwork(dimension, column_idx_start, v, false);
         new_permutation.set(
@@ -314,7 +314,7 @@ pub fn route_benes_inner(
         );
         lhs_routed[v - subnetwork_offset] = true;
 
-        /* if the other neighbor of v is not routed, route it; otherwise, find the next unrouted node  */
+        // if the other neighbor of v is not routed, route it; otherwise, find the next unrouted node
         if !lhs_routed
             [benes_packet_cross_destination(dimension, column_idx_start, v) - subnetwork_offset]
         {
@@ -327,7 +327,7 @@ pub fn route_benes_inner(
             }
 
             if last_unrouted == subnetwork_offset + subnetwork_size {
-                break; /* all routed! */
+                break; // all routed!
             } else {
                 w = last_unrouted;
             }
@@ -352,7 +352,7 @@ pub fn route_benes_inner(
         subnetwork_offset + subnetwork_size - 1,
     );
 
-    /* route upper part */
+    // route upper part
     route_benes_inner(
         dimension,
         &new_permutation_upper,
@@ -364,7 +364,7 @@ pub fn route_benes_inner(
         routing,
     );
 
-    /* route lower part */
+    // route lower part
     route_benes_inner(
         dimension,
         &new_permutation_lower,
@@ -398,7 +398,7 @@ pub fn get_benes_routing(permutation: &integer_permutation) -> benes_routing {
     return routing;
 }
 
-/* auxiliary function that is used in valid_benes_routing below */
+// auxiliary function that is used in valid_benes_routing below
 
 pub fn route_by_benes<T: Default + Clone>(routing: &benes_routing, start: &Vec<T>) -> Vec<Vec<T>> {
     let num_packets = start.len();

@@ -49,16 +49,11 @@
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations::*;
 use crate::polynomial_arithmetic::xgcd::_polynomial_xgcd;
-use ffec::common::utils::log2;
 use ffec::FieldTConfig;
+use ffec::common::utils::log2;
 
 //
-pub fn compute_subproduct_tree<
-    FieldT:FieldTConfig,
->(
-    m: usize,
-    T: &mut Vec<Vec<Vec<FieldT>>>,
-) {
+pub fn compute_subproduct_tree<FieldT: FieldTConfig>(m: usize, T: &mut Vec<Vec<Vec<FieldT>>>) {
     if T.len() != m + 1 {
         T.resize(m + 1, vec![]);
     }
@@ -69,7 +64,7 @@ pub fn compute_subproduct_tree<
      * Note: n = 2^m.
      */
 
-    /* Precompute the first row. */
+    //Precompute the first row.
     T[0] = vec![vec![]; 1usize << m];
     for j in 0..m {
         T[0][j] = vec![FieldT::one(); 2];
@@ -96,9 +91,7 @@ pub fn compute_subproduct_tree<
 }
 
 //
-pub fn monomial_to_newton_basis<
-    FieldT: FieldTConfig,
->(
+pub fn monomial_to_newton_basis<FieldT: FieldTConfig>(
     a: &mut Vec<FieldT>,
     T: &Vec<Vec<Vec<FieldT>>>,
     n: usize,
@@ -108,7 +101,7 @@ pub fn monomial_to_newton_basis<
         eyre::bail!("expected T.len() == m + 1");
     }
 
-    /* MonomialToNewton */
+    //MonomialToNewton
     let mut I = T[m][0].clone();
     _reverse(&mut I, n);
 
@@ -128,7 +121,7 @@ pub fn monomial_to_newton_basis<
     let mut Q = _polynomial_multiplication_transpose(n - 1, &I, a).unwrap();
     _reverse(&mut Q, n);
 
-    /* TNewtonToMonomial */
+    //TNewtonToMonomial
     let mut c = vec![vec![]; n];
     c[0] = Q;
 
@@ -140,7 +133,7 @@ pub fn monomial_to_newton_basis<
         row_length = T[i].len() - 1;
         c_vec = 1usize << i;
 
-        /* NB: unsigned reverse iteration */
+        //NB: unsigned reverse iteration
         let t = 1usize << (m - i - 1);
         for j in (0..t).rev() {
             c[2 * j + 1] = _polynomial_multiplication_transpose(
@@ -154,9 +147,9 @@ pub fn monomial_to_newton_basis<
         }
     }
 
-    /* Store Computed Newton Basis Coefficients */
+    //Store Computed Newton Basis Coefficients
     let mut j = 0;
-    /* NB: unsigned reverse iteration */
+    //NB: unsigned reverse iteration
     for i in (0..c.len()).rev() {
         a[j] = c[i][0].clone();
         j += 1;
@@ -165,9 +158,7 @@ pub fn monomial_to_newton_basis<
 }
 
 //
-pub fn newton_to_monomial_basis<
-    FieldT: FieldTConfig
->(
+pub fn newton_to_monomial_basis<FieldT: FieldTConfig>(
     a: &mut Vec<FieldT>,
     T: &Vec<Vec<Vec<FieldT>>>,
     n: usize,
@@ -182,7 +173,7 @@ pub fn newton_to_monomial_basis<
         f[i] = vec![a[i].clone()];
     }
 
-    /* NewtonToMonomial */
+    //NewtonToMonomial
     let mut temp = vec![FieldT::zero()];
     for i in 0..m {
         for j in 0..(m - i - 1) {
@@ -200,9 +191,7 @@ pub fn newton_to_monomial_basis<
 }
 
 //
-pub fn monomial_to_newton_basis_geometric<
-    FieldT: FieldTConfig,
->(
+pub fn monomial_to_newton_basis_geometric<FieldT: FieldTConfig>(
     a: &mut Vec<FieldT>,
     geometric_sequence: &Vec<FieldT>,
     geometric_triangular_sequence: &Vec<FieldT>,
@@ -240,9 +229,7 @@ pub fn monomial_to_newton_basis_geometric<
 }
 
 //
-pub fn newton_to_monomial_basis_geometric<
-    FieldT: FieldTConfig,
->(
+pub fn newton_to_monomial_basis_geometric<FieldT: FieldTConfig>(
     a: &mut Vec<FieldT>,
     geometric_sequence: &Vec<FieldT>,
     geometric_triangular_sequence: &Vec<FieldT>,

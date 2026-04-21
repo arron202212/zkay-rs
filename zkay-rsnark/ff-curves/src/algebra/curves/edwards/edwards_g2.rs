@@ -20,8 +20,7 @@ pub struct edwards_G2 {
     pub Z: edwards_Fq3,
 }
 impl PpConfig for edwards_G2 {
-    type TT = bigint<1>;
-    // type Fr=Self;
+    type GType = Self;
 }
 impl FpmConfig for edwards_G2 {
     type Fr = edwards_Fq;
