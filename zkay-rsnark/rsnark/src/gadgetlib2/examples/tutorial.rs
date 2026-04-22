@@ -41,7 +41,6 @@ use rccell::RcCell;
 //         The library has been designed to allow future addition of other characteristics/forms in
 //         the future by implementing only low level circuits for these forms.
 // */
-
 pub fn test_ProtoboardUsage<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -673,7 +672,6 @@ pub fn TEST_R1P_VerifyTransactionAmounts_Gadget<
 //     Below is an example of integrating gadgetlib2 constructed constraint systems with the
 //     ppzkSNARK.
 // */
-
 pub fn TEST_Integration<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,

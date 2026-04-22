@@ -70,7 +70,6 @@ pub struct G1_precomputation<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct precompute_G1_gadget<ppT: ppTConfig> {
-    
     pub precomp: G1_precomputations<ppT>, // must be a reference.
 }
 
@@ -79,7 +78,6 @@ pub struct precompute_G1_gadget<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget_coeffs<ppT: ppTConfig> {
-    
     pub RX: RcCell<Fqe_variable<ppT>>,
     pub RY: RcCell<Fqe_variable<ppT>>,
     pub gamma: RcCell<Fqe_variable<ppT>>,
@@ -91,7 +89,6 @@ pub struct precompute_G2_gadget_coeffs<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct G2_precomputation<ppT: ppTConfig> {
- 
     pub Q: RcCell<G2_variables<ppT>>,
 
     pub coeffs: Vec<RcCell<precompute_G2_gadget_coeffss<ppT>>>,
@@ -118,7 +115,6 @@ pub struct G2_precomputation<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget_doubling_step<ppT: ppTConfig> {
-   
     pub cur: precompute_G2_gadget_coeffss<ppT>,
     pub next: precompute_G2_gadget_coeffss<ppT>,
 
@@ -179,7 +175,6 @@ pub struct precompute_G2_gadget_addition_step<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget<ppT: ppTConfig> {
-   
     pub addition_steps: Vec<RcCell<precompute_G2_gadget_addition_steps<ppT>>>,
     pub doubling_steps: Vec<RcCell<precompute_G2_gadget_doubling_steps<ppT>>>,
 
@@ -189,8 +184,6 @@ pub struct precompute_G2_gadget<ppT: ppTConfig> {
     pub precomp: G2_precomputations<ppT>, // important to have a reference here
 }
 
-
-
 pub type G1_precomputations<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, G1_precomputation<ppT>>;
 
@@ -199,8 +192,7 @@ impl<ppT: ppTConfig> G1_precomputation<ppT> {
         pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
         P_val: G1<other_curve<ppT>>,
         annotation_prefix: String,
-    ) -> G1_precomputations<ppT>
-    {
+    ) -> G1_precomputations<ppT> {
         let mut P_val_copy = P_val.clone();
         P_val_copy.to_affine_coordinates();
         let P = RcCell::new(G1_variable::<ppT>::new2(
@@ -307,9 +299,7 @@ impl<ppT: ppTConfig> precompute_G1_gadgets<ppT> {
 
 pub fn test_G1_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<Fpk_variableT<ppT>>>(
     annotation: &str,
-)
-
-{
+) {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut g_val = ppT::FieldT::random_element() * G1::<ppT>::one();
 
@@ -631,7 +621,6 @@ impl<ppT: ppTConfig> precompute_G2_gadget_doubling_steps<ppT> {
 
 // If invert_Q is set to true: use -QY in place of QY everywhere above.
 // */
-
 pub type precompute_G2_gadget_addition_steps<ppT> = gadget<
     <ppT as ppTConfig>::FieldT,
     <ppT as ppTConfig>::PB,
@@ -958,9 +947,7 @@ impl<ppT: ppTConfig> precompute_G2_gadgets<ppT> {
 }
 pub fn test_G2_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<FieldT<ppT>>>(
     annotation: &str,
-)
-
-{
+) {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let g_val = G2::<other_curve<ppT>>::one() * FieldT::<other_curve<ppT>>::random_element();
 

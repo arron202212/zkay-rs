@@ -20,7 +20,7 @@ use crate::relations::ram_computations::rams::ram_params::{
 //  * then you could declare my_ram_ppzksnark_pp as follows:
 //  *
 //  *   pub struct my_ram_ppzksnark_pp {
-//  *   
+//  *
 //  *       pub type snark_pp=my_snark_pp;
 //  *       pub type machine_pp=my_machine_pp;
 //  *       static pub fn  init_public params()
@@ -38,11 +38,9 @@ use crate::relations::ram_computations::rams::ram_params::{
 //  * for an example of the above steps for the case of "RAM=TinyRAM".
 //  *
 //  */
-
 // /**
 //  * Below are various template aliases (used for convenience).
 //  */
-
 pub trait RamPptConfig: Default + Clone {
     type snark_pp: ppTConfig<FieldT = <Self::machine_pp as ram_params_type>::base_field_type>;
     type machine_pp: ram_params_type;

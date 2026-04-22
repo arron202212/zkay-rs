@@ -82,7 +82,6 @@ pub struct tbcs_gate {
     pub output: tbcs_wire_t,
 
     pub is_circuit_output: bool,
-    
 }
 
 // /**
@@ -113,7 +112,6 @@ pub struct tbcs_circuit {
 
     pub gate_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-   
 }
 
 use ffec::common::utils;
@@ -202,7 +200,6 @@ impl tbcs_gate {
             }
         );
     }
-
 }
 
 impl tbcs_circuit {

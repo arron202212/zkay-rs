@@ -33,7 +33,6 @@ use std::collections::BTreeMap;
 //  * There is no need to store the Z polynomial because it is uniquely
 //  * determined by the domain (as Z is its vanishing polynomial).
 //  */
-
 pub struct ssp_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -54,7 +53,6 @@ pub struct ssp_instance<FieldT: FieldTConfig> {
 //  * - evaluations of the V (and Z) polynomials at t;
 //  * - evaluations of all monomials of t.
 //  */
-
 pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -73,7 +71,6 @@ pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
 // /**
 //  * A SSP witness.
 //  */
-
 pub struct ssp_witness<FieldT> {
     pub num_variables: usize,
     pub degree: usize,

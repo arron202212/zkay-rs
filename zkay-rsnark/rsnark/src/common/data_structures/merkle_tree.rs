@@ -21,7 +21,6 @@ use std::marker::PhantomData;
 //  * pub struct offers methods to retrieve the root of the Merkle tree and to
 //  * obtain the authentication paths for (the value at) a given address.
 //  */
-
 pub type merkle_authentication_node = bit_vector;
 pub type merkle_authentication_path = Vec<merkle_authentication_node>;
 pub type hash_value_type = bit_vector; //hash_value_type ;
@@ -46,7 +45,6 @@ pub trait VecConfig {
 pub trait GConfig: Default + Clone {}
 pub trait PConfig: Default + Clone {}
 pub trait HashTConfig: Default + Clone {
-    
     fn new5<P: PConfig, G: GConfig, G2: GConfig>(
         pb: RcCell<P>,
         sz: usize,
@@ -150,7 +148,6 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         Self::new(depth, value_size)
     }
 
- 
     pub fn new3(depth: usize, value_size: usize, contents: BTreeMap<usize, bit_vector>) -> Self {
         let mut hash_defaults: Vec<_> = Vec::<Self>::with_capacity(depth + 1);
         let (mut values, mut hashes) = (Vec::new(), Vec::new());
@@ -244,7 +241,6 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         } else {
             self.hash_defaults[0].clone()
         }
-        
     }
 
     pub fn get_path(&self, address: usize) -> merkle_authentication_path_type {

@@ -8,12 +8,14 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs;
 use crate::relations::ram_computations::memory::memory_interface::memory_contents;
 use crate::relations::ram_computations::memory::memory_store_trace::memory_store_trace;
 use crate::relations::ram_computations::rams::ram_params;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::utils::bit_vector;
 use ffec::common::utils::log2;
 use num_enum::{FromPrimitive, IntoPrimitive};
 use std::collections::BTreeMap;
 use strum::Display;
+use tracing::{Level, span};
+
 #[derive(
     Display,
     Hash,
@@ -139,7 +141,6 @@ pub fn opcode_values() -> BTreeMap<String, tinyram_opcode> {
     BTreeMap::new()
 }
 
-
 pub type tinyram_input_tape = Vec<usize>;
 #[derive(Default, Clone)]
 pub struct tinyram_architecture_params {
@@ -153,10 +154,8 @@ impl tinyram_architecture_params {
     }
 }
 
-
 // /* order everywhere is reversed (i.e. MSB comes first),
 // corresponding to the order in memory */
-
 pub struct tinyram_instruction {
     //
     pub opcode: tinyram_opcode,

@@ -33,7 +33,6 @@ use std::marker::PhantomData;
 // /**
 //  * Specialization for MNT4.
 //  */
-
 pub trait pairing_selector4<
     mnt4_pp: PublicParams,
     mnt6_pp: PublicParams,
@@ -64,14 +63,11 @@ pub trait pairing_selector4<
     type e_over_e_miller_loop_gadget_type;
     type e_times_e_over_e_miller_loop_gadget_type;
     type final_exp_gadget_type;
-
 }
-
 
 // /**
 //  * Specialization for MNT6.
 //  */
-
 pub trait pairing_selector6<
     mnt6_pp: PublicParams,
     mnt4_pp: PublicParams,

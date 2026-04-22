@@ -58,13 +58,12 @@ use crate::relations::ram_computations::rams::ram_params::{
     ram_boot_trace, ram_cpu_checker, ram_input_tape, ram_params_type, ram_protoboard,
 };
 use crate::relations::variable::linear_combination;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
+
 use ffec::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::{FieldTConfig, One, Zero, div_ceil, log2};
 use rccell::RcCell;
-use tracing::{span, Level};
-
-
+use tracing::{Level, span};
 
 // /*
 //   Memory layout for our reduction is as follows:
@@ -97,7 +96,6 @@ use tracing::{span, Level};
 //   input and thus can be ignored by the "weak" input consistency R1CS
 //   verifier.
 // */
-
 type FieldT<RamT> = ram_base_field<RamT>;
 
 #[derive(Clone, Default)]
@@ -164,7 +162,11 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         span.exit();
 
-        let span = span!(Level::TRACE, "Allocate instruction fetch and execution lines").entered();
+        let span = span!(
+            Level::TRACE,
+            "Allocate instruction fetch and execution lines"
+        )
+        .entered();
         let mut load_instruction_lines = Vec::with_capacity(time_bound + 1); //the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC)
         for i in 0..time_bound {
             load_instruction_lines.push(memory_line_variable_gadget::<
@@ -267,7 +269,11 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         span.exit();
 
-        let span = span!(Level::TRACE, "Collect inputs/outputs for the routing network").entered();
+        let span = span!(
+            Level::TRACE,
+            "Collect inputs/outputs for the routing network"
+        )
+        .entered();
         let mut routing_inputs = Vec::with_capacity(num_memory_lines);
         let mut routing_outputs = Vec::with_capacity(num_memory_lines);
 
@@ -372,10 +378,11 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
 }
 impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
     pub fn generate_r1cs_constraints(&self) {
-        enter_block(
-            "Call to generate_r1cs_constraints of ram_universal_gadget",
-            false,
+        let span = span!(
+            Level::TRACE,
+            "Call to generate_r1cs_constraints of ram_universal_gadget"
         );
+        let _ = span.enter();
         for i in 0..self.t.boot_trace_size_bound {
             self.t.unpack_boot_lines[i].generate_r1cs_constraints(false);
         }
@@ -522,10 +529,6 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 1. * num_variables as f64 / self.t.time_bound as f64
             );
         }
-        leave_block(
-            "Call to generate_r1cs_constraints of ram_universal_gadget",
-            false,
-        );
     }
 
     pub fn generate_r1cs_witness(
@@ -716,7 +719,6 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
         //   cycle over all memory accesses, enforced by the proper ordering
         //   property.
         // */
-
         let mut mem_pairs = vec![];
 
         for i in 0..self.t.num_memory_lines {

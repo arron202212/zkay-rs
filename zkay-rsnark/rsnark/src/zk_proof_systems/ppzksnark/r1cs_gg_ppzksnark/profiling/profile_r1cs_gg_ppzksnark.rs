@@ -31,6 +31,7 @@ use ff_curves::default_ec_pp;
 use ffec::FieldTConfig;
 use ffec::common::profiling::{enter_block, leave_block, print_compilation_info, start_profiling};
 use ffec::div_ceil;
+use tracing::{Level, span};
 
 fn main(argc: i32, argv: &[&str]) -> i32 {
     default_r1cs_gg_ppzksnark_pp::init_public_params();

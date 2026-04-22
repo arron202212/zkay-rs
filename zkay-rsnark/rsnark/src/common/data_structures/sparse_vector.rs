@@ -5,7 +5,6 @@ use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::{KCConfig, multi_exp, multi_exp_method};
 use ffec::{FieldTConfig, PpConfig, Zero};
 
-
 // /**
 //  * A sparse vector is a list of indices along with corresponding values.
 //  * The indices are selected from the set {0,1,...,domain_size-1}.
@@ -15,7 +14,6 @@ pub struct sparse_vector<T: PpConfig> {
     pub indices: Vec<usize>,
     pub values: Vec<T>,
     pub domain_size_: usize,
-   
 }
 
 impl<T: PpConfig> sparse_vector<T> {
@@ -67,9 +65,7 @@ impl<T: PpConfig> sparse_vector<T> {
         it: &[FieldT],
         offset: usize,
     ) -> (T, sparse_vector<T>) {
-      
         let mut chunks = 1;
-     
 
         let mut accumulated_value = T::zero();
         let mut resulting_vector = sparse_vector::<T>::default();
@@ -78,7 +74,7 @@ impl<T: PpConfig> sparse_vector<T> {
         let mut range_len = it.len();
         let mut in_block = false;
         let mut first_pos = -1;
-        let mut last_pos = -1; 
+        let mut last_pos = -1;
 
         for i in 0..self.indices.len() {
             let matching_pos = (offset <= self.indices[i] && self.indices[i] < offset + range_len);
@@ -94,7 +90,6 @@ impl<T: PpConfig> sparse_vector<T> {
                     in_block = false;
                     copy_over = true;
 
-           
                     accumulated_value = accumulated_value
                         + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
                             &self.values[first_pos as usize..last_pos as usize + 1],
@@ -148,8 +143,6 @@ impl<T: PpConfig> Index<usize> for sparse_vector<T> {
         }
     }
 }
-
-
 
 impl<T: PpConfig> PartialEq for sparse_vector<T> {
     #[inline]
@@ -222,7 +215,6 @@ impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
         true
     }
 }
-
 
 use std::fmt;
 

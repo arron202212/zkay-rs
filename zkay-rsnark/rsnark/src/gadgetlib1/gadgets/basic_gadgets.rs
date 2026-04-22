@@ -211,8 +211,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> dual_variable_gadge
             },
         )
     }
-
-   
 }
 
 // /*
@@ -993,7 +991,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<Fi
 
         //  therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
         // */
-
         //not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget
         generate_boolean_r1cs_constraint::<FieldT, PB>(
             &self.pb,

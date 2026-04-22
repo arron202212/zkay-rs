@@ -2,7 +2,6 @@
 
 use ffec::common::utils;
 
-
 // /**
 //  * The ErrorHandling pub struct containimplements the functionality of displaying the content of error
 //  * messages (including content of call stack when error happened), and exiting the program.
@@ -15,7 +14,6 @@ pub fn POW2(exponent: i32) -> i64 {
 }
 
 const MAX_FMT: usize = 256;
-
 
 // /** Safely converts 64-bit types to 32-bit. */
 pub fn safeConvert(num: i64) -> i64 {
@@ -30,14 +28,9 @@ pub fn safeConvert(num: i64) -> i64 {
 //     reproduce assertion.
 // */
 impl ErrorHandling {
-    pub fn fatalError(msg: &str) {
-       
-    }
+    pub fn fatalError(msg: &str) {}
 
-
-    pub fn printStacktrace() {
-       
-    }
+    pub fn printStacktrace() {}
 }
 
 pub fn Log2(n: f64) -> f64 {

@@ -14,7 +14,6 @@ pub type fooram_input_tape = Vec<usize>;
 #[derive(Default, Clone)]
 pub struct fooram_architecture_params {
     pub w: usize,
-   
 }
 
 impl fooram_architecture_params {

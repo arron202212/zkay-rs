@@ -3,10 +3,19 @@
 // The gadgets verify field arithmetic in Fp2 = Fp[U]/(U^2-non_residue),
 // where non_residue is in Fp.
 
-use crate::{gadgetlib1::{gadget::gadget,pb_variable::{
-    pb_linear_combination, pb_linear_combination_array, pb_variable,
-},protoboard::{PBConfig, ProtoboardConfig, protoboard}},prefix_format,relations::{constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint,variable::{linear_combination, variable}}};
-use ffec::{FieldTConfig,One};
+use crate::{
+    gadgetlib1::{
+        gadget::gadget,
+        pb_variable::{pb_linear_combination, pb_linear_combination_array, pb_variable},
+        protoboard::{PBConfig, ProtoboardConfig, protoboard},
+    },
+    prefix_format,
+    relations::{
+        constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint,
+        variable::{linear_combination, variable},
+    },
+};
+use ffec::{FieldTConfig, One};
 
 use rccell::RcCell;
 use std::marker::PhantomData;

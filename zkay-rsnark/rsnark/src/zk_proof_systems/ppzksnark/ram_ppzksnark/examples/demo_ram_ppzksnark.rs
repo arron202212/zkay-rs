@@ -1,9 +1,3 @@
-// use common::profiling;
-
-// use crate::common::default_types::tinyram_ppzksnark_pp;
-// use crate::reductions::ram_to_r1cs::ram_to_r1cs;
-// use crate::relations::ram_computations::rams::tinyram::tinyram_params;
-// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
 use crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_ppConfig;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
@@ -24,8 +18,7 @@ use clap::{ArgAction, Command, arg, command, value_parser};
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 use std::ops::Mul;
-
-// // namespace po = boost::program_options;
+use tracing::{Level, span};
 
 fn process_demo_command_line(
     argc: i32,

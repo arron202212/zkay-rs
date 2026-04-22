@@ -27,7 +27,6 @@ use std::marker::PhantomData;
 //  * Gadget that represents a G1 variable.
 //  */
 
-
 type FieldT<ppT> = Fr<ppT>;
 #[derive(Clone, Default)]
 pub struct G1_variable<ppT: ppTConfig> {
@@ -39,10 +38,8 @@ pub struct G1_variable<ppT: ppTConfig> {
 // /**
 //  * Gadget that creates constraints for the validity of a G1 variable.
 //  */
-
 #[derive(Clone, Default)]
 pub struct G1_checker_gadget<ppT: ppTConfig> {
-
     pub P: G1_variables<ppT>,
     pub P_X_squared: variable<ppT::FieldT, pb_variable>,
     pub P_Y_squared: variable<ppT::FieldT, pb_variable>,
@@ -51,7 +48,6 @@ pub struct G1_checker_gadget<ppT: ppTConfig> {
 // /**
 //  * Gadget that creates constraints for G1 addition.
 //  */
-
 #[derive(Clone, Default)]
 pub struct G1_add_gadget<ppT: ppTConfig> {
     pub lambda: variable<ppT::FieldT, pb_variable>,

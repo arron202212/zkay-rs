@@ -198,7 +198,6 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
         //   Define masked_out_dw_contents_prev to be the correct masked out
         //   contents for the current access type.
         // */
-
         let mut masked_out_indicators =
             pb_linear_combination_array::<FieldT, tinyram_protoboard<FieldT>>::default();
         masked_out_indicators.contents.push(is_word0.clone().into());

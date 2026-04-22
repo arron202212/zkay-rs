@@ -93,14 +93,13 @@ pub type VarIndex_t = u64;
 
 #[enum_dispatch]
 pub trait FElemInterface: Default + Clone {
-  
     fn asString(&self) -> String {
         String::new()
     }
     fn fieldType(&self) -> FieldType {
         FieldType::AGNOSTIC
     }
-   
+
     fn inverse(&self) -> Self {
         panic!("")
     }
@@ -113,7 +112,6 @@ pub trait FElemInterface: Default + Clone {
     fn power(&self, exponent: u64) -> Self {
         self.clone()
     }
-   
 }
 
 /// A wrapper pub struct for field elements. Can hold any derived pub type of FieldElementInterface
@@ -179,10 +177,9 @@ impl PartialEq for Variable {
     }
 }
 
-//     /// A set of Variables should be declared as follows:  
+//     /// A set of Variables should be declared as follows:
 pub type VariableSet = BTreeSet<Variable>;
 pub type VariableMultiSet = BTreeMap<Variable, i32>;
-
 
 pub type VariableArrayContents = Vec<Variable>;
 pub trait SubVariableArrayConfig: Default + Clone + Ord {
@@ -196,7 +193,6 @@ pub struct VariableArray<T: SubVariableArrayConfig> {
     pub contents: VariableArrayContents,
     pub name_: String,
     pub t: T,
-    
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -288,7 +284,6 @@ pub struct MultiPackedWord {
     pub fieldType_: FieldType,
 }
 
-
 pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 
 /// Holds both representations of a word, both multipacked and unpacked
@@ -296,7 +291,6 @@ pub type MultiPackedWordArray = Vec<VariableArray<MultiPackedWord>>;
 pub struct DualWord {
     pub multipacked_: VariableArray<MultiPackedWord>,
     pub unpacked_: VariableArray<UnpackedWord>,
-   
 }
 
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
@@ -306,14 +300,12 @@ pub struct DualWordArray {
     pub multipackedContents_: MultiPackedWordArray,
     pub unpackedContents_: UnpackedWordArray,
     pub numElements_: usize,
-   
 }
 
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct LinearTerm {
     pub variable_: Variable,
     pub coeff_: FElem,
-   
 }
 
 //  pub type size_type=Vec<LinearTerm>::size_type;
@@ -322,15 +314,45 @@ pub struct LinearCombination {
     pub linearTerms_: Vec<LinearTerm>,
     pub indexMap_: BTreeMap<i32, i32>, // jSNARK-edit: This map is used to reduce memory consumption. Can be helpful for some circuits produced by Pinocchio compiler.
     pub constant_: FElem,
-   
 }
-
 
 #[derive(Default, Clone, Debug, PartialOrd, Ord, Eq, PartialEq)]
 pub struct Monomial {
     pub coeff_: FElem,
     pub variables_: BTreeMap<Variable, i32>,
-   
+}
+
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Polynomial {
+    pub monomials_: Vec<Monomial>,
+    pub constant_: FElem,
+}
+
+impl AddAssign<&Self> for FElem {
+    #[inline]
+    fn add_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(&other.fieldType());
+        let oe = other.elem_.borrow().clone();
+        *self.elem_.borrow_mut() += &oe;
+    }
+}
+
+impl SubAssign<&Self> for FElem {
+    #[inline]
+    fn sub_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(&other.fieldType());
+        *self.elem_.borrow_mut() -= &other.elem_.borrow();
+    }
+}
+
+impl MulAssign<&Self> for FElem {
+    #[inline]
+    #[allow(clippy::many_single_char_names)]
+    fn mul_assign(&mut self, other: &Self) {
+        self.promoteToFieldType(&other.fieldType());
+        *self.elem_.borrow_mut() *= &other.elem_.borrow();
+    }
+}
 impl Neg for FElem {
     type Output = Self;
 
@@ -716,7 +738,6 @@ impl Variable {
                 self.index_
             ))
             .clone()
-        
     }
     // jSNARK-edit: A simple getter for the Variable index
     pub fn getIndex(&self) -> VarIndex_t {
@@ -986,7 +1007,6 @@ impl DualWordArray {
     }
 
     pub fn at(&self, i: usize) -> DualWord {
-   
         DualWord::new2(self.multipacked()[i].clone(), self.unpacked()[i].clone())
     }
 
@@ -1002,7 +1022,6 @@ impl DualWordArray {
         return self.numElements_;
     }
 }
-
 
 impl Neg for LinearTerm {
     type Output = Self;
@@ -1272,7 +1291,6 @@ impl LinearCombination {
     }
 }
 
-
 pub fn sum(inputs: &VariableArrayType) -> LinearCombination {
     let mut retval = LinearCombination::default();
     for var in inputs.iter() {
@@ -1481,7 +1499,6 @@ impl Polynomial {
         return retval;
     }
 }
-
 
 impl Neg for Polynomial {
     type Output = Self;

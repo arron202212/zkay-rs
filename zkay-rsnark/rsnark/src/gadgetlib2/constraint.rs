@@ -37,10 +37,8 @@ pub trait ConstraintConfig {
 /// An abstract struct for a field agnostic constraint. The derived classes will be field specific.
 #[derive(Default, Clone)]
 pub struct Constraint<T: Default + Clone> {
-    
     pub name_: String,
     pub t: T,
-
 }
 
 /// A rank-1 prime characteristic constraint. The constraint is defined by <a,x> * <b,x> = <c,x>
@@ -49,7 +47,7 @@ pub struct Constraint<T: Default + Clone> {
 pub struct Rank1Constraint {
     pub a_: LinearCombination,
     pub b_: LinearCombination,
-    pub c_: LinearCombination, 
+    pub c_: LinearCombination,
 }
 
 #[derive(Default, Clone)]
@@ -58,7 +56,6 @@ pub struct PolynomialConstraint {
     pub b_: Polynomial,
 }
 
-
 pub type ConstraintPtr = RcCell<ConstraintType>;
 #[derive(Default, Clone)]
 pub struct ConstraintSystem {
@@ -66,9 +63,6 @@ pub struct ConstraintSystem {
 }
 pub type PolyPtrSet = BTreeSet<RcCell<Polynomial>>;
 impl ConstraintSystem {
-   
-
-   
     //
     // /// Required for interfacing with BREX. Should be optimized in the future
     pub fn getConstraintPolynomials(&self) -> PolyPtrSet {
@@ -90,7 +84,6 @@ impl<T: Default + Clone> Constraint<T> {
     pub fn new(name: String, t: T) -> Self {
         Self { name_: name, t }
     }
-    
 }
 
 impl Rank1Constraint {
@@ -132,7 +125,7 @@ impl ConstraintConfig for Constraint<Rank1Constraint> {
         if ares.clone() * &bres == cres {
             return true;
         }
-       
+
         if printOnFail == &PrintOptions::DBG_PRINT_IF_NOT_SATISFIED {
             println!(
                 "Constraint named \"{}\" not satisfied. Constraint is:",

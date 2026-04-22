@@ -23,6 +23,7 @@ use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::common::profiling::{enter_block, leave_block, print_compilation_info, start_profiling};
 use std::ops::Mul;
+use tracing::{Level, span};
 
 fn main<default_tbcs_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i32
 where

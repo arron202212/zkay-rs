@@ -45,7 +45,6 @@ pub trait ppzkadsnarkConfig: ppTConfig + Sized + Default + Clone {
 // /**
 //  * Below are various template aliases (used for convenience).
 //  */
-
 pub type snark_pp<r1cs_ppzkadsnark_ppT> = <r1cs_ppzkadsnark_ppT as ppzkadsnarkConfig>::snark_pp;
 
 pub type r1cs_ppzkadsnark_constraint_system<r1cs_ppzkadsnark_ppT> =

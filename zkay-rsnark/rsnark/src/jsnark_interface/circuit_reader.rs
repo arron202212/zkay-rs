@@ -25,7 +25,6 @@ use ff_curves::{Fr, default_ec_pp};
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use rccell::RcCell;
 use regex::Regex;
-use tracing::{span, Level};
 use sscanf::sscanf;
 use std::{
     collections::BTreeMap,
@@ -37,6 +36,7 @@ use std::{
     ops::{Add, Mul, Neg, Sub},
     process,
 };
+use tracing::{Level, span};
 
 type Wire = u32;
 

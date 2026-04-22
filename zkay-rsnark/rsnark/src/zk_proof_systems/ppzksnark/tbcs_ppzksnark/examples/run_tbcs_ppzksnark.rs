@@ -13,11 +13,10 @@ use crate::zk_proof_systems::ppzksnark::tbcs_ppzksnark::tbcs_ppzksnark::{
     tbcs_ppzksnark_verifier_process_vk, tbcs_ppzksnark_verifier_strong_IC,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use std::ops::Mul;
-
-
+use tracing::{Level, span};
 
 // /**
 //  * The code below provides an example of all stages of running a TBCS ppzkSNARK.
@@ -32,8 +31,6 @@ use std::ops::Mul;
 //  *     a primary input for C, and a proof.
 //  */
 
-
-
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
 //  * TBCS example (specified by a circuit, primary input, and auxiliary input).
@@ -41,7 +38,6 @@ use std::ops::Mul;
 //  * Optionally, also test the serialization routines for keys and proofs.
 //  * (This takes additional time.)
 //  */
-
 pub fn run_tbcs_ppzksnark<ppT: ppTConfig>(example: &tbcs_example, test_serialization: bool) -> bool
 where
     knowledge_commitment<

@@ -1,38 +1,34 @@
-// use common::profiling;
-
-// use crate::common::default_types::ram_zksnark_pp;
-// use crate::relations::ram_computations::memory::examples::memory_contents_examples;
-// use crate::relations::ram_computations::rams::examples::ram_examples;
-// use crate::relations::ram_computations::rams::tinyram::tinyram_params;
-// use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark;
-// use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark;
 use crate::common::data_structures::merkle_tree::HashTConfig;
-use crate::common::default_types::r1cs_ppzkpcd_pp::default_r1cs_ppzkpcd_ppConfig;
-use crate::common::default_types::ram_zksnark_pp::default_ram_zksnark_pp;
-use crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_ppConfig;
+use crate::common::default_types::{
+    r1cs_ppzkpcd_pp::default_r1cs_ppzkpcd_ppConfig, ram_zksnark_pp::default_ram_zksnark_pp,
+    tinyram_ppzksnark_pp::default_tinyram_ppzksnark_ppConfig,
+};
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
-use crate::relations::ram_computations::memory::delegated_ra_memory::delegated_ra_memory;
-use crate::relations::ram_computations::memory::examples::memory_contents_examples::random_memory_contents;
-use crate::relations::ram_computations::rams::examples::ram_examples::gen_ram_example_complex;
-use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
-use crate::relations::ram_computations::rams::ram_params::ram_params_type;
-use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_architecture_params;
-use crate::zk_proof_systems::pcd::r1cs_pcd::compliance_predicate::cp_handler::CPHConfig;
-use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
-use crate::zk_proof_systems::zksnark::ram_zksnark::examples::run_ram_zksnark::run_ram_zksnark;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark::{
-    ram_zksnark_proof, ram_zksnark_verification_key, ram_zksnark_verifier,
+use crate::relations::ram_computations::memory::{
+    delegated_ra_memory::delegated_ra_memory,
+    examples::memory_contents_examples::random_memory_contents,
 };
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::RamConfig;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::ram_zksnark_PCD_pp;
-use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::ram_zksnark_machine_pp;
-use ff_curves::Fr;
-use ff_curves::PublicParams;
+use crate::relations::ram_computations::rams::{
+    examples::ram_examples::gen_ram_example_complex,
+    ram_params::{ArchitectureParamsTypeConfig, ram_params_type},
+    tinyram::tinyram_aux::tinyram_architecture_params,
+};
+use crate::zk_proof_systems::pcd::r1cs_pcd::{
+    compliance_predicate::cp_handler::CPHConfig, ppzkpcd_compliance_predicate::PcdPptConfig,
+};
+use crate::zk_proof_systems::zksnark::ram_zksnark::{
+    examples::run_ram_zksnark::run_ram_zksnark,
+    ram_zksnark::{ram_zksnark_proof, ram_zksnark_verification_key, ram_zksnark_verifier},
+    ram_zksnark_params::{RamConfig, ram_zksnark_PCD_pp, ram_zksnark_machine_pp},
+};
+
+use ff_curves::{Fr, PublicParams};
 use ffec::common::profiling::{
     enter_block, last_times, leave_block, print_compilation_info, start_profiling,
 };
 use std::ops::Mul;
+use tracing::{Level, span};
 
 pub fn simulate_random_memory_contents<FieldT: HashTConfig>(
     ap: tinyram_architecture_params,

@@ -1,9 +1,3 @@
-// use common::profiling;
-
-// use crate::common::default_types::ram_ppzksnark_pp;
-// use crate::relations::ram_computations::rams::examples::ram_examples;
-// use crate::relations::ram_computations::rams::tinyram::tinyram_params;
-// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::examples::run_ram_ppzksnark;
 use crate::common::default_types::ram_ppzksnark_pp::default_ram_ppzksnark_pp;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::ram_computations::rams::examples::ram_examples::gen_ram_example_complex;
@@ -20,6 +14,7 @@ use ffec::common::profiling::{
     enter_block, last_times, leave_block, print_compilation_info, start_profiling,
 };
 use std::ops::Mul;
+use tracing::{Level, span};
 
 type machine_ppT<default_ram_ppzksnark_pp> = ram_ppzksnark_machine_pp<default_ram_ppzksnark_pp>;
 

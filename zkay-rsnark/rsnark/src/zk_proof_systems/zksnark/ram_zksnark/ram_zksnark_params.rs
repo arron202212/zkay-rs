@@ -27,7 +27,7 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::{
 //  * then you would declare my_ram_zksnark_pp as follows:
 //  *
 //  *   pub struct my_ram_zksnark_pp {
-//  *   
+//  *
 //  *       type PCD_pp=my_PCD_pp;
 //  *       type machine_pp=my_machine_pp;
 //  *       static pub fn  init_public_params()
@@ -45,7 +45,6 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_compliance_predicate::{
 //  * for an example of the above steps for the case of "RAM=TinyRAM".
 //  *
 //  */
-
 // /*
 //  * Below are various template aliases (used for convenience).
 //  */

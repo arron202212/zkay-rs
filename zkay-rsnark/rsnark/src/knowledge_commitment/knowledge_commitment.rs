@@ -21,20 +21,16 @@ use std::ops::{Add, Mul, Sub};
 //  * - "one" = (1,1)
 //  * - a * (g,h) + b * (g',h')->Self= ( a * g + b * g', a * h + b * h').
 //  */
-
 #[derive(Default, Clone, Debug)]
 pub struct knowledge_commitment<T: PpConfig, T2: PpConfig> {
     pub g: T,
     pub h: T2,
 }
 
-
 // /**
 //  * A knowledge commitment vector is a sparse vector of knowledge commitments.
 //  */
-
 pub type knowledge_commitment_vector<T, T2> = sparse_vector<knowledge_commitment<T, T2>>;
-
 
 impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
     pub fn new(g: T, h: T2) -> Self {
@@ -167,7 +163,6 @@ impl<T: PpConfig, T2: PpConfig> fmt::Display for knowledge_commitment<T, T2> {
         write!(f, "{}{OUTPUT_SEPARATOR}{}", self.g, self.h)
     }
 }
-
 
 impl<T: PpConfig, T2: PpConfig> Add for knowledge_commitment<T, T2> {
     type Output = Self;

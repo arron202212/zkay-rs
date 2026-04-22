@@ -20,12 +20,11 @@ use ff_curves::PublicParams;
 use ff_curves::{G1, G2};
 use ffec::FieldTConfig;
 use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
-
-
+use tracing::{Level, span};
 
 pub enum Assert<const CHECK: bool> {}
 
@@ -82,7 +81,6 @@ impl TestAffineVerifier for has_affine_pairing_holder<false> {
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
 //  * R1CS example (specified by a constraint system, input, and witness).
@@ -99,7 +97,6 @@ where
         Mul<Fr<ppT>, Output = knowledge_commitment<G2<ppT>, G1<ppT>>>,
     knowledge_commitment<G1<ppT>, G1<ppT>>:
         Mul<Fr<ppT>, Output = knowledge_commitment<G1<ppT>, G1<ppT>>>,
-    
 {
     let span = span!(Level::TRACE, "Call to run_r1cs_ppzksnark").entered();
 

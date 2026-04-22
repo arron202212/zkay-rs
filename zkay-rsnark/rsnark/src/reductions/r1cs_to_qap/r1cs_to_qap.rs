@@ -36,12 +36,12 @@ use crate::relations::variable::{
 use ffec::FieldTConfig;
 use ffec::common::profiling;
 use ffec::common::utils;
-use ffec::common::utils::FMT;
+
 use fqfft::evaluation_domain::{
     evaluation_domain::{EvaluationDomainConfig, evaluation_domain},
     get_evaluation_domain::get_evaluation_domain,
 };
-use tracing::{span, Level};
+use tracing::{Level, span};
 
 use std::collections::BTreeMap;
 
@@ -64,8 +64,8 @@ pub fn r1cs_to_qap_instance_map<
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> qap_instance<FieldT> {
-    let span = span!(Level::TRACE, "Call to r1cs_to_qap_instance_map").entered();
-
+    let span0 = span!(Level::TRACE, "Call to r1cs_to_qap_instance_map");
+    let _=span0.enter();
     let domain =
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
@@ -76,7 +76,11 @@ pub fn r1cs_to_qap_instance_map<
     let mut C_in_Lagrange_basis =
         Vec::<BTreeMap<usize, FieldT>>::with_capacity(cs.num_variables() + 1);
 
-    let span = span!(Level::TRACE, "Compute polynomials A, B, C in Lagrange basis").entered();
+    let span = span!(
+        Level::TRACE,
+        "Compute polynomials A, B, C in Lagrange basis"
+    )
+    .entered();
     // /**
     //  * add and process the constraints
     //  *     input_i * 0 = 0
@@ -107,7 +111,7 @@ pub fn r1cs_to_qap_instance_map<
     }
     span.exit();
 
-    span.exit();
+   
 
     qap_instance::<FieldT>::new(
         domain.clone(),
@@ -142,7 +146,11 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> qap_instance_evaluation<FieldT> {
-    let span = span!(Level::TRACE, "Call to r1cs_to_qap_instance_map_with_evaluation").entered();
+    let span0 = span!(
+        Level::TRACE,
+        "Call to r1cs_to_qap_instance_map_with_evaluation"
+    );
+    let _=span0.enter();
 
     let domain =
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
@@ -194,7 +202,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
     }
     span.exit();
 
-    span.exit();
+  
 
     qap_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -251,7 +259,8 @@ pub fn r1cs_to_qap_witness_map<
     d2: &FieldT,
     d3: &FieldT,
 ) -> qap_witness<FieldT> {
-    let span = span!(Level::TRACE, "Call to r1cs_to_qap_witness_map").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_to_qap_witness_map");
+    let _=span0.enter();
 
     // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -265,7 +274,11 @@ pub fn r1cs_to_qap_witness_map<
         .cloned()
         .collect();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomials A, B on set S").entered();
+    let span = span!(
+        Level::TRACE,
+        "Compute evaluation of polynomials A, B on set S"
+    )
+    .entered();
     let (mut aA, mut aB) = (
         vec![FieldT::zero(); domain.borrow().m()],
         vec![FieldT::zero(); domain.borrow().m()],
@@ -286,15 +299,15 @@ pub fn r1cs_to_qap_witness_map<
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial A").entered();
+    let spana = span!(Level::TRACE, "Compute coefficients of polynomial A").entered();
     domain.borrow_mut().iFFT(&mut aA);
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial B").entered();
+    let spanb = span!(Level::TRACE, "Compute coefficients of polynomial B").entered();
     domain.borrow_mut().iFFT(&mut aB);
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Compute ZK-patch").entered();
+    let spanp = span!(Level::TRACE, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
 
     // add coefficients of the polynomial (d2*A + d1*B - d3) + d1*d2*Z
@@ -305,21 +318,21 @@ pub fn r1cs_to_qap_witness_map<
     domain
         .borrow_mut()
         .add_poly_Z(&(d1.clone() * d2.clone()), &mut coefficients_for_H);
-    span.exit();
+    spanp.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial A on set T").entered();
+    let spanat = span!(Level::TRACE, "Compute evaluation of polynomial A on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
-    span.exit();
+    spanat.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial B on set T").entered();
+    let spanbt = span!(Level::TRACE, "Compute evaluation of polynomial B on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aB, &FieldT::multiplicative_generator());
-    span.exit();
+    spanbt.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
+    let spanht = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
 
     for i in 0..domain.borrow().m() {
@@ -327,49 +340,49 @@ pub fn r1cs_to_qap_witness_map<
     }
     // Vec<FieldT: FieldTConfig>().swap(aB); // destroy aB
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial C on set S").entered();
+    let spancs = span!(Level::TRACE, "Compute evaluation of polynomial C on set S").entered();
     let mut aC = vec![FieldT::zero(); domain.borrow().m()];
     for i in 0..cs.num_constraints() {
         aC[i] += cs.constraints[i].c.evaluate(&full_variable_assignment);
     }
-    span.exit();
+    spancs.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial C").entered();
+    let spanc = span!(Level::TRACE, "Compute coefficients of polynomial C").entered();
     domain.borrow_mut().iFFT(&mut aC);
-    span.exit();
+    spanc.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial C on set T").entered();
+    let spanct = span!(Level::TRACE, "Compute evaluation of polynomial C on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
-    span.exit();
+    spanct.exit();
 
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
-    let span = span!(Level::TRACE, "Divide by Z on set T").entered();
+    let spanzt = span!(Level::TRACE, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
-    span.exit();
+    spanzt.exit();
 
-    span.exit();
+    spanht.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
+    let spanh = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
-    span.exit();
+    spanh.exit();
 
-    let span = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
+    let spansh = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
-    span.exit();
+    spansh.exit();
 
-    span.exit();
 
-    return qap_witness::<FieldT>::new(
+
+     qap_witness::<FieldT>::new(
         cs.num_variables(),
         domain.borrow().m(),
         cs.num_inputs(),
@@ -378,7 +391,7 @@ pub fn r1cs_to_qap_witness_map<
         d3.clone(),
         full_variable_assignment,
         (coefficients_for_H),
-    );
+    )
 }
 
 //

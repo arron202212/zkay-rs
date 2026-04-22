@@ -14,10 +14,11 @@ use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark_par
 use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 
 pub trait TestAffineVerifier {
     fn test_affine_verifier<ppT: PublicParams>(
@@ -67,7 +68,10 @@ impl TestAffineVerifier for TestAffineVerifiers<false> {
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-{
+pub fn run_r1cs_gg_ppzksnark<ppT: PublicParams>(
+    example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
+    test_serialization: bool,
+) -> bool {
     let span = span!(Level::TRACE, "Call to run_r1cs_gg_ppzksnark").entered();
 
     println!("R1CS GG-ppzkSNARK Generator");

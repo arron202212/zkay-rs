@@ -69,6 +69,7 @@ use ff_curves::{
 };
 
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 
 const N: usize = 4;
 
@@ -325,7 +326,6 @@ impl<ppT: PublicParams> r1cs_gg_ppzksnark_proof<ppT> {
 //  *
 //  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
 //  */
-
 pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
     r1cs: &r1cs_gg_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_gg_ppzksnark_keypair<ppT> {
@@ -543,7 +543,6 @@ pub fn r1cs_gg_ppzksnark_generator<ppT: PublicParams>(
 //  *               ``there exists Y such that CS(X,Y)=0''.
 //  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
 //  */
-
 pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
     pk: &r1cs_gg_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
@@ -679,13 +678,11 @@ pub fn r1cs_gg_ppzksnark_prover<ppT: PublicParams>(
 //   weak input consistency requires that |primary_input| <= CS.num_inputs (and
 //   the primary input is implicitly padded with zeros up to length CS.num_inputs).
 // */
-
 // /**
 //  * A verifier algorithm for the R1CS GG-ppzkSNARK that:
 //  * (1) accepts a non-processed verification key, and
 //  * (2) has weak input consistency.
 //  */
-
 pub fn r1cs_gg_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
@@ -703,7 +700,6 @@ pub fn r1cs_gg_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
 //  * (1) accepts a non-processed verification key, and
 //  * (2) has strong input consistency.
 //  */
-
 pub fn r1cs_gg_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
@@ -719,11 +715,14 @@ pub fn r1cs_gg_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
 // /**
 //  * Convert a (non-processed) verification key into a processed verification key.
 //  */
-
 pub fn r1cs_gg_ppzksnark_verifier_process_vk<ppT: PublicParams>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
 ) -> r1cs_gg_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to r1cs_gg_ppzksnark_verifier_process_vk").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_gg_ppzksnark_verifier_process_vk"
+    )
+    .entered();
 
     let mut pvk = r1cs_gg_ppzksnark_processed_verification_key::<ppT>::default();
     pvk.vk_alpha_g1_beta_g2 = vk.alpha_g1_beta_g2.clone();
@@ -741,13 +740,16 @@ pub fn r1cs_gg_ppzksnark_verifier_process_vk<ppT: PublicParams>(
 //  * (1) accepts a processed verification key, and
 //  * (2) has weak input consistency.
 //  */
-
 pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     pvk: &r1cs_gg_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_gg_ppzksnark_online_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_gg_ppzksnark_online_verifier_weak_IC"
+    )
+    .entered();
     assert!(pvk.gamma_ABC_g1.domain_size() >= primary_input.len());
 
     let span = span!(Level::TRACE, "Accumulate input").entered();
@@ -804,14 +806,17 @@ pub fn r1cs_gg_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
 //  * (1) accepts a processed verification key, and
 //  * (2) has strong input consistency.
 //  */
-
 pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     pvk: &r1cs_gg_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
 ) -> bool {
     let mut result = true;
-    let span = span!(Level::TRACE, "Call to r1cs_gg_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_gg_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
 
     if pvk.gamma_ABC_g1.domain_size() != primary_input.len() {
         print_indent();
@@ -837,13 +842,16 @@ pub fn r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
 //  * (2) has weak input consistency, and
 //  * (3) uses affine coordinates for elliptic-curve computations.
 //  */
-
 pub fn r1cs_gg_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     vk: &r1cs_gg_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_gg_ppzksnark_primary_input<ppT>,
     proof: &r1cs_gg_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_gg_ppzksnark_affine_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_gg_ppzksnark_affine_verifier_weak_IC"
+    )
+    .entered();
     assert!(vk.gamma_ABC_g1.domain_size() >= primary_input.len());
 
     let pvk_vk_gamma_g2_precomp = ppT::affine_ate_precompute_G2(&vk.gamma_g2);
@@ -944,7 +952,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_gg_ppzksnark_proving_key<ppT> {
         )
     }
 }
-
 
 impl<ppT: PublicParams> PartialEq for r1cs_gg_ppzksnark_verification_key<ppT> {
     #[inline]

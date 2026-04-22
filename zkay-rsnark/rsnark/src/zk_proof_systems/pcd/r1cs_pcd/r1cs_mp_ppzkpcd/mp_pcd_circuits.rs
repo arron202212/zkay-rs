@@ -77,7 +77,7 @@ use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use ffec::bit_vector;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::div_ceil;
 use ffec::field_utils::field_utils::{
     convert_field_element_to_bit_vector, pack_bit_vector_into_field_element_vector1,
@@ -85,6 +85,7 @@ use ffec::field_utils::field_utils::{
 use ffec::{One, Zero};
 use rccell::RcCell;
 use std::ops::Mul;
+use tracing::{Level, span};
 
 // /**
 //  * A compliance-step PCD circuit.
@@ -92,7 +93,6 @@ use std::ops::Mul;
 //  * The circuit is an R1CS that checks compliance (for the given compliance predicate)
 //  * and validity of previous proofs.
 //  */
-
 pub struct mp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>,
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
@@ -155,7 +155,6 @@ pub struct mp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
 //  *
 //  * The circuit is an R1CS that checks validity of previous proofs.
 //  */
-
 
 pub struct mp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
@@ -1220,8 +1219,11 @@ pub fn get_mp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     commitment_to_translation_step_r1cs_vks: &set_commitment,
     primary_input: &r1cs_pcd_compliance_predicate_primary_input<Fr<ppT>, ppT::M>,
 ) -> r1cs_primary_input<Fr<ppT>> {
-    span.exit();
-    //type ppT::FieldT = Fr<ppT>;
+    let span0 = span!(
+        Level::TRACE,
+        "Call to get_mp_compliance_step_pcd_circuit_input"
+    );
+    let _ = span0.enter();
 
     let outgoing_message_as_va = primary_input
         .outgoing_message
@@ -1237,12 +1239,11 @@ pub fn get_mp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     block.extend(commitment_to_translation_step_r1cs_vks.clone());
     block.extend(msg_bits.clone());
 
-    span.exit();
+    let span = span!(Level::TRACE, "Sample CRH randomness").entered();
     CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::sample_randomness(block.len());
     span.exit();
 
     let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash_for_field(&block);
-    span.exit();
 
     digest
 }
@@ -1254,8 +1255,11 @@ pub fn get_mp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         <<<ppT as ppTConfig>::P as pairing_selector>::other_curve_type as ppTConfig>::M,
     >,
 ) -> r1cs_primary_input<Fr<ppT>> {
-    span.exit();
-    // type ppT::FieldT = Fr<ppT>;
+    let span0 = span!(
+        Level::TRACE,
+        "Call to get_mp_translation_step_pcd_circuit_input"
+    );
+    let _ = span0.enter();
 
     let mp_compliance_step_pcd_circuit_input =
         get_mp_compliance_step_pcd_circuit_input::<other_curve<ppT>>(
@@ -1277,7 +1281,6 @@ pub fn get_mp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         &mp_compliance_step_pcd_circuit_input_bits,
         mp_compliance_step_pcd_circuit_maker::<ppT>::field_capacity(),
     );
-    span.exit();
 
     result
 }

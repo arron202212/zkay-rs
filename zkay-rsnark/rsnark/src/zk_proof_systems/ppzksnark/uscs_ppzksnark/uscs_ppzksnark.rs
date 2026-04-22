@@ -33,12 +33,6 @@
 //  ASIACRYPT 2014,
 //  <http://eprint.iacr.org/2014/718>
 
-// use ff_curves::algebra::curves::public_params;
-
-// use crate::common::data_structures::accumulation_vector;
-// use crate::knowledge_commitment::knowledge_commitment;
-// use crate::relations::constraint_satisfaction_problems/uscs/uscs;
-// use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/uscs_ppzksnark_params;
 use crate::common::data_structures::accumulation_vector::accumulation_vector;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::reductions::uscs_to_ssp::uscs_to_ssp::{
@@ -49,14 +43,14 @@ use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::uscs_ppzksnark_params::{
 };
 use ff_curves::Fr;
 use ff_curves::{G1, G1_precomp, G1_vector, G2, G2_precomp, G2_vector, GT};
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::scalar_multiplication::multiexp::{
     batch_exp, batch_exp_with_coeff, batch_to_special, get_exp_window_size, get_window_table,
     inhibit_profiling_info, multi_exp, multi_exp_method, multi_exp_with_mixed_addition,
 };
 use ffec::{One, PpConfig, Zero};
 use std::ops::Mul;
-
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the USCS ppzkSNARK.
@@ -71,7 +65,6 @@ pub struct uscs_ppzksnark_proving_key<ppT: ppTConfig> {
     pub constraint_system: uscs_ppzksnark_constraint_system<ppT>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
-   
     pub fn new(
         V_g1_query: G1_vector<ppT>,
         alpha_V_g1_query: G1_vector<ppT>,
@@ -120,15 +113,11 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
         print_indent();
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
-
-    
 }
-
 
 // /**
 //  * A verification key for the USCS ppzkSNARK.
 //  */
-
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_verification_key<ppT: ppTConfig> {
     pub tilde_g2: G2<ppT>,
@@ -209,7 +198,6 @@ pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub pairing_of_g1_and_g2: GT<ppT>,
 
     pub encoded_IC_query: accumulation_vector<G1<ppT>>,
-   
 }
 
 // /**
@@ -227,7 +215,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
     ) -> Self {
         Self { pk, vk }
     }
-
 }
 
 // /**
@@ -293,10 +280,7 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
             && self.H_g1.is_well_formed()
             && self.V_g2.is_well_formed()
     }
-
 }
-
-
 
 // /*
 // Below are four variants of verifier algorithm for the USCS ppzkSNARK.
@@ -311,7 +295,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
 //     weak input consistency requires that |primary_input| <= CS.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length CS.num_inputs).
 // */
-
 // /**
 //  * A generator algorithm for the USCS ppzkSNARK.
 //  *
@@ -546,7 +529,11 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
         );
     span.exit();
 
-    let span = span!(Level::TRACE, "Compute alpha_V_g1, the 2nd component of the proof").entered();
+    let span = span!(
+        Level::TRACE,
+        "Compute alpha_V_g1, the 2nd component of the proof"
+    )
+    .entered();
     alpha_V_g1 = alpha_V_g1
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -618,20 +605,25 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_online_verifier_weak_IC").entered();
+    let span0 = span!(
+        Level::TRACE,
+        "Call to uscs_ppzksnark_online_verifier_weak_IC"
+    );
+    let _=span0.enter();
+
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    let span = span!(Level::TRACE, "Compute input-dependent part of V").entered();
+    let spanv = span!(Level::TRACE, "Compute input-dependent part of V").entered();
     let accumulated_IC = pvk
         .encoded_IC_query
         .accumulate_chunk::<Fr<ppT>>(primary_input, 0);
     assert!(accumulated_IC.is_fully_accumulated());
     let acc = accumulated_IC.first;
-    span.exit();
+    spanv.exit();
 
     let mut result = true;
 
-    let span = span!(Level::TRACE, "Check if the proof is well-formed").entered();
+    let spanc = span!(Level::TRACE, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -639,11 +631,11 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanc.exit();
 
-    let span = span!(Level::TRACE, "Online pairing computations").entered();
+    let spano = span!(Level::TRACE, "Online pairing computations").entered();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for V is valid").entered();
+    let spanvv = span!(Level::TRACE, "Check knowledge commitment for V is valid").entered();
     let proof_V_g1_with_acc_precomp = ppT::precompute_G1(&(proof.V_g1.clone() + acc.clone()));
     let proof_V_g2_precomp = ppT::precompute_G2(&proof.V_g2);
     let V_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &pvk.pp_G2_one_precomp);
@@ -656,9 +648,9 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanvv.exit();
 
-    let span = span!(Level::TRACE, "Check SSP divisibility").entered(); // i.e., check that V^2=H*Z+1
+    let spans = span!(Level::TRACE, "Check SSP divisibility").entered(); // i.e., check that V^2=H*Z+1
     let proof_H_g1_precomp = ppT::precompute_G1(&proof.H_g1);
     let SSP_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &proof_V_g2_precomp);
     let SSP_2 = ppT::miller_loop(&proof_H_g1_precomp, &pvk.vk_Z_g2_precomp);
@@ -672,9 +664,9 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    span.exit();
+    spans.exit();
 
-    let span = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let spansc = span!(Level::TRACE, "Check same coefficients were used").entered();
     let proof_V_g1_precomp = ppT::precompute_G1(&proof.V_g1);
     let proof_alpha_V_g1_precomp = ppT::precompute_G1(&proof.alpha_V_g1);
     let alpha_V_1 = ppT::miller_loop(&proof_V_g1_precomp, &pvk.vk_alpha_tilde_g2_precomp);
@@ -687,11 +679,11 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    span.exit();
+    spansc.exit();
 
-    span.exit();
+    spano.exit();
 
-    span.exit();
+  
 
     result
 }
@@ -718,7 +710,11 @@ pub fn uscs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
     let mut result = true;
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to uscs_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
 
     if pvk.encoded_IC_query.domain_size() != primary_input.len() {
         print_indent();

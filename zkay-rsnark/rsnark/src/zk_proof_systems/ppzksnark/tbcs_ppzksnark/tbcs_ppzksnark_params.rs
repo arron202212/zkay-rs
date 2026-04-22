@@ -8,7 +8,6 @@ use crate::relations::circuit_satisfaction_problems::tbcs::tbcs::{
 // /**
 //  * Below are various typedefs aliases (used for uniformity with other proof systems).
 //  */
-
 pub type tbcs_ppzksnark_circuit = tbcs_circuit;
 
 pub type tbcs_ppzksnark_primary_input = tbcs_primary_input;

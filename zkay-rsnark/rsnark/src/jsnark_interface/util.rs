@@ -1,5 +1,4 @@
-
-use ff_curves::{Fr,default_ec_pp};
+use ff_curves::{Fr, default_ec_pp};
 
 type FieldT = Fr<default_ec_pp>;
 

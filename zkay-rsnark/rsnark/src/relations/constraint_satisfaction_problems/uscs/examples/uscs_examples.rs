@@ -7,11 +7,10 @@ use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::FieldTConfig;
-use tracing::{span, Level};
+use tracing::{Level, span};
 // /**
 //  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
 //  */
-
 pub struct uscs_example<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -39,11 +38,8 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-
-
 //  Implementation of functions to sample USCS examples with prescribed parameters
 //  (according to some distribution).
-
 
 // /**
 //  * Generate a USCS example such that:
@@ -60,7 +56,11 @@ pub fn generate_uscs_example_with_field_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
-    let span = span!(Level::TRACE, "Call to generate_uscs_example_with_field_input").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to generate_uscs_example_with_field_input"
+    )
+    .entered();
 
     assert!(num_inputs >= 1);
     assert!(num_constraints >= num_inputs);
@@ -137,7 +137,11 @@ pub fn generate_uscs_example_with_binary_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
-    let span = span!(Level::TRACE, "Call to generate_uscs_example_with_binary_input").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to generate_uscs_example_with_binary_input"
+    )
+    .entered();
 
     assert!(num_inputs >= 1);
 

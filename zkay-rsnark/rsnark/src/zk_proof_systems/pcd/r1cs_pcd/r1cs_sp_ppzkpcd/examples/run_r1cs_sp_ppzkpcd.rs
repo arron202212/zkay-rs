@@ -22,11 +22,11 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::{
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_params::r1cs_sp_ppzkpcd_primary_input;
 use ff_curves::Fr;
-use tracing::{span, Level};
 use ffec::common::serialization::reserialize;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::ops::Mul;
+use tracing::{Level, span};
 // /**
 //  * Runs the single-predicate ppzkPCD (generator, prover, and verifier) for the
 //  * "tally compliance predicate", of a given wordsize, arity, and depth.
@@ -34,7 +34,6 @@ use std::ops::Mul;
 //  * Optionally, also test the serialization routines for keys and proofs.
 //  * (This takes additional time.)
 //  */
-
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 pub fn run_r1cs_sp_ppzkpcd_tally_example<
     PCD_ppT: PcdPptConfig<curve_A_pp = PCD_ppT>

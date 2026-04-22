@@ -22,11 +22,11 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
 use ff_curves::Fr;
-use tracing::{span, Level};
 use ffec::common::serialization::reserialize;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::ops::Mul;
+use tracing::{Level, span};
 
 // /**
 //  * Runs the multi-predicate ppzkPCD (generator, prover, and verifier) for the
@@ -37,7 +37,6 @@ use std::ops::Mul;
 //  *
 //  * Optionally, also test the case of compliance predicates with different types.
 //  */
-
 
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 
@@ -99,11 +98,12 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to run_r1cs_mp_ppzkpcd_tally_example").entered();
+    let span0 = span!(Level::TRACE, "Call to run_r1cs_mp_ppzkpcd_tally_example");
+    let _=span0.enter();
 
     let mut all_accept = true;
 
-    let span = span!(Level::TRACE, "Generate all messages").entered();
+    let spang = span!(Level::TRACE, "Generate all messages").entered();
     let mut tree_size = 0;
     let mut nodes_in_layer = 1;
     for layer in 0..=depth {
@@ -139,13 +139,13 @@ where
         nodes_in_layer *= max_arity;
     }
 
-    span.exit();
+    spang.exit();
 
     let mut tree_proofs = vec![r1cs_mp_ppzkpcd_proof::<PCD_ppT>::default(); tree_size]; //Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
     let mut tree_messages =
         vec![r1cs_pcd_message::<FieldT<PCD_ppT>, PCD_ppT::M>::default(); tree_size];
 
-    let span = span!(Level::TRACE, "Generate compliance predicates").entered();
+    let spanc = span!(Level::TRACE, "Generate compliance predicates").entered();
     let (mut tally_1_accepted_types, mut tally_2_accepted_types) =
         (BTreeSet::new(), BTreeSet::new());
     if test_same_type_optimization {
@@ -176,7 +176,7 @@ where
     tally_2.generate_r1cs_constraints();
     let mut cp_1 = tally_1.get_compliance_predicate();
     let mut cp_2 = tally_2.get_compliance_predicate();
-    span.exit();
+    spanc.exit();
 
     println!("R1CS ppzkPCD Generator");
     let mut keypair = r1cs_mp_ppzkpcd_generator::<PCD_ppT>(&vec![cp_1.clone(), cp_2.clone()]);
@@ -304,7 +304,7 @@ where
         nodes_in_layer /= max_arity;
     }
 
-    span.exit();
+   
 
     all_accept
 }

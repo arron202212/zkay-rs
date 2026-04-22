@@ -290,7 +290,6 @@ mod tests {
         initPublicParamsFromDefaultPp();
         let e1: FElem = 42i64.into();
         assert_eq!(e1.asString(), "42");
-        
     }
 
     #[test]
@@ -312,7 +311,6 @@ mod tests {
         assert!(e0 == 42);
         assert!(!(e0 == 41));
         assert!(e0 != 41);
-        
     }
 
     #[test]
@@ -328,7 +326,6 @@ mod tests {
         assert!(e0 == -42);
         assert!(!(e0 == -41));
         assert!(e0 != -41);
-       
     }
 
     #[test]
@@ -446,7 +443,7 @@ mod tests {
         initPublicParamsFromDefaultPp();
         let x = VariableArray::new(10, "x".to_owned(), VariableArrayBase);
         let mut ass = VariableAssignment::default();
-       
+
         let mut lt10 = LinearTerm::new(x[0].clone(), FElem::froms(Fp::from(-1)));
         assert_eq!(lt10.asString(), "-1 * x[0]");
         let mut lt11 = LinearTerm::new(x[0].clone(), FElem::froms(Fp::from(0)));
@@ -509,9 +506,9 @@ mod tests {
         assert_eq!(lc4.eval(&assignment), 4 + 4 - 3);
         assert_eq!(lc1.eval(&assignment), 4 + 4 - 3);
         assert_eq!(lc3.eval(&assignment), 3);
-       
+
         assert_eq!(lc1.asString(), "2 * x[2] + 1");
-        
+
         let sVar = lc1.getUsedVariables();
         assert_eq!(sVar.len(), 1usize);
         assignment.insert(x[2].clone(), 83.into());
@@ -593,7 +590,6 @@ mod tests {
         m4 *= &(m0.clone().into());
         let m3: Monomial = m4.clone();
         assert_eq!(m3.asString(), "-3*x[0]*x[3]");
-       
     }
 
     #[test]
@@ -602,25 +598,25 @@ mod tests {
         let mut p0 = Polynomial::default();
         let mut assignment = VariableAssignment::default();
         assert_eq!(p0.eval(&assignment), 0);
-        
+
         let x = VariableArray::new(10, "x".to_owned(), VariableArrayBase);
         let m0 = Monomial::new(x[0].clone(), 3.into());
         let p1: Polynomial = m0.clone().into();
         assignment.insert(x[0].clone(), 2.into());
         assert_eq!(p1.eval(&assignment), 6);
-        
+
         let p2: Polynomial = x[2].clone().into();
         assignment.insert(x[2].clone(), 2.into());
         assert_eq!(p2.eval(&assignment), 2);
-        
+
         let p3: Polynomial = FElem::froms(Fp::from(3)).into();
         assert_eq!(p3.eval(&assignment), 3);
-        
+
         let mut lc = LinearCombination::from(x[0].clone());
         lc += &(x[2].clone().into());
         let p4: Polynomial = lc.clone().into();
         assert_eq!(p4.eval(&assignment), 4);
-        
+
         let lt5: Polynomial = (x[5].clone() * 5).into();
         let p5: Polynomial = lt5.clone();
         assignment.insert(x[5].clone(), 5.into());
@@ -663,21 +659,13 @@ mod tests {
         let mut p4: Polynomial = (x[0].clone() + &x[2]).into();
         p4 += &p3;
         let p5: Polynomial = p4.clone();
-        
+
         assert_eq!(p0.asString(), "0");
         assert_eq!(p1.asString(), "3*x[0]");
         assert_eq!(p2.asString(), "x[2]");
         assert_eq!(p3.asString(), "3");
         assert_eq!(p4.asString(), "x[0] + x[2] + 3");
         assert_eq!(p5.asString(), "x[0] + x[2] + 3");
-        
-        
-        
-        
-        
-        
-        
-        
     }
 
     #[test]
@@ -708,7 +696,7 @@ mod tests {
         assignment.insert(x[0].clone(), 0.into());
         assignment.insert(x[1].clone(), 1.into());
         assignment.insert(x[2].clone(), 2.into());
-        p1 -= &p2; 
+        p1 -= &p2;
         p0 = p1.clone();
         assert_eq!(p0.eval(&assignment), 1 - 2 * 2);
         assert_eq!(p1.eval(&assignment), 1 - 2 * 2);

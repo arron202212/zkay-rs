@@ -6,7 +6,6 @@
 // also, each output gives rise to a corresponding R1CS constraint that enforces
 // that the output is zero.
 
-
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_primary_input,
 };
@@ -17,8 +16,8 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
-use ffec::common::utils::FMT;
-use tracing::{span, Level};
+
+use tracing::{Level, span};
 
 // /**
 //  * Instance map for the BACS-to-R1CS reduction.

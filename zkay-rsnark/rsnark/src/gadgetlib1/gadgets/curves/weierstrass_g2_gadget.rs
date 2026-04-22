@@ -27,7 +27,6 @@ use std::ops::Add;
 // /**
 //  * Gadget that represents a G2 variable.
 //  */
-
 type FieldT<ppT> = Fr<ppT>;
 type FqeT<ppT> = Fqe<other_curve<ppT>>;
 type FqkT<ppT> = Fqk<other_curve<ppT>>;
@@ -43,7 +42,6 @@ pub struct G2_variable<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct G2_checker_gadget<ppT: ppTConfig> {
-
     pub Q: G2_variables<ppT>,
     pub Xsquared: RcCell<Fqe_variable<ppT>>,
     pub Ysquared: RcCell<Fqe_variable<ppT>>,

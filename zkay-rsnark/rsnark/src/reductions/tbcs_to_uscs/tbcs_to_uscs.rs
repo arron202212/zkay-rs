@@ -28,10 +28,8 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, variable,
 };
 use ffec::FieldTConfig;
-use ffec::common::utils::FMT;
+
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
-
-
 
 // /**
 //  * Instance map for the TBCS-to-USCS reduction.

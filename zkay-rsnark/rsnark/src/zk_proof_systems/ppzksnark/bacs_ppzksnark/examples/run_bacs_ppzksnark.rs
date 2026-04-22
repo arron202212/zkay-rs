@@ -12,12 +12,10 @@ use crate::zk_proof_systems::ppzksnark::bacs_ppzksnark::bacs_ppzksnark::{
     bacs_ppzksnark_verifier_process_vk, bacs_ppzksnark_verifier_strong_IC,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use std::ops::Mul;
-
-
-
+use tracing::{Level, span};
 
 // /**
 //  * The code below provides an example of all stages of running a BACS ppzkSNARK.
@@ -31,9 +29,6 @@ use std::ops::Mul;
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for C, and a proof.
 //  */
-
-
-
 
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given

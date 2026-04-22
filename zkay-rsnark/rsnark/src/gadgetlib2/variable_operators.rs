@@ -182,17 +182,6 @@ impl Add<&FElem> for FElem {
 
 // // int
 
-
-
-
-
-
-
-
-
-
-
-
 // // symetrical operators
 
 impl Add<&Monomial> for Polynomial {
@@ -362,8 +351,6 @@ impl Add<i32> for Polynomial {
         FElem::from(rhs) + &self
     }
 }
-
-
 
 impl Neg for Variable {
     type Output = LinearTerm;
@@ -541,19 +528,6 @@ impl Sub<&FElem> for FElem {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 impl Sub<&Monomial> for Polynomial {
     type Output = Polynomial;
     #[inline]
@@ -561,7 +535,6 @@ impl Sub<&Monomial> for Polynomial {
         self + &(-rhs.clone())
     }
 }
-
 
 impl Sub<&LinearCombination> for Monomial {
     type Output = Polynomial;
@@ -634,7 +607,6 @@ impl Sub<&Variable> for Polynomial {
         self + &(-rhs.clone())
     }
 }
-
 
 impl Sub<&FElem> for Variable {
     type Output = LinearCombination;
@@ -723,8 +695,6 @@ impl Sub<i32> for Polynomial {
         (self + (-rhs)).into()
     }
 }
-
-
 
 impl Mul<&Polynomial> for Polynomial {
     type Output = Self;
@@ -914,17 +884,6 @@ impl Mul<&FElem> for FElem {
 
 // // int
 
-
-
-
-
-
-
-
-
-
-
-
 // // symetrical operators
 
 impl Mul<&Monomial> for Polynomial {
@@ -1096,4 +1055,3 @@ impl Mul<i32> for Polynomial {
         FElem::from(rhs.clone()) * &self
     }
 }
-

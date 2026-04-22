@@ -26,11 +26,6 @@
 // "Cluster Computing in Zero Knowledge",
 // Alessandro Chiesa, Eran Tromer, Madars Virza,
 
-// use crate::common::data_structures::set_commitment;
-// use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate;
-// use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_mp_ppzkpcd::r1cs_mp_ppzkpcd_params;
-// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
-
 use crate::common::data_structures::set_commitment::set_commitment_accumulator;
 use crate::common::data_structures::set_commitment::{set_commitment, set_membership_proof};
 use crate::gadgetlib1::gadgets::hashes::crh_gadget::CRH_with_bit_out_gadget;
@@ -69,11 +64,12 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_verifier_process_vk, r1cs_ppzksnark_verifier_strong_IC,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::collections::{BTreeMap, HashMap};
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the R1CS (multi-predicate) ppzkPCD.
@@ -341,12 +337,9 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> 
     }
 }
 
-
 pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicates: &Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
 ) -> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
-   
-
     let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_generator").entered();
 
     let mut keypair = r1cs_mp_ppzkpcd_keypair::<PCD_ppT>::default();
@@ -380,16 +373,16 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     span.exit();
 
     for i in 0..compliance_predicates.len() {
-        enter_block(
-            &prefix_format!(
-                "",
-                "Process predicate {} (with name {} and type {})",
-                i,
-                compliance_predicates[i].name,
-                compliance_predicates[i].types,
-            ),
-            false,
+        let s = prefix_format!(
+            "",
+            "Process predicate {} (with name {} and type {})",
+            i,
+            compliance_predicates[i].name,
+            compliance_predicates[i].types,
         );
+        let span0 = span!(Level::TRACE, "{s}");
+        let _ = span0.enter();
+
         assert!(compliance_predicates[i].is_well_formed());
 
         let span = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
@@ -402,7 +395,11 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         let mut mp_compliance_step_pcd_circuit_cs = mp_compliance_step_pcd_circuit.get_circuit();
         span.exit();
 
-        let span = span!(Level::TRACE, "Generate key pair for compliance step PCD circuit").entered();
+        let span = span!(
+            Level::TRACE,
+            "Generate key pair for compliance step PCD circuit"
+        )
+        .entered();
         let mut mp_compliance_step_keypair =
             r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&mp_compliance_step_pcd_circuit_cs);
         span.exit();
@@ -416,12 +413,20 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         let mp_translation_step_pcd_circuit_cs = mp_translation_step_pcd_circuit.get_circuit();
         span.exit();
 
-        let span = span!(Level::TRACE, "Generate key pair for translation step PCD circuit").entered();
+        let span = span!(
+            Level::TRACE,
+            "Generate key pair for translation step PCD circuit"
+        )
+        .entered();
         let mut mp_translation_step_keypair =
             r1cs_ppzksnark_generator::<B_pp<PCD_ppT>>(&mp_translation_step_pcd_circuit_cs);
         span.exit();
 
-        let span = span!(Level::TRACE, "Augment set of translation step verification keys").entered();
+        let span = span!(
+            Level::TRACE,
+            "Augment set of translation step verification keys"
+        )
+        .entered();
         let vk_bits =
             r1cs_ppzksnark_verification_key_variable::<A_pp<PCD_ppT>>::get_verification_key_bits(
                 &mp_translation_step_keypair.vk,
@@ -471,23 +476,13 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             .translation_step_r1cs_vks
             .push(mp_translation_step_keypair.vk.clone());
         span.exit();
-
-        leave_block(
-            &prefix_format!(
-                "",
-                "Process predicate {} (with name {} and type {})",
-                i,
-                compliance_predicates[i].name,
-                compliance_predicates[i].types,
-            ),
-            false,
-        );
     }
+    let spanc = span!(
+        Level::TRACE,
+        "Compute set commitment and corresponding membership proofs"
+    )
+    .entered();
 
-    enter_block(
-        "Compute set commitment and corresponding membership proofs",
-        false,
-    );
     let cm = all_translation_vks.get_commitment();
     keypair.pk.commitment_to_translation_step_r1cs_vks = cm.clone();
     keypair.vk.commitment_to_translation_step_r1cs_vks = cm;
@@ -503,10 +498,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             .compliance_step_r1cs_vk_membership_proofs
             .push(proof);
     }
-    leave_block(
-        "Compute set commitment and corresponding membership proofs",
-        false,
-    );
+    let _ = spanc.exit();
 
     print_indent();
     println!("in generator");
@@ -564,13 +556,10 @@ where
             >,
         >,
 {
-    // type curve_A_pp= PCD_ppT::curve_A_pp;
-    // type curve_B_pp= PCD_ppT::curve_B_pp;
+  
 
-    // type FieldT_A=Fr<A_pp<PCD_ppT>>;
-    // type FieldT_B=Fr<B_pp<PCD_ppT>>;
-
-    let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_prover").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_prover");
+    let _=span0.enter();
 
     // #ifdef DEBUG
     print!("Compliance predicate name: {}\n", compliance_predicate_name);
@@ -585,7 +574,7 @@ where
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
 
-    let span = span!(Level::TRACE, "Prove compliance step").entered();
+    let spanp = span!(Level::TRACE, "Prove compliance step").entered();
     assert!(compliance_predicate_idx < pk.compliance_predicates.len());
     assert!(prev_proofs.len() <= pk.compliance_predicates[compliance_predicate_idx].max_arity);
 
@@ -660,7 +649,7 @@ where
         &compliance_step_primary_input,
         &compliance_step_auxiliary_input,
     );
-    span.exit();
+    spanp.exit();
 
     // #ifdef DEBUG
     let compliance_step_input = get_mp_compliance_step_pcd_circuit_input::<A_pp<PCD_ppT>>(
@@ -696,7 +685,7 @@ where
 
     span.exit();
 
-    // #ifdef DEBUG
+   
     let translation_step_ok = r1cs_ppzksnark_verifier_strong_IC::<B_pp<PCD_ppT>>(
         &pk.translation_step_r1cs_vks[compliance_predicate_idx],
         &translation_step_primary_input,
@@ -706,7 +695,7 @@ where
 
     print_indent();
     println!("in prover");
-    span.exit();
+  
 
     let mut result = r1cs_mp_ppzkpcd_proof::<PCD_ppT>::default();
     result.compliance_predicate_idx = compliance_predicate_idx;
@@ -719,9 +708,11 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-    // type curve_B_pp= PCD_ppT::curve_B_pp;
+   
 
-    let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_online_verifier").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_online_verifier");
+    let _=span0.enter();
+
     let r1cs_input = get_mp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
         &pvk.commitment_to_translation_step_r1cs_vks,
         primary_input,
@@ -734,17 +725,20 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
 
     print_indent();
     println!("in online verifier");
-    span.exit();
+    
     result
 }
 
 pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
 ) -> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
-    // type curve_A_pp= PCD_ppT::curve_A_pp;
-    // type curve_B_pp= PCD_ppT::curve_B_pp;
+  
 
-    let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_processed_verification_key").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_mp_ppzkpcd_processed_verification_key"
+    );
+    let _=span.enter();
 
     let mut result = r1cs_mp_ppzkpcd_processed_verification_key::<PCD_ppT>::default();
     result.commitment_to_translation_step_r1cs_vks =
@@ -763,7 +757,7 @@ pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
             .translation_step_r1cs_pvks
             .push(translation_step_r1cs_pvk);
     }
-    span.exit();
+    
 
     result
 }

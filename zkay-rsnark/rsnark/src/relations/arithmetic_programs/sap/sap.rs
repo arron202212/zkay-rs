@@ -19,7 +19,6 @@ use fqfft::evaluation_domain::evaluation_domain::{
 use rccell::RcCell;
 use std::collections::BTreeMap;
 
-
 // /**
 //  * A SAP instance.
 //  *
@@ -70,11 +69,9 @@ pub struct sap_instance_evaluation<FieldT: FieldTConfig> {
     pub Zt: FieldT,
 }
 
-
 // /**
 //  * A SAP witness.
 //  */
-
 #[derive(Default, Clone)]
 pub struct sap_witness<FieldT> {
     pub num_variables: usize,

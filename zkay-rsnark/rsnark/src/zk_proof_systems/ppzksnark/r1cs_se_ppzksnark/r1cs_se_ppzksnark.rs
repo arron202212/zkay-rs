@@ -41,6 +41,13 @@ use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_get_domain;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_instance_map_with_evaluation;
 use crate::reductions::r1cs_to_sap::r1cs_to_sap::r1cs_to_sap_witness_map;
 use crate::relations::arithmetic_programs::sap::sap::sap_instance_evaluation;
+use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
+    r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
+};
+use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark_params::{
+    r1cs_se_ppzksnark_auxiliary_input, r1cs_se_ppzksnark_constraint_system,
+    r1cs_se_ppzksnark_primary_input,
+};
 use crate::zk_proof_systems::ppzksnark::{
     KeyPairTConfig, ProofTConfig, ProvingKeyTConfig, VerificationKeyTConfig,
 };
@@ -48,7 +55,7 @@ use ff_curves::PublicParams;
 use ff_curves::{Fqk, Fr, Fr_vector, G1, G1_precomp, G1_vector, G2, G2_precomp, G2_vector};
 use ffec::FieldTConfig;
 use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::scalar_multiplication::multiexp::{
@@ -59,15 +66,7 @@ use ffec::{One, Zero};
 use fqfft::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use rccell::RcCell;
 use std::ops::{Add, Mul};
-
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
-    r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
-};
-use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark_params::{
-    r1cs_se_ppzksnark_auxiliary_input, r1cs_se_ppzksnark_constraint_system,
-    r1cs_se_ppzksnark_primary_input,
-};
-
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the R1CS SEppzkSNARK.
@@ -108,7 +107,6 @@ pub struct r1cs_se_ppzksnark_proving_key<ppT: PublicParams> {
 impl<ppT: PublicParams> ProvingKeyTConfig for r1cs_se_ppzksnark_proving_key<ppT> {}
 
 impl<ppT: PublicParams> r1cs_se_ppzksnark_proving_key<ppT> {
-
     pub fn new(
         A_query: G1_vector<ppT>,
         B_query: G2_vector<ppT>,
@@ -266,14 +264,12 @@ impl<ppT: PublicParams> KeyPairTConfig for r1cs_se_ppzksnark_keypair<ppT> {
     }
 }
 impl<ppT: PublicParams> r1cs_se_ppzksnark_keypair<ppT> {
-
     pub fn new(
         pk: r1cs_se_ppzksnark_proving_key<ppT>,
         vk: r1cs_se_ppzksnark_verification_key<ppT>,
     ) -> Self {
         Self { pk, vk }
     }
-
 }
 
 // /**
@@ -323,8 +319,6 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_proof<ppT> {
     }
 }
 
-
-
 // /**
 //  * A prover algorithm for the R1CS SEppzkSNARK.
 //  *
@@ -337,9 +331,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     pk: &r1cs_se_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_se_ppzksnark_auxiliary_input<ppT>,
-) -> r1cs_se_ppzksnark_proof<ppT>
-
-{
+) -> r1cs_se_ppzksnark_proof<ppT> {
     let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_prover").entered();
 
     // // #ifdef DEBUG
@@ -372,7 +364,6 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     //     assert!(pk.G_gamma2_Z_t.len() >= sap_wit.degree() - 1);
     //
 
-  
     let chunks = 1;
     //
 
@@ -469,7 +460,6 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 //     weak input consistency requires that |primary_input| <= CS.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length CS.num_inputs).
 // */
-
 // /**
 //  * A verifier algorithm for the R1CS SEppzkSNARK that:
 //  * (1) accepts a non-processed verification key, and
@@ -510,7 +500,11 @@ pub fn r1cs_se_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
 pub fn r1cs_se_ppzksnark_verifier_process_vk<ppT: PublicParams>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
 ) -> r1cs_se_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_process_vk").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_se_ppzksnark_verifier_process_vk"
+    )
+    .entered();
 
     let G_alpha_pc = ppT::precompute_G1(&vk.G_alpha);
     let H_beta_pc = ppT::precompute_G2(&vk.H_beta);
@@ -540,7 +534,11 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_online_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_se_ppzksnark_online_verifier_weak_IC"
+    )
+    .entered();
 
     let mut result = true;
 
@@ -555,7 +553,6 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     span.exit();
 
     let span = span!(Level::TRACE, "Pairing computations").entered();
-
 
     let chunks = 1;
     //
@@ -624,7 +621,11 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_se_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
     let mut result = true;
 
     if pvk.query.len() != primary_input.len() + 1 {
@@ -642,7 +643,6 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     span.exit();
     result
 }
-
 
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
     #[inline]
@@ -699,7 +699,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
         )
     }
 }
-
 
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_verification_key<ppT> {
     #[inline]
@@ -783,7 +782,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_proof<ppT> {
     }
 }
 
-
 impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
     pub fn dummy_verification_key(
         &self,
@@ -817,10 +815,9 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
 //  */
 pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     cs: &r1cs_se_ppzksnark_constraint_system<ppT>,
-) -> r1cs_se_ppzksnark_keypair<ppT>
-
-{
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_generator").entered();
+) -> r1cs_se_ppzksnark_keypair<ppT> {
+    let span0 = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_generator");
+    let _=span0.enter();
 
     // /**
     //  * draw random element t at which the SAP is evaluated.
@@ -853,14 +850,14 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         sap_inst.num_inputs()
     );
 
-    let span = span!(Level::TRACE, "Compute query densities").entered();
+    let spand = span!(Level::TRACE, "Compute query densities").entered();
     let mut non_zero_At = 0;
     for i in 0..=sap_inst.num_variables() {
         if !sap_inst.At[i].is_zero() {
             non_zero_At += 1;
         }
     }
-    span.exit();
+    spand.exit();
 
     let At = (sap_inst.At.clone());
     let Ct = (sap_inst.Ct.clone());
@@ -877,7 +874,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         ppT::G2::random_element(),
     );
 
-    let span = span!(Level::TRACE, "Generating G multiexp table").entered();
+    let spang = span!(Level::TRACE, "Generating G multiexp table").entered();
     let G_exp_count = sap_inst.num_inputs() + 1 // verifier_query
                          + non_zero_At // A_query
                          + sap_inst.degree() + 1 // G_gamma2_Z_t
@@ -890,9 +887,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     print_indent();
     print!("* G window: {}\n", G_window);
     let G_table = get_window_table(ppT::Fr::size_in_bits(), G_window, G.clone());
-    span.exit();
+    spang.exit();
 
-    let span = span!(Level::TRACE, "Generating H_gamma multiexp table").entered();
+    let spanh = span!(Level::TRACE, "Generating H_gamma multiexp table").entered();
     let mut H_gamma = H.clone() * gamma.clone();
     let mut H_gamma_exp_count = non_zero_At; // B_query
     let mut H_gamma_window = get_exp_window_size::<ppT::G2>(H_gamma_exp_count);
@@ -900,9 +897,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     print!("* H_gamma window: {}\n", H_gamma_window);
     let mut H_gamma_table =
         get_window_table(ppT::Fr::size_in_bits(), H_gamma_window, H_gamma.clone());
-    span.exit();
+    spanh.exit();
 
-    let span = span!(Level::TRACE, "Generate R1CS verification key").entered();
+    let spanvk = span!(Level::TRACE, "Generate R1CS verification key").entered();
     let mut G_alpha = G.clone() * alpha.clone();
     let mut H_beta = H.clone() * beta.clone();
 
@@ -916,11 +913,11 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
 
-    span.exit();
+    spanvk.exit();
 
-    let span = span!(Level::TRACE, "Generate R1CS proving key").entered();
+    let spanpk = span!(Level::TRACE, "Generate R1CS proving key").entered();
 
-    let span = span!(Level::TRACE, "Compute the A-query").entered();
+    let spana = span!(Level::TRACE, "Compute the A-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     for i in 0..At.len() {
         tmp_exponents.push(gamma.clone() * At[i].clone());
@@ -932,17 +929,17 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
     //
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Compute the B-query").entered();
+    let spanb = span!(Level::TRACE, "Compute the B-query").entered();
     let B_query =
         batch_exp::<G2<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G2<ppT> >(B_query);
     //
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Compute the G_gamma-query").entered();
+    let spang = span!(Level::TRACE, "Compute the G_gamma-query").entered();
     let G_gamma = G.clone() * gamma.clone();
     let G_gamma_Z = G_gamma.clone() * sap_inst.Zt.clone();
     let H_gamma_Z = H_gamma.clone() * sap_inst.Zt.clone();
@@ -963,9 +960,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(G_gamma2_Z_t);
     //
-    span.exit();
+    spang.exit();
 
-    let span = span!(Level::TRACE, "Compute the C_1-query").entered();
+    let spancq = span!(Level::TRACE, "Compute the C_1-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() - sap_inst.num_inputs());
     for i in sap_inst.num_inputs() + 1..=sap_inst.num_variables() {
         tmp_exponents.push(
@@ -979,9 +976,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_1);
     //
-    span.exit();
+    spancq.exit();
 
-    let span = span!(Level::TRACE, "Compute the C_2-query").entered();
+    let spancq = span!(Level::TRACE, "Compute the C_2-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     let mut double_gamma2_Z = gamma.clone() * gamma.clone() * sap_inst.Zt.clone();
     double_gamma2_Z = double_gamma2_Z.clone() + double_gamma2_Z.clone();
@@ -993,12 +990,11 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     tmp_exponents.clear();
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_2);
-    //
-    span.exit();
+    spancq.exit();
 
-    span.exit();
+    spanpk.exit();
 
-    span.exit();
+   
 
     let vk = r1cs_se_ppzksnark_verification_key::<ppT>::new(
         H,

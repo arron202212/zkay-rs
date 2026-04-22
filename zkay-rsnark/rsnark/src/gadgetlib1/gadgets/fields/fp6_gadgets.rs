@@ -343,7 +343,6 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         //         "Multiplication and Squaring on Pairing-Friendly Fields"
         //         Devegili, OhEigeartaigh, Scott, Dahab
         // */
-
         let v1 = RcCell::new(Fp3_variable::<Fp6T::Fp3T, FieldT, PB>::new(
             pb.clone(),
             prefix_format!(annotation_prefix, " v1"),

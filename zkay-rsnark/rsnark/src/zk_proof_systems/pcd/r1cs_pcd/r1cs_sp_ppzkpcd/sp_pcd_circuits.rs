@@ -63,7 +63,7 @@ use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 use ffec::PpConfig;
 use ffec::bit_vector;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::div_ceil;
 use ffec::field_utils::field_utils::{
     convert_field_element_to_bit_vector, pack_bit_vector_into_field_element_vector1,
@@ -71,6 +71,7 @@ use ffec::field_utils::field_utils::{
 use ffec::{One, Zero};
 use rccell::RcCell;
 use std::ops::Mul;
+use tracing::{Level, span};
 
 // /**
 //  * A compliance-step PCD circuit.
@@ -140,11 +141,6 @@ pub struct sp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub proof: RcCell<r1cs_ppzksnark_proof_variables<ppT>>,
     pub online_verifier: RcCell<r1cs_ppzksnark_online_verifier_gadgets<ppT>>,
 }
-
-
-
-
-
 
 impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
     pub fn new(compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>) -> Self {
@@ -652,9 +648,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
             ppT::LD,
         >,
         incoming_proofs: &Vec<r1cs_ppzksnark_proof<other_curve<ppT>>>,
-    )
-  
-    {
+    ) {
         let compliance_predicate_arity = self.compliance_predicate.max_arity;
         self.pb.borrow_mut().clear_values();
         *self.pb.borrow_mut().val_ref(&self.zero) = ppT::FieldT::zero();
@@ -722,8 +716,7 @@ impl<ppT: ppTConfig> sp_compliance_step_pcd_circuit_maker<ppT> {
 }
 
 impl<ppT: ppTConfig> sp_translation_step_pcd_circuit_maker<ppT> {
-    pub fn new(sp_compliance_step_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>) -> Self
-    {
+    pub fn new(sp_compliance_step_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>) -> Self {
         //allocate input of the translation PCD circuit
         let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
         let mut sp_translation_step_pcd_circuit_input =
@@ -898,7 +891,11 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     sp_translation_step_vk_bits: &bit_vector,
     primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::FieldT, ppT::M>,
 ) -> r1cs_primary_input<ppT::FieldT> {
-    let span = span!(Level::TRACE, "Call to get_sp_compliance_step_pcd_circuit_input").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to get_sp_compliance_step_pcd_circuit_input"
+    )
+    .entered();
     // type FieldT<ppT>=ppT::FieldT;
 
     let outgoing_message_as_va = primary_input
@@ -933,10 +930,12 @@ pub fn get_sp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         Fr<other_curve<ppT>>,
         <<<ppT as ppTConfig>::P as pairing_selector>::other_curve_type as ppTConfig>::M,
     >,
-) -> r1cs_primary_input<Fr<ppT>>
-
-{
-    let span = span!(Level::TRACE, "Call to get_sp_translation_step_pcd_circuit_input").entered();
+) -> r1cs_primary_input<Fr<ppT>> {
+    let span = span!(
+        Level::TRACE,
+        "Call to get_sp_translation_step_pcd_circuit_input"
+    )
+    .entered();
     // type FieldT<ppT>=ppT::FieldT;
 
     let sp_compliance_step_pcd_circuit_input = get_sp_compliance_step_pcd_circuit_input::<

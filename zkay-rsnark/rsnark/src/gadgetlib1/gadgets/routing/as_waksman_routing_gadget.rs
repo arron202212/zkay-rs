@@ -23,7 +23,6 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 #[derive(Clone, Default)]
 pub struct as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
-
     // /*
     //   Indexing conventions:
 

@@ -38,11 +38,11 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_prf
 use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_signature::SigConfig;
 use ff_curves::algebra::curves::public_params::*;
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 // use crate::common::data_structures::accumulation_vector;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::knowledge_commitment::kc_multiexp::{kc_batch_exp, kc_multi_exp_with_mixed_addition};
@@ -61,6 +61,7 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_par
     r1cs_ppzkadsnark_skT, r1cs_ppzkadsnark_vkT, snark_pp,
 };
 use ff_curves::Fr;
+use ffec::common::profiling::print_indent;
 use ffec::scalar_multiplication::multiexp::{
     batch_exp, get_exp_window_size, get_window_table, inhibit_profiling_info, multi_exp,
     multi_exp_method, multi_exp_with_mixed_addition,
@@ -74,11 +75,9 @@ pub struct r1cs_ppzkadsnark_pub_auth_prms<PP: ppzkadsnarkConfig> {
     pub I1: G1<snark_pp<PP>>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_pub_auth_prms<PP> {
-    
     pub fn new(I1: G1<snark_pp<PP>>) -> Self {
         Self { I1 }
     }
-
 }
 
 // /**
@@ -91,7 +90,6 @@ pub struct r1cs_ppzkadsnark_sec_auth_key<PP: ppzkadsnarkConfig> {
     pub S: r1cs_ppzkadsnark_prfKeyT<PP>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_sec_auth_key<PP> {
-    
     pub fn new(
         i: Fr<snark_pp<PP>>,
         skp: r1cs_ppzkadsnark_skT<PP>,
@@ -99,7 +97,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_sec_auth_key<PP> {
     ) -> Self {
         Self { i, skp, S }
     }
-
 }
 
 // /**
@@ -111,11 +108,9 @@ pub struct r1cs_ppzkadsnark_pub_auth_key<PP: ppzkadsnarkConfig> {
     pub vkp: r1cs_ppzkadsnark_vkT<PP>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_pub_auth_key<PP> {
-   
     pub fn new(minusI2: G2<snark_pp<PP>>, vkp: r1cs_ppzkadsnark_vkT<PP>) -> Self {
         Self { minusI2, vkp }
     }
-
 }
 
 #[derive(Default, Clone)]
@@ -125,7 +120,6 @@ pub struct r1cs_ppzkadsnark_auth_keys<PP: ppzkadsnarkConfig> {
     pub sak: r1cs_ppzkadsnark_sec_auth_key<PP>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_keys<PP> {
-   
     pub fn new(
         pap: r1cs_ppzkadsnark_pub_auth_prms<PP>,
         pak: r1cs_ppzkadsnark_pub_auth_key<PP>,
@@ -145,7 +139,6 @@ pub struct r1cs_ppzkadsnark_auth_data<PP: ppzkadsnarkConfig> {
     pub sigma: r1cs_ppzkadsnark_sigT<PP>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_data<PP> {
-   
     pub fn new(
         mu: Fr<snark_pp<PP>>,
         Lambda: G2<snark_pp<PP>>,
@@ -153,7 +146,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_auth_data<PP> {
     ) -> Self {
         Self { mu, Lambda, sigma }
     }
-
 }
 
 // /**
@@ -169,7 +161,6 @@ pub struct r1cs_ppzkadsnark_proving_key<PP: ppzkadsnarkConfig> {
     pub rA_i_Z_g1: G1<snark_pp<PP>>, // Now come the additional elements for ad
     pub constraint_system: r1cs_ppzkadsnark_constraint_system<PP>,
 }
-
 
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proving_key<PP> {
     pub fn new(
@@ -237,7 +228,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proving_key<PP> {
         print_indent();
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
-
 }
 
 // /**
@@ -302,7 +292,6 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_verification_key<PP> {
         print_indent();
         print!("* VK size in bits: {}\n", self.size_in_bits());
     }
-
 }
 
 // /**
@@ -328,7 +317,6 @@ pub struct r1cs_ppzkadsnark_processed_verification_key<PP: ppzkadsnarkConfig> {
     pub Ain: G1_vector<snark_pp<PP>>,
 
     pub proof_g_vki_precomp: Vec<G1_precomp<snark_pp<PP>>>,
-    
 }
 
 // /**
@@ -340,14 +328,12 @@ pub struct r1cs_ppzkadsnark_keypair<PP: ppzkadsnarkConfig> {
     pub vk: r1cs_ppzkadsnark_verification_key<PP>,
 }
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_keypair<PP> {
-   
     pub fn new(
         pk: r1cs_ppzkadsnark_proving_key<PP>,
         vk: r1cs_ppzkadsnark_verification_key<PP>,
     ) -> Self {
         Self { pk, vk }
     }
-
 }
 
 // /**
@@ -454,13 +440,10 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_proof<PP> {
             && self.g_Aau.h.is_well_formed()
             && self.muA.is_well_formed())
     }
-
 }
 
-
 impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_verification_key<PP> {
-    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzkadsnark_verification_key<PP>
- {
+    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzkadsnark_verification_key<PP> {
         let mut result = r1cs_ppzkadsnark_verification_key::<PP>::default();
         result.alphaA_g2 = G2::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
         result.alphaB_g1 = G1::<snark_pp<PP>>::one() * Fr::<snark_pp<PP>>::random_element();
@@ -484,10 +467,7 @@ impl<PP: ppzkadsnarkConfig> r1cs_ppzkadsnark_verification_key<PP> {
 // /**
 //  * R1CS ppZKADSNARK authentication parameters generator algorithm.
 //  */
-
-pub fn r1cs_ppzkadsnark_auth_generator<PP: ppzkadsnarkConfig>() -> r1cs_ppzkadsnark_auth_keys<PP>
-
-{
+pub fn r1cs_ppzkadsnark_auth_generator<PP: ppzkadsnarkConfig>() -> r1cs_ppzkadsnark_auth_keys<PP> {
     let mut sigkp = PP::Sig::sigGen();
     let mut prfseed = PP::Prf::prfGen();
     let mut i = Fr::<snark_pp<PP>>::random_element();
@@ -506,9 +486,7 @@ pub fn r1cs_ppzkadsnark_auth_sign<PP: ppzkadsnarkConfig>(
     ins: &Vec<Fr<snark_pp<PP>>>,
     sk: &r1cs_ppzkadsnark_sec_auth_key<PP>,
     labels: &Vec<labelT>,
-) -> Vec<r1cs_ppzkadsnark_auth_data<PP>>
-
-{
+) -> Vec<r1cs_ppzkadsnark_auth_data<PP>> {
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_auth_sign").entered();
     assert!(labels.len() == ins.len());
     let mut res = Vec::with_capacity(ins.len());
@@ -556,9 +534,7 @@ pub fn r1cs_ppzkadsnark_auth_verify2<PP: ppzkadsnarkConfig>(
     auth_data: &Vec<r1cs_ppzkadsnark_auth_data<PP>>,
     pak: &r1cs_ppzkadsnark_pub_auth_key<PP>,
     labels: &Vec<labelT>,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_auth_verify").entered();
     assert!((data.len() == labels.len()) && (data.len() == auth_data.len()));
     let mut res = true;
@@ -584,9 +560,7 @@ pub fn r1cs_ppzkadsnark_auth_verify2<PP: ppzkadsnarkConfig>(
 pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     cs: &r1cs_ppzkadsnark_constraint_system<PP>,
     prms: &r1cs_ppzkadsnark_pub_auth_prms<PP>,
-) -> r1cs_ppzkadsnark_keypair<PP>
-
-{
+) -> r1cs_ppzkadsnark_keypair<PP> {
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_generator").entered();
 
     //make the B_query "lighter" if possible
@@ -683,7 +657,6 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     print!("* G1 window: {}\n", g1_window);
     print_indent();
     print!("* G2 window: {}\n", g2_window);
-
 
     let chunks: usize = 1;
 
@@ -801,20 +774,17 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let rA_i_Z_g1 = prms.I1.clone() * (rA.clone() * qap_inst.Zt.clone());
     span.exit();
 
-    enter_block(
-        "Copy encoded input coefficients for R1CS verification key",
-        false,
-    );
+    let spank = span!(
+        Level::TRACE,
+        "Copy encoded input coefficients for R1CS verification key"
+    )
+    .entered();
     let A0 = A_query[0].g.clone();
     let mut Ain = Vec::with_capacity(qap_inst.num_inputs());
     for i in 0..qap_inst.num_inputs() {
         Ain.push(A_query[1 + i].g.clone());
     }
-
-    leave_block(
-        "Copy encoded input coefficients for R1CS verification key",
-        false,
-    );
+    spank.exit();
 
     span.exit();
 
@@ -874,7 +844,7 @@ where
                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
                 <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
             >,
-        >, 
+        >,
 {
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_prover").entered();
 
@@ -902,7 +872,6 @@ where
         &d3,
     );
     span.exit();
-
 
     let mut t = Fr::<snark_pp<PP>>::random_element();
     let mut qap_inst: qap_instance_evaluation<_> =
@@ -932,7 +901,6 @@ where
     assert_eq!(pk.C_query.domain_size(), qap_wit.num_variables() + 2);
     assert_eq!(pk.H_query.len(), qap_wit.degree() + 1);
     assert_eq!(pk.K_query.len(), qap_wit.num_variables() + 4);
-
 
     let chunks = 1;
 
@@ -1122,9 +1090,7 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
     proof: &r1cs_ppzkadsnark_proof<PP>,
     sak: &r1cs_ppzkadsnark_sec_auth_key<PP>,
     labels: &Vec<labelT>,
-) -> bool
-
-{
+) -> bool {
     let mut result = true;
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_online_verifier").entered();
 
@@ -1291,9 +1257,7 @@ pub fn r1cs_ppzkadsnark_verifier<PP: ppzkadsnarkConfig>(
     proof: &r1cs_ppzkadsnark_proof<PP>,
     sak: &r1cs_ppzkadsnark_sec_auth_key<PP>,
     labels: &Vec<labelT>,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_verifier").entered();
     let mut pvk = r1cs_ppzkadsnark_verifier_process_vk::<PP>(&vk);
     let mut result = r1cs_ppzkadsnark_online_verifier::<PP>(&pvk, &proof, &sak, &labels);

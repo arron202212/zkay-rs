@@ -1,4 +1,3 @@
-
 use crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_ppConfig;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
@@ -24,8 +23,7 @@ use ff_curves::default_ec_pp;
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 use std::ops::Mul;
-use tracing::{span, Level};
-
+use tracing::{Level, span};
 
 fn process_arithm_command_line(
     argc: i32,

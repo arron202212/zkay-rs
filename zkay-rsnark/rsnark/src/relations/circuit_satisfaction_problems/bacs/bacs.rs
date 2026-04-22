@@ -16,9 +16,7 @@ use std::collections::BTreeMap;
 // /**
 //  * A BACS variable assignment is a vector of field elements.
 //  */
-
 pub type bacs_variable_assignment<FieldT> = Vec<FieldT>;
-
 
 // /**
 //  * A BACS gate is a formal expression of the form lhs * rhs = output ,
@@ -33,21 +31,17 @@ pub struct bacs_gate<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinear
 
     pub output: variable<FieldT, SV>,
     pub is_circuit_output: bool,
-    
 }
 
 // /**
 //  * A BACS primary input is a BACS variable assignment.
 //  */
-
 pub type bacs_primary_input<FieldT> = bacs_variable_assignment<FieldT>;
 
 // /**
 //  * A BACS auxiliary input is a BACS variable assigment.
 //  */
-
 pub type bacs_auxiliary_input<FieldT> = bacs_variable_assignment<FieldT>;
-
 
 // /**
 //  * A BACS circuit is an arithmetic circuit in which every gate is a BACS gate.
@@ -71,9 +65,7 @@ pub struct bacs_circuit<
 
     pub gate_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-   
 }
-
 
 use ffec::common::profiling::print_indent;
 use ffec::common::utils;
@@ -103,7 +95,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             })
         );
     }
-
 }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     bacs_circuit<FieldT, SV, SLC>
@@ -249,7 +240,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 
             print!("Gate {} ({}):\n", i, annotation);
             self.gates[i].print(&self.variable_annotations);
-
         }
     }
 

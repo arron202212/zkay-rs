@@ -11,7 +11,7 @@ use crate::knowledge_commitment::knowledge_commitment::{
 };
 use ffec::FieldTConfig;
 use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::field_utils::BigInt;
 use ffec::field_utils::BigInteger;
 use ffec::field_utils::bigint::bigint;
@@ -21,8 +21,7 @@ use ffec::scalar_multiplication::multiexp::{
 };
 use ffec::scalar_multiplication::wnaf::opt_window_wnaf_exp;
 use ffec::{One, Zero};
-use tracing::{span, Level};
-
+use tracing::{Level, span};
 
 pub fn opt_window_wnaf_exps<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
     base: &knowledge_commitment<T, T2>,

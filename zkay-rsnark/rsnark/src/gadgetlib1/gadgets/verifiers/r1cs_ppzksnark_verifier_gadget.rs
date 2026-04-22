@@ -357,9 +357,7 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proof_variables<ppT> {
         self.t.G2_checker.borrow().generate_r1cs_constraints();
     }
 
-    pub fn generate_r1cs_witness(&self, proof: &r1cs_ppzksnark_proof<other_curve<ppT>>)
-
-    {
+    pub fn generate_r1cs_witness(&self, proof: &r1cs_ppzksnark_proof<other_curve<ppT>>) {
         let G1_elems = vec![
             proof.g_A.g.clone(),
             proof.g_A.h.clone(),
@@ -623,8 +621,7 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key
         pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
         r1cs_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>,
         annotation_prefix: String,
-    ) -> r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variables<ppT>
-    {
+    ) -> r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variables<ppT> {
         let encoded_IC_base = RcCell::new(G1_variable::<ppT>::new2(
             pb.clone(),
             r1cs_vk.encoded_IC_query.first.clone(),

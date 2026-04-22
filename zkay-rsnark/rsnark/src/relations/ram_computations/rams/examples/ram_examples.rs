@@ -10,8 +10,7 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, random_tinyram_instruction, tinyram_opcode, tinyram_program,
 };
 
-use tracing::{span, Level};
-
+use tracing::{Level, span};
 
 #[derive(Default)]
 pub struct ram_example<RamT: ram_params_type> {

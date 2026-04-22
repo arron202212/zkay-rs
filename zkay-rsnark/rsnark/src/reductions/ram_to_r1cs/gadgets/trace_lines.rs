@@ -23,7 +23,6 @@ use rccell::RcCell;
 //  * Memory lines are used by memory_checker_gadget.
 //  */
 
-
 type FieldT<RamT> = ram_base_field<RamT>;
 
 #[derive(Clone, Default)]
@@ -41,7 +40,6 @@ pub struct memory_line_variable_gadget<RamT: ram_params_type, T: Default + Clone
 //  *
 //  * Execution lines are used by execution_checker_gadget.
 //  */
-
 
 #[derive(Clone, Default)]
 pub struct execution_line_variable_gadget<RamT: ram_params_type> {

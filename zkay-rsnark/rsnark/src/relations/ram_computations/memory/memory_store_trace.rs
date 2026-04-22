@@ -15,7 +15,6 @@ pub type address_and_value = (usize, usize);
 #[derive(Default)]
 pub struct memory_store_trace {
     entries: BTreeMap<usize, address_and_value>,
-    
 }
 
 impl Index<usize> for memory_store_trace {

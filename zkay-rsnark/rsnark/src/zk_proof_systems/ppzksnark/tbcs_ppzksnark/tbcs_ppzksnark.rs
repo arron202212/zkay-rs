@@ -21,8 +21,6 @@
 //  - USCS = "Unitary-Square Constraint System"
 //  - ppzkSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
 
-
-
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::reductions::tbcs_to_uscs::tbcs_to_uscs::{
@@ -38,9 +36,8 @@ use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::uscs_ppzksnark::{
     uscs_ppzksnark_verification_key, uscs_ppzksnark_verifier_process_vk,
 };
 use ff_curves::Fr;
-use tracing::{span, Level};
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
-
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the TBCS ppzkSNARK.
@@ -51,7 +48,6 @@ pub struct tbcs_ppzksnark_proving_key<ppT: ppTConfig> {
     pub uscs_pk: uscs_ppzksnark_proving_key<ppT>,
 }
 impl<ppT: ppTConfig> tbcs_ppzksnark_proving_key<ppT> {
-
     pub fn new(circuit: tbcs_ppzksnark_circuit, uscs_pk: uscs_ppzksnark_proving_key<ppT>) -> Self {
         Self { circuit, uscs_pk }
     }
@@ -79,14 +75,11 @@ impl<ppT: ppTConfig> tbcs_ppzksnark_proving_key<ppT> {
     pub fn print_size(&self) {
         self.uscs_pk.print_size();
     }
-
-   
 }
 
 // /**
 //  * A verification key for the TBCS ppzkSNARK.
 //  */
-
 pub type tbcs_ppzksnark_verification_key<ppT> = uscs_ppzksnark_verification_key<ppT>;
 
 // /**
@@ -96,7 +89,6 @@ pub type tbcs_ppzksnark_verification_key<ppT> = uscs_ppzksnark_verification_key<
 //  * contains a small constant amount of additional pre-computed information that
 //  * enables a faster verification time.
 //  */
-
 pub type tbcs_ppzksnark_processed_verification_key<ppT> =
     uscs_ppzksnark_processed_verification_key<ppT>;
 
@@ -109,27 +101,18 @@ pub struct tbcs_ppzksnark_keypair<ppT: ppTConfig> {
     pub vk: tbcs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> tbcs_ppzksnark_keypair<ppT> {
-
     pub fn new(
         pk: tbcs_ppzksnark_proving_key<ppT>,
         vk: tbcs_ppzksnark_verification_key<ppT>,
     ) -> Self {
         Self { pk, vk }
     }
-
 }
 
 // /**
 //  * A proof for the TBCS ppzkSNARK.
 //  */
-
 pub type tbcs_ppzksnark_proof<ppT> = uscs_ppzksnark_proof<ppT>;
-
-
-
-
-
-
 
 // /*
 // Below are four variants of verifier algorithm for the TBCS ppzkSNARK.
@@ -144,22 +127,6 @@ pub type tbcs_ppzksnark_proof<ppT> = uscs_ppzksnark_proof<ppT>;
 //     weak input consistency requires that |primary_input| <= C.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length C.num_inputs).
 // */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // /**
 //  * A generator algorithm for the TBCS ppzkSNARK.
@@ -267,7 +234,11 @@ pub fn tbcs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     proof: &tbcs_ppzksnark_proof<ppT>,
 ) -> bool {
     // type FieldT=Fr<ppT>;
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_online_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to tbcs_ppzksnark_online_verifier_weak_IC"
+    )
+    .entered();
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
     let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &uscs_input, proof);
     span.exit();
@@ -285,7 +256,11 @@ pub fn tbcs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     proof: &tbcs_ppzksnark_proof<ppT>,
 ) -> bool {
     // type FieldT=Fr<ppT>;
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to tbcs_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
     let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &uscs_input, proof);
     span.exit();

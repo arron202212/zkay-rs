@@ -54,10 +54,11 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_verifier_process_vk, r1cs_ppzksnark_verifier_strong_IC,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::{FieldTConfig, PpConfig, bit_vector};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the R1CS (single-predicate) ppzkPCD.
@@ -156,7 +157,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> 
 // /**
 //  * A key pair for the R1CS (single-predicate) ppzkPC, which consists of a proving key and a verification key.
 //  */
-
 #[derive(Default, Clone)]
 pub struct r1cs_sp_ppzkpcd_keypair<PCD_ppT: PcdPptConfig> {
     pub pk: r1cs_sp_ppzkpcd_proving_key<PCD_ppT>,
@@ -195,8 +195,6 @@ pub type r1cs_sp_ppzkpcd_proof<PCD_ppT> =
 
 impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
     pub fn dummy_verification_key() -> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
-       
-
         let mut result = r1cs_sp_ppzkpcd_verification_key::<PCD_ppT>::default();
         result.compliance_step_r1cs_vk =
             r1cs_ppzksnark_verification_key::<PCD_ppT::curve_A_pp>::dummy_verification_key(
@@ -211,7 +209,6 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
     }
 }
 
-
 // /**
 //  * A generator algorithm for the R1CS (single-predicate) ppzkPCD.
 //  *
@@ -219,12 +216,9 @@ impl<PCD_ppT: PcdPptConfig> r1cs_sp_ppzkpcd_verification_key<PCD_ppT> {
 //  */
 pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicate: &r1cs_sp_ppzkpcd_compliance_predicate<PCD_ppT>,
-) -> r1cs_sp_ppzkpcd_keypair<PCD_ppT>
-
-{
+) -> r1cs_sp_ppzkpcd_keypair<PCD_ppT> {
     // assert!(Fr::< PCD_ppT::curve_A_pp>::modulo == Fq::< PCD_ppT::curve_B_pp>::modulo);
     // assert!(Fq::< PCD_ppT::curve_A_pp>::modulo == Fr::< PCD_ppT::curve_B_pp>::modulo);
-
 
     let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_generator").entered();
 
@@ -238,7 +232,11 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_step_pcd_circuit_cs.report_linear_constraint_statistics();
     span.exit();
 
-    let span = span!(Level::TRACE, "Generate key pair for compliance step PCD circuit").entered();
+    let span = span!(
+        Level::TRACE,
+        "Generate key pair for compliance step PCD circuit"
+    )
+    .entered();
     let mut compliance_step_keypair =
         r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&compliance_step_pcd_circuit_cs);
     span.exit();
@@ -253,7 +251,11 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     translation_step_pcd_circuit_cs.report_linear_constraint_statistics();
     span.exit();
 
-    let span = span!(Level::TRACE, "Generate key pair for translation step PCD circuit").entered();
+    let span = span!(
+        Level::TRACE,
+        "Generate key pair for translation step PCD circuit"
+    )
+    .entered();
     let translation_step_keypair =
         r1cs_ppzksnark_generator::<B_pp<PCD_ppT>>(&translation_step_pcd_circuit_cs);
     span.exit();
@@ -335,10 +337,7 @@ where
                 <<PCD_ppT as PcdPptConfig>::curve_A_pp as ff_curves::PublicParams>::G1,
             >,
         >,
-    
 {
-    
-
     let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_prover").entered();
 
     let translation_step_r1cs_vk_bits =
@@ -421,10 +420,7 @@ pub fn r1cs_sp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     pvk: &r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT>,
     primary_input: &r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_sp_ppzkpcd_proof<PCD_ppT>,
-) -> bool
-
-{
-
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_online_verifier").entered();
     let r1cs_input = get_sp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
         &pvk.translation_step_r1cs_vk_bits,
@@ -444,12 +440,12 @@ pub fn r1cs_sp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
 //  * Convert a (non-processed) verification key into a processed verification key.
 pub fn r1cs_sp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_sp_ppzkpcd_verification_key<PCD_ppT>,
-) -> r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT>
-
-{
-
-
-    let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_processed_verification_key").entered();
+) -> r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> {
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_sp_ppzkpcd_processed_verification_key"
+    )
+    .entered();
     let compliance_step_r1cs_pvk =
         r1cs_ppzksnark_verifier_process_vk::<PCD_ppT::curve_A_pp>(&vk.compliance_step_r1cs_vk);
     let translation_step_r1cs_pvk =
@@ -480,9 +476,7 @@ pub fn r1cs_sp_ppzkpcd_verifier<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_sp_ppzkpcd_verification_key<PCD_ppT>,
     primary_input: &r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_sp_ppzkpcd_proof<PCD_ppT>,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_verifier").entered();
     let pvk = r1cs_sp_ppzkpcd_process_vk::<PCD_ppT>(&vk);
     let result = r1cs_sp_ppzkpcd_online_verifier::<PCD_ppT>(&pvk, primary_input, proof);

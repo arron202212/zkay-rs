@@ -23,13 +23,11 @@ use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark_sig
 use ff_curves::PublicParams;
 use ff_curves::{Fr, G2};
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
-
-
-
+use tracing::{Level, span};
 
 // /**
 //  * The code below provides an example of all stages of running a R1CS ppzkADSNARK.
@@ -43,8 +41,6 @@ use std::ops::{Add, Mul};
 //  * (3) The "verifier", which runs the ppzkADSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-
-
 
 // /**
 //  * Runs the ppzkADSNARK (generator, prover, and verifier) for a given
@@ -78,7 +74,6 @@ where
                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
             >,
         >,
-    
 {
     let span = span!(Level::TRACE, "Call to run_r1cs_ppzkadsnark").entered();
 

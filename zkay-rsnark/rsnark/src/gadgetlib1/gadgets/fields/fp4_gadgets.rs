@@ -65,7 +65,6 @@ pub trait Fp4TConfig<FieldT: FieldTConfig>:
 
 #[derive(Clone, Default)]
 pub struct Fp4_variable<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-
     pub c0: Fp2_variables<Fp4T::Fp2T, FieldT, PB>,
     pub c1: Fp2_variables<Fp4T::Fp2T, FieldT, PB>,
 }
@@ -75,7 +74,6 @@ pub struct Fp4_variable<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBCo
 //  */
 #[derive(Clone, Default)]
 pub struct Fp4_tower_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-
     pub A: Fp4_variables<Fp4T, FieldT, PB>,
     pub B: Fp4_variables<Fp4T, FieldT, PB>,
     pub result: Fp4_variables<Fp4T, FieldT, PB>,
@@ -113,7 +111,6 @@ pub struct Fp4_direct_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig,
 // /**
 //  * Alias default multiplication gadget
 //  */
-
 pub type Fp4_mul_gadget<Fp4T, FieldT, PB> = Fp4_direct_mul_gadget<Fp4T, FieldT, PB>;
 
 // /**

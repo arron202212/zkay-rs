@@ -18,9 +18,7 @@ use std::marker::PhantomData;
 //  *
 //  * Note that the power is a constant (i.e., hardcoded into the gadget).
 //  */
-
 type FieldT<FpkT> = <FpkT as ppTConfig>::my_Fp;
-
 
 #[derive(Clone, Default)]
 pub struct exponentiation_gadget<FpkT: ppTConfig> {

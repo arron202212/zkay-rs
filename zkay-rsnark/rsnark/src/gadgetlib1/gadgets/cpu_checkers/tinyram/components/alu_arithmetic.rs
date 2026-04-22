@@ -1121,7 +1121,6 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
 // testing functions, which basically do the same thing: brute force
 // the range of inputs which different success predicates */
 
-
 type initializer_fn<T, FieldT: FieldTConfig> = fn(
     &RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>, // pb
     &pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,  // opcode_indicators
@@ -2635,7 +2634,6 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
         //   from two's complement: (packed - 2^w * bits[w-1])
         //   to two's complement: lower order bits of 2^{2w} + result_of_*
         // */
-
         let (mut a, mut b, mut c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -3126,7 +3124,6 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             // /*
             //   add main shifting constraint
 
-
             //   old_result =
             //   (shifted_result * 2^(i+1) + shifted_out_part) * need_to_shift +
             //   (shfited_result) * (1-need_to_shift)
@@ -3305,7 +3302,6 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
         //   (shifted_result * 2^i + shifted_out_part) * need_to_shift +
         //   (shfited_result) * (1-need_to_shift)
         // */
-
         for i in 0..self.t.t.t.t.logw {
             *self
                 .pb

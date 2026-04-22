@@ -44,11 +44,7 @@ pub type benes_topology = Vec<Vec<(usize, usize)>>;
 //  */
 pub type benes_routing = Vec<bit_vector>;
 
-
-
-
 //  Implementation of interfaces for functionality for routing on a Benes network.
-
 
 // /**
 //  * Compute the mask for all the cross edges originating at a

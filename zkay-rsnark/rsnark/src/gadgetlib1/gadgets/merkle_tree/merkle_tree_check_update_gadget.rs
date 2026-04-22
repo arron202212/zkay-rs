@@ -305,7 +305,6 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
         // (enforced above), we have that auxiliary_input part is also
         // constrained to be boolean, because prev_path is *all*
         // constrained to be all boolean. */
-
         self.t
             .check_next_root
             .borrow()

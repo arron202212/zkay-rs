@@ -21,7 +21,6 @@
 //  - R1CS = "Rank-1 Constraint System"
 //  - ppzkSNARK = "PreProcessing Zero-Knowledge Succinct Non-interactive ARgument of Knowledge"
 
-
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
@@ -44,9 +43,8 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_proof, r1cs_ppzksnark_prover, r1cs_ppzksnark_verifier_process_vk,
 };
 use ff_curves::Fr;
-use tracing::{span, Level};
 use std::ops::Mul;
-
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the BACS ppzkSNARK.
@@ -57,14 +55,12 @@ pub struct bacs_ppzksnark_proving_key<ppT: ppTConfig> {
     pub r1cs_pk: r1cs_ppzksnark_proving_key<ppT>,
 }
 impl<ppT: ppTConfig> bacs_ppzksnark_proving_key<ppT> {
-    
     pub fn new(
         circuit: bacs_ppzksnark_circuit<ppT>,
         r1cs_pk: r1cs_ppzksnark_proving_key<ppT>,
     ) -> Self {
         Self { circuit, r1cs_pk }
     }
-   
 
     pub fn G1_size(&self) -> usize {
         self.r1cs_pk.g1_size()
@@ -89,13 +85,11 @@ impl<ppT: ppTConfig> bacs_ppzksnark_proving_key<ppT> {
     pub fn print_size(&self) {
         self.r1cs_pk.print_size();
     }
-
 }
 
 // /**
 //  * A verification key for the BACS ppzkSNARK.
 //  */
-
 pub type bacs_ppzksnark_verification_key<ppT> = r1cs_ppzksnark_verification_key<ppT>;
 
 // /**
@@ -105,7 +99,6 @@ pub type bacs_ppzksnark_verification_key<ppT> = r1cs_ppzksnark_verification_key<
 //  * contains a small constant amount of additional pre-computed information that
 //  * enables a faster verification time.
 //  */
-
 pub type bacs_ppzksnark_processed_verification_key<ppT> =
     r1cs_ppzksnark_processed_verification_key<ppT>;
 
@@ -118,26 +111,18 @@ pub struct bacs_ppzksnark_keypair<ppT: ppTConfig> {
     pub vk: bacs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> bacs_ppzksnark_keypair<ppT> {
-   
     pub fn new(
         pk: bacs_ppzksnark_proving_key<ppT>,
         vk: bacs_ppzksnark_verification_key<ppT>,
     ) -> Self {
         Self { pk, vk }
     }
-
-    
 }
 
 // /**
 //  * A proof for the BACS ppzkSNARK.
 //  */
-
 pub type bacs_ppzksnark_proof<ppT> = r1cs_ppzksnark_proof<ppT>;
-
-
-
-
 
 // /*
 // Below are four variants of verifier algorithm for the BACS ppzkSNARK.
@@ -152,16 +137,6 @@ pub type bacs_ppzksnark_proof<ppT> = r1cs_ppzksnark_proof<ppT>;
 //     weak input consistency requires that |primary_input| <= C.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length C.num_inputs).
 // */
-
-
-
-
-
-
-
-
-
-
 
 type FieldT<ppT> = Fr<ppT>;
 // /**
@@ -290,7 +265,11 @@ pub fn bacs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     primary_input: &bacs_ppzksnark_primary_input<ppT>,
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_online_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to bacs_ppzksnark_online_verifier_weak_IC"
+    )
+    .entered();
     let bit = r1cs_ppzksnark_online_verifier_weak_IC::<ppT>(pvk, primary_input, proof);
     span.exit();
 
@@ -307,7 +286,11 @@ pub fn bacs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     primary_input: &bacs_ppzksnark_primary_input<ppT>,
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to bacs_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
     let bit = r1cs_ppzksnark_online_verifier_strong_IC::<ppT>(pvk, primary_input, proof);
     span.exit();
 

@@ -82,7 +82,6 @@ pub struct mnt_miller_loop_dbl_line_eval<ppT: ppTConfig> {
 //  */
 #[derive(Clone, Default)]
 pub struct mnt_miller_loop_add_line_eval<ppT: ppTConfig> {
-   
     invert_Q: bool,
     prec_P: G1_precomputations<ppT>,
     c: precompute_G2_gadget_coeffss<ppT>,
@@ -123,7 +122,6 @@ pub struct mnt_miller_loop_gadget<ppT: ppTConfig> {
 //  * Gadget for verifying a double Miller loop (where the second is inverted).
 //  */
 
-
 #[derive(Clone, Default)]
 pub struct mnt_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
     g_RR_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
@@ -157,7 +155,6 @@ pub struct mnt_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
 // /**
 //  * Gadget for verifying a triple Miller loop (where the third is inverted).
 //  */
-
 #[derive(Clone, Default)]
 pub struct mnt_e_times_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
     g_RR_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
@@ -204,7 +201,6 @@ pub struct mnt_e_times_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
 
 //   (later in Miller loop: f = f.squared() * g_RR_at_P)
 // */
-
 //Note the slight interface change: this gadget will allocate g_RR_at_P inside itself (!)
 pub type mnt_miller_loop_dbl_line_evals<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, mnt_miller_loop_dbl_line_eval<ppT>>;
@@ -317,7 +313,6 @@ impl<ppT: ppTConfig> mnt_miller_loop_dbl_line_evals<ppT> {
 
 //   If invert_Q is set to true: use -QY in place of QY everywhere above.
 // */
-
 //Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
 pub type mnt_miller_loop_add_line_evals<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, mnt_miller_loop_add_line_eval<ppT>>;
@@ -649,9 +644,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadgets<ppT> {
     }
 }
 
-pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &str)
-
-{
+pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &str) {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut P_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
     let mut Q_val = ppT::FieldT::random_element() * G2::<other_curve<ppT>>::one();
@@ -1016,9 +1009,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadgets<ppT> {
     }
 }
 
-pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &str)
-
-{
+pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &str) {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut P1_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
     let mut Q1_val = ppT::FieldT::random_element() * G2::<other_curve<ppT>>::one();

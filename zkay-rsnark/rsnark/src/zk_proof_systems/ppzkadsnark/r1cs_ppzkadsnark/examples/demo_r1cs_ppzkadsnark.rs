@@ -15,10 +15,10 @@ use ff_curves::PublicParams;
 use ffec::FieldTConfig;
 use ffec::Fp_modelConfig;
 use ffec::PpConfig;
-use tracing::{span, Level};
 use ffec::div_ceil;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
+use tracing::{Level, span};
 
 pub fn main<ppT: ppzkadsnarkConfig>(argc: i32, argv: &[&str]) -> i32
 where
@@ -41,7 +41,7 @@ where
                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
             >,
-        >, 
+        >,
 {
     <ppT as ff_curves::PublicParams>::init_public_params();
     // start_profiling();

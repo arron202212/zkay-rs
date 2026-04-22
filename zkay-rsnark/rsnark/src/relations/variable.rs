@@ -14,7 +14,6 @@ use std::ops::{Add, Mul, Neg, Sub};
 pub type var_index_t = usize;
 pub type integer_coeff_t = i64;
 
-
 pub trait SubVariableConfig: Default + Clone + std::cmp::PartialEq {}
 #[derive(Clone, Default, PartialEq)]
 pub struct DefaultVariable;
@@ -127,8 +126,6 @@ impl<FieldT: FieldTConfig, SLC: SubLinearCombinationConfig, SV: SubVariableConfi
         rhs
     }
 }
-
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig> PartialEq for variable<FieldT, SV> {
     #[inline]
@@ -275,7 +272,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     Add<linear_term<FieldT, SV>> for linear_combination<FieldT, SV, SLC>
 {
@@ -292,7 +288,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig> PartialEq for linear_term<Fiel
         self.index == other.index && self.coeff == other.coeff
     }
 }
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> From<FieldT>
     for linear_combination<FieldT, SV, SLC>
@@ -492,7 +487,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> Add
     for linear_combination<FieldT, SV, SLC>
 {
@@ -502,7 +496,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         rhs
     }
 }
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     Add<variable<FieldT, SV>> for linear_combination<FieldT, SV, SLC>

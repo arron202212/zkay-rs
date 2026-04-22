@@ -15,12 +15,6 @@
 
 //  does the same but now the input consists of 10 bytes.
 
-// use common::profiling;
-// use common::utils;
-
-// use crate::common::default_types::uscs_ppzksnark_pp;
-// use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
-// use libsnark/zk_proof_systems/ppzksnark/uscs_ppzksnark/examples/run_uscs_ppzksnark;
 use crate::common::default_types::uscs_ppzksnark_pp::default_uscs_ppzksnark_pp;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
@@ -29,6 +23,7 @@ use crate::zk_proof_systems::ppzksnark::uscs_ppzksnark::examples::run_uscs_ppzks
 use ff_curves::Fr;
 use ff_curves::PublicParams;
 use ffec::common::profiling::{enter_block, leave_block, print_compilation_info, start_profiling};
+use tracing::{Level, span};
 
 fn main<default_uscs_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i32 {
     default_uscs_ppzksnark_pp::init_public_params();

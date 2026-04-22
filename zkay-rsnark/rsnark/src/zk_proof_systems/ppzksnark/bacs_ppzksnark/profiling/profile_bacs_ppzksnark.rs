@@ -27,6 +27,7 @@ use ff_curves::default_ec_pp;
 use ffec::common::profiling::{enter_block, leave_block, print_compilation_info, start_profiling};
 use ffec::div_ceil;
 use std::ops::Mul;
+use tracing::{Level, span};
 
 fn main<default_bacs_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i32
 where

@@ -14,14 +14,11 @@ use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark::{
 };
 use ff_curves::{Fr, PublicParams};
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
-
-
-
-
+use tracing::{Level, span};
 
 // /**
 //  * The code below provides an example of all stages of running a R1CS SEppzkSNARK.
@@ -36,8 +33,6 @@ use std::ops::{Add, Mul};
 //  *     a primary input for CS, and a proof.
 //  */
 
-
-
 // /**
 //  * Runs the SEppzkSNARK (generator, prover, and verifier) for a given
 //  * R1CS example (specified by a constraint system, input, and witness).
@@ -48,9 +43,7 @@ use std::ops::{Add, Mul};
 pub fn run_r1cs_se_ppzksnark<ppT: ppTConfig>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to run_r1cs_se_ppzksnark").entered();
 
     println!("R1CS SEppzkSNARK Generator");

@@ -40,7 +40,6 @@ use crate::common::data_structures::integer_permutation::integer_permutation;
 //  * We call the position assigned to the top ports of a switch its
 //  * "canonical" position.
 //  */
-
 // /**
 //  * A data structure that stores the topology of an AS-Waksman network.
 //  *
@@ -82,9 +81,6 @@ pub type as_waksman_topology = Vec<Vec<(usize, usize)>>;
 //  * switches, i.e. only canonical positions are present.
 //  */
 pub type as_waksman_routing = Vec<Vec<bool>>;
-
-
-
 
 // /**
 //  * Return the height of the AS-Waksman network's top sub-network.
@@ -310,7 +306,7 @@ pub fn generate_as_waksman_topology(num_packets: usize) -> as_waksman_topology {
 //  */
 pub fn as_waksman_get_canonical_row_idx(row_offset: usize, row_idx: usize) -> usize {
     // translate back relative to row_offset, clear LSB, and then translate forward
-     (((row_idx - row_offset) & !1) + row_offset)
+    (((row_idx - row_offset) & !1) + row_offset)
 }
 
 // /**
@@ -366,7 +362,7 @@ pub fn as_waksman_other_output_position(row_offset: usize, packet_idx: usize) ->
 //  */
 pub fn as_waksman_other_input_position(row_offset: usize, packet_idx: usize) -> usize {
     // Due to symmetry, this function equals as_waksman_other_output_position.
-     as_waksman_other_output_position(row_offset, packet_idx)
+    as_waksman_other_output_position(row_offset, packet_idx)
 }
 
 // /**

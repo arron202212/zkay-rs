@@ -14,6 +14,9 @@ use crate::PpConfig;
 pub type bit_vector = Vec<bool>;
 
 use std::fmt::Write;
+
+pub fn FMT(s: &str, c: &str) {}
+
 pub fn print_vector<T: std::fmt::Display>(vec: &Vec<T>) {
     print!("{{ ");
     for elem in vec {

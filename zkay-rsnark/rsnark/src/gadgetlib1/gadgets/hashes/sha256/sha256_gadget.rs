@@ -70,7 +70,6 @@ pub struct sha256_compression_function_gadget<FieldT: FieldTConfig, PB: PBConfig
 //  * sha256_two_to_one_hash_gadget trivially extends to a collision for
 //  * full SHA256 (by appending the same padding).
 //  */
-
 type hash_value_type = bit_vector;
 type merkle_authentication_path_type = merkle_authentication_path;
 #[derive(Clone, Default)]

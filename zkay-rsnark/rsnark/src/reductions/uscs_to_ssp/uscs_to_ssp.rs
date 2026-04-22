@@ -35,14 +35,7 @@ use fqfft::evaluation_domain::{
 };
 use std::collections::BTreeMap;
 
-use tracing::{span, Level};
-
-
-
-
-
-
-
+use tracing::{Level, span};
 
 // /**
 //  * Instance map for the USCS-to-SSP reduction.
@@ -55,8 +48,6 @@ use tracing::{span, Level};
 //  *   each V_i is expressed in the Lagrange basis.
 //  */
 
-
-
 // /**
 //  * Instance map for the USCS-to-SSP reduction.
 //  */
@@ -67,7 +58,8 @@ pub fn uscs_to_ssp_instance_map<
 >(
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
 ) -> ssp_instance<FieldT> {
-    let span = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map").entered();
+    let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map");
+    let _=span0.enter();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
@@ -85,7 +77,7 @@ pub fn uscs_to_ssp_instance_map<
     }
     span.exit();
 
-    span.exit();
+   
 
     ssp_instance::<FieldT>::new(
         domain.clone(),
@@ -109,7 +101,6 @@ pub fn uscs_to_ssp_instance_map<
 //  *   n = degree of the SSP
 //  */
 
-
 // /**
 //  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
 //  */
@@ -121,7 +112,12 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> ssp_instance_evaluation<FieldT> {
-    let span = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map_with_evaluation").entered();
+    let span0 = span!(
+        Level::TRACE,
+        "Call to uscs_to_ssp_instance_map_with_evaluation"
+    )
+   ;
+    let _=span0.enter();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
@@ -148,7 +144,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     }
     span.exit();
 
-    span.exit();
+   
 
     ssp_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -190,7 +186,6 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 //  * some reshuffling to save space.
 //  */
 
-
 // /**
 //  * Witness map for the USCS-to-SSP reduction.
 //  *
@@ -206,8 +201,8 @@ pub fn uscs_to_ssp_witness_map<
     auxiliary_input: &uscs_auxiliary_input<FieldT>,
     d: &FieldT,
 ) -> ssp_witness<FieldT> {
-    let span = span!(Level::TRACE, "Call to uscs_to_ssp_witness_map").entered();
-
+    let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_witness_map");
+    let _=span0.enter();
     //sanity check
 
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -220,7 +215,7 @@ pub fn uscs_to_ssp_witness_map<
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial V on set S").entered();
+    let spanvs = span!(Level::TRACE, "Compute evaluation of polynomial V on set S").entered();
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
     assert!(domain.borrow().m() >= cs.num_constraints());
     for i in 0..cs.num_constraints() {
@@ -229,13 +224,13 @@ pub fn uscs_to_ssp_witness_map<
     for i in cs.num_constraints()..domain.borrow().m() {
         aA[i] += FieldT::one();
     }
-    span.exit();
+    spanvs.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial V").entered();
+    let spanv = span!(Level::TRACE, "Compute coefficients of polynomial V").entered();
     domain.borrow_mut().iFFT(&mut aA);
-    span.exit();
+    spanv.exit();
 
-    let span = span!(Level::TRACE, "Compute ZK-patch").entered();
+    let spanzp = span!(Level::TRACE, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -247,15 +242,15 @@ pub fn uscs_to_ssp_witness_map<
     domain
         .borrow_mut()
         .add_poly_Z(&d.squared(), &mut coefficients_for_H);
-    span.exit();
+    spanzp.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
+    let spanvt= span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
-    span.exit();
+    spanvt.exit();
 
-    let span = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
+    let spanht = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -264,35 +259,34 @@ pub fn uscs_to_ssp_witness_map<
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
 
-    let span = span!(Level::TRACE, "Divide by Z on set T").entered();
+    let spanzt = span!(Level::TRACE, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
-    span.exit();
+    spanzt.exit();
 
-    span.exit();
+    spanht.exit();
 
-    let span = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
+    let spanh = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
-    span.exit();
+    spanh.exit();
 
-    let span = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
-    // #ifdef MULTICORE
-    //#pragma omp parallel for
+    let spanhp = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
+
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
-    span.exit();
+    spanhp.exit();
 
-    span.exit();
+  
 
-    return ssp_witness::<FieldT>::new(
+     ssp_witness::<FieldT>::new(
         cs.num_variables(),
         domain.borrow().m(),
         cs.num_inputs(),
         d.clone(),
         full_variable_assignment,
         coefficients_for_H,
-    );
+    )
 }

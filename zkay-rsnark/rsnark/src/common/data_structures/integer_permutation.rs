@@ -7,13 +7,10 @@ pub struct integer_permutation {
 
     pub min_element: usize,
     pub max_element: usize,
-    
 }
-
 
 impl integer_permutation {
     pub fn new(size: usize) -> Self {
-        
         Self {
             contents: vec![0; size],
             min_element: 0,
@@ -24,7 +21,7 @@ impl integer_permutation {
     pub fn new2(min_element: usize, max_element: usize) -> Self {
         assert!(min_element <= max_element);
         let size = max_element - min_element + 1;
-      
+
         Self {
             contents: vec![0; size],
             min_element,
@@ -81,11 +78,10 @@ impl integer_permutation {
                 && slice_max_element <= self.max_element
         );
         let mut result = Self::new2(slice_min_element, slice_max_element);
-       
+
         result
             .contents
             .insert(0, self.contents[slice_min_element - self.min_element]);
-       
 
         return result;
     }
@@ -94,6 +90,5 @@ impl integer_permutation {
         false
     }
 
-    pub fn random_shuffle(&self) {
-    }
+    pub fn random_shuffle(&self) {}
 }

@@ -59,15 +59,14 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
     ram_zksnark_machine_pp, ram_zksnark_primary_input,
 };
 use ff_curves::Fr;
-use tracing::{span, Level};
 use ffec::log2;
 use rccell::RcCell;
 use std::ops::Mul;
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the RAM zkSNARK.
 //  */
-
 #[derive(Default, Clone)]
 pub struct ram_zksnark_proving_key<RamPpt: RamConfig> {
     pub ap: ram_zksnark_architecture_params<RamPpt>,
@@ -163,20 +162,20 @@ pub fn ram_zksnark_generator<RamPpt: RamConfig>(
 where
     <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
 {
-   
-    let span = span!(Level::TRACE, "Call to ram_zksnark_generator").entered();
+    let span0 = span!(Level::TRACE, "Call to ram_zksnark_generator");
+    let _=span0.enter();
 
-    let span = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
+    let spang = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(ap.clone());
     cp_handler.generate_r1cs_constraints();
     let mut ram_compliance_predicate = cp_handler.get_compliance_predicate();
-    span.exit();
+    spang.exit();
 
     let span = span!(Level::TRACE, "Generate PCD key pair").entered();
     let mut kp = r1cs_sp_ppzkpcd_generator::<pcdT<RamPpt>>(&ram_compliance_predicate);
     span.exit();
 
-    span.exit();
+   
 
     let pk = ram_zksnark_proving_key::<RamPpt>::new(ap.clone(), kp.pk);
     let vk = ram_zksnark_verification_key::<RamPpt>::new(ap.clone(), kp.vk);
@@ -239,12 +238,13 @@ where
 {
     assert!(log2(time_bound) <= RamT::<RamPpt>::timestamp_length);
 
-    let span = span!(Level::TRACE, "Call to ram_zksnark_prover").entered();
-    let span = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
+    let span0 = span!(Level::TRACE, "Call to ram_zksnark_prover");
+    let _=span0.enter();
+    let spang = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(pk.ap.clone());
-    span.exit();
+    spang.exit();
 
-    let span = span!(Level::TRACE, "Initialize the RAM computation").entered();
+    let spani = span!(Level::TRACE, "Initialize the RAM computation").entered();
     let mut cur_proof = r1cs_sp_ppzkpcd_proof::<pcdT<RamPpt>>::default(); // start out with an empty proof
 
     //initialize memory with the correct values
@@ -267,17 +267,16 @@ where
     );
 
     // let aux_it = auxiliary_input.begin();
-    span.exit();
+    spani.exit();
 
-    let span = span!(Level::TRACE, "Execute and prove the computation").entered();
+    let spane = span!(Level::TRACE, "Execute and prove the computation").entered();
     let mut want_halt = false;
     for step in 1..=time_bound {
-        enter_block(
-            &prefix_format!("", "Prove step {} out of {}", step, time_bound),
-            false,
-        );
+        let s = prefix_format!("", "Prove step {} out of {}", step, time_bound);
+        let span0 = span!(Level::TRACE, "{s}");
+        let _ = span0.enter();
 
-        let span = span!(Level::TRACE, "Execute witness map").entered();
+        let spanm = span!(Level::TRACE, "Execute witness map").entered();
 
         let local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
             want_halt,
@@ -298,17 +297,15 @@ where
                 <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD,
             >::new(vec![msg.clone()], local_data, cp_handler.get_witness());
 
-       
         print!("Current state:\n");
         msg.borrow().print();
 
         msg = cp_handler.get_outgoing_message();
 
-       
         print!("Next state:\n");
         msg.borrow().print();
 
-        span.exit();
+        spanm.exit();
 
         cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT<RamPpt>>(
             &pk.pcd_pk,
@@ -316,17 +313,13 @@ where
             &cp_auxiliary_input,
             &vec![cur_proof],
         );
-        leave_block(
-            &prefix_format!("", "Prove step {} out of {}", step, time_bound),
-            false,
-        );
     }
-    span.exit();
+    spane.exit();
 
-    let span = span!(Level::TRACE, "Finalize the computation").entered();
+    let spanf = span!(Level::TRACE, "Finalize the computation").entered();
     want_halt = true;
 
-    let span = span!(Level::TRACE, "Execute witness map").entered();
+    let spanew = span!(Level::TRACE, "Execute witness map").entered();
 
     let mut local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
         want_halt,
@@ -345,7 +338,7 @@ where
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD,
     >::new(vec![msg.clone()], local_data, cp_handler.get_witness());
-    span.exit();
+    spanew.exit();
 
     cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT<RamPpt>>(
         &pk.pcd_pk,
@@ -353,9 +346,9 @@ where
         &cp_auxiliary_input,
         &vec![cur_proof],
     );
-    span.exit();
+    spanf.exit();
 
-    span.exit();
+    
 
     cur_proof.into()
 }
@@ -369,8 +362,6 @@ pub fn ram_zksnark_verifier<RamPpt: RamConfig>(
     time_bound: usize,
     proof: &ram_zksnark_proof<RamPpt>,
 ) -> bool {
-  
-
     let span = span!(Level::TRACE, "Call to ram_zksnark_verifier").entered();
     let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<
         FieldT<RamPpt>,

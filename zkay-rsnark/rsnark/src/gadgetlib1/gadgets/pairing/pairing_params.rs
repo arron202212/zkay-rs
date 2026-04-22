@@ -310,7 +310,7 @@ pub trait ppTConfig:
 //  * Second, specialize pairing_selector<ec_ppT> for the
 //  * case ec_ppT = my_ec_pp, type  the above types:
 //  *
-//  *   
+//  *
 //  *   pub struct pairing_selector<my_ec_pp> {
 //  *       type FieldT=my_Field;
 //  *       type FqeT=my_Fqe;
@@ -336,7 +336,6 @@ pub trait ppTConfig:
 //  * ec_ppT to "MNT4" and "MNT6".
 //  *
 //  */
-
 
 // /**
 //  * Below are various template aliases (used for convenience).

@@ -1,9 +1,6 @@
 //  Declaration of interfaces for a R1CS example, as well as functions to sample
 //  R1CS examples with prescribed parameters (according to some distribution).
 
-
-
-use rand::Rng;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
@@ -12,12 +9,12 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
+use rand::Rng;
 use std::collections::BTreeMap;
-use tracing::{span, Level};
+use tracing::{Level, span};
 // /**
 //  * A R1CS example comprises a R1CS constraint system, R1CS input, and R1CS witness.
 //  */
-
 pub struct r1cs_example<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -56,7 +53,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-
 // /**
 //  * Generate a R1CS example such that:
 //  * - the number of constraints of the R1CS constraint system is num_constraints;
@@ -72,7 +68,11 @@ pub fn generate_r1cs_example_with_field_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
-    let span = span!(Level::TRACE, "Call to generate_r1cs_example_with_field_input").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to generate_r1cs_example_with_field_input"
+    )
+    .entered();
 
     assert!(num_inputs <= num_constraints + 2);
 
@@ -162,7 +162,11 @@ pub fn generate_r1cs_example_with_binary_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
-    let span = span!(Level::TRACE, "Call to generate_r1cs_example_with_binary_input").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to generate_r1cs_example_with_binary_input"
+    )
+    .entered();
 
     assert!(num_inputs >= 1);
 

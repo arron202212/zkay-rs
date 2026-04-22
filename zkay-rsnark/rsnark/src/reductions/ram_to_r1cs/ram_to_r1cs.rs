@@ -24,10 +24,7 @@ use ffec::field_utils::field_utils::{
 };
 use rccell::RcCell;
 use std::collections::BTreeSet;
-use tracing::{span, Level};
-
-
-
+use tracing::{Level, span};
 
 type FieldT<RamT> = ram_base_field<RamT>;
 

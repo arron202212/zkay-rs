@@ -1,7 +1,6 @@
 // Declaration of functionality that runs the RAM ppzkSNARK for
 // a given RAM example.
 
-
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::ram_computations::rams::examples::ram_examples::ram_example;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
@@ -13,12 +12,11 @@ use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark::{
 use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::RamPptConfig;
 use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params::ram_ppzksnark_machine_pp;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::RamConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use ffec::log2;
 use std::ops::Mul;
-
-
+use tracing::{Level, span};
 
 // /**
 //  * The code below provides an example of all stages of running a RAM ppzkSNARK.
@@ -32,8 +30,6 @@ use std::ops::Mul;
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a boot trace, and a proof.
 //  */
-
-
 
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given

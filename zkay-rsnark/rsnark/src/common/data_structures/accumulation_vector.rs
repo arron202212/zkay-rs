@@ -11,7 +11,6 @@ use ffec::{One, PpConfig, Zero};
 //  * The method "accumulate_chunk" allows one to accumlate portions of the sparse
 //  * vector into the accumualation value.
 //  */
-
 #[derive(Clone, Default)]
 pub struct accumulation_vector<T: PpConfig> {
     pub first: T,
@@ -27,7 +26,6 @@ impl<T: PpConfig> From<Vec<T>> for accumulation_vector<T> {
 }
 
 impl<T: PpConfig> accumulation_vector<T> {
-    
     pub fn new(first: T, rest: sparse_vector<T>) -> Self {
         Self { first, rest }
     }
@@ -37,7 +35,6 @@ impl<T: PpConfig> accumulation_vector<T> {
             rest: sparse_vector::new(v),
         }
     }
-
 }
 
 //  Implementation of interfaces for an accumulation vector.

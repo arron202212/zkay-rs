@@ -15,9 +15,7 @@ pub type set_commitment = bit_vector;
 pub struct set_membership_proof {
     pub address: usize,
     pub merkle_path: merkle_authentication_path,
-   
 }
-
 
 pub struct set_commitment_accumulator<HashT: HashTConfig> {
     pub tree: RcCell<merkle_tree<HashT>>,
@@ -30,7 +28,6 @@ pub struct set_commitment_accumulator<HashT: HashTConfig> {
 // /* note that set_commitment has both .cpp, for implementation of
 // non-templatized code (methods of set_membership_proof) and .tcc
 // (implementation of set_commitment_accumulator<HashT> */
-
 use ffec::common::serialization;
 use std::mem;
 impl set_membership_proof {
@@ -43,7 +40,6 @@ impl set_membership_proof {
         }
     }
 }
-
 
 impl<HashT: HashTConfig> set_commitment_accumulator<HashT> {
     pub fn new(max_entries: usize, value_size: usize) -> Self {

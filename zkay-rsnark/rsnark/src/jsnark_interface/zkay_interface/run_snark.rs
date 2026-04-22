@@ -46,9 +46,7 @@ use std::fs::File;
 
 use num_enum::{FromPrimitive, IntoPrimitive};
 use strum::Display;
-use tracing::{span, Level};
-
-
+use tracing::{Level, span};
 
 #[derive(Display, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
 #[repr(u8)]
@@ -232,17 +230,15 @@ fn keygen<KeyPairT: KeyPairTConfig, F>(
     // Generate keypair
     let keypair = generate(cs);
 
-
     // Dump proving key to binary file
     let span = span!(Level::TRACE, "WritingProverKey").entered();
     writeToFile(prover_key_filename, keypair.pk());
-   
 
     // Dump verification key in text format
     let span = span!(Level::TRACE, "SerializeVk").entered();
-    let mut vk_out = fs::read_to_string(verification_key_filename).unwrap();
+    let mut vk_out = std::fs::read_to_string(verification_key_filename).unwrap();
     serialize_vk::<KeyPairT>(&mut vk_out, &keypair);
-    span.exit(); 
+    span.exit();
 
     // Also dump in binary format for local verification
     writeToFile(
@@ -250,7 +246,6 @@ fn keygen<KeyPairT: KeyPairTConfig, F>(
         keypair.vk(),
     );
 }
-
 
 fn proofgen<
     ProofT: ProofTConfig,

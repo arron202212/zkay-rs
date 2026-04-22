@@ -12,8 +12,7 @@ use ffec::common::profiling::{
     enter_block, leave_block, print_header, print_indent, start_profiling,
 };
 use ffec::log2;
-use tracing::{span, Level};
-
+use tracing::{Level, span};
 
 // /**
 //  * Test Benes network routing for all permutations on 2^log2(N) elements.
@@ -48,14 +47,15 @@ pub fn test_as_waksman(N: usize) {
 pub fn main() -> i32 {
     start_profiling();
 
-    let span = span!(Level::TRACE, "Test routing algorithms").entered();
+    let span0 = span!(Level::TRACE, "Test routing algorithms");
+    let _=span0.enter();
 
-    let span = span!(Level::TRACE, "Test Benes network routing algorithm").entered();
+    let span1 = span!(Level::TRACE, "Test Benes network routing algorithm").entered();
     let bn_size = 8;
     print_indent();
     print!("* for all permutations on {} elements\n", bn_size);
     test_benes(bn_size);
-    span.exit();
+    span1.exit();
 
     let span = span!(Level::TRACE, "Test AS-Waksman network routing algorithm").entered();
     let asw_max_size = 9;
@@ -66,6 +66,6 @@ pub fn main() -> i32 {
     }
     span.exit();
 
-    span.exit();
+    
     0
 }

@@ -35,7 +35,6 @@ pub struct r1cs_pcd_message_variable<T: MessageVariableConfig> {
 // /**
 //  * A variable to represent an r1cs_pcd_local_data.
 //  */
-
 #[derive(Clone, Default)]
 pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
     pub num_vars_at_construction: usize,
@@ -46,7 +45,6 @@ pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
 // /**
 //  * A base pub struct for creating compliance predicates.
 //  */
-
 pub trait CPHConfig: ppTConfig {
     type protoboardT: ProtoboardConfig<FieldT = Self::FieldT, PB = Self::PB>;
     type MV: MessageVariableConfig<Output = Self::M, FieldT = Self::FieldT, PB = Self::PB>;
@@ -108,7 +106,6 @@ impl<T: MessageVariableConfig> r1cs_pcd_message_variables<T> {
         // /* NOTE: this assumes that r1cs_pcd_message_variable has been the
         //  * only gadget allocating variables on the protoboard and needs to
         //  * be updated, e.g., in multicore variable allocation scenario. */
-
         for var_idx in self.t.num_vars_at_construction + 1..=self.pb.borrow().num_variables() {
             self.t
                 .all_vars

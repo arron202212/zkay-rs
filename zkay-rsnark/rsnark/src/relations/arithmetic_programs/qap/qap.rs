@@ -18,7 +18,6 @@ use fqfft::evaluation_domain::evaluation_domain::{
 use rccell::RcCell;
 use std::collections::BTreeMap;
 
-
 // /**
 //  * A QAP instance.
 //  *
@@ -30,7 +29,6 @@ use std::collections::BTreeMap;
 //  * There is no need to store the Z polynomial because it is uniquely
 //  * determined by the domain (as Z is its vanishing polynomial).
 //  */
-
 pub struct qap_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -43,7 +41,6 @@ pub struct qap_instance<FieldT: FieldTConfig> {
     pub C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 
-
 // /**
 //  * A QAP instance evaluation is a QAP instance that is evaluated at a field element t.
 //  *
@@ -55,7 +52,6 @@ pub struct qap_instance<FieldT: FieldTConfig> {
 //  * - evaluations of all monomials of t;
 //  * - counts about how many of the above evaluations are in fact non-zero.
 //  */
-
 pub struct qap_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -73,7 +69,6 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig> {
     pub Zt: FieldT,
 }
 
-
 // /**
 //  * A QAP witness.
 //  */
@@ -89,7 +84,6 @@ pub struct qap_witness<FieldT> {
     pub coefficients_for_ABCs: Vec<FieldT>,
     pub coefficients_for_H: Vec<FieldT>,
 }
-
 
 impl<FieldT: FieldTConfig> qap_instance<FieldT> {
     pub fn new(

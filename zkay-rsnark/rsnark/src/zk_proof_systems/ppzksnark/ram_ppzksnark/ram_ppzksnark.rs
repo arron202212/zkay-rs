@@ -54,13 +54,12 @@ use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
     r1cs_ppzksnark_generator, r1cs_ppzksnark_proof, r1cs_ppzksnark_prover,
 };
 use ff_curves::Fr;
-use tracing::{span, Level};
 use std::collections::BTreeSet;
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the RAM ppzkSNARK.
 //  */
-
 type snark_ppT<ram_ppzksnark_ppT> = ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>;
 
 #[derive(Default, Clone)]
@@ -71,7 +70,6 @@ pub struct ram_ppzksnark_proving_key<ram_ppzksnark_ppT: RamPptConfig> {
     pub time_bound: usize,
 }
 impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_proving_key<ram_ppzksnark_ppT> {
-   
     pub fn new(
         r1cs_pk: r1cs_ppzksnark_proving_key<snark_ppT<ram_ppzksnark_ppT>>,
         ap: ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
@@ -85,14 +83,11 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_proving_key<ram_ppzksnark_pp
             time_bound,
         }
     }
-
 }
-
 
 // /**
 //  * A verification key for the RAM ppzkSNARK.
 //  */
-
 #[derive(Default, Clone)]
 pub struct ram_ppzksnark_verification_key<ram_ppzksnark_ppT: RamPptConfig> {
     pub r1cs_vk: r1cs_ppzksnark_verification_key<snark_ppT<ram_ppzksnark_ppT>>,
@@ -103,7 +98,6 @@ pub struct ram_ppzksnark_verification_key<ram_ppzksnark_ppT: RamPptConfig> {
 }
 
 impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksnark_ppT> {
-    
     pub fn new(
         r1cs_vk: r1cs_ppzksnark_verification_key<snark_ppT<ram_ppzksnark_ppT>>,
         ap: ram_ppzksnark_architecture_params<ram_ppzksnark_ppT>,
@@ -118,21 +112,17 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
             bound_primary_input_locations: BTreeSet::new(),
         }
     }
-
-   
 }
 
 // /**
 //  * A key pair for the RAM ppzkSNARK, which consists of a proving key and a verification key.
 //  */
-
 #[derive(Default, Clone)]
 pub struct ram_ppzksnark_keypair<ram_ppzksnark_ppT: RamPptConfig> {
     pub pk: ram_ppzksnark_proving_key<ram_ppzksnark_ppT>,
     pub vk: ram_ppzksnark_verification_key<ram_ppzksnark_ppT>,
 }
 impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_keypair<ram_ppzksnark_ppT> {
-   
     pub fn new(
         pk: ram_ppzksnark_proving_key<ram_ppzksnark_ppT>,
         vk: ram_ppzksnark_verification_key<ram_ppzksnark_ppT>,
@@ -144,15 +134,8 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_keypair<ram_ppzksnark_ppT> {
 // /**
 //  * A proof for the RAM ppzkSNARK.
 //  */
-
 pub type ram_ppzksnark_proof<ram_ppzksnark_ppT> =
     r1cs_ppzksnark_proof<ram_ppzksnark_snark_pp<ram_ppzksnark_ppT>>;
-
-
-
-
-                                                  
-
 
 use std::fmt;
 impl<ram_ppzksnark_ppT: RamPptConfig> fmt::Display
@@ -163,7 +146,6 @@ impl<ram_ppzksnark_ppT: RamPptConfig> fmt::Display
     }
 }
 
-
 type ram_ppT<ram_ppzksnark_ppT> = ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>;
 type FieldT<ram_ppzksnark_ppT> = ram_base_field<ram_ppT<ram_ppzksnark_ppT>>;
 
@@ -172,10 +154,12 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
         &self,
         primary_input: &ram_ppzksnark_primary_input,
     ) -> ram_ppzksnark_verification_key<ram_ppzksnark_ppT> {
-        enter_block(
-            "Call to ram_ppzksnark_verification_key::bind_primary_input",
-            false,
+        let span = span!(
+            Level::TRACE,
+            "Call to ram_ppzksnark_verification_key::bind_primary_input"
         );
+        let _ = span.enter();
+
         let mut result = self.clone();
 
         let packed_input_element_size =
@@ -202,10 +186,6 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
             result.bound_primary_input_locations.insert(input_pos);
         }
 
-        leave_block(
-            "Call to ram_ppzksnark_verification_key::bind_primary_input",
-            false,
-        );
         result
     }
 }
@@ -218,7 +198,6 @@ impl<ram_ppzksnark_ppT: RamPptConfig> fmt::Display
     }
 }
 
-
 // /**
 //  * A generator algorithm for the RAM ppzkSNARK.
 //  *
@@ -230,8 +209,6 @@ pub fn ram_ppzksnark_generator<ram_ppzksnark_ppT: RamPptConfig>(
     primary_input_size_bound: usize,
     time_bound: usize,
 ) -> ram_ppzksnark_keypair<ram_ppzksnark_ppT> {
-
-
     let span = span!(Level::TRACE, "Call to ram_ppzksnark_generator").entered();
     let mut universal_r1cs = ram_to_r1cs::<ram_ppT<ram_ppzksnark_ppT>>::new(
         ap.clone(),
@@ -259,8 +236,6 @@ pub fn ram_ppzksnark_generator<ram_ppzksnark_ppT: RamPptConfig>(
 
     ram_ppzksnark_keypair::<ram_ppzksnark_ppT>::new(pk, vk)
 }
-
-
 
 // /**
 //  * A prover algorithm for the RAM ppzkSNARK.
@@ -300,8 +275,6 @@ where
             >,
         >,
 {
- 
-
     let span = span!(Level::TRACE, "Call to ram_ppzksnark_prover").entered();
     let mut universal_r1cs = ram_to_r1cs::<ram_ppT<ram_ppzksnark_ppT>>::new(
         pk.ap.clone(),
@@ -340,7 +313,6 @@ pub fn ram_ppzksnark_verifier<ram_ppzksnark_ppT: RamPptConfig>(
     primary_input: &ram_ppzksnark_primary_input,
     proof: &ram_ppzksnark_proof<ram_ppzksnark_ppT>,
 ) -> bool {
-   
     let span = span!(Level::TRACE, "Call to ram_ppzksnark_verifier").entered();
     let input_specific_vk = vk.bind_primary_input(primary_input);
     let ans = r1cs_ppzksnark_verifier_weak_IC::<snark_ppT<ram_ppzksnark_ppT>>(

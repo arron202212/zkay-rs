@@ -10,7 +10,6 @@ use crate::gadgetlib2::variable::{
 };
 use rccell::RcCell;
 
-
 pub type ParamsCPtr = Option<RcCell<ProtoboardParams>>;
 
 pub struct Protoboard {
@@ -41,7 +40,7 @@ impl Protoboard {
     pub fn params(&self) -> &ParamsCPtr {
         &self.pParams_
     }
-   
+
     pub fn flagIsSet(&mut self, flag: &FlagVariable) -> bool {
         *self.val(flag) == 1
     }
@@ -51,14 +50,13 @@ impl Protoboard {
     pub fn flipFlag(&mut self, flag: &FlagVariable) {
         *self.val(flag) = FElem::from(1) - &*self.val(flag);
     }
- 
+
     pub fn constraintSystem(&self) -> &ConstraintSystem {
         &self.constraintSystem_
     }
     pub fn assignment(&self) -> &VariableAssignment {
         &self.assignment_
     }
-   
 }
 
 // /*

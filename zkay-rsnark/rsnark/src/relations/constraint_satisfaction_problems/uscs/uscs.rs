@@ -22,20 +22,17 @@ use std::fmt;
 //  *
 //  * A USCS constraint is used to construct a USCS constraint system (see below).
 //  */
-
 pub type uscs_constraint<FieldT, SV, SLC> = linear_combination<FieldT, SV, SLC>;
 
 // /**
 //  * A USCS variable assignment is a vector of <FieldT> elements that represents
 //  * a candidate solution to a USCS constraint system (see below).
 //  */
-
 pub type uscs_primary_input<FieldT> = Vec<FieldT>;
 
 pub type uscs_auxiliary_input<FieldT> = Vec<FieldT>;
 
 pub type uscs_variable_assignment<FieldT> = Vec<FieldT>;
-
 
 // /**
 //  * A system of USCS constraints looks like
@@ -68,9 +65,7 @@ pub struct uscs_constraint_system<
     // // #ifdef DEBUG
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-   
 }
-
 
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
@@ -197,7 +192,6 @@ pub fn dump_uscs_constraint<
     print!("terms:\n");
     constraint.print_with_assignment(full_variable_assignment, variable_annotations);
 }
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> PartialEq
     for uscs_constraint_system<FieldT, SV, SLC>

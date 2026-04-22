@@ -10,9 +10,9 @@ use crate::relations::variable::{linear_combination, linear_term};
 use ffec::FieldTConfig;
 use ffec::algebra::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::common::profiling::print_indent;
-use ffec::common::utils::FMT;
+
 use std::collections::BTreeMap;
-use tracing::{span, Level};
+use tracing::{Level, span};
 // /**
 //  * A R1CS constraint is a formal expression of the form
 //  *
@@ -38,7 +38,6 @@ pub struct r1cs_constraint<
 //  * A R1CS variable assignment is a vector of <FieldT> elements that represents
 //  * a candidate solution to a R1CS constraint system (see below).
 //  */
-
 //TODO: specify that it does *NOT* include the constant 1
 
 pub type r1cs_primary_input<FieldT> = Vec<FieldT>;
@@ -73,7 +72,6 @@ pub struct r1cs_constraint_system<
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
 }
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     r1cs_constraint_system<FieldT, SV, SLC>
@@ -145,7 +143,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         write!(f, "{}{}{}", self.a, self.b, self.c)
     }
 }
-
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     r1cs_constraint_system<FieldT, SV, SLC>
@@ -258,10 +255,11 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 
     pub fn swap_AB_if_beneficial(&mut self) {
-        enter_block(
-            "Call to r1cs_constraint_system::swap_AB_if_beneficial",
-            false,
+        let span0 = span!(
+            Level::TRACE,
+            "Call to r1cs_constraint_system::swap_AB_if_beneficial"
         );
+        let _ = span0.enter();
 
         let span = span!(Level::TRACE, "Estimate densities").entered();
         let mut touched_by_A = vec![false; self.num_variables() + 1];
@@ -303,11 +301,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             print_indent();
             print!("Swap is not beneficial, not performing\n");
         }
-
-        leave_block(
-            "Call to r1cs_constraint_system::swap_AB_if_beneficial",
-            false,
-        );
     }
 
     pub fn report_linear_constraint_statistics(&self) {

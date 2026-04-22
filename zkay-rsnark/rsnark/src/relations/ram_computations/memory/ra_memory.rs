@@ -12,7 +12,6 @@ pub struct ra_memory {
     contents: memory_contents,
 }
 
-
 impl ra_memory {
     pub fn new(num_addresses: usize, value_size: usize) -> memory_base<Self> {
         memory_base::new(

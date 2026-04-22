@@ -267,7 +267,6 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
         true
     }
 
-
     pub fn is_satisfied(
         &self,
         outgoing_message: &RcCell<r1cs_pcd_message<FieldT, ppT::M>>,

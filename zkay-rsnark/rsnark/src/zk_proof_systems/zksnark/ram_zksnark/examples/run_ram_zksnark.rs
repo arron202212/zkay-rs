@@ -17,12 +17,10 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark::{
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::RamConfig;
 use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::ram_zksnark_machine_pp;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::reserialize;
 use std::ops::Mul;
-// use common::profiling;
-
-// use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark;
+use tracing::{Level, span};
 
 // /**
 //  * Runs the zkSNARK (generator, prover, and verifier) for a given

@@ -16,7 +16,6 @@ pub struct tbcs_example {
     pub auxiliary_input: tbcs_auxiliary_input,
 }
 impl tbcs_example {
-  
     pub fn new(
         circuit: tbcs_circuit,
         primary_input: tbcs_primary_input,
@@ -41,7 +40,6 @@ impl tbcs_example {
 //  * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
 //  * - selecting a gate type at random (subject to the constraint "output = 0" if this is an output gate).
 //  */
-
 pub fn generate_tbcs_example(
     primary_input_size: usize,
     auxiliary_input_size: usize,

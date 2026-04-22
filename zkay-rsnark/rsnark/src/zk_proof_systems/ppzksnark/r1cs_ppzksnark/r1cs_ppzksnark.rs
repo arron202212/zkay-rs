@@ -57,7 +57,7 @@ use ff_curves::{
     Fr, Fr_vector, G1, G1_precomp, G1_vector, G2, G2_precomp, PublicParams, PublicParamsType,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::common::serialization::OUTPUT_NEWLINE;
 use ffec::scalar_multiplication::multiexp::{
     batch_exp, get_exp_window_size, get_window_table, inhibit_profiling_info, multi_exp,
@@ -67,15 +67,13 @@ use ffec::{One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::fmt;
 use std::ops::{Add, Mul, Sub};
+use tracing::{Level, span};
 
 // /**
 //  * A proving key for the R1CS ppzkSNARK.
 //  */
-
 #[derive(Clone, Default)]
-pub struct r1cs_ppzksnark_proving_key<ppT: PublicParams>
-
-{
+pub struct r1cs_ppzksnark_proving_key<ppT: PublicParams> {
     pub A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
     pub B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
     pub C_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
@@ -86,10 +84,7 @@ pub struct r1cs_ppzksnark_proving_key<ppT: PublicParams>
 }
 impl<ppT: PublicParams> ProvingKeyTConfig for r1cs_ppzksnark_proving_key<ppT> {}
 
-impl<ppT: PublicParams> r1cs_ppzksnark_proving_key<ppT>
-
-{
-  
+impl<ppT: PublicParams> r1cs_ppzksnark_proving_key<ppT> {
     pub fn new(
         A_query: knowledge_commitment_vector<G1<ppT>, G1<ppT>>,
         B_query: knowledge_commitment_vector<G2<ppT>, G1<ppT>>,
@@ -97,9 +92,7 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proving_key<ppT>
         H_query: G1_vector<ppT>,
         K_query: G1_vector<ppT>,
         constraint_system: r1cs_ppzksnark_constraint_system<ppT>,
-    ) -> Self
-
-    {
+    ) -> Self {
         Self {
             A_query,
             B_query,
@@ -152,17 +145,13 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proving_key<ppT>
         print_indent();
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
-
-    
 }
 
 // /**
 //  * A verification key for the R1CS ppzkSNARK.
 //  */
 #[derive(Default, Clone)]
-pub struct r1cs_ppzksnark_verification_key<ppT: PublicParams>
-
-{
+pub struct r1cs_ppzksnark_verification_key<ppT: PublicParams> {
     pub alphaA_g2: G2<ppT>,
     pub alphaB_g1: G1<ppT>,
     pub alphaC_g2: G2<ppT>,
@@ -174,10 +163,7 @@ pub struct r1cs_ppzksnark_verification_key<ppT: PublicParams>
     pub encoded_IC_query: accumulation_vector<G1<ppT>>,
 }
 impl<ppT: PublicParams> VerificationKeyTConfig for r1cs_ppzksnark_verification_key<ppT> {}
-impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT>
-
-{
-   
+impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT> {
     pub fn new(
         alphaA_g2: G2<ppT>,
         alphaB_g1: G1<ppT>,
@@ -222,8 +208,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT>
         print_indent();
         print!("* VK size in bits: {}\n", self.size_in_bits());
     }
-
-    
 }
 
 // /**
@@ -234,9 +218,7 @@ impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT>
 //  * enables a faster verification time.
 //  */
 #[derive(Default, Clone)]
-pub struct r1cs_ppzksnark_processed_verification_key<ppT: PublicParams>
-
-{
+pub struct r1cs_ppzksnark_processed_verification_key<ppT: PublicParams> {
     pub pp_G2_one_precomp: G2_precomp<ppT>,
     pub vk_alphaA_g2_precomp: G2_precomp<ppT>,
     pub vk_alphaB_g1_precomp: G1_precomp<ppT>,
@@ -247,16 +229,13 @@ pub struct r1cs_ppzksnark_processed_verification_key<ppT: PublicParams>
     pub vk_gamma_beta_g2_precomp: G2_precomp<ppT>,
 
     pub encoded_IC_query: accumulation_vector<G1<ppT>>,
-  
 }
 
 // /**
 //  * A key pair for the R1CS ppzkSNARK, which consists of a proving key and a verification key.
 //  */
 #[derive(Clone, Default)]
-pub struct r1cs_ppzksnark_keypair<ppT: PublicParams>
-
-{
+pub struct r1cs_ppzksnark_keypair<ppT: PublicParams> {
     pub pk: r1cs_ppzksnark_proving_key<ppT>,
     pub vk: r1cs_ppzksnark_verification_key<ppT>,
 }
@@ -270,19 +249,14 @@ impl<ppT: PublicParams> KeyPairTConfig for r1cs_ppzksnark_keypair<ppT> {
         &self.pk
     }
 }
-impl<ppT: PublicParams> r1cs_ppzksnark_keypair<ppT>
-
-{
-   
+impl<ppT: PublicParams> r1cs_ppzksnark_keypair<ppT> {
     pub fn new(
         pk: r1cs_ppzksnark_proving_key<ppT>,
         vk: r1cs_ppzksnark_verification_key<ppT>,
     ) -> Self {
         Self { pk, vk }
     }
-
 }
-
 
 // /**
 //  * A proof for the R1CS ppzkSNARK.
@@ -319,9 +293,7 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proof<ppT> {
         g_C: knowledge_commitment<G1<ppT>, G1<ppT>>,
         g_H: G1<ppT>,
         g_K: G1<ppT>,
-    ) -> Self
-
-    {
+    ) -> Self {
         Self {
             g_A,
             g_B,
@@ -362,7 +334,6 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proof<ppT> {
             && self.g_H.is_well_formed()
             && self.g_K.is_well_formed()
     }
-
 }
 
 // /**
@@ -370,12 +341,9 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proof<ppT> {
 //  *
 //  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
 //  */
-
 pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     cs: &r1cs_ppzksnark_constraint_system<ppT>,
-) -> r1cs_ppzksnark_keypair<ppT>
-
-{
+) -> r1cs_ppzksnark_keypair<ppT> {
     let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_generator").entered();
 
     //make the B_query "lighter" if possible
@@ -618,7 +586,6 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
 //  *               ``there exists Y such that CS(X,Y)=0''.
 //  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
 //  */
-
 pub fn r1cs_ppzksnark_prover<ppT: PublicParams>(
     pk: &r1cs_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
@@ -645,7 +612,6 @@ where
                 <ppT as ff_curves::PublicParams>::G1,
             >,
         >,
-    
 {
     let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_prover").entered();
 
@@ -699,7 +665,6 @@ where
     //     assert!(pk.H_query.len() == qap_wit.degree()+1);
     //     assert!(pk.K_query.len() == qap_wit.num_variables()+4);
     //
-
 
     let chunks = 1;
 
@@ -798,20 +763,16 @@ where
 //     weak input consistency requires that |primary_input| <= CS.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length CS.num_inputs).
 // */
-
 // /**
 //  * A verifier algorithm for the R1CS ppzkSNARK that:
 //  * (1) accepts a non-processed verification key, and
 //  * (2) has weak input consistency.
 //  */
-
 pub fn r1cs_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
     vk: &r1cs_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_verifier_weak_IC").entered();
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = r1cs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
@@ -824,14 +785,11 @@ pub fn r1cs_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
 //  * (1) accepts a non-processed verification key, and
 //  * (2) has strong input consistency.
 //  */
-
 pub fn r1cs_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
     vk: &r1cs_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
-) -> bool
-
-{
+) -> bool {
     let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_verifier_strong_IC").entered();
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = r1cs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
@@ -868,14 +826,16 @@ pub fn r1cs_ppzksnark_verifier_process_vk<ppT: PublicParams>(
 //  * (1) accepts a processed verification key, and
 //  * (2) has weak input consistency.
 //  */
-
 pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     pvk: &r1cs_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
-) -> bool
-{
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_online_verifier_weak_IC").entered();
+) -> bool {
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_ppzksnark_online_verifier_weak_IC"
+    )
+    .entered();
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
     let span = span!(Level::TRACE, "Compute input-dependent part of A").entered();
@@ -996,16 +956,17 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
 //  * (1) accepts a processed verification key, and
 //  * (2) has strong input consistency.
 //  */
-
 pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     pvk: &r1cs_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
-) -> bool
-
-{
+) -> bool {
     let mut result = true;
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_online_verifier_strong_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_ppzksnark_online_verifier_strong_IC"
+    )
+    .entered();
 
     if pvk.encoded_IC_query.domain_size() != primary_input.len() {
         print_indent();
@@ -1031,13 +992,16 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
 //  * (2) has weak input consistency, and
 //  * (3) uses affine coordinates for elliptic-curve computations.
 //  */
-
 pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     vk: &r1cs_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_affine_verifier_weak_IC").entered();
+    let span = span!(
+        Level::TRACE,
+        "Call to r1cs_ppzksnark_affine_verifier_weak_IC"
+    )
+    .entered();
     assert!(vk.encoded_IC_query.domain_size() >= primary_input.len());
 
     let pvk_pp_G2_one_precomp = ppT::affine_ate_precompute_G2(&G2::<ppT>::one());
@@ -1155,7 +1119,6 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     result
 }
 
-
 impl<ppT: PublicParams> PartialEq for r1cs_ppzksnark_proving_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -1191,7 +1154,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_ppzksnark_proving_key<ppT> {
     }
 }
 
-
 impl<ppT: PublicParams> PartialEq for r1cs_ppzksnark_verification_key<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -1223,9 +1185,7 @@ impl<ppT: PublicParams> fmt::Display for r1cs_ppzksnark_verification_key<ppT> {
     }
 }
 
-impl<ppT: PublicParams> r1cs_ppzksnark_processed_verification_key<ppT>
-
-{
+impl<ppT: PublicParams> r1cs_ppzksnark_processed_verification_key<ppT> {
     pub fn size_in_bits(&self) -> usize {
         0
     }
@@ -1263,7 +1223,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_ppzksnark_processed_verification_k
     }
 }
 
-
 impl<ppT: PublicParams> PartialEq for r1cs_ppzksnark_proof<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -1285,10 +1244,8 @@ impl<ppT: PublicParams> fmt::Display for r1cs_ppzksnark_proof<ppT> {
     }
 }
 
-
 impl<ppT: PublicParams> r1cs_ppzksnark_verification_key<ppT> {
-    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzksnark_verification_key<ppT>
-{
+    pub fn dummy_verification_key(input_size: usize) -> r1cs_ppzksnark_verification_key<ppT> {
         let mut result = r1cs_ppzksnark_verification_key::<ppT>::default();
         result.alphaA_g2 = G2::<ppT>::one() * Fr::<ppT>::random_element();
         result.alphaB_g1 = G1::<ppT>::one() * Fr::<ppT>::random_element();

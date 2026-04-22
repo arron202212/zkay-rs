@@ -82,7 +82,7 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
     RamConfig, ram_zksnark_PCD_pp, ram_zksnark_architecture_params,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block, print_indent};
+use ffec::common::profiling::print_indent;
 use ffec::field_utils::field_utils::{
     convert_bit_vector_to_field_element, convert_field_element_to_bit_vector1,
     pack_bit_vector_into_field_element_vector,
@@ -90,6 +90,7 @@ use ffec::field_utils::field_utils::{
 use ffec::{One, Zero, bit_vector, div_ceil, int_list_to_bits, log2};
 use rccell::RcCell;
 use std::collections::BTreeSet;
+use tracing::{Level, span};
 
 // /**
 //  * A RAM message specializes the generic PCD message, in order to
@@ -146,7 +147,6 @@ pub struct ram_pcd_local_data_variable<RamT: ram_params_type> {
 // /**
 //  * A RAM compliance predicate.
 //  */
-
 type HashT<RamT> = CRH_with_bit_out_gadgets<FieldT<RamT>, <RamT as ppTConfig>::PB>;
 type base_handler<RamT> = compliance_predicate_handler<FieldT<RamT>, ram_protoboard<RamT>>;
 
@@ -582,7 +582,6 @@ impl<RamT: ram_params_type> LocalDataVariableConfig for ram_pcd_local_data_varia
 //   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
 //   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
 // */
-
 pub type ram_compliance_predicate_handlers<RamT> = compliance_predicate_handler<
     <RamT as ram_params_type>::CPH,
     ram_compliance_predicate_handler<RamT>,
@@ -997,10 +996,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
         primary_input: &ram_boot_trace,
         time_bound: usize,
     ) -> RcCell<r1cs_pcd_message<FieldT<RamT>, ram_pcd_message<RamT>>> {
-        enter_block(
-            "Call to ram_compliance_predicate_handler::get_final_case_msg",
-            false,
+        let span = span!(
+            Level::TRACE,
+            "Call to ram_compliance_predicate_handler::get_final_case_msg"
         );
+        let _ = span.enter();
+
         let num_addresses = 1usize << ap.address_size();
         let value_size = ap.value_size();
         let mem = delegated_ra_memory::<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>::new3(
@@ -1035,10 +1036,6 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
             cpu_state_initial,
             has_accepted,
         ));
-        leave_block(
-            "Call to ram_compliance_predicate_handler::get_final_case_msg",
-            false,
-        );
 
         result
     }
@@ -1543,7 +1540,6 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         //   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
         //   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
         // */
-
         // Order matters here: both witness maps touch next_root, but the
         // one that does not set values must be executed the last, so its
         // auxiliary variables are filled in correctly according to values
@@ -1590,10 +1586,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         ap: &ram_architecture_params<RamT>,
         primary_input: &ram_boot_trace,
     ) -> RcCell<r1cs_pcd_message<FieldT<RamT>, ram_pcd_message<RamT>>> {
-        enter_block(
-            "Call to ram_compliance_predicate_handler::get_base_case_message",
-            false,
+        let span = span!(
+            Level::TRACE,
+            "Call to ram_compliance_predicate_handler::get_base_case_message"
         );
+        let _ = span.enter();
+
         let num_addresses = 1usize << ap.address_size();
         let value_size = ap.value_size();
         let mem = delegated_ra_memory::<CRH_with_bit_out_gadgets<FieldT<RamT>, RamT::PB>>::new3(
@@ -1628,10 +1626,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             cpu_state_initial,
             has_accepted,
         ));
-        leave_block(
-            "Call to ram_compliance_predicate_handler::get_base_case_message",
-            false,
-        );
+
         result
     }
 }
