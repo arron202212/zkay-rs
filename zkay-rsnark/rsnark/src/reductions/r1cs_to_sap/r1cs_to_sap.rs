@@ -38,7 +38,6 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils::FMT;
 
 use fqfft::evaluation_domain::{
@@ -48,53 +47,24 @@ use fqfft::evaluation_domain::{
 use rccell::RcCell;
 
 use std::collections::BTreeMap;
-/**
- * Helper function to find evaluation domain that will be used by the reduction
- * for a given R1CS instance.
- */
-//
-// RcCell<EvaluationDomainConfig<FieldT> > r1cs_to_sap_get_domain(&cs:r1cs_constraint_system<FieldT>);
 
-/**
- * Instance map for the R1CS-to-QAP reduction.
- */
-//
-// sap_instance<FieldT> r1cs_to_sap_instance_map(&cs:r1cs_constraint_system<FieldT>);
+use tracing::{span, Level};
 
-/**
- * Instance map for the R1CS-to-QAP reduction followed by evaluation of the resulting QAP instance.
- */
-//
-// sap_instance_evaluation<FieldT> r1cs_to_sap_instance_map_with_evaluation(cs:&r1cs_constraint_system<FieldT>
-//                                                                          &t:FieldT);
 
-/**
- * Witness map for the R1CS-to-QAP reduction.
- *
- * The witness map takes zero knowledge into account when d1,d2 are random.
- */
-//
-// sap_witness<FieldT> r1cs_to_sap_witness_map(cs:&r1cs_constraint_system<FieldT>
-//                                             primary_input:&r1cs_primary_input<FieldT>
-//                                             auxiliary_input:&r1cs_auxiliary_input<FieldT>
-//                                             d1:&FieldT
-//                                             &d2:FieldT);
 
-// use crate::reductions::r1cs_to_sap::r1cs_to_sap;
 
-/**
- * Helper function to multiply a field element by 4 efficiently
- */
+// /**
+//  * Helper function to multiply a field element by 4 efficiently
+//  */
 
 pub fn times_four<FieldT: FieldTConfig>(x: FieldT) -> FieldT {
     let times_two = x.clone() + x.clone();
     return times_two.clone() + times_two.clone();
 }
 
-/**
- * Helper function to find evaluation domain that will be used by the reduction
- * for a given R1CS instance.
- */
+
+//  * Helper function to find evaluation domain that will be used by the reduction
+//  * for a given R1CS instance.
 
 pub fn r1cs_to_sap_get_domain<
     FieldT: FieldTConfig,
@@ -103,21 +73,21 @@ pub fn r1cs_to_sap_get_domain<
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> RcCell<EvaluationDomainType<FieldT>> {
-    /*
-     * the SAP instance will have:
-     * - two constraints for every constraint in the original constraint system
-     * - two constraints for every public input, except the 0th, which
-     *   contributes just one extra constraint
-     * see comments in r1cs_to_sap_instance_map for details on where these
-     * constraints come from.
-     */
-    return get_evaluation_domain::<FieldT>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1)
-        .unwrap();
+    // /*
+    //  * the SAP instance will have:
+    //  * - two constraints for every constraint in the original constraint system
+    //  * - two constraints for every public input, except the 0th, which
+    //  *   contributes just one extra constraint
+    //  * see comments in r1cs_to_sap_instance_map for details on where these
+    //  * constraints come from.
+    //  */
+     get_evaluation_domain::<FieldT>(2 * cs.num_constraints() + 2 * cs.num_inputs() + 1)
+        .unwrap()
 }
 
-/**
- * Instance map for the R1CS-to-SAP reduction.
- */
+// /**
+//  * Instance map for the R1CS-to-SAP reduction.
+//  */
 pub fn r1cs_to_sap_instance_map<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -125,7 +95,7 @@ pub fn r1cs_to_sap_instance_map<
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> sap_instance<FieldT> {
-    enter_block("Call to r1cs_to_sap_instance_map", false);
+    let span = span!(Level::TRACE, "Call to r1cs_to_sap_instance_map").entered();
 
     let domain = r1cs_to_sap_get_domain(cs);
 
@@ -136,21 +106,21 @@ pub fn r1cs_to_sap_instance_map<
     let mut C_in_Lagrange_basis =
         Vec::<BTreeMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
 
-    enter_block("Compute polynomials A, C in Lagrange basis", false);
-    /**
-     * process R1CS constraints, converting a constraint of the form
-     *   \sum a_i x_i * \sum b_i x_i = \sum c_i x_i
-     * into two constraints
-     *   (\sum (a_i + b_i) x_i)^2 = 4 \sum c_i x_i + x'_i
-     *   (\sum (a_i - b_i) x_i)^2 = x'_i
-     * where x'_i is an extra variable (a separate one for each original
-     * constraint)
-     *
-     * this adds 2 * cs.num_constraints() constraints
-     *   (numbered 0 .. 2 * cs.num_constraints() - 1)
-     * and cs.num_constraints() extra variables
-     *   (numbered cs.num_variables() + 1 .. cs.num_variables() + cs.num_constraints())
-     */
+    let span = span!(Level::TRACE, "Compute polynomials A, C in Lagrange basis").entered();
+    // /**
+    //  * process R1CS constraints, converting a constraint of the form
+    //  *   \sum a_i x_i * \sum b_i x_i = \sum c_i x_i
+    //  * into two constraints
+    //  *   (\sum (a_i + b_i) x_i)^2 = 4 \sum c_i x_i + x'_i
+    //  *   (\sum (a_i - b_i) x_i)^2 = x'_i
+    //  * where x'_i is an extra variable (a separate one for each original
+    //  * constraint)
+    //  *
+    //  * this adds 2 * cs.num_constraints() constraints
+    //  *   (numbered 0 .. 2 * cs.num_constraints() - 1)
+    //  * and cs.num_constraints() extra variables
+    //  *   (numbered cs.num_variables() + 1 .. cs.num_variables() + cs.num_constraints())
+    //  */
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
@@ -186,26 +156,26 @@ pub fn r1cs_to_sap_instance_map<
             .or_insert(FieldT::zero()) += FieldT::one();
     }
 
-    /**
-     * add and convert the extra constraints
-     *     x_i * 1 = x_i
-     * to ensure that the polynomials 0 .. cs.num_inputs() are linearly
-     * independent from each other and the rest, which is required for security
-     * proofs (see [GM17, p. 29])
-     *
-     * note that i = 0 is a special case, where this constraint is expressible
-     * as x_0^2 = x_0,
-     * whereas for every other i we introduce an extra variable x''_i and do
-     *   (x_i + x_0)^2 = 4 x_i + x''_i
-     *   (x_i - x_0)^2 = x''_i
-     *
-     * this adds 2 * cs.num_inputs() + 1 extra constraints
-     *   (numbered 2 * cs.num_constraints() ..
-     *             2 * cs.num_constraints() + 2 * cs.num_inputs())
-     * and cs.num_inputs() extra variables
-     *   (numbered cs.num_variables() + cs.num_constraints() + 1 ..
-     *             cs.num_variables() + cs.num_constraints() + cs.num_inputs())
-     */
+    // /**
+    //  * add and convert the extra constraints
+    //  *     x_i * 1 = x_i
+    //  * to ensure that the polynomials 0 .. cs.num_inputs() are linearly
+    //  * independent from each other and the rest, which is required for security
+    //  * proofs (see [GM17, p. 29])
+    //  *
+    //  * note that i = 0 is a special case, where this constraint is expressible
+    //  * as x_0^2 = x_0,
+    //  * whereas for every other i we introduce an extra variable x''_i and do
+    //  *   (x_i + x_0)^2 = 4 x_i + x''_i
+    //  *   (x_i - x_0)^2 = x''_i
+    //  *
+    //  * this adds 2 * cs.num_inputs() + 1 extra constraints
+    //  *   (numbered 2 * cs.num_constraints() ..
+    //  *             2 * cs.num_constraints() + 2 * cs.num_inputs())
+    //  * and cs.num_inputs() extra variables
+    //  *   (numbered cs.num_variables() + cs.num_constraints() + 1 ..
+    //  *             cs.num_variables() + cs.num_constraints() + cs.num_inputs())
+    //  */
     let extra_constr_offset = 2 * cs.num_constraints();
     let extra_var_offset2 = cs.num_variables() + cs.num_constraints();
 
@@ -240,9 +210,9 @@ pub fn r1cs_to_sap_instance_map<
             .or_insert(FieldT::zero()) += FieldT::one();
     }
 
-    leave_block("Compute polynomials A, C in Lagrange basis", false);
+    span.exit();
 
-    leave_block("Call to r1cs_to_sap_instance_map", false);
+    span.exit();
 
     sap_instance::<FieldT>::new(
         domain.clone(),
@@ -254,10 +224,10 @@ pub fn r1cs_to_sap_instance_map<
     )
 }
 
-/**
- * Instance map for the R1CS-to-SAP reduction followed by evaluation
- * of the resulting QAP instance.
- */
+// /**
+//  * Instance map for the R1CS-to-SAP reduction followed by evaluation
+//  * of the resulting QAP instance.
+//  */
 pub fn r1cs_to_sap_instance_map_with_evaluation<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -266,7 +236,7 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> sap_instance_evaluation<FieldT> {
-    enter_block("Call to r1cs_to_sap_instance_map_with_evaluation", false);
+    let span = span!(Level::TRACE, "Call to r1cs_to_sap_instance_map_with_evaluation").entered();
 
     let domain: RcCell<EvaluationDomainType<FieldT>> = r1cs_to_sap_get_domain(cs);
 
@@ -280,11 +250,11 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
 
     let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
-    enter_block("Compute evaluations of A, C, H at t", false);
+    let span = span!(Level::TRACE, "Compute evaluations of A, C, H at t").entered();
     let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
-    /**
-     * add and process all constraints as in r1cs_to_sap_instance_map
-     */
+    // /**
+    //  * add and process all constraints as in r1cs_to_sap_instance_map
+    //  */
     let extra_var_offset = cs.num_variables() + 1;
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].a.terms.len() {
@@ -332,9 +302,9 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
         Ht.push(ti.clone());
         ti *= t.clone();
     }
-    leave_block("Compute evaluations of A, C, H at t", false);
+    span.exit();
 
-    leave_block("Call to r1cs_to_sap_instance_map_with_evaluation", false);
+    span.exit();
 
     sap_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -349,35 +319,35 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     )
 }
 
-/**
-* Witness map for the R1CS-to-SAP reduction.
-*
-* The witness map takes zero knowledge into account when d1, d2 are random.
-*
-* More precisely, compute the coefficients
-*     h_0,h_1,...,h_n
-* of the polynomial
-*     H(z)->Self= (A(z)*A(z)-C(z))/Z(z)
-* where
-*   A(z)->Self= A_0(z) + \sum_{k=1}^{m} w_k A_k(z) + d1 * Z(z)
-*   C(z)->Self= C_0(z) + \sum_{k=1}^{m} w_k C_k(z) + d2 * Z(z)
-*   Z(z)->Self= "vanishing polynomial of set S"
-* and
-*   m = number of variables of the SAP
-*   n = degree of the SAP
-*
-* This is done as follows:
-*  (1) compute evaluations of A,C on S = {sigma_1,...,sigma_n}
-*  (2) compute coefficients of A,C
-*  (3) compute evaluations of A,C on T = "coset of S"
-*  (4) compute evaluation of H on T
-*  (5) compute coefficients of H
-*  (6) patch H to account for d1,d2
-       (i.e., add coefficients of the polynomial (2*d1*A - d2 + d1^2 * Z))
-*
-* The code below is not as simple as the above high-level description due to
-* some reshuffling to save space.
-*/
+// /**
+// * Witness map for the R1CS-to-SAP reduction.
+// *
+// * The witness map takes zero knowledge into account when d1, d2 are random.
+// *
+// * More precisely, compute the coefficients
+// *     h_0,h_1,...,h_n
+// * of the polynomial
+// *     H(z)->Self= (A(z)*A(z)-C(z))/Z(z)
+// * where
+// *   A(z)->Self= A_0(z) + \sum_{k=1}^{m} w_k A_k(z) + d1 * Z(z)
+// *   C(z)->Self= C_0(z) + \sum_{k=1}^{m} w_k C_k(z) + d2 * Z(z)
+// *   Z(z)->Self= "vanishing polynomial of set S"
+// * and
+// *   m = number of variables of the SAP
+// *   n = degree of the SAP
+// *
+// * This is done as follows:
+// *  (1) compute evaluations of A,C on S = {sigma_1,...,sigma_n}
+// *  (2) compute coefficients of A,C
+// *  (3) compute evaluations of A,C on T = "coset of S"
+// *  (4) compute evaluation of H on T
+// *  (5) compute coefficients of H
+// *  (6) patch H to account for d1,d2
+//        (i.e., add coefficients of the polynomial (2*d1*A - d2 + d1^2 * Z))
+// *
+// * The code below is not as simple as the above high-level description due to
+// * some reshuffling to save space.
+// */
 pub fn r1cs_to_sap_witness_map<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -389,7 +359,7 @@ pub fn r1cs_to_sap_witness_map<
     d1: &FieldT,
     d2: &FieldT,
 ) -> sap_witness<FieldT> {
-    enter_block("Call to r1cs_to_sap_witness_map", false);
+    let span = span!(Level::TRACE, "Call to r1cs_to_sap_witness_map").entered();
 
     // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -404,38 +374,38 @@ pub fn r1cs_to_sap_witness_map<
         .cloned()
         .collect();
 
-    /**
-     * we need to generate values of all the extra variables that we added
-     * during the reduction
-     *
-     * note: below, we pass full_variable_assignment into the .evaluate()
-     * method of the R1CS constraints. however, these extra variables shouldn't
-     * be a problem, because .evaluate() only accesses the variables that are
-     * actually used in the constraint.
-     */
+    // /**
+    //  * we need to generate values of all the extra variables that we added
+    //  * during the reduction
+    //  *
+    //  * note: below, we pass full_variable_assignment into the .evaluate()
+    //  * method of the R1CS constraints. however, these extra variables shouldn't
+    //  * be a problem, because .evaluate() only accesses the variables that are
+    //  * actually used in the constraint.
+    //  */
     for i in 0..cs.num_constraints() {
-        /**
-         * this is variable (extra_var_offset + i), an extra variable
-         * we introduced that is not present in the input.
-         * its value is (a - b)^2
-         */
+        // /**
+        //  * this is variable (extra_var_offset + i), an extra variable
+        //  * we introduced that is not present in the input.
+        //  * its value is (a - b)^2
+        //  */
         let mut extra_var = cs.constraints[i].a.evaluate(&full_variable_assignment)
             - cs.constraints[i].b.evaluate(&full_variable_assignment);
         extra_var = extra_var.clone() * extra_var.clone();
         full_variable_assignment.push(extra_var);
     }
     for i in 1..=cs.num_inputs() {
-        /**
-         * this is variable (extra_var_offset2 + i), an extra variable
-         * we introduced that is not present in the input.
-         * its value is (x_i - 1)^2
-         */
+        // /**
+        //  * this is variable (extra_var_offset2 + i), an extra variable
+        //  * we introduced that is not present in the input.
+        //  * its value is (x_i - 1)^2
+        //  */
         let mut extra_var = full_variable_assignment[i - 1].clone() - FieldT::one();
         extra_var = extra_var.clone() * extra_var.clone();
         full_variable_assignment.push(extra_var);
     }
 
-    enter_block("Compute evaluation of polynomial A on set S", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial A on set S").entered();
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
 
     // account for all constraints, as in r1cs_to_sap_instance_map
@@ -459,13 +429,13 @@ pub fn r1cs_to_sap_witness_map<
         aA[extra_constr_offset + 2 * i] -= FieldT::one();
     }
 
-    leave_block("Compute evaluation of polynomial A on set S", false);
+    span.exit();
 
-    enter_block("Compute coefficients of polynomial A", false);
+    let span = span!(Level::TRACE, "Compute coefficients of polynomial A").entered();
     domain.borrow_mut().iFFT(&mut aA);
-    leave_block("Compute coefficients of polynomial A", false);
+    span.exit();
 
-    enter_block("Compute ZK-patch", false);
+    let span = span!(Level::TRACE, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
 
     // add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z
@@ -476,22 +446,22 @@ pub fn r1cs_to_sap_witness_map<
     domain
         .borrow_mut()
         .add_poly_Z(&(d1.clone() * d1.clone()), &mut coefficients_for_H);
-    leave_block("Compute ZK-patch", false);
+    span.exit();
 
-    enter_block("Compute evaluation of polynomial A on set T", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial A on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
-    leave_block("Compute evaluation of polynomial A on set T", false);
+    span.exit();
 
-    enter_block("Compute evaluation of polynomial H on set T", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
 
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aA[i].clone();
     }
 
-    enter_block("Compute evaluation of polynomial C on set S", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial C on set S").entered();
     let mut aC = vec![FieldT::zero(); domain.borrow().m()];
     // again, accounting for all constraints
     let extra_var_offset = cs.num_variables() + 1;
@@ -514,42 +484,42 @@ pub fn r1cs_to_sap_witness_map<
             full_variable_assignment[extra_var_offset2 + i - 1].clone();
     }
 
-    leave_block("Compute evaluation of polynomial C on set S", false);
+    span.exit();
 
-    enter_block("Compute coefficients of polynomial C", false);
+    let span = span!(Level::TRACE, "Compute coefficients of polynomial C").entered();
     domain.borrow_mut().iFFT(&mut aC);
-    leave_block("Compute coefficients of polynomial C", false);
+    span.exit();
 
-    enter_block("Compute evaluation of polynomial C on set T", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial C on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
-    leave_block("Compute evaluation of polynomial C on set T", false);
+    span.exit();
 
     for i in 0..domain.borrow().m() {
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
-    enter_block("Divide by Z on set T", false);
+    let span = span!(Level::TRACE, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
-    leave_block("Divide by Z on set T", false);
+    span.exit();
 
-    leave_block("Compute evaluation of polynomial H on set T", false);
+    span.exit();
 
-    enter_block("Compute coefficients of polynomial H", false);
+    let span = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
-    leave_block("Compute coefficients of polynomial H", false);
+    span.exit();
 
-    enter_block("Compute sum of H and ZK-patch", false);
+    let span = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
-    leave_block("Compute sum of H and ZK-patch", false);
+    span.exit();
 
-    leave_block("Call to r1cs_to_sap_witness_map", false);
+    span.exit();
 
     return sap_witness::<FieldT>::new(
         sap_num_variables,
@@ -561,5 +531,3 @@ pub fn r1cs_to_sap_witness_map<
         (coefficients_for_H),
     );
 }
-
-//

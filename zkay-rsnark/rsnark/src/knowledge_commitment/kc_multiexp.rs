@@ -1,11 +1,11 @@
-/*
-  Split out from multiexp to prevent cyclical
-  dependencies. I.e. previously multiexp dependend on
-  knowledge_commitment, which dependend on sparse_vector, which
-  dependend on multiexp (to do accumulate).
+// /*
+//   Split out from multiexp to prevent cyclical
+//   dependencies. I.e. previously multiexp dependend on
+//   knowledge_commitment, which dependend on sparse_vector, which
+//   dependend on multiexp (to do accumulate).
 
-  Will probably go away in more general exp refactoring.
-*/
+//   Will probably go away in more general exp refactoring.
+// */
 use crate::knowledge_commitment::knowledge_commitment::{
     knowledge_commitment, knowledge_commitment_vector,
 };
@@ -21,6 +21,8 @@ use ffec::scalar_multiplication::multiexp::{
 };
 use ffec::scalar_multiplication::wnaf::opt_window_wnaf_exp;
 use ffec::{One, Zero};
+use tracing::{span, Level};
+
 
 pub fn opt_window_wnaf_exps<T: PpConfig, T2: PpConfig, FieldT: FieldTConfig>(
     base: &knowledge_commitment<T, T2>,
@@ -45,7 +47,7 @@ pub fn kc_multi_exp_with_mixed_addition<
     scalar: &[FieldT],
     chunks: usize,
 ) -> knowledge_commitment<T, T2> {
-    enter_block("Process scalar vector", false);
+    let span = span!(Level::TRACE, "Process scalar vector").entered();
     let index_it = vec.indices.partition_point(|&i| i < min_idx);
     let offset = index_it;
     let value_it = &vec.values[offset];
@@ -114,7 +116,7 @@ pub fn kc_multi_exp_with_mixed_addition<
         num_other,
         100 * num_other / (num_skip + num_add + num_other)
     );
-    leave_block("Process scalar vector", false);
+    span.exit();
 
     acc + multi_exp::<knowledge_commitment<T, T2>, FieldT, Method>(&g, &p, chunks)
 }

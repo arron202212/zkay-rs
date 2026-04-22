@@ -12,17 +12,17 @@ use crate::relations::variable::{linear_combination, variable};
 use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
-/**
- * The bar gadget checks linear combination
- *                   Z = aX + bY (mod 2^w)
- * for a, b - const, X, Y - vectors of w bits,
- * where w is implicitly inferred, Z - a packed variable.
- *
- * This gadget is used four times in fooram:
- * - PC' = PC + 1
- * - load_addr = 2 * x + PC'
- * - store_addr = x + PC
- */
+// /**
+//  * The bar gadget checks linear combination
+//  *                   Z = aX + bY (mod 2^w)
+//  * for a, b - const, X, Y - vectors of w bits,
+//  * where w is implicitly inferred, Z - a packed variable.
+//  *
+//  * This gadget is used four times in fooram:
+//  * - PC' = PC + 1
+//  * - load_addr = 2 * x + PC'
+//  * - store_addr = x + PC
+//  */
 #[derive(Clone, Default)]
 pub struct bar_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     // : public gadget<FieldT>

@@ -10,13 +10,7 @@ use crate::gadgetlib2::variable::{
 };
 use rccell::RcCell;
 
-// #define ASSERT_CONSTRAINTS_SATISFIED(pb) \
-// ASSERT_TRUE(pb->isSatisfied(PrintOptions::DBG_PRINT_IF_NOT_SATISFIED))
 
-// #define ASSERT_CONSTRAINTS_NOT_SATISFIED(pb) \
-// ASSERT_FALSE(pb->isSatisfied(PrintOptions::NO_DBG_PRINT))
-
-// pub struct ProtoboardParams; // Forward declaration
 pub type ParamsCPtr = Option<RcCell<ProtoboardParams>>;
 
 pub struct Protoboard {
@@ -29,8 +23,7 @@ pub struct Protoboard {
     // of protoboards, for instance TinyRAMProtoboard : public Protoboard
     // This may not be trivial because of Gadget multiple inheritance scheme
 }
-//     Protoboard(fieldType:FieldType&, ParamsCPtr pParams);
-//
+
 impl Protoboard {
     pub fn create(fieldType: FieldType, pParams: ParamsCPtr) -> ProtoboardPtr {
         Some(RcCell::new(Protoboard::new(fieldType, pParams)))
@@ -48,67 +41,32 @@ impl Protoboard {
     pub fn params(&self) -> &ParamsCPtr {
         &self.pParams_
     }
-    //     FElem& val(var:&Variable);
-    //     FElem val(lc:&LinearCombination) const;
-    //     pub fn  setValuesAsBitArray(varArray:&VariableArray, srcValue:usize);
-    //     pub fn  setDualWordValue(dualWord:&DualWord, srcValue:usize);
-    //     pub fn  setMultipackedWordValue(multipackedWord:&MultiPackedWord, srcValue:usize);
-
-    //     // The following 3 methods are purposely not overloaded to the same name in order to reduce
-    //     // programmer error. We want the programmer to explicitly code what type of constraint
-    //     // she wants.
-    //     pub fn  addRank1Constraint(a:&LinearCombination,
-    //                             b:&LinearCombination,
-    //                             c:&LinearCombination,
-    //                             name:&String);
-    //     pub fn  addGeneralConstraint(a:&Polynomial,
-    //                               b:&Polynomial,
-    //                               name:&String);
-    //     /// adds a constraint of the form (a == 0)
-    //     pub fn  addUnaryConstraint(a:&LinearCombination, name:&String);
-    //     bool isSatisfied(printOnFail:PrintOptions = PrintOptions::NO_DBG_PRINT);
+   
     pub fn flagIsSet(&mut self, flag: &FlagVariable) -> bool {
         *self.val(flag) == 1
     }
-    // pub fn  setFlag(flag:&FlagVariable, bool newFlagState = true);
     pub fn clearFlag(&mut self, flag: &FlagVariable) {
         *self.val(flag) = FElem::from(0);
     }
     pub fn flipFlag(&mut self, flag: &FlagVariable) {
         *self.val(flag) = FElem::from(1) - &*self.val(flag);
     }
-    //     pub fn  enforceBooleanity(var:&Variable);
-    //     ::String annotation() const;
+ 
     pub fn constraintSystem(&self) -> &ConstraintSystem {
         &self.constraintSystem_
     }
     pub fn assignment(&self) -> &VariableAssignment {
         &self.assignment_
     }
-    //     bool dualWordAssignmentEqualsValue(
-    //             dualWord:&DualWord,
-    //             expectedValue:usize,
-    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-    //     bool multipackedWordAssignmentEqualsValue(
-    //             multipackedWord:&MultiPackedWord,
-    //             expectedValue:usize,
-    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-    //     bool unpackedWordAssignmentEqualsValue(
-    //             unpackedWord:&UnpackedWord,
-    //             expectedValue:usize,
-    //             printOption:PrintOptions = PrintOptions::NO_DBG_PRINT) const;
+   
 }
 
-/*
-    An abstract pub struct to hold any additional information needed by a specific Protoboard. For
-    example a Protoboard specific to TinyRAM will have a pub struct ArchParams which will inherit from
-    this class.
-*/
+// /*
+//     An abstract pub struct to hold any additional information needed by a specific Protoboard. For
+//     example a Protoboard specific to TinyRAM will have a pub struct ArchParams which will inherit from
+//     this class.
+// */
 pub struct ProtoboardParams;
-//  {
-//
-//     virtual ~ProtoboardParams() = 0;
-// };
 
 impl Protoboard {
     pub fn new(fieldType: FieldType, pParams: ParamsCPtr) -> Self {

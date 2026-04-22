@@ -358,8 +358,7 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_proof_variables<ppT> {
     }
 
     pub fn generate_r1cs_witness(&self, proof: &r1cs_ppzksnark_proof<other_curve<ppT>>)
-    // where
-    //     ppT::other_curve_type: ppTConfig,
+
     {
         let G1_elems = vec![
             proof.g_A.g.clone(),
@@ -625,11 +624,6 @@ impl<ppT: ppTConfig> r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key
         r1cs_vk: r1cs_ppzksnark_verification_key<other_curve<ppT>>,
         annotation_prefix: String,
     ) -> r1cs_ppzksnark_preprocessed_r1cs_ppzksnark_verification_key_variables<ppT>
-// where
-    //     <ppT::other_curve_type as ff_curves::PublicParams>::Fr: Mul<
-    //             <ppT as ff_curves::PublicParams>::Fr,
-    //             Output = <ppT::other_curve_type as ff_curves::PublicParams>::Fr,
-    //         >,
     {
         let encoded_IC_base = RcCell::new(G1_variable::<ppT>::new2(
             pb.clone(),

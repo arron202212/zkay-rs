@@ -1,7 +1,7 @@
 //  Declaration of GF(2^256) finite field.
 
 // //x^256 + x^10 + x^5 + x^2 + 1
-// /* gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
+//gf256 implements the field GF(2)/(x^256 + x^10 + x^5 + x^2 + 1).
 //    Elements are represented internally with four uint64s */
 // pub struct gf256 {
 
@@ -17,7 +17,7 @@
 //     static 256:constexpr uint64_t num_bits =,
 
 //     explicit gf256();
-//     /* we need a constructor that only initializes the low 64 bits of value_ to
+// we need a constructor that only initializes the low 64 bits of value_ to
 //        be able to do gf256(0) and gf256(1). */
 //     explicit gf256(const uint64_t value_low);
 //     explicit gf256(value_high:uint64_t, value_midh:uint64_t,
@@ -54,12 +54,12 @@
 //     bool is_zero() const;
 
 //     pub fn  print() const;
-//     /**
+//
 //      * Returns the constituent bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are 0.
 //      */
 //     Vec<uint64_t> to_words() const;
-//     /**
+//
 //      * Sets the field element from the given bits in 64 bit words, in little-endian order.
 //      * Only the right-most ceil_size_in_bits() bits are used; other bits are ignored.
 //      * Should always return true since the right-most bits are always valid.
@@ -175,10 +175,10 @@
 // // #ifdef PROFILE_OP_COUNTS
 //     this->mul_cnt++;
 //
-//     /* Does not require *this and other to be different, and therefore
+// Does not require *this and other to be different, and therefore
 //        also works for squaring, implemented below. */
 // // #ifdef USE_ASM
-//     /* depending on the manufacturer and generation of a CPU, the PCLMUL
+// depending on the manufacturer and generation of a CPU, the PCLMUL
 //        instruction might take different amounts of time.
 //        empirically, it appears that on recent Intel CPUs, PCLMUL is so fast that
 //        a naive multiplicator that uses 16 PCLMULs is faster than anything more
@@ -189,7 +189,7 @@
 //        thus we use a preprocessor flag to choose between a naive and a Karatsuba
 //        multiplicator. */
 // // #ifdef ASM_MINIMIZE_CLMULS
-//     /* here we implement a Karatsuba-like approach for multiplying 4-limb numbers.
+//     here we implement a Karatsuba-like approach for multiplying 4-limb numbers.
 
 //        given
 //          a = a0 + B * a1 + B^2 * a2 + B^3 * a3
@@ -208,7 +208,7 @@
 //          8. c4 = (a1 + a3) * (b1 + b3) - c6 + u - t
 //          9. c3 = (a0 + a1 + a2 + a3) * (b0 + b1 + b2 + b3)
 //                  - c0 - c1 - c2 - c4 - c5 - c6 */
-//     /* load the two operands and the modulus into 128-bit registers.
+// load the two operands and the modulus into 128-bit registers.
 //        we load corresponding limbs of both operands into a single register,
 //        because it lets us implement Karatsuba with fewer 128-bit xors. */
 //     let ab0= _mm_set_epi64x(this->value_[0], other.value_[0]);
@@ -247,7 +247,7 @@
 //          c3, c0), c1), c2), c4), c5), c6);
 
 // #else // ASM_MINIMIZE_CLMULS
-//     /* here we compute the same c as in Karatsuba, but by just naively
+// here we compute the same c as in Karatsuba, but by just naively
 //        multiplying all pairs of limbs of the operands and adding together
 //        the results that correspond to the same shift. */
 //     let a_low= _mm_loadu_si128((const __m128i*) &(this->value_[0]));
@@ -283,7 +283,7 @@
 
 //
 
-//     /* this part is common to both multiplication algorithms:
+// this part is common to both multiplication algorithms:
 //        given the 6 overlapping 128-bit limbs such that
 //        a * b = c0 + (c1 << 64) + (c2 << 128) + (c3 << 192) + ... (c6 << 384)
 //        merge them into non-overlapping 128-bit limbs
@@ -416,7 +416,7 @@
 //     return result;
 // }
 
-// /* calculate el^{-1} as el^{2^{256}-2}. the addition chain below
+//calculate el^{-1} as el^{2^{256}-2}. the addition chain below
 //    requires 270 mul/sqr operations total. */
 // pub fn inverse()->gf256
 // {

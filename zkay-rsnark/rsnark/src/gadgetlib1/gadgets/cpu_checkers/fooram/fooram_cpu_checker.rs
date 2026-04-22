@@ -209,10 +209,10 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
                 format!("{annotation_prefix} compute_packed_load_addr"),
             ));
 
-        /*
-          packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
-          packed_ls_addr ~ ls_addr
-        */
+        // /*
+        //   packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
+        //   packed_ls_addr ~ ls_addr
+        // */
         let mut packed_ls_addr = variable::<FieldT, pb_variable>::default();
         packed_ls_addr.allocate(&pb, format!("{annotation_prefix} packed_ls_addr"));
         let pack_ls_addr = RcCell::new(packing_gadget::<FieldT, fooram_protoboard<FieldT>>::new(
@@ -236,10 +236,10 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
                 format!("{annotation_prefix} compute_packed_store_val"),
             ));
 
-        /*
-          packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
-          packed_ls_next_val ~ ls_next_val
-        */
+        // /*
+        //   packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
+        //   packed_ls_next_val ~ ls_next_val
+        // */
         let mut packed_ls_prev_val = variable::<FieldT, pb_variable>::default();
         packed_ls_prev_val.allocate(&pb, format!("{annotation_prefix} packed_ls_prev_val"));
         let pack_ls_prev_val =
@@ -259,11 +259,11 @@ impl<FieldT: FieldTConfig> fooram_cpu_checker<FieldT> {
                 format!("{annotation_prefix} pack_ls_next_val"),
             ));
 
-        /*
-          packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
-          packed_next_state ~ next_state
-          packed_prev_state ~ prev_state
-        */
+        // /*
+        //   packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
+        //   packed_next_state ~ next_state
+        //   packed_prev_state ~ prev_state
+        // */
         let mut packed_prev_state = variable::<FieldT, pb_variable>::default();
         packed_prev_state.allocate(&pb, format!("{annotation_prefix} packed_prev_state"));
         let pack_prev_state =
@@ -350,11 +350,11 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_constraints();
 
-        /*
-          packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
-          packed_ls_addr - packed_store_addr = x0 * (packed_load_addr - packed_store_addr)
-          packed_ls_addr ~ ls_addr
-        */
+        // /*
+        //   packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
+        //   packed_ls_addr - packed_store_addr = x0 * (packed_load_addr - packed_store_addr)
+        //   packed_ls_addr ~ ls_addr
+        // */
         self.t
             .t
             .pack_ls_addr
@@ -380,11 +380,11 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_constraints();
 
-        /*
-          packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
-          packed_ls_next_val - packed_store_val = x0 * (packed_ls_prev_val - packed_store_val)
-          packed_ls_next_val ~ ls_next_val
-        */
+        // /*
+        //   packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
+        //   packed_ls_next_val - packed_store_val = x0 * (packed_ls_prev_val - packed_store_val)
+        //   packed_ls_next_val ~ ls_next_val
+        // */
         self.t
             .t
             .pack_ls_prev_val
@@ -408,12 +408,12 @@ impl<FieldT: FieldTConfig>
             format!("{} compute_packed_ls_next_val", self.annotation_prefix),
         );
 
-        /*
-          packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
-          packed_next_state - packed_prev_state = x0 * (packed_ls_prev_val - packed_prev_state)
-          packed_next_state ~ next_state
-          packed_prev_state ~ prev_state
-        */
+        // /*
+        //   packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
+        //   packed_next_state - packed_prev_state = x0 * (packed_ls_prev_val - packed_prev_state)
+        //   packed_next_state ~ next_state
+        //   packed_prev_state ~ prev_state
+        // */
         self.t
             .t
             .pack_prev_state
@@ -473,11 +473,11 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_witness();
 
-        /*
-          packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
-          packed_ls_addr - packed_store_addr = x0 * (packed_load_addr - packed_store_addr)
-          packed_ls_addr ~ ls_addr
-        */
+        // /*
+        //   packed_ls_addr = x0 * packed_load_addr + (1-x0) * packed_store_addr
+        //   packed_ls_addr - packed_store_addr = x0 * (packed_load_addr - packed_store_addr)
+        //   packed_ls_addr ~ ls_addr
+        // */
         *self.pb.borrow_mut().val_ref(&self.t.t.packed_ls_addr) =
             (self.pb.borrow().val(&self.t.t.prev_pc_val[0])
                 * self.pb.borrow().val(&self.t.t.packed_load_addr)
@@ -501,11 +501,11 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_witness();
 
-        /*
-          packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
-          packed_ls_next_val - packed_store_val = x0 * (packed_ls_prev_val - packed_store_val)
-          packed_ls_next_val ~ ls_next_val
-        */
+        // /*
+        //   packed_ls_next_val = x0 * packed_ls_prev_val + (1-x0) * packed_store_val
+        //   packed_ls_next_val - packed_store_val = x0 * (packed_ls_prev_val - packed_store_val)
+        //   packed_ls_next_val ~ ls_next_val
+        // */
         self.t
             .t
             .pack_ls_prev_val
@@ -522,12 +522,12 @@ impl<FieldT: FieldTConfig>
             .borrow()
             .generate_r1cs_witness_from_packed();
 
-        /*
-          packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
-          packed_next_state - packed_prev_state = x0 * (packed_ls_prev_val - packed_prev_state)
-          packed_next_state ~ next_state
-          packed_prev_state ~ prev_state
-        */
+        // /*
+        //   packed_next_state = x0 * packed_ls_prev_val + (1-x0) * packed_prev_state
+        //   packed_next_state - packed_prev_state = x0 * (packed_ls_prev_val - packed_prev_state)
+        //   packed_next_state ~ next_state
+        //   packed_prev_state ~ prev_state
+        // */
         self.t
             .t
             .pack_prev_state

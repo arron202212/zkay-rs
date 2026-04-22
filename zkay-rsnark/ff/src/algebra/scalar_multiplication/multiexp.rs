@@ -27,6 +27,7 @@ use std::{
     marker::ConstParamTy,
     ops::{Add, Mul},
 };
+use tracing::{Level, span};
 
 pub trait KCConfig: Default + Clone {
     type T: PpConfig;
@@ -39,68 +40,61 @@ pub const inhibit_profiling_info: bool = false;
 
 #[derive(ConstParamTy, PartialEq, Eq)]
 pub enum multi_exp_method {
-    /**
-     * Naive multi-exponentiation individually multiplies each base by the
-     * corresponding scalar and adds up the results.
-     * multi_exp_method_naive uses opt_window_wnaf_exp for exponentiation,
-     * while multi_exp_method_plain uses operator *.
-     */
+    //  * Naive multi-exponentiation individually multiplies each base by the
+    //  * corresponding scalar and adds up the results.
+    //  * multi_exp_method_naive uses opt_window_wnaf_exp for exponentiation,
+    //  * while multi_exp_method_plain uses operator *.
     multi_exp_method_naive,
     multi_exp_method_naive_plain,
-    /**
-     * A variant of the Bos-Coster algorithm [1],
-     * with implementation suggestions from [2].
-     *
-     * [1] = Bos and Coster, "Addition chain heuristics", CRYPTO '89
-     * [2] = Bernstein, Duif, Lange, Schwabe, and Yang, "High-speed high-security signatures", CHES '11
-     */
+
+    //  * A variant of the Bos-Coster algorithm [1],
+    //  * with implementation suggestions from [2].
+    //  *
+    //  * [1] = Bos and Coster, "Addition chain heuristics", CRYPTO '89
+    //  * [2] = Bernstein, Duif, Lange, Schwabe, and Yang, "High-speed high-security signatures", CHES '11
     multi_exp_method_bos_coster,
-    /**
-     * A special case of Pippenger's algorithm from Page 15 of
-     * Bernstein, Doumen, Lange, Oosterwijk,
-     * "Faster batch forgery identification", INDOCRYPT 2012
-     * (https://eprint.iacr.org/2012/549.pdf)
-     * When compiled with USE_MIXED_ADDITION, assumes input is in special form.
-     * Requires that T implements .dbl() (and, if USE_MIXED_ADDITION is defined,
-     * .to_special(), .mixed_add(), and batch_to_special()).
-     */
+
+    //  * A special case of Pippenger's algorithm from Page 15 of
+    //  * Bernstein, Doumen, Lange, Oosterwijk,
+    //  * "Faster batch forgery identification", INDOCRYPT 2012
+    //  * (https://eprint.iacr.org/2012/549.pdf)
+    //  * When compiled with USE_MIXED_ADDITION, assumes input is in special form.
+    //  * Requires that T implements .dbl() (and, if USE_MIXED_ADDITION is defined,
+    //  * .to_special(), .mixed_add(), and batch_to_special()).
     multi_exp_method_BDLO12,
 }
-//
-// /**
+
 //  * Computes the sum
 //  * \sum_i scalar_start[i] * vec_start[i]
 //  * using the selected method.
 //  * Input is split into the given number of chunks, and, when compiled with
 //  * MULTICORE, the chunks are processed in parallel.
-//  */
+
 //
 // T multi_exp(Vec<T>::const_iterator vec_start,
 
-// /**
 //  * A variant of multi_exp that takes advantage of the method mixed_add (instead
 //  * of the operator '+').
 //  * Assumes input is in special form, and includes special pre-processing for
 //  * scalars equal to 0 or 1.
-//  */
+
 //
 // T multi_exp_with_mixed_addition(Vec<T>::const_iterator vec_start,
 
-// /**
 //  * A window table stores window sizes for different instance sizes for fixed-base multi-scalar multiplications.
-//  */
+
 //
 pub type window_table<T> = Vec<Vec<T>>;
 //
-// /**
+
 //  * Compute window size for the given number of scalars.
-//  */
+
 //
 // std::usize get_exp_window_size(const std::usize num_scalars);
 //
-// /**
+
 //  * Compute table of window sizes.
-//  */
+
 //
 // window_table<T> get_window_table(scalar_size:std::usize,
 //  window:std::usize,
@@ -135,87 +129,18 @@ impl<B: AsRef<[u64]>> PartialOrd for ordered_exponent<B> {
     }
 }
 
-//     bool operator<(other:&ordered_exponent<n>) const
-//     {
-// // #if defined(__x86_64__) && defined(USE_ASM)
-//         // if n == 3
-//         // {
-//             // long res;
-//             // __asm__
-//                 // ("// check for overflow           \n\t"
-//                 //  "mov $0, %[res]                  \n\t"
-//                 //  ADD_CMP(16)
-//                 //  ADD_CMP(8)
-//                 //  ADD_CMP(0)
-//                 //  "jmp done%=                      \n\t"
-//                 //  "subtract%=:                     \n\t"
-//                 //  "mov $1, %[res]                  \n\t"
-//                 //  "done%=:                         \n\t"
-//                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
-//                 //  : "cc", "%rax");
-//             // return res;
-//         // }
-//         // else if n == 4
-//         // {
-//             // long res;
-//             // __asm__
-//                 // ("// check for overflow           \n\t"
-//                 //  "mov $0, %[res]                  \n\t"
-//                 //  ADD_CMP(24)
-//                 //  ADD_CMP(16)
-//                 //  ADD_CMP(8)
-//                 //  ADD_CMP(0)
-//                 //  "jmp done%=                      \n\t"
-//                 //  "subtract%=:                     \n\t"
-//                 //  "mov $1, %[res]                  \n\t"
-//                 //  "done%=:                         \n\t"
-//                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
-//                 //  : "cc", "%rax");
-//             // return res;
-//         // }
-//         // else if n == 5
-//         // {
-//             // long res;
-//             // __asm__
-//                 // ("// check for overflow           \n\t"
-//                 //  "mov $0, %[res]                  \n\t"
-//                 //  ADD_CMP(32)
-//                 //  ADD_CMP(24)
-//                 //  ADD_CMP(16)
-//                 //  ADD_CMP(8)
-//                 //  ADD_CMP(0)
-//                 //  "jmp done%=                      \n\t"
-//                 //  "subtract%=:                     \n\t"
-//                 //  "mov $1, %[res]                  \n\t"
-//                 //  "done%=:                         \n\t"
-//                 //  : [res] "=&r" (res)
-//                 //  : [A] "r" (other.r.0.0), [mod] "r" (this->r.0.0)
-//                 //  : "cc", "%rax");
-//             // return res;
-//         // }
-//         // else
-// //
-//         {
-//             return (mpn_cmp(this->r.0.0, other.r.0.0, n) < 0);
-//         }
-//     }
-// };
-
-/**
- * multi_exp_inner<T, FieldT, Method>() implementes the specified
- * multiexponentiation method.
- * this implementation relies on some rather arcane template magic:
- * function templates cannot be partially specialized, so we cannot just write
- *     
- *     T multi_exp_inner<T, FieldT, multi_exp_method_naive>
- * thus we resort to using std::enable_if. the basic idea is that *overloading*
- * is what's actually happening here, it's just that, for any given value of
- * Method, only one of the templates will be valid, and thus the correct
- * implementation will be used.
- */
-
+// /**
+//  * multi_exp_inner<T, FieldT, Method>() implementes the specified
+//  * multiexponentiation method.
+//  * this implementation relies on some rather arcane template magic:
+//  * function templates cannot be partially specialized, so we cannot just write
+//  *
+//  *     T multi_exp_inner<T, FieldT, multi_exp_method_naive>
+//  * thus we resort to using std::enable_if. the basic idea is that *overloading*
+//  * is what's actually happening here, it's just that, for any given value of
+//  * Method, only one of the templates will be valid, and thus the correct
+//  * implementation will be used.
+//  */
 struct MultiExpInner<const Method: multi_exp_method>;
 
 trait MultiExpInnerConfig {
@@ -501,7 +426,7 @@ pub fn multi_exp_with_mixed_addition<
     scalar: &[FieldT],
     chunks: usize,
 ) -> T {
-    enter_block("Process scalar vector", false);
+    let span = span!(Level::TRACE, "Process scalar vector").entered();
 
     let zero = FieldT::zero();
     let one = FieldT::one();
@@ -553,7 +478,7 @@ pub fn multi_exp_with_mixed_addition<
         );
     }
 
-    leave_block("Process scalar vector", false);
+    span.exit();
 
     acc + multi_exp::<T, FieldT, Method>(&g, &p, chunks)
 }
@@ -716,7 +641,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: FieldTConfig>(
 }
 
 pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {
-    enter_block("Batch-convert elements to special form", false);
+    let span = span!(Level::TRACE, "Batch-convert elements to special form").entered();
 
     let mut non_zero_vec = vec![];
     for i in 0..vec.len() {
@@ -737,68 +662,5 @@ pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {
             vec[i] = zero_special.clone();
         }
     }
-    leave_block("Batch-convert elements to special form", false);
+    span.exit();
 }
-
-// struct Item<const I: u8>;
-// #[derive(Debug)] struct A;
-// #[derive(Debug)] struct B;
-// #[derive(Debug)] struct C;
-
-// impl Item<0> { fn foo() -> A { A } }
-// impl Item<1> { fn foo() -> B { B } }
-// impl Item<2> { fn foo() -> C { C } }
-
-// const fn check(i: i32) -> u8 {
-//     match i {
-//         0   => 0,
-//         1.. => 1,
-//         _   => 2,
-//     }
-// }
-
-// fn main() {
-//     dbg!(Item::<{ check(0) }>::foo(),   // A
-//          Item::<{ check(1) }>::foo(),   // B
-//          Item::<{ check(-1) }>::foo()); // C
-// }
-
-// struct Guard<const U: bool>;
-// trait Protect {}
-// impl Protect for Guard<true> {}
-
-// fn main() {
-//    f::<0>()
-// }
-
-// fn f<const N: usize>()
-// where
-//    Guard<{
-//        const fn _f_guard<const N: usize>() -> bool {
-//            if !N > 0 {
-//                panic!("guard evaluated to false")
-//            }
-//            true
-//        }
-//        _f_guard::<N>()
-//    }>: Protect,
-// {
-//    todo!()
-// }
-
-// #![feature(adt_const_params)]
-
-// #[derive(ConstParamTy, PartialEq, Eq)]
-// enum MyEnum {
-//     VariantA,
-//     VariantB,
-// }
-
-// struct MyStruct<const V: MyEnum> {
-//     // ... fields
-// }
-
-// fn main() {
-//     let _instance_a = MyStruct::<{ MyEnum::VariantA }>;
-//     let _instance_b = MyStruct::<{ MyEnum::VariantB }>;
-// }

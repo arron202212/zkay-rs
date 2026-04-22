@@ -1,12 +1,11 @@
 // Declaration of interfaces for extended GCD routines.
 
-/**
- * Perform the standard Extended Euclidean Division algorithm.
- * Input: Polynomial A, Polynomial B.
- * Output: Polynomial G, Polynomial U, Polynomial V, such that G = (A * U) + (B * V).
- */
-//
-// pub fn  _polynomial_xgcd(a:&Vec<FieldT>, b:&Vec<FieldT>, g:&Vec<FieldT>, u:&Vec<FieldT>, v:&Vec<FieldT>);
+// /**
+//  * Perform the standard Extended Euclidean Division algorithm.
+//  * Input: Polynomial A, Polynomial B.
+//  * Output: Polynomial G, Polynomial U, Polynomial V, such that G = (A * U) + (B * V).
+//  */
+
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations;
 use crate::polynomial_arithmetic::basic_operations::{

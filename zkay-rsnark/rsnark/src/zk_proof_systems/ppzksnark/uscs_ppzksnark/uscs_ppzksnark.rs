@@ -57,15 +57,10 @@ use ffec::scalar_multiplication::multiexp::{
 use ffec::{One, PpConfig, Zero};
 use std::ops::Mul;
 
-// pub struct uscs_ppzksnark_proving_key;
 
-// std::ostream& operator<<(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
-
-/**
- * A proving key for the USCS ppzkSNARK.
- */
+// /**
+//  * A proving key for the USCS ppzkSNARK.
+//  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_proving_key<ppT: ppTConfig> {
     pub V_g1_query: G1_vector<ppT>,
@@ -76,10 +71,7 @@ pub struct uscs_ppzksnark_proving_key<ppT: ppTConfig> {
     pub constraint_system: uscs_ppzksnark_constraint_system<ppT>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
-    // uscs_ppzksnark_proving_key() {};
-    // uscs_ppzksnark_proving_key<ppT>& operator=(other:&uscs_ppzksnark_proving_key<ppT>) = default;
-    // uscs_ppzksnark_proving_key(other:&uscs_ppzksnark_proving_key<ppT>) = default;
-    // uscs_ppzksnark_proving_key(uscs_ppzksnark_proving_key<ppT> &&other) = default;
+   
     pub fn new(
         V_g1_query: G1_vector<ppT>,
         alpha_V_g1_query: G1_vector<ppT>,
@@ -129,20 +121,13 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proving_key<ppT> {
         print!("* PK size in bits: {}\n", self.size_in_bits());
     }
 
-    // bool operator==(other:&uscs_ppzksnark_proving_key<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk);
+    
 }
 
-// pub struct uscs_ppzksnark_verification_key;
 
-// std::ostream& operator<<(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>);
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk);
-
-/**
- * A verification key for the USCS ppzkSNARK.
- */
+// /**
+//  * A verification key for the USCS ppzkSNARK.
+//  */
 
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_verification_key<ppT: ppTConfig> {
@@ -189,11 +174,6 @@ impl<ppT: ppTConfig> uscs_ppzksnark_verification_key<ppT> {
         print!("* VK size in bits: {}\n", self.size_in_bits());
     }
 
-    // bool operator==(other:&uscs_ppzksnark_verification_key<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk);
-
-    // static uscs_ppzksnark_verification_key<ppT> dummy_verification_key(input_size:usize);
     pub fn dummy_verification_key(input_size: usize) -> Self {
         let mut result = uscs_ppzksnark_verification_key::<ppT>::default();
         result.tilde_g2 = Fr::<ppT>::random_element() * G2::<ppT>::one();
@@ -212,19 +192,13 @@ impl<ppT: ppTConfig> uscs_ppzksnark_verification_key<ppT> {
     }
 }
 
-// pub struct uscs_ppzksnark_processed_verification_key;
-
-// std::ostream& operator<<(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
-
-/**
- * A processed verification key for the USCS ppzkSNARK.
- *
- * Compared to a (non-processed) verification key, a processed verification key
- * contains a small constant amount of additional pre-computed information that
- * enables a faster verification time.
- */
+// /**
+//  * A processed verification key for the USCS ppzkSNARK.
+//  *
+//  * Compared to a (non-processed) verification key, a processed verification key
+//  * contains a small constant amount of additional pre-computed information that
+//  * enables a faster verification time.
+//  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub pp_G1_one_precomp: G1_precomp<ppT>,
@@ -235,21 +209,18 @@ pub struct uscs_ppzksnark_processed_verification_key<ppT: ppTConfig> {
     pub pairing_of_g1_and_g2: GT<ppT>,
 
     pub encoded_IC_query: accumulation_vector<G1<ppT>>,
-    // bool operator==(other:&uscs_ppzksnark_processed_verification_key) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk);
+   
 }
 
-/**
- * A key pair for the USCS ppzkSNARK, which consists of a proving key and a verification key.
- */
+// /**
+//  * A key pair for the USCS ppzkSNARK, which consists of a proving key and a verification key.
+//  */
 #[derive(Default, Clone)]
 pub struct uscs_ppzksnark_keypair<ppT: ppTConfig> {
     pub pk: uscs_ppzksnark_proving_key<ppT>,
     pub vk: uscs_ppzksnark_verification_key<ppT>,
 }
 impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
-    // uscs_ppzksnark_keypair() {};
     pub fn new(
         pk: uscs_ppzksnark_proving_key<ppT>,
         vk: uscs_ppzksnark_verification_key<ppT>,
@@ -257,22 +228,15 @@ impl<ppT: ppTConfig> uscs_ppzksnark_keypair<ppT> {
         Self { pk, vk }
     }
 
-    // uscs_ppzksnark_keypair(uscs_ppzksnark_keypair<ppT> &&other) = default;
 }
 
-// pub struct uscs_ppzksnark_proof;
-
-// std::ostream& operator<<(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>);
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
-
-/**
- * A proof for the USCS ppzkSNARK.
- *
- * While the proof has a structure, externally one merely opaquely produces,
- * serializes/deserializes, and verifies proofs. We only expose some information
- * about the structure for statistics purposes.
- */
+// /**
+//  * A proof for the USCS ppzkSNARK.
+//  *
+//  * While the proof has a structure, externally one merely opaquely produces,
+//  * serializes/deserializes, and verifies proofs. We only expose some information
+//  * about the structure for statistics purposes.
+//  */
 #[derive(Clone)]
 pub struct uscs_ppzksnark_proof<ppT: ppTConfig> {
     pub V_g1: G1<ppT>,
@@ -330,245 +294,33 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
             && self.V_g2.is_well_formed()
     }
 
-    // bool operator==(other:&uscs_ppzksnark_proof<ppT>) const;
-    // friend std::ostream& operator<< <ppT>(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>);
-    // friend std::istream& operator>> <ppT>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof);
 }
 
-/**
- * A generator algorithm for the USCS ppzkSNARK.
- *
- * Given a USCS constraint system CS, this algorithm produces proving and verification keys for CS.
- */
 
-// uscs_ppzksnark_keypair<ppT> uscs_ppzksnark_generator(cs:&uscs_ppzksnark_constraint_system<ppT>);
 
-/**
- * A prover algorithm for the USCS ppzkSNARK.
- *
- * Given a USCS primary input X and a USCS auxiliary input Y, this algorithm
- * produces a proof (of knowledge) that attests to the following statement:
- *               ``there exists Y such that CS(X,Y)=0''.
- * Above, CS is the USCS constraint system that was given as input to the generator algorithm.
- */
+// /*
+// Below are four variants of verifier algorithm for the USCS ppzkSNARK.
 
-// uscs_ppzksnark_proof<ppT> uscs_ppzksnark_prover(pk:&uscs_ppzksnark_proving_key<ppT>,
-//                                                 primary_input:&uscs_ppzksnark_primary_input<ppT>,
-//                                                 auxiliary_input:&uscs_ppzksnark_auxiliary_input<ppT>);
+// These are the four cases that arise from the following two choices:
 
-/*
-Below are four variants of verifier algorithm for the USCS ppzkSNARK.
+// (1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
+//     In the latter case, we call the algorithm an "online verifier".
 
-These are the four cases that arise from the following two choices:
+// (2) The verifier checks for "weak" input consistency or, instead, "strong" input consistency.
+//     Strong input consistency requires that |primary_input| = CS.num_inputs, whereas
+//     weak input consistency requires that |primary_input| <= CS.num_inputs (and
+//     the primary input is implicitly padded with zeros up to length CS.num_inputs).
+// */
 
-(1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
-    In the latter case, we call the algorithm an "online verifier".
-
-(2) The verifier checks for "weak" input consistency or, instead, "strong" input consistency.
-    Strong input consistency requires that |primary_input| = CS.num_inputs, whereas
-    weak input consistency requires that |primary_input| <= CS.num_inputs (and
-    the primary input is implicitly padded with zeros up to length CS.num_inputs).
-*/
-
-/**
- * A verifier algorithm for the USCS ppzkSNARK that:
- * (1) accepts a non-processed verification key, and
- * (2) has weak input consistency.
- */
-
-// bool uscs_ppzksnark_verifier_weak_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
-//                                      primary_input:&uscs_ppzksnark_primary_input<ppT>,
-//                                      proof:&uscs_ppzksnark_proof<ppT>);
-
-/**
- * A verifier algorithm for the USCS ppzkSNARK that:
- * (1) accepts a non-processed verification key, and
- * (2) has strong input consistency.
- */
-
-// bool uscs_ppzksnark_verifier_strong_IC(vk:&uscs_ppzksnark_verification_key<ppT>,
-//                                        primary_input:&uscs_ppzksnark_primary_input<ppT>,
-//                                        proof:&uscs_ppzksnark_proof<ppT>);
-
-/**
- * Convert a (non-processed) verification key into a processed verification key.
- */
-
-// uscs_ppzksnark_processed_verification_key<ppT> uscs_ppzksnark_verifier_process_vk(vk:&uscs_ppzksnark_verification_key<ppT>);
-
-/**
- * A verifier algorithm for the USCS ppzkSNARK that:
- * (1) accepts a processed verification key, and
- * (2) has weak input consistency.
- */
-
-// bool uscs_ppzksnark_online_verifier_weak_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
-//                                             primary_input:&uscs_ppzksnark_primary_input<ppT>,
-//                                             proof:&uscs_ppzksnark_proof<ppT>);
-
-/**
- * A verifier algorithm for the USCS ppzkSNARK that:
- * (1) accepts a processed verification key, and
- * (2) has strong input consistency.
- */
-
-// bool uscs_ppzksnark_online_verifier_strong_IC(pvk:&uscs_ppzksnark_processed_verification_key<ppT>,
-//                                               primary_input:&uscs_ppzksnark_primary_input<ppT>,
-//                                               proof:&uscs_ppzksnark_proof<ppT>);
-
-//  use algebra::scalar_multiplication::multiexp;
-// use common::profiling;
-// use common::utils;
-
-// #ifdef MULTICORE
-// use  <omp.h>
-
-// use libsnark/reductions/uscs_to_ssp/uscs_to_ssp;
-// use crate::relations::arithmetic_programs::ssp::ssp;
-
-// bool uscs_ppzksnark_proving_key<ppT>::operator==(other:&uscs_ppzksnark_proving_key<ppT>) const
-// {
-//     return (self.V_g1_query == other.V_g1_query &&
-//             self.alpha_V_g1_query == other.alpha_V_g1_query &&
-//             self.H_g1_query == other.H_g1_query &&
-//             self.V_g2_query == other.V_g2_query &&
-//             self.constraint_system == other.constraint_system);
-// }
-
-// std::ostream& operator<<(std::ostream &out, pk:&uscs_ppzksnark_proving_key<ppT>)
-// {
-//     out << pk.V_g1_query;
-//     out << pk.alpha_V_g1_query;
-//     out << pk.H_g1_query;
-//     out << pk.V_g2_query;
-//     out << pk.constraint_system;
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_proving_key<ppT> &pk)
-// {
-//     in >> pk.V_g1_query;
-//     in >> pk.alpha_V_g1_query;
-//     in >> pk.H_g1_query;
-//     in >> pk.V_g2_query;
-//     in >> pk.constraint_system;
-
-//     return in;
-// }
-
-// bool uscs_ppzksnark_verification_key<ppT>::operator==(other:&uscs_ppzksnark_verification_key<ppT>) const
-// {
-//     return (self.tilde_g2 == other.tilde_g2 &&
-//             self.alpha_tilde_g2 == other.alpha_tilde_g2 &&
-//             self.Z_g2 == other.Z_g2 &&
-//             self.encoded_IC_query == other.encoded_IC_query);
-// }
-
-// std::ostream& operator<<(std::ostream &out, vk:&uscs_ppzksnark_verification_key<ppT>)
-// {
-//     out << vk.tilde_g2 << OUTPUT_NEWLINE;
-//     out << vk.alpha_tilde_g2 << OUTPUT_NEWLINE;
-//     out << vk.Z_g2 << OUTPUT_NEWLINE;
-//     out << vk.encoded_IC_query << OUTPUT_NEWLINE;
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_verification_key<ppT> &vk)
-// {
-//     in >> vk.tilde_g2;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.alpha_tilde_g2;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.Z_g2;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.encoded_IC_query;
-//     consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }
-
-// bool uscs_ppzksnark_processed_verification_key<ppT>::operator==(other:&uscs_ppzksnark_processed_verification_key<ppT>) const
-// {
-//     return (self.pp_G1_one_precomp == other.pp_G1_one_precomp &&
-//             self.pp_G2_one_precomp == other.pp_G2_one_precomp &&
-//             self.vk_tilde_g2_precomp == other.vk_tilde_g2_precomp &&
-//             self.vk_alpha_tilde_g2_precomp == other.vk_alpha_tilde_g2_precomp &&
-//             self.vk_Z_g2_precomp == other.vk_Z_g2_precomp &&
-//             self.pairing_of_g1_and_g2 == other.pairing_of_g1_and_g2 &&
-//             self.encoded_IC_query == other.encoded_IC_query);
-// }
-
-// std::ostream& operator<<(std::ostream &out, pvk:&uscs_ppzksnark_processed_verification_key<ppT>)
-// {
-//     out << pvk.pp_G1_one_precomp << OUTPUT_NEWLINE;
-//     out << pvk.pp_G2_one_precomp << OUTPUT_NEWLINE;
-//     out << pvk.vk_tilde_g2_precomp << OUTPUT_NEWLINE;
-//     out << pvk.vk_alpha_tilde_g2_precomp << OUTPUT_NEWLINE;
-//     out << pvk.vk_Z_g2_precomp << OUTPUT_NEWLINE;
-//     out << pvk.pairing_of_g1_and_g2 << OUTPUT_NEWLINE;
-//     out << pvk.encoded_IC_query << OUTPUT_NEWLINE;
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_processed_verification_key<ppT> &pvk)
-// {
-//     in >> pvk.pp_G1_one_precomp;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.pp_G2_one_precomp;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.vk_tilde_g2_precomp;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.vk_alpha_tilde_g2_precomp;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.vk_Z_g2_precomp;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.pairing_of_g1_and_g2;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.encoded_IC_query;
-//     consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }
-
-// bool uscs_ppzksnark_proof<ppT>::operator==(other:&uscs_ppzksnark_proof<ppT>) const
-// {
-//     return (self.V_g1 == other.V_g1 &&
-//             self.alpha_V_g1 == other.alpha_V_g1 &&
-//             self.H_g1 == other.H_g1 &&
-//             self.V_g2 == other.V_g2);
-// }
-
-// std::ostream& operator<<(std::ostream &out, proof:&uscs_ppzksnark_proof<ppT>)
-// {
-//     out << proof.V_g1 << OUTPUT_NEWLINE;
-//     out << proof.alpha_V_g1 << OUTPUT_NEWLINE;
-//     out << proof.H_g1 << OUTPUT_NEWLINE;
-//     out << proof.V_g2 << OUTPUT_NEWLINE;
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, uscs_ppzksnark_proof<ppT> &proof)
-// {
-//     in >> proof.V_g1;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> proof.alpha_V_g1;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> proof.H_g1;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> proof.V_g2;
-//     consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }
-
+// /**
+//  * A generator algorithm for the USCS ppzkSNARK.
+//  *
+//  * Given a USCS constraint system CS, this algorithm produces proving and verification keys for CS.
+//  */
 pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     cs: &uscs_ppzksnark_constraint_system<ppT>,
 ) -> uscs_ppzksnark_keypair<ppT> {
-    enter_block("Call to uscs_ppzksnark_generator", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_generator").entered();
 
     //draw random element at which the SSP is evaluated
 
@@ -619,7 +371,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     let alpha = Fr::<ppT>::random_element();
 
-    enter_block("Generate USCS proving key", false);
+    let span = span!(Level::TRACE, "Generate USCS proving key").entered();
 
     let g1_exp_count = Vt_table.len() + Vt_table_minus_Xt_table.len() + Ht_table.len();
     let g2_exp_count = Vt_table_minus_Xt_table.len();
@@ -632,17 +384,17 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     print_indent();
     print!("* G2 window: {}\n", g2_window);
 
-    enter_block("Generating G1 multiexp table", false);
+    let span = span!(Level::TRACE, "Generating G1 multiexp table").entered();
     let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
-    leave_block("Generating G1 multiexp table", false);
+    span.exit();
 
-    enter_block("Generating G2 multiexp table", false);
+    let span = span!(Level::TRACE, "Generating G2 multiexp table").entered();
     let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, G2::<ppT>::one());
-    leave_block("Generating G2 multiexp table", false);
+    span.exit();
 
-    enter_block("Generate proof components", false);
+    let span = span!(Level::TRACE, "Generate proof components").entered();
 
-    enter_block("Compute the query for V_g1", false);
+    let span = span!(Level::TRACE, "Compute the query for V_g1").entered();
     let mut V_g1_query = batch_exp(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -652,9 +404,9 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut V_g1_query);
 
-    leave_block("Compute the query for V_g1", false);
+    span.exit();
 
-    enter_block("Compute the query for alpha_V_g1", false);
+    let span = span!(Level::TRACE, "Compute the query for alpha_V_g1").entered();
     let mut alpha_V_g1_query = batch_exp_with_coeff(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -665,34 +417,34 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut alpha_V_g1_query);
 
-    leave_block("Compute the query for alpha_V_g1", false);
+    span.exit();
 
-    enter_block("Compute the query for H_g1", false);
+    let span = span!(Level::TRACE, "Compute the query for H_g1").entered();
     let mut H_g1_query = batch_exp(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut H_g1_query);
 
-    leave_block("Compute the query for H_g1", false);
+    span.exit();
 
-    enter_block("Compute the query for V_g2", false);
+    let span = span!(Level::TRACE, "Compute the query for V_g2").entered();
     let mut V_g2_query = batch_exp(Fr::<ppT>::size_in_bits(), g2_window, &g2_table, &Vt_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G2<ppT>>(&mut V_g2_query);
 
-    leave_block("Compute the query for V_g2", false);
+    span.exit();
 
-    leave_block("Generate proof components", false);
+    span.exit();
 
-    leave_block("Generate USCS proving key", false);
+    span.exit();
 
-    enter_block("Generate USCS verification key", false);
+    let span = span!(Level::TRACE, "Generate USCS verification key").entered();
 
     let tilde = Fr::<ppT>::random_element();
     let tilde_g2 = tilde.clone() * G2::<ppT>::one();
     let alpha_tilde_g2 = (alpha * tilde) * G2::<ppT>::one();
     let Z_g2 = ssp_inst.Zt * G2::<ppT>::one();
 
-    enter_block("Encode IC query for USCS verification key", false);
+    let span = span!(Level::TRACE, "Encode IC query for USCS verification key").entered();
     let encoded_IC_base = Xt_table[0].clone() * G1::<ppT>::one();
     let encoded_IC_values = batch_exp(
         Fr::<ppT>::size_in_bits(),
@@ -700,11 +452,11 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
         &g1_table,
         &Xt_table[1..].to_vec(),
     );
-    leave_block("Encode IC query for USCS verification key", false);
+    span.exit();
 
-    leave_block("Generate USCS verification key", false);
+    span.exit();
 
-    leave_block("Call to uscs_ppzksnark_generator", false);
+    span.exit();
 
     let encoded_IC_query =
         accumulation_vector::<G1<ppT>>::new_with_vec(encoded_IC_base, encoded_IC_values);
@@ -730,20 +482,25 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     uscs_ppzksnark_keypair::<ppT>::new(pk, vk)
 }
-
+//  * A prover algorithm for the USCS ppzkSNARK.
+//  *
+//  * Given a USCS primary input X and a USCS auxiliary input Y, this algorithm
+//  * produces a proof (of knowledge) that attests to the following statement:
+//  *               ``there exists Y such that CS(X,Y)=0''.
+//  * Above, CS is the USCS constraint system that was given as input to the generator algorithm.
 pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     pk: &uscs_ppzksnark_proving_key<ppT>,
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     auxiliary_input: &uscs_ppzksnark_auxiliary_input<ppT>,
 ) -> uscs_ppzksnark_proof<ppT> {
-    enter_block("Call to uscs_ppzksnark_prover", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_prover").entered();
 
     let d = Fr::<ppT>::random_element();
 
-    enter_block("Compute the polynomial H", false);
+    let span = span!(Level::TRACE, "Compute the polynomial H").entered();
     let ssp_wit =
         uscs_to_ssp_witness_map(&pk.constraint_system, primary_input, auxiliary_input, &d);
-    leave_block("Compute the polynomial H", false);
+    span.exit();
 
     //sanity checks
     assert!(
@@ -774,9 +531,9 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 
     // MAYBE LATER: do queries 1,2,4 at once for slightly better speed
 
-    enter_block("Compute the proof", false);
+    let span = span!(Level::TRACE, "Compute the proof").entered();
 
-    enter_block("Compute V_g1, the 1st component of the proof", false);
+    let span = span!(Level::TRACE, "Compute V_g1, the 1st component of the proof").entered();
     V_g1 = V_g1
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -787,9 +544,9 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
             &ssp_wit.coefficients_for_Vs[ssp_wit.num_inputs()..ssp_wit.num_variables()],
             chunks,
         );
-    leave_block("Compute V_g1, the 1st component of the proof", false);
+    span.exit();
 
-    enter_block("Compute alpha_V_g1, the 2nd component of the proof", false);
+    let span = span!(Level::TRACE, "Compute alpha_V_g1, the 2nd component of the proof").entered();
     alpha_V_g1 = alpha_V_g1
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -800,29 +557,29 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
             &ssp_wit.coefficients_for_Vs[ssp_wit.num_inputs()..ssp_wit.num_variables()],
             chunks,
         );
-    leave_block("Compute alpha_V_g1, the 2nd component of the proof", false);
+    span.exit();
 
-    enter_block("Compute H_g1, the 3rd component of the proof", false);
+    let span = span!(Level::TRACE, "Compute H_g1, the 3rd component of the proof").entered();
     H_g1 = H_g1
         + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.H_g1_query[..ssp_wit.degree() + 1],
             &ssp_wit.coefficients_for_H[..ssp_wit.degree() + 1],
             chunks,
         );
-    leave_block("Compute H_g1, the 3rd component of the proof", false);
+    span.exit();
 
-    enter_block("Compute V_g2, the 4th component of the proof", false);
+    let span = span!(Level::TRACE, "Compute V_g2, the 4th component of the proof").entered();
     V_g2 = V_g2
         + multi_exp::<G2<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.V_g2_query[1..ssp_wit.num_variables() + 1],
             &ssp_wit.coefficients_for_Vs[..ssp_wit.num_variables()],
             chunks,
         );
-    leave_block("Compute V_g2, the 4th component of the proof", false);
+    span.exit();
 
-    leave_block("Compute the proof", false);
+    span.exit();
 
-    leave_block("Call to uscs_ppzksnark_prover", false);
+    span.exit();
 
     let proof = uscs_ppzksnark_proof::<ppT>::new(V_g1, alpha_V_g1, H_g1, V_g2);
 
@@ -830,11 +587,11 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 
     proof
 }
-
+//  * Convert a (non-processed) verification key into a processed verification key.
 pub fn uscs_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &uscs_ppzksnark_verification_key<ppT>,
 ) -> uscs_ppzksnark_processed_verification_key<ppT> {
-    enter_block("Call to uscs_ppzksnark_verifier_process_vk", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_process_vk").entered();
 
     let mut pvk = uscs_ppzksnark_processed_verification_key::<ppT>::default();
 
@@ -849,30 +606,32 @@ pub fn uscs_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
 
     pvk.encoded_IC_query = vk.encoded_IC_query.clone();
 
-    leave_block("Call to uscs_ppzksnark_verifier_process_vk", false);
+    span.exit();
 
     pvk
 }
-
+//  * A verifier algorithm for the USCS ppzkSNARK that:
+//  * (1) accepts a processed verification key, and
+//  * (2) has weak input consistency.
 pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     pvk: &uscs_ppzksnark_processed_verification_key<ppT>,
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to uscs_ppzksnark_online_verifier_weak_IC", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_online_verifier_weak_IC").entered();
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    enter_block("Compute input-dependent part of V", false);
+    let span = span!(Level::TRACE, "Compute input-dependent part of V").entered();
     let accumulated_IC = pvk
         .encoded_IC_query
         .accumulate_chunk::<Fr<ppT>>(primary_input, 0);
     assert!(accumulated_IC.is_fully_accumulated());
     let acc = accumulated_IC.first;
-    leave_block("Compute input-dependent part of V", false);
+    span.exit();
 
     let mut result = true;
 
-    enter_block("Check if the proof is well-formed", false);
+    let span = span!(Level::TRACE, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -880,11 +639,11 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    leave_block("Check if the proof is well-formed", false);
+    span.exit();
 
-    enter_block("Online pairing computations", false);
+    let span = span!(Level::TRACE, "Online pairing computations").entered();
 
-    enter_block("Check knowledge commitment for V is valid", false);
+    let span = span!(Level::TRACE, "Check knowledge commitment for V is valid").entered();
     let proof_V_g1_with_acc_precomp = ppT::precompute_G1(&(proof.V_g1.clone() + acc.clone()));
     let proof_V_g2_precomp = ppT::precompute_G2(&proof.V_g2);
     let V_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &pvk.pp_G2_one_precomp);
@@ -897,9 +656,9 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    leave_block("Check knowledge commitment for V is valid", false);
+    span.exit();
 
-    enter_block("Check SSP divisibility", false); // i.e., check that V^2=H*Z+1
+    let span = span!(Level::TRACE, "Check SSP divisibility").entered(); // i.e., check that V^2=H*Z+1
     let proof_H_g1_precomp = ppT::precompute_G1(&proof.H_g1);
     let SSP_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &proof_V_g2_precomp);
     let SSP_2 = ppT::miller_loop(&proof_H_g1_precomp, &pvk.vk_Z_g2_precomp);
@@ -913,9 +672,9 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    leave_block("Check SSP divisibility", false);
+    span.exit();
 
-    enter_block("Check same coefficients were used", false);
+    let span = span!(Level::TRACE, "Check same coefficients were used").entered();
     let proof_V_g1_precomp = ppT::precompute_G1(&proof.V_g1);
     let proof_alpha_V_g1_precomp = ppT::precompute_G1(&proof.alpha_V_g1);
     let alpha_V_1 = ppT::miller_loop(&proof_V_g1_precomp, &pvk.vk_alpha_tilde_g2_precomp);
@@ -928,34 +687,38 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         }
         result = false;
     }
-    leave_block("Check same coefficients were used", false);
+    span.exit();
 
-    leave_block("Online pairing computations", false);
+    span.exit();
 
-    leave_block("Call to uscs_ppzksnark_online_verifier_weak_IC", false);
+    span.exit();
 
     result
 }
-
+//  * A verifier algorithm for the USCS ppzkSNARK that:
+//  * (1) accepts a non-processed verification key, and
+//  * (2) has weak input consistency.
 pub fn uscs_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     vk: &uscs_ppzksnark_verification_key<ppT>,
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to uscs_ppzksnark_verifier_weak_IC", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_weak_IC").entered();
     let pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, primary_input, proof);
-    leave_block("Call to uscs_ppzksnark_verifier_weak_IC", false);
+    span.exit();
     result
 }
-
+//  * A verifier algorithm for the USCS ppzkSNARK that:
+//  * (1) accepts a processed verification key, and
+//  * (2) has strong input consistency.
 pub fn uscs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     pvk: &uscs_ppzksnark_processed_verification_key<ppT>,
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
     let mut result = true;
-    enter_block("Call to uscs_ppzksnark_online_verifier_strong_IC", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_online_verifier_strong_IC").entered();
 
     if pvk.encoded_IC_query.domain_size() != primary_input.len() {
         print_indent();
@@ -969,18 +732,20 @@ pub fn uscs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
         result = uscs_ppzksnark_online_verifier_weak_IC(pvk, primary_input, proof);
     }
 
-    leave_block("Call to uscs_ppzksnark_online_verifier_strong_IC", false);
+    span.exit();
     result
 }
-
+//  * A verifier algorithm for the USCS ppzkSNARK that:
+//  * (1) accepts a non-processed verification key, and
+//  * (2) has strong input consistency.
 pub fn uscs_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     vk: &uscs_ppzksnark_verification_key<ppT>,
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to uscs_ppzksnark_verifier_strong_IC", false);
+    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_strong_IC").entered();
     let pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, primary_input, proof);
-    leave_block("Call to uscs_ppzksnark_verifier_strong_IC", false);
+    span.exit();
     result
 }

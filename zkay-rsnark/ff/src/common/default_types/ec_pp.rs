@@ -1,9 +1,6 @@
 //  This file defines default_ec_pp based on the CURVE=... make flag, which selects
 //  which elliptic curve is used to implement group arithmetic and pairings.
 
-//
-// // #define EC_PP_HPP_
-
 // / Pick the elliptic curve /
 // // #ifdef CURVE_BLS12_381
 // // #define LIBFF_DEFAULT_EC_PP_DEFINED

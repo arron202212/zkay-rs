@@ -28,15 +28,12 @@ use std::{
     str::FromStr,
 };
 
-// /**
 //  * Arithmetic in the finite field F[(p^3)^2].
 //  *
 //  * Let p := modulus. This interface provides arithmetic for the extension field
 //  * Fp6 = Fp3[Y]/(Y^2-X) where Fp3 = Fp[X]/(X^3-T::non_residue) and T::non_residue is in Fp.
 //  *
 //  * ASSUMPTION: p = 1 (mod 6)
-//  */
-//
 
 // type Fp_modelConfig<const N:usize,T>=
 pub trait Fp6_modelConfig<const N: usize, const N2: usize, const N3: usize, const N6: usize>:
@@ -344,11 +341,6 @@ impl<
     }
 }
 
-//
-// bool Fp6_2over3_model<n,modulus>::operator==(other:&Fp6_2over3_model<n,modulus>) const
-// {
-//     return (self.c0 == other.c0 && self.c1 == other.c1);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -363,21 +355,6 @@ impl<
     }
 }
 
-//
-// bool Fp6_2over3_model<n,modulus>::operator!=(other:&Fp6_2over3_model<n,modulus>) const
-// {
-//     return !(operator==(other));
-// }
-
-//
-// Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator+(other:&Fp6_2over3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-//
-//     Self::new(self.c0 + other.c0,
-//                                 self.c1 + other.c1);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -393,15 +370,6 @@ impl<
         Self::new(self.c0 + other.borrow().c0, self.c1 + other.borrow().c1)
     }
 }
-//
-// Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator-(other:&Fp6_2over3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-//
-//     Self::new(self.c0 - other.c0,
-//                                 self.c1 - other.c1);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -417,15 +385,6 @@ impl<
     }
 }
 
-//
-// Fp6_2over3_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp6_2over3_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     Self::new(lhs*rhs.c0,
-//                                 lhs*rhs.c1);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -442,22 +401,6 @@ impl<
     }
 }
 
-//
-// Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator*(other:&Fp6_2over3_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-//
-//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba)
-//     B:&my_Fp3<N,T::Fp3_modelConfig> = other.c1, &A = other.c0,
-//                  &b = self.c1, &a = self.c0;
-//     let aA= a*A;
-//     let bB= b*B;
-//     let beta_bB= Fp6_2over3_model<n,modulus>::mul_by_non_residue(bB);
-
-//     Self::new(aA + beta_bB,
-//                                        (a+b)*(A+B) - aA  - bB);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -479,24 +422,6 @@ impl<
         Self::new(aA + beta_bB, (a + b) * (A + B) - aA - bB)
     }
 }
-// impl<const N: usize, const N2: usize,const N3: usize, const N6: usize, T: Fp6_modelConfig<N, N2,N3,N6>> Mul<bigint<N>>
-//     for Fp6_2over3_model<N, N2, N3,N6,T>
-// {
-//     type Output = Self;
-
-//     fn mul(self, rhs: bigint<N>) -> Self::Output {
-//         let mut r = self;
-//         // r *= *rhs.borrow();
-//         r
-//     }
-// }
-
-//
-// Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator-() const
-// {
-//     Self::new(-self.c0,
-//                                 -self.c1);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -511,12 +436,6 @@ impl<
         Self::new(-self.c0, -self.c1)
     }
 }
-
-//
-// Fp6_2over3_model<n,modulus> Fp6_2over3_model<n,modulus>::operator^(const u64 pow) const
-// {
-//     return power<Fp6_2over3_model<n, modulus> >(*this, pow);
-// }
 
 impl<
     const N: usize,
@@ -534,12 +453,6 @@ impl<
     }
 }
 
-//
-//
-// Fp6_2over3_model<n, modulus> Fp6_2over3_model<n,modulus>::operator^(exponent:&bigint<m>) const
-// {
-//     return power<Fp6_2over3_model<n, modulus>, m>(*this, exponent);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -556,19 +469,6 @@ impl<
     }
 }
 
-//
-//
-// Fp6_2over3_model<n, modulus> Fp6_2over3_model<n,modulus>::operator^(exponent:&Fp6_2over3_model<m, exp_modulus>) const
-// {
-//     return *self^(exponent.as_bigint());
-// }
-
-//
-// Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator+=(const Fp6_2over3_model<n,modulus>& other)
-// {
-//     *self = *this + other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -583,12 +483,6 @@ impl<
     }
 }
 
-//
-// Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator-=(const Fp6_2over3_model<n,modulus>& other)
-// {
-//     *self = *this - other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -602,12 +496,6 @@ impl<
         *self = *self - *other.borrow();
     }
 }
-//
-// Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator*=(const Fp6_2over3_model<n,modulus>& other)
-// {
-//     *self = *this * other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -622,12 +510,6 @@ impl<
     }
 }
 
-//
-// Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator^=(const u64 pow)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -640,13 +522,6 @@ impl<
         *self = *self ^ rhs;
     }
 }
-//
-//
-// Fp6_2over3_model<n,modulus>& Fp6_2over3_model<n,modulus>::operator^=(pow:&bigint<m>)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 
 impl<
     const N: usize,
@@ -669,7 +544,6 @@ impl<
     T: Fp6_modelConfig<N, N2, N3, N6>,
 > PpConfig for Fp6_2over3_model<N, N2, N3, N6, T>
 {
-    
     type BigIntT = bigint<N>;
 }
 
@@ -705,7 +579,6 @@ impl<
 use std::fmt;
 use std::io::{self, Read};
 
-// 对应: std::ostream& operator<<(std::ostream &out, const Fp2_model<n, modulus> &el)
 impl<
     const N: usize,
     const N2: usize,
@@ -715,13 +588,10 @@ impl<
 > fmt::Display for Fp6_2over3_model<N, N2, N3, N6, T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // OUTPUT_SEPARATOR 在 Rust 中通常直接用空格或指定的 separator
         write!(f, "{} {}", self.c0, self.c1)
     }
 }
 
-// 对应: std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
-// Rust 中通常通过自定义函数或实现特定 Trait 来处理流输入
 impl<
     const N: usize,
     const N2: usize,
@@ -734,7 +604,7 @@ impl<
         let mut line = String::new();
         reader.read_line(&mut line)?;
         let parts: Vec<&str> = line.split_whitespace().collect();
-        // 解析 c0 和 c1
+
         let c0 = parts[0]
             .parse()
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "c0 parse error"))?;
@@ -774,20 +644,6 @@ impl<
         Ok(Self::default())
     }
 }
-
-//
-// std::ostream& operator<<(std::ostream &out, el:&Fp6_2over3_model<n, modulus>)
-// {
-//     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, Fp6_2over3_model<n, modulus> &el)
-// {
-//     in >> el.c0 >> el.c1;
-//     return in;
-// }
 
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::{

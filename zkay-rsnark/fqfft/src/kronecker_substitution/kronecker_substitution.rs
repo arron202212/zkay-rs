@@ -2,13 +2,13 @@
 
 use crate::polynomial_arithmetic::basic_operations::_condense;
 use ffec::algebra::field_utils::bigint::GMP_NUMB_BITS;
-/**
- * Given two polynomial vectors, A and B, the function performs
- * polynomial multiplication and returns the resulting polynomial vector.
- * The implementation makes use of
- * [Harvey 07, Multipoint Kronecker Substitution, Section 2.1] and
- * [Gathen and Gerhard, Modern Computer Algebra 3rd Ed., Section 8.4].
- */
+// /**
+//  * Given two polynomial vectors, A and B, the function performs
+//  * polynomial multiplication and returns the resulting polynomial vector.
+//  * The implementation makes use of
+//  * [Harvey 07, Multipoint Kronecker Substitution, Section 2.1] and
+//  * [Gathen and Gerhard, Modern Computer Algebra 3rd Ed., Section 8.4].
+//  */
 //
 // pub fn  kronecker_substitution(v3:&Vec<FieldT>,  v1:&Vec<FieldT>,  v2:&Vec<FieldT>);
 use ffec::common::utils;
@@ -51,11 +51,11 @@ pub fn kronecker_substitution<
     //Output polynomial
     v3.resize(n3, FieldT::zero());
 
-    /*
-     * Allocate all MP_LIMB_T space once and store the reference pointer M1
-     * to free memory afterwards. P1, P2, and P3 will remain fixed pointers
-     * to the start of their respective polynomials as reference.
-     */
+    // /*
+    //  * Allocate all MP_LIMB_T space once and store the reference pointer M1
+    //  * to free memory afterwards. P1, P2, and P3 will remain fixed pointers
+    //  * to the start of their respective polynomials as reference.
+    //  */
     let m1 = vec![0; 2 * (k1 + k2)]; //(mp_limb_t*) malloc (sizeof (mp_limb_t) * 2 * (k1 + k2));
     // let p1 = m1;
     //     let p2 = p1 + k1;

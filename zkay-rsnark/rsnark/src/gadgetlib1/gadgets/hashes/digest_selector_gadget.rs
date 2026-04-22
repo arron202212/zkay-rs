@@ -49,10 +49,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadget<FieldT, PB> {
 impl<FieldT: FieldTConfig, PB: PBConfig> digest_selector_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         for i in 0..self.t.digest_size {
-            /*
-              input = is_right * right + (1-is_right) * left
-              input - left = is_right(right - left)
-            */
+            // /*
+            //   input = is_right * right + (1-is_right) * left
+            //   input - left = is_right(right - left)
+            // */
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.is_right.clone().into(),

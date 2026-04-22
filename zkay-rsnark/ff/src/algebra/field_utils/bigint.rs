@@ -195,8 +195,6 @@ impl<const N: usize> bigint<N> {
         print!("{:N$?}\n", self.0);
     }
 
-   
-
     pub const fn clear(&mut self) {
         self.0.0 = [0; N];
     }
@@ -252,22 +250,20 @@ impl<const N: usize> bigint<N> {
     }
 }
 impl<const N: usize> BigIntegerT for bigint<N> {
-
-    fn  print_hex(&self) {
+    fn print_hex(&self) {
         print!("{:N$x?}\n", self.0);
     }
-    fn  num_bits(&self) -> usize {
+    fn num_bits(&self) -> usize {
         self.0.num_bits() as _
     }
 
-    fn  as_ulong(&self) -> u64 {
+    fn as_ulong(&self) -> u64 {
         self.0.0[0]
     }
 
-    fn  test_bit(&self, bitno: usize) -> bool {
+    fn test_bit(&self, bitno: usize) -> bool {
         self.0.get_bit(bitno)
     }
-
 }
 impl<const N: usize> Index<usize> for bigint<N> {
     type Output = u64;
@@ -303,60 +299,6 @@ impl<const N: usize> MulAssign<&Self> for bigint<N> {
 impl<const N: usize> MulAssign for bigint<N> {
     fn mul_assign(&mut self, rhs: Self) {}
 }
-// use std::ops::Mul;
-// impl<const N:usize> Mul for bigint<N> {
-//     type Output =Self;
-
-//     fn mul(self, rhs: Self) -> Self {
-//         Self::new(0)
-//     }
-// }
-// impl<T, const N:usize> Mul<&T> for bigint<N> {
-//     type Output = bigint<N>;
-
-//     fn mul(self, rhs: &T) -> bigint<N> {
-//         bigint::<N>::new(0)
-//     }
-// }
-// // impl<T,const N:usize> Mul<&T> for bigint<N> {
-// //     type Output =Self;
-
-// //     fn mul(self, rhs: &T) -> Self {
-// //         Self::new(0)
-// //     }
-// // }
-// use std::cmp::Ordering;
-
-// impl<const N:usize> PartialEq for bigint<N> {
-//      #[inline]
-//     fn eq(&self, other: &Self) -> bool {
-//        self.0.0[.. N]== other.0.0[.. N]
-//     }
-// }
-// impl<const N:usize> PartialOrd for bigint<N> {
-//     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-//         Some(self.0.0.cmp(&other.0.0))
-//     }
-// }
-
-// //
-// // bool bigint<n>::operator==(const bigint<n>& other) const
-// // {
-// //     return (mpn_cmp(self.0.0, other.0.0, n) == 0);
-// // }
-
-// //
-// // bool bigint<n>::operator!=(const bigint<n>& other) const
-// // {
-// //     return !(operator==(other));
-// // }
-
-// //
-// // bool bigint<n>::operator<(const bigint<n>& other) const
-// // {
-// //     return (mpn_cmp(self.0.0, other.0.0, n) < 0);
-// // }
-
 use std::fmt;
 impl<const N: usize> fmt::Display for bigint<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -374,50 +316,3 @@ impl<const N: usize> fmt::Display for bigint<N> {
         write!(f, "{}", self.0)
     }
 }
-
-//
-// std::ostream& operator<<(std::ostream &out, b:&bigint<n>)
-// {
-// // #ifdef BINARY_OUTPUT
-//     out.write((char*)b.0.0, sizeof(b.0.0[0]) * n);
-// #else
-//     mpz_t t;
-//     mpz_init(t);
-//     b.to_mpz(t);
-
-//     out << t;
-
-//     mpz_clear(t);
-//
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, bigint<n> &b)
-// {
-// // #ifdef BINARY_OUTPUT
-//     in.read((char*)b.0.0, sizeof(b.0.0[0]) * n);
-// #else
-//     String s;
-//     in >> s;
-
-//     usize l = s.len();
-//     unsigned char* s_copy = new unsigned char[l];
-
-//     for i in 0..l
-//     {
-//         assert!(s[i] >= '0' && s[i] <= '9');
-//         s_copy[i] = s[i] - '0';
-//     }
-
-//     mp_size_t limbs_written = mpn_set_str(b.0.0, s_copy, l, 10);
-//     assert!(limbs_written <= n);
-//     if limbs_written < n
-//     {
-//       memset(b.0.0 + limbs_written, 0, (n - limbs_written) * sizeof(mp_limb_t));
-//     }
-
-//     delete[] s_copy;
-//
-//     return in;
-// }

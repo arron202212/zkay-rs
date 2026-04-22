@@ -64,13 +64,12 @@ pub fn to_field<FieldT: FieldTConfig>(d: i32) -> FieldT {
     FieldT::from(d)
 }
 
-/**
- * Gadget that represents an Fp6 variable.
- */
+// /**
+//  * Gadget that represents an Fp6 variable.
+//  */
 pub trait Fp6TConfig<FieldT: FieldTConfig>:
     FieldTConfig + Default + Clone + std::ops::Mul<Output = Self>
 {
-    // type FieldT: FieldTConfig;
     type Fp3T: Fp3TConfig<FieldT>;
     type Fp2T: Fp2TConfig<FieldT>;
     fn c0(&self) -> Self::Fp3T;
@@ -84,21 +83,15 @@ pub trait Fp6TConfig<FieldT: FieldTConfig>:
 
 #[derive(Clone, Default)]
 pub struct Fp6_variable<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp6T::my_Fp>
-    // type FieldT=Fp6T::my_Fp;
-    // type Fp3T=Fp6T::my_Fpe;
     pub c0: Fp3_variables<Fp6T::Fp3T, FieldT, PB>,
     pub c1: Fp3_variables<Fp6T::Fp3T, FieldT, PB>,
 }
 
-/**
- * Gadget that creates constraints for Fp6 multiplication.
- */
+// /**
+//  * Gadget that creates constraints for Fp6 multiplication.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp6_mul_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp6T::my_Fp>
-    //     type FieldT=Fp6T::my_Fp;
-    //     type Fp3T=Fp6T::my_Fpe;
     pub A: Fp6_variables<Fp6T, FieldT, PB>,
     pub B: Fp6_variables<Fp6T, FieldT, PB>,
     pub result: Fp6_variables<Fp6T, FieldT, PB>,
@@ -124,14 +117,11 @@ pub struct Fp6_mul_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
     pub compute_result_c1: RcCell<Fp3_mul_gadgets<Fp6T::Fp3T, FieldT, PB>>,
 }
 
-/**
- * Gadget that creates constraints for Fp6 multiplication by a Fp6 element B for which B.t.c0.t.c0 = B.t.c0.t.c1 = 0.
- */
+// /**
+//  * Gadget that creates constraints for Fp6 multiplication by a Fp6 element B for which B.t.c0.t.c0 = B.t.c0.t.c1 = 0.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp6_mul_by_2345_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp6T::my_Fp>
-    //     type FieldT=Fp6T::my_Fp;
-    //     type Fp3T=Fp6T::my_Fpe;
     pub A: Fp6_variables<Fp6T, FieldT, PB>,
     pub B: Fp6_variables<Fp6T, FieldT, PB>,
     pub result: Fp6_variables<Fp6T, FieldT, PB>,
@@ -156,26 +146,21 @@ pub struct Fp6_mul_by_2345_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig
     pub compute_result_c1: RcCell<Fp3_mul_gadgets<Fp6T::Fp3T, FieldT, PB>>,
 }
 
-/**
- * Gadget that creates constraints for Fp6 squaring.
- */
+// /**
+//  * Gadget that creates constraints for Fp6 squaring.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp6_sqr_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp6T::my_Fp>
-    //     type FieldT=Fp6T::my_Fp;
     pub A: Fp6_variables<Fp6T, FieldT, PB>,
     pub result: Fp6_variables<Fp6T, FieldT, PB>,
     pub mul: RcCell<Fp6_mul_gadgets<Fp6T, FieldT, PB>>,
 }
 
-/**
- * Gadget that creates constraints for Fp6 cyclotomic squaring
- */
+// /**
+//  * Gadget that creates constraints for Fp6 cyclotomic squaring
+//  */
 #[derive(Clone, Default)]
 pub struct Fp6_cyclotomic_sqr_gadget<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp6T::my_Fp>
-    //     type FieldT=Fp6T::my_Fp;
-    //     type Fp3T=Fp6T::my_Fp2;
     pub A: Fp6_variables2<Fp6T, FieldT, PB>,
     pub result: Fp6_variables2<Fp6T, FieldT, PB>,
     pub a: RcCell<Fp2_variables<Fp6T::Fp2T, FieldT, PB>>,
@@ -341,23 +326,23 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp6_variables<Fp6T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp6_mul_gadgets<Fp6T, FieldT, PB> {
-        /*
-            Karatsuba multiplication for Fp6 as a quadratic extension of Fp3:
-                v0 = A.t.c0 * B.t.c0
-                v1 = A.c1 * B.c1
-                result.t.c0 = v0 + non_residue * v1
-                result.c1 = (A.t.c0 + A.c1) * (B.t.c0 + B.c1) - v0 - v1
-            where "non_residue * elem" := (non_residue * elem.c2, elem.c0, elem.c1)
+        // /*
+        //     Karatsuba multiplication for Fp6 as a quadratic extension of Fp3:
+        //         v0 = A.t.c0 * B.t.c0
+        //         v1 = A.c1 * B.c1
+        //         result.t.c0 = v0 + non_residue * v1
+        //         result.c1 = (A.t.c0 + A.c1) * (B.t.c0 + B.c1) - v0 - v1
+        //     where "non_residue * elem" := (non_residue * elem.c2, elem.c0, elem.c1)
 
-            Enforced with 3 Fp3_mul_gadget's that ensure that:
-                A.c1 * B.c1 = v1
-                A.t.c0 * B.t.c0 = v0
-                (A.t.c0+A.c1)*(B.t.c0+B.c1) = result.c1 + v0 + v1
+        //     Enforced with 3 Fp3_mul_gadget's that ensure that:
+        //         A.c1 * B.c1 = v1
+        //         A.t.c0 * B.t.c0 = v0
+        //         (A.t.c0+A.c1)*(B.t.c0+B.c1) = result.c1 + v0 + v1
 
-            Reference:
-                "Multiplication and Squaring on Pairing-Friendly Fields"
-                Devegili, OhEigeartaigh, Scott, Dahab
-        */
+        //     Reference:
+        //         "Multiplication and Squaring on Pairing-Friendly Fields"
+        //         Devegili, OhEigeartaigh, Scott, Dahab
+        // */
 
         let v1 = RcCell::new(Fp3_variable::<Fp6T::Fp3T, FieldT, PB>::new(
             pb.clone(),
@@ -540,30 +525,30 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp6_variables<Fp6T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp6_mul_by_2345_gadgets<Fp6T, FieldT, PB> {
-        /*
-            Karatsuba multiplication for Fp6 as a quadratic extension of Fp3:
-                v0 = A.t.c0 * B.t.c0
-                v1 = A.c1 * B.c1
-                result.t.c0 = v0 + non_residue * v1
-                result.c1 = (A.t.c0 + A.c1) * (B.t.c0 + B.c1) - v0 - v1
-            where "non_residue * elem" := (non_residue * elem.c2, elem.c0, elem.c1)
+        // /*
+        //     Karatsuba multiplication for Fp6 as a quadratic extension of Fp3:
+        //         v0 = A.t.c0 * B.t.c0
+        //         v1 = A.c1 * B.c1
+        //         result.t.c0 = v0 + non_residue * v1
+        //         result.c1 = (A.t.c0 + A.c1) * (B.t.c0 + B.c1) - v0 - v1
+        //     where "non_residue * elem" := (non_residue * elem.c2, elem.c0, elem.c1)
 
-            We know that B.t.c0.t.c0 = B.t.c0.t.c1 = 0
+        //     We know that B.t.c0.t.c0 = B.t.c0.t.c1 = 0
 
-            Enforced with 2 Fp3_mul_gadget's that ensure that:
-                A.c1 * B.c1 = v1
-                (A.t.c0+A.c1)*(B.t.c0+B.c1) = result.c1 + v0 + v1
+        //     Enforced with 2 Fp3_mul_gadget's that ensure that:
+        //         A.c1 * B.c1 = v1
+        //         (A.t.c0+A.c1)*(B.t.c0+B.c1) = result.c1 + v0 + v1
 
-            And one multiplication (three direct constraints) that enforces A.t.c0 * B.t.c0
-            = v0, where B.t.c0.t.c0 = B.t.c0.t.c1 = 0.
+        //     And one multiplication (three direct constraints) that enforces A.t.c0 * B.t.c0
+        //     = v0, where B.t.c0.t.c0 = B.t.c0.t.c1 = 0.
 
-            Note that (u + v * X + t * X^2) * (0 + 0 * X + z * X^2) =
-            (v * z * non_residue + t * z * non_residue * X + u * z * X^2)
+        //     Note that (u + v * X + t * X^2) * (0 + 0 * X + z * X^2) =
+        //     (v * z * non_residue + t * z * non_residue * X + u * z * X^2)
 
-            Reference:
-                "Multiplication and Squaring on Pairing-Friendly Fields"
-                Devegili, OhEigeartaigh, Scott, Dahab
-        */
+        //     Reference:
+        //         "Multiplication and Squaring on Pairing-Friendly Fields"
+        //         Devegili, OhEigeartaigh, Scott, Dahab
+        // */
         let v1 = RcCell::new(Fp3_variable::<Fp6T::Fp3T, FieldT, PB>::new(
             pb.clone(),
             prefix_format!(annotation_prefix, " v1"),
@@ -791,27 +776,27 @@ impl<Fp6T: Fp6TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp6_variables2<Fp6T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp6_cyclotomic_sqr_gadgets<Fp6T, FieldT, PB> {
-        /*
-            my_Fp2 a = my_Fp2(c0.t.c0, c1.t.c1);
-            my_Fp2 b = my_Fp2(c1.t.c0, c0.t.c2);
-            my_Fp2 c = my_Fp2(c0.t.c1, c1.t.c2);
+        // /*
+        //     my_Fp2 a = my_Fp2(c0.t.c0, c1.t.c1);
+        //     my_Fp2 b = my_Fp2(c1.t.c0, c0.t.c2);
+        //     my_Fp2 c = my_Fp2(c0.t.c1, c1.t.c2);
 
-            my_Fp2 asq = a.squared();
-            my_Fp2 bsq = b.squared();
-            my_Fp2 csq = c.squared();
+        //     my_Fp2 asq = a.squared();
+        //     my_Fp2 bsq = b.squared();
+        //     my_Fp2 csq = c.squared();
 
-            result.t.c0.t.c0 = 3 * asq_a - 2 * a_a;
-            result.c1.t.c1 = 3 * asq_b + 2 * a_b;
+        //     result.t.c0.t.c0 = 3 * asq_a - 2 * a_a;
+        //     result.c1.t.c1 = 3 * asq_b + 2 * a_b;
 
-            result.t.c0.t.c1 = 3 * bsq_a - 2 * c_a;
-            result.c1.t.c2 = 3 * bsq_b + 2 * c_b;
+        //     result.t.c0.t.c1 = 3 * bsq_a - 2 * c_a;
+        //     result.c1.t.c2 = 3 * bsq_b + 2 * c_b;
 
-            result.t.c0.t.c2 = 3 * csq_a - 2 * b_b;
-            result.c1.t.c0 = 3 * my_Fp3::non_residue * csq_b + 2 * b_a;
+        //     result.t.c0.t.c2 = 3 * csq_a - 2 * b_b;
+        //     result.c1.t.c0 = 3 * my_Fp3::non_residue * csq_b + 2 * b_a;
 
-            return Fp6_2over3_model<n, mbodulus>(my_Fp3(A_a, C_a, B_b),
-                                                 my_Fp3(B_a, A_b, C_b))
-        */
+        //     return Fp6_2over3_model<n, mbodulus>(my_Fp3(A_a, C_a, B_b),
+        //                                          my_Fp3(B_a, A_b, C_b))
+        // */
         let a = RcCell::new(Fp2_variable::<Fp6T::Fp2T, FieldT, PB>::new4(
             pb.clone(),
             A.t.c0.t.c0.clone(),

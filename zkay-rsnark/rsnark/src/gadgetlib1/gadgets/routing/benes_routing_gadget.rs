@@ -26,31 +26,31 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 #[derive(Clone, Default)]
 pub struct benes_routing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
-    //gadget<FieldT>
+ 
 
-    /*
-      Indexing conventions:
+    // /*
+    //   Indexing conventions:
 
-      routed_packets[column_idx][packet_idx][subpacket_idx]
-      pack_inputs/unpack_outputs[packet_idx]
-      benes_switch_bits[column_idx][row_idx]
+    //   routed_packets[column_idx][packet_idx][subpacket_idx]
+    //   pack_inputs/unpack_outputs[packet_idx]
+    //   benes_switch_bits[column_idx][row_idx]
 
-      Where column_idx ranges is in range 0 .. 2*dimension
-      (2*dimension-1 for switch bits/topology) and packet_idx is in
-      range 0 .. num_packets-1.
-    */
+    //   Where column_idx ranges is in range 0 .. 2*dimension
+    //   (2*dimension-1 for switch bits/topology) and packet_idx is in
+    //   range 0 .. num_packets-1.
+    // */
     routed_packets: Vec<Vec<pb_variable_array<FieldT, PB>>>,
     unpack_outputs: Vec<multipacking_gadgets<FieldT, PB>>,
     pack_inputs: Vec<multipacking_gadgets<FieldT, PB>>,
 
-    /*
-      If #packets = 1 then we can route without explicit routing bits
-      (and save half the constraints); in this case benes_switch_bits will
-      be unused.
+    // /*
+    //   If #packets = 1 then we can route without explicit routing bits
+    //   (and save half the constraints); in this case benes_switch_bits will
+    //   be unused.
 
-      For benes_switch_bits 0 corresponds to straight edge and 1
-      corresponds to cross edge.
-    */
+    //   For benes_switch_bits 0 corresponds to straight edge and 1
+    //   corresponds to cross edge.
+    // */
     benes_switch_bits: Vec<pb_variable_array<FieldT, PB>>,
     neighbors: benes_topology,
 
@@ -239,10 +239,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> benes_routing_gadgets<FieldT, PB> {
 
                     //route forward according to routing bits
                     for subpacket_idx in 0..self.t.num_subpackets {
-                        /*
-                          (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
-                          switch_bit * (cross_edge-straight_edge) = cur-straight_edge
-                        */
+                        // /*
+                        //   (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
+                        //   switch_bit * (cross_edge-straight_edge) = cur-straight_edge
+                        // */
                         self.pb.borrow_mut().add_r1cs_constraint(
                             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                                 self.t.benes_switch_bits[column_idx][packet_idx]

@@ -7,24 +7,28 @@
 #![allow(unused_braces)]
 #![allow(warnings, unused)]
 
-// use  Util;
-// use  crate::gadgetlib2::integration;
-// use  crate::gadgetlib2::adapters;
-// use  common::profiling;
-use crate::gadgetlib2::constraint::PrintOptions;
-use crate::gadgetlib2::pp::Fp;
-use crate::gadgetlib2::variable::{
-    FElem, FElemInterface, FieldType, LinearCombination, LinearTerm, ProtoboardPtr, R1P_Elem,
-    Variable, VariablePtr,
+use crate::{
+    gadgetlib2::{
+        constraint::PrintOptions,
+        pp::Fp,
+        variable::{
+            FElem, FElemInterface, FieldType, LinearCombination, LinearTerm, ProtoboardPtr,
+            R1P_Elem, Variable, VariablePtr,
+        },
+    },
+    jsnark_interface::{
+        circuit_parser::{Gate, WireEntry, read_field_element_from_hex},
+        util::readIds,
+    },
 };
-use crate::jsnark_interface::circuit_parser::{Gate, WireEntry, read_field_element_from_hex};
-use crate::jsnark_interface::util::readIds;
 use ff_curves::{Fr, default_ec_pp};
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use rccell::RcCell;
 use regex::Regex;
+use tracing::{span, Level};
 use sscanf::sscanf;
 use std::{
+    collections::BTreeMap,
     fmt::Debug,
     fs,
     fs::File,
@@ -33,8 +37,6 @@ use std::{
     ops::{Add, Mul, Neg, Sub},
     process,
 };
-
-use std::collections::BTreeMap;
 
 type Wire = u32;
 
@@ -137,7 +139,7 @@ impl CircuitReader {
     }
 
     pub fn parse_and_eval(&mut self, gates: &[Gate], inputsFilepath: &str) {
-        enter_block("Parsing and Evaluating the circuit", false);
+        let span = span!(Level::TRACE, "Parsing and Evaluating the circuit").entered();
 
         let Gate::Total(ret) = gates[0] else {
             panic!("total failed")
@@ -318,7 +320,7 @@ impl CircuitReader {
             }
         }
         println!("===eval==start=={:?}==", start.elapsed());
-        leave_block("Parsing and Evaluating the circuit", false);
+        span.exit();
     }
 
     pub fn construct_circuit(&mut self, gates: &[Gate]) {

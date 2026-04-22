@@ -50,9 +50,9 @@ const mnt4_final_exponent_last_chunk_is_w0_neg: bigint<4> = bigint::<4>::one();
 const mnt6_final_exponent_last_chunk_is_w0_neg: bigint<4> = bigint::<4>::one();
 const mnt6_final_exponent_last_chunk_abs_of_w0: bigint<4> = bigint::<4>::one();
 
-/**
- * Gadget for final exponentiation with embedding degree 4.
- */
+// /**
+//  * Gadget for final exponentiation with embedding degree 4.
+//  */
 type FieldT<ppT> = Fr<ppT>;
 #[derive(Clone, Default)]
 pub struct mnt4_final_exp_gadget<ppT: ppTConfig> {
@@ -86,14 +86,11 @@ pub struct mnt4_final_exp_gadget<ppT: ppTConfig> {
     pub result_is_one: variable<ppT::FieldT, pb_variable>,
 }
 
-/**
- * Gadget for final exponentiation with embedding degree 6.
- */
+// /**
+//  * Gadget for final exponentiation with embedding degree 6.
+//  */
 #[derive(Clone, Default)]
 pub struct mnt6_final_exp_gadget<ppT: ppTConfig> {
-    //gadget<Fr<ppT> >
-
-    // type FieldT=Fr<ppT>;
     pub el: Fqk_variable<ppT>,
     pub one: RcCell<Fqk_variable<ppT>>,
     pub el_inv: RcCell<Fqk_variable<ppT>>,

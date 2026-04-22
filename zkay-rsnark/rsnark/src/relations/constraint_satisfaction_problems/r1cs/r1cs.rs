@@ -10,20 +10,19 @@ use crate::relations::variable::{linear_combination, linear_term};
 use ffec::FieldTConfig;
 use ffec::algebra::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::common::profiling::print_indent;
-use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils::FMT;
 use std::collections::BTreeMap;
-
-/**
- * A R1CS constraint is a formal expression of the form
- *
- *                < A , X > * < B , X > = < C , X > ,
- *
- * where X = (x_0,x_1,...,x_m) is a vector of formal variables and A,B,C each
- * consist of 1+m elements in <FieldT>.
- *
- * A R1CS constraint is used to construct a R1CS constraint system (see below).
- */
+use tracing::{span, Level};
+// /**
+//  * A R1CS constraint is a formal expression of the form
+//  *
+//  *                < A , X > * < B , X > = < C , X > ,
+//  *
+//  * where X = (x_0,x_1,...,x_m) is a vector of formal variables and A,B,C each
+//  * consist of 1+m elements in <FieldT>.
+//  *
+//  * A R1CS constraint is used to construct a R1CS constraint system (see below).
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_constraint<
     FieldT: FieldTConfig,
@@ -35,21 +34,10 @@ pub struct r1cs_constraint<
     pub c: linear_combination<FieldT, SV, SLC>,
 }
 
-//     r1cs_constraint() {};
-//     r1cs_constraint(a:&linear_combination<FieldT>
-//                     b:&linear_combination<FieldT>
-//                     c:&linear_combination<FieldT>);
-
-//     r1cs_constraint(A:Vec<linear_combination<FieldT> >
-//                     B:Vec<linear_combination<FieldT> >
-//                     C:Vec<linear_combination<FieldT> >);
-
-// };
-
-/**
- * A R1CS variable assignment is a vector of <FieldT> elements that represents
- * a candidate solution to a R1CS constraint system (see below).
- */
+// /**
+//  * A R1CS variable assignment is a vector of <FieldT> elements that represents
+//  * a candidate solution to a R1CS constraint system (see below).
+//  */
 
 //TODO: specify that it does *NOT* include the constant 1
 
@@ -59,18 +47,18 @@ pub type r1cs_auxiliary_input<FieldT> = Vec<FieldT>;
 
 pub type r1cs_variable_assignment<FieldT> = Vec<FieldT>; //note the changed name! (TODO: remove this comment after primary_input transition is complete)
 
-/**
- * A system of R1CS constraints looks like
- *
- *     { < A_k , X > * < B_k , X > = < C_k , X > }_{k=1}^{n}  .
- *
- * In other words, the system is satisfied if and only if there exist a
- * USCS variable assignment for which each R1CS constraint is satisfied.
- *
- * NOTE:
- * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
- * Thus, the 0-th variable is not included in num_variables.
- */
+// /**
+//  * A system of R1CS constraints looks like
+//  *
+//  *     { < A_k , X > * < B_k , X > = < C_k , X > }_{k=1}^{n}  .
+//  *
+//  * In other words, the system is satisfied if and only if there exist a
+//  * USCS variable assignment for which each R1CS constraint is satisfied.
+//  *
+//  * NOTE:
+//  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
+//  * Thus, the 0-th variable is not included in num_variables.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_constraint_system<
     FieldT: FieldTConfig,
@@ -82,26 +70,10 @@ pub struct r1cs_constraint_system<
 
     pub constraints: Vec<r1cs_constraint<FieldT, SV, SLC>>,
 
-    // usize num_inputs() const;
-    // usize num_variables() const;
-    // usize num_constraints() const;
-
-    // #ifdef DEBUG
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
 }
 
-//     bool is_valid() const;
-//     bool is_satisfied(primary_input:&r1cs_primary_input<FieldT>
-//                       &auxiliary_input:r1cs_auxiliary_input<FieldT>) const;
-
-//     pub fn  add_constraint(&c:r1cs_constraint<FieldT,SV,SLC>);
-//     pub fn  add_constraint(c:&r1cs_constraint<FieldT,SV,SLC> &annotation:String);
-
-//     pub fn  swap_AB_if_beneficial();
-
-//     pub fn  report_linear_constraint_statistics() const;
-// };
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     r1cs_constraint_system<FieldT, SV, SLC>
@@ -164,13 +136,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         self.a == other.a && self.b == other.b && self.c == other.c
     }
 }
-// < FieldT>
-// bool r1cs_constraint<FieldT,SV,SLC>::operator==(&other:r1cs_constraint<FieldT,SV,SLC>) const
-// {
-//     return (self.a == other.a &&
-//             self.b == other.b &&
-//             self.c == other.c);
-// }
+
 use std::fmt;
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> fmt::Display
     for r1cs_constraint<FieldT, SV, SLC>
@@ -179,25 +145,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         write!(f, "{}{}{}", self.a, self.b, self.c)
     }
 }
-// < FieldT>
-// std::ostream& operator<<(std::ostream &out, &c:r1cs_constraint<FieldT,SV,SLC>)
-// {
-//     out << c.a;
-//     out << c.b;
-//     out << c.c;
 
-//     return out;
-// }
-
-// < FieldT>
-// std::istream& operator>>(std::istream &in, r1cs_constraint<FieldT,SV,SLC> &c)
-// {
-//     in >> c.a;
-//     in >> c.b;
-//     in >> c.c;
-
-//     return in;
-// }
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig>
     r1cs_constraint_system<FieldT, SV, SLC>
@@ -315,7 +263,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             false,
         );
 
-        enter_block("Estimate densities", false);
+        let span = span!(Level::TRACE, "Estimate densities").entered();
         let mut touched_by_A = vec![false; self.num_variables() + 1];
         let mut touched_by_B = vec![false; self.num_variables() + 1];
 
@@ -342,15 +290,15 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
             print_indent();
             print!("* Non-zero B-count (estimate): {}\n", non_zero_B_count);
         }
-        leave_block("Estimate densities", false);
+        span.exit();
 
         if non_zero_B_count > non_zero_A_count {
-            enter_block("Perform the swap", false);
+            let span = span!(Level::TRACE, "Perform the swap").entered();
             for i in 0..self.constraints.len() {
                 (self.constraints[i].b, self.constraints[i].a) =
                     (self.constraints[i].a.clone(), self.constraints[i].b.clone());
             }
-            leave_block("Perform the swap", false);
+            span.exit();
         } else {
             print_indent();
             print!("Swap is not beneficial, not performing\n");
@@ -363,7 +311,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 
     pub fn report_linear_constraint_statistics(&self) {
-        // #ifdef DEBUG
         for i in 0..self.constraints.len() {
             let constr = &self.constraints[i];
             let mut a_is_const = true;
@@ -401,13 +348,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-// < FieldT>
-// bool r1cs_constraint_system<FieldT>::operator==(&other:r1cs_constraint_system<FieldT>) const
-// {
-//     return (self.constraints == other.constraints &&
-//             self.primary_input_size == other.primary_input_size &&
-//             self.auxiliary_input_size == other.auxiliary_input_size);
-// }
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> fmt::Display
     for r1cs_constraint_system<FieldT, SV, SLC>
 {
@@ -425,43 +365,3 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         )
     }
 }
-
-// std::ostream& operator<<(std::ostream &out, &cs:r1cs_constraint_system<FieldT>)
-// {
-//     out << cs.primary_input_size << "\n";
-//     out << cs.auxiliary_input_size << "\n";
-
-//     out << cs.num_constraints() << "\n";
-//     for c in &cs.constraints
-//     {
-//         out << c;
-//     }
-
-//     return out;
-// }
-
-// < FieldT>
-// std::istream& operator>>(std::istream &in, r1cs_constraint_system<FieldT> &cs)
-// {
-//     in >> cs.primary_input_size;
-//     in >> cs.auxiliary_input_size;
-
-//     cs.constraints.clear();
-
-//     usize s;
-//     in >> s;
-
-//     char b;
-//     in.read(&b, 1);
-
-//     cs.constraints.reserve(s);
-
-//     for i in 0..s
-//     {
-//         r1cs_constraint<FieldT,SV,SLC> c;
-//         in >> c;
-//         cs.constraints.push(c);
-//     }
-
-//     return in;
-// }

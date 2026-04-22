@@ -35,9 +35,9 @@ use parking_lot::Mutex;
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-/**
- * Gadget for the SHA256 compression function.
- */
+// /**
+//  * Gadget for the SHA256 compression function.
+//  */
 #[derive(Clone, Default)]
 pub struct sha256_compression_function_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     //gadget<FieldT>
@@ -63,13 +63,13 @@ pub struct sha256_compression_function_gadget<FieldT: FieldTConfig, PB: PBConfig
     pub output: digest_variables<FieldT, PB>,
 }
 
-/**
- * Gadget for the SHA256 compression function, viewed as a 2-to-1 hash
- * function, and using the same initialization vector as in SHA256
- * specification. Thus, any collision for
- * sha256_two_to_one_hash_gadget trivially extends to a collision for
- * full SHA256 (by appending the same padding).
- */
+// /**
+//  * Gadget for the SHA256 compression function, viewed as a 2-to-1 hash
+//  * function, and using the same initialization vector as in SHA256
+//  * specification. Thus, any collision for
+//  * sha256_two_to_one_hash_gadget trivially extends to a collision for
+//  * full SHA256 (by appending the same padding).
+//  */
 
 type hash_value_type = bit_vector;
 type merkle_authentication_path_type = merkle_authentication_path;

@@ -5,11 +5,12 @@ pub mod bigint;
 pub mod field_utils;
 pub mod fp_aux;
 
-// pub mod arithmetic;
-use crate::BigInt;
-use crate::algebra::UniformRand;
 use crate::{
-    algebra::bits::{BitIteratorBE, BitIteratorLE},
+    BigInt,
+    algebra::{
+        UniformRand,
+        bits::{BitIteratorBE, BitIteratorLE},
+    },
     const_for,
 };
 use ark_serialize::{

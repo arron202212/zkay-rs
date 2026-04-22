@@ -12,80 +12,29 @@ use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{FieldTConfig, Fp_model, Fp_modelConfig, One, PpConfig, Zero};
 use std::ops::{Add, Mul, Sub};
 
-/**
- * A knowledge commitment is a pair (g,h) where g is in T and h in T2,
- * and T and T2 are groups (written additively).
- *
- * Such pairs form a group by defining:
- * - "zero" = (0,0)
- * - "one" = (1,1)
- * - a * (g,h) + b * (g',h')->Self= ( a * g + b * g', a * h + b * h').
- */
+// /**
+//  * A knowledge commitment is a pair (g,h) where g is in T and h in T2,
+//  * and T and T2 are groups (written additively).
+//  *
+//  * Such pairs form a group by defining:
+//  * - "zero" = (0,0)
+//  * - "one" = (1,1)
+//  * - a * (g,h) + b * (g',h')->Self= ( a * g + b * g', a * h + b * h').
+//  */
 
 #[derive(Default, Clone, Debug)]
 pub struct knowledge_commitment<T: PpConfig, T2: PpConfig> {
     pub g: T,
     pub h: T2,
 }
-// impl<const N:usize,T1:PpConfig,T2:PpConfig> knowledge_commitment<T1,T2>{
-//     // knowledge_commitment<T1,T2>() = default;
-//     // knowledge_commitment<T1,T2>(&other:knowledge_commitment<T1,T2>) = default;
-//     // knowledge_commitment<T1,T2>(knowledge_commitment<T1,T2> &&other) = default;
-//     pub fn new(g:T1, h:T2)->Self{
-//         Self{g,h}
-//     }
 
-// knowledge_commitment<T1,T2>& operator=(&other:knowledge_commitment<T1,T2>) = default;
-// knowledge_commitment<T1,T2>& operator=(knowledge_commitment<T1,T2> &&other) = default;
-// knowledge_commitment<T1,T2> operator+(&other:knowledge_commitment<T,T2>) const;
-// knowledge_commitment<T1,T2> mixed_add(&other:knowledge_commitment<T,T2>) const;
-// knowledge_commitment<T1,T2> dbl() const;
 
-//     pub fn to_special(&self){
-//     }
-//      pub fn is_special() ->bool{
-// }
+// /**
+//  * A knowledge commitment vector is a sparse vector of knowledge commitments.
+//  */
 
-//      pub fn is_zero() ->bool{
-//         }
-// bool operator==(&other:knowledge_commitment<T1,T2>) const;
-// bool operator!=(&other:knowledge_commitment<T1,T2>) const;
-
-// static knowledge_commitment<T1,T2> zero();
-// static knowledge_commitment<T1,T2> one();
-
-// pub fn  print() const;
-
-// static usize size_in_bits();
-
-// static pub fn  batch_to_special_all_non_zeros(
-//     Vec<knowledge_commitment<T1,T2> > &vec);
-// }
-
-//
-// knowledge_commitment<T1,T2> operator*(lhs, &rhs:knowledge_commitment<T1:&ffec::bigint<m>T2>);
-
-//
-// knowledge_commitment<T1,T2> operator*(lhs, &rhs:knowledge_commitment<T1:&ffec::Fp_model<m, modulus_p>T2>);
-
-//
-// std::ostream& operator<<(std::ostream& out, &kc:knowledge_commitment<T1,T2>);
-
-//
-// std::istream& operator>>(std::istream& in, knowledge_commitment<T1,T2> &kc);
-
-/**
- * A knowledge commitment vector is a sparse vector of knowledge commitments.
- */
-//
 pub type knowledge_commitment_vector<T, T2> = sparse_vector<knowledge_commitment<T, T2>>;
 
-// impl<T: PpConfig,T2: PpConfig> KCConfig for knowledge_commitment<T,T2> {
-//     type T=T;
-//     type T2=T2;
-//     type FieldT=FieldT;
-//     type BigInt=BigInt;
-// }
 
 impl<T: PpConfig, T2: PpConfig> knowledge_commitment<T, T2> {
     pub fn new(g: T, h: T2) -> Self {
@@ -219,19 +168,6 @@ impl<T: PpConfig, T2: PpConfig> fmt::Display for knowledge_commitment<T, T2> {
     }
 }
 
-//
-// std::istream& operator>>(std::istream& in, knowledge_commitment<T1,T2> &kc)
-// {
-//     in >> kc.g;
-//     ffec::consume_OUTPUT_SEPARATOR(in);
-//     in >> kc.h;
-//     return in;
-// }
-
-// bool pub fn operator!=(&other:knowledge_commitment<T1,T2>) const
-// {
-//     return !((*this) == other);
-// }
 
 impl<T: PpConfig, T2: PpConfig> Add for knowledge_commitment<T, T2> {
     type Output = Self;
@@ -255,15 +191,6 @@ impl<T: PpConfig, T2: PpConfig> Mul for knowledge_commitment<T, T2> {
         self
     }
 }
-
-// impl<T: PpConfig,T2: PpConfig,FieldT : FieldTConfig> Mul<FieldT> for &knowledge_commitment<T,T2> {
-//     type Output = knowledge_commitment<T,T2>;
-
-//     fn mul(self, rhs: FieldT) -> Self::Output {
-//         // knowledge_commitment::<T,FieldT>::new(self.g * rhs, self.h * rhs)
-//         self
-//     }
-// }
 
 impl<T: PpConfig, T2: PpConfig, const N: usize> Mul<bigint<N>> for knowledge_commitment<T, T2> {
     type Output = Self;

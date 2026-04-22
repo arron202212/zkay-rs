@@ -72,9 +72,9 @@ pub struct merkle_tree_check_update_gadget<FieldT: FieldTConfig, PB: PBConfig, H
     next_root_digest: digest_variables<FieldT, PB>,
     next_path: merkle_authentication_path_variables<FieldT, PB, HashT>,
     update_successful: linear_combination<FieldT, pb_variable, pb_linear_combination>,
-    /* Note that while it is necessary to generate R1CS constraints
-    for prev_path, it is not necessary to do so for next_path. See
-    comment in the implementation of generate_r1cs_constraints() */
+    // /* Note that while it is necessary to generate R1CS constraints
+    // for prev_path, it is not necessary to do so for next_path. See
+    // comment in the implementation of generate_r1cs_constraints() */
 }
 
 pub type merkle_tree_check_update_gadgets<FieldT, PB, HashT> =
@@ -275,10 +275,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
         //ensure that prev auxiliary input and next auxiliary input match
         for i in 0..self.t.tree_depth {
             for j in 0..self.t.digest_size {
-                /*
-                  addr * (prev_left - next_left) + (1 - addr) * (prev_right - next_right) = 0
-                  addr * (prev_left - next_left - prev_right + next_right) = next_right - prev_right
-                */
+                // /*
+                //   addr * (prev_left - next_left) + (1 - addr) * (prev_right - next_right) = 0
+                //   addr * (prev_left - next_left - prev_right + next_right) = next_right - prev_right
+                // */
                 self.pb.borrow_mut().add_r1cs_constraint(
                     r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                         self.t.address_bits[self.t.tree_depth - 1 - i].clone().into(),
@@ -293,18 +293,18 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
             }
         }
 
-        /* Note that while it is necessary to generate R1CS constraints
-        for prev_path, it is not necessary to do so for next_path.
+        // /* Note that while it is necessary to generate R1CS constraints
+        // for prev_path, it is not necessary to do so for next_path.
 
-        This holds, because { next_path.left_inputs[i],
-        next_path.right_inputs[i] } is a pair { hash_output,
-        auxiliary_input }. The bitness for hash_output is enforced
-        above by next_hashers[i].generate_r1cs_constraints.
+        // This holds, because { next_path.left_inputs[i],
+        // next_path.right_inputs[i] } is a pair { hash_output,
+        // auxiliary_input }. The bitness for hash_output is enforced
+        // above by next_hashers[i].generate_r1cs_constraints.
 
-        Because auxiliary input is the same for prev_path and next_path
-        (enforced above), we have that auxiliary_input part is also
-        constrained to be boolean, because prev_path is *all*
-        constrained to be all boolean. */
+        // Because auxiliary input is the same for prev_path and next_path
+        // (enforced above), we have that auxiliary_input part is also
+        // constrained to be boolean, because prev_path is *all*
+        // constrained to be all boolean. */
 
         self.t
             .check_next_root

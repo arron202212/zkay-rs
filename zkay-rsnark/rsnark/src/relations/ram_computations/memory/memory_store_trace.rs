@@ -3,23 +3,19 @@
 use super::memory_interface::{memory_base, memory_contents, memory_interface};
 use std::collections::BTreeMap;
 use std::ops::{Index, IndexMut};
-/**
- * A pair consisting of an address and a value.
- * It represents a memory store.
- */
+// /**
+//  * A pair consisting of an address and a value.
+//  * It represents a memory store.
+//  */
 pub type address_and_value = (usize, usize);
 
-/**
- * A list in which each component consists of a timestamp and a memory store.
- */
+// /**
+//  * A list in which each component consists of a timestamp and a memory store.
+//  */
 #[derive(Default)]
 pub struct memory_store_trace {
     entries: BTreeMap<usize, address_and_value>,
-    //     memory_store_trace();
-    //     address_and_value get_trace_entry(timestamp:usize,) const;
-    //     BTreeMap<usize, address_and_value> get_all_trace_entries() const;
-    //     pub fn  set_trace_entry(timestamp:usize, av:&address_and_value);
-    //     memory_contents as_memory_contents() const;
+    
 }
 
 impl Index<usize> for memory_store_trace {
@@ -49,7 +45,6 @@ impl memory_store_trace {
         } else {
             (0, 0)
         }
-        // return if it != entries.end() {it.1} else{std::make_pair<usize, usize>(0, 0)};
     }
 
     pub fn get_all_trace_entries(&self) -> &BTreeMap<usize, address_and_value> {

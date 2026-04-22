@@ -13,6 +13,7 @@ use ffec::{
     field_utils::bigint::{BigIntegerT, bigint},
     {FieldTConfig, PpConfig},
 };
+use tracing::{Level, span};
 
 //Tate pairing
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -85,7 +86,11 @@ pub fn edwards_final_exponentiation_last_chunk(
     elt: &edwards_Fq6,
     elt_inv: &edwards_Fq6,
 ) -> edwards_Fq6 {
-    enter_block("Call to edwards_final_exponentiation_last_chunk", false);
+    let span = span!(
+        Level::TRACE,
+        "Call to edwards_final_exponentiation_last_chunk"
+    )
+    .entered();
     let elt_q = elt.Frobenius_map(1);
     let w1_part = elt_q.cyclotomic_exp(&edwards_final_exponent_last_chunk_w1);
     let mut w0_part = if edwards_final_exponent_last_chunk_is_w0_neg {
@@ -94,7 +99,7 @@ pub fn edwards_final_exponentiation_last_chunk(
         elt.cyclotomic_exp(&edwards_final_exponent_last_chunk_abs_of_w0)
     };
     let result = w1_part * w0_part;
-    leave_block("Call to edwards_final_exponentiation_last_chunk", false);
+    span.exit();
 
     result
 }
@@ -103,7 +108,11 @@ pub fn edwards_final_exponentiation_first_chunk(
     elt: &edwards_Fq6,
     elt_inv: &edwards_Fq6,
 ) -> edwards_Fq6 {
-    enter_block("Call to edwards_final_exponentiation_first_chunk", false);
+    let span = span!(
+        Level::TRACE,
+        "Call to edwards_final_exponentiation_first_chunk"
+    )
+    .entered();
 
     //(q^3-1)*(q+1)
 
@@ -115,30 +124,30 @@ pub fn edwards_final_exponentiation_first_chunk(
     let alpha = elt_q3_over_elt.Frobenius_map(1);
     //beta = elt^((q^3-1)*(q+1)
     let beta = alpha * elt_q3_over_elt;
-    leave_block("Call to edwards_final_exponentiation_first_chunk", false);
+    span.exit();
     return beta;
 }
 
 pub fn edwards_final_exponentiation(elt: &edwards_Fq6) -> edwards_GT {
-    enter_block("Call to edwards_final_exponentiation", false);
+    let span = span!(Level::TRACE, "Call to edwards_final_exponentiation").entered();
     let elt_inv = elt.inverse();
     let elt_to_first_chunk = edwards_final_exponentiation_first_chunk(elt, &elt_inv);
     let elt_inv_to_first_chunk = edwards_final_exponentiation_first_chunk(&elt_inv, elt);
     let result =
         edwards_final_exponentiation_last_chunk(&elt_to_first_chunk, &elt_inv_to_first_chunk);
-    leave_block("Call to edwards_final_exponentiation", false);
+    span.exit();
 
     result
 }
 
 pub fn edwards_tate_precompute_G2(Q: &edwards_G2) -> edwards_tate_G2_precomp {
-    enter_block("Call to edwards_tate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to edwards_tate_precompute_G2").entered();
     let mut Qcopy: edwards_G2 = Q.clone();
     Qcopy.to_affine_coordinates();
     let mut result = edwards_tate_G2_precomp::default();
     result.y0 = Qcopy.Y * Qcopy.Z.inverse(); // Y/Z
     result.eta = (Qcopy.Z + Qcopy.Y) * edwards_Fq6::mul_by_non_residue(&Qcopy.X).inverse(); // (Z+Y)/(nqr*X)
-    leave_block("Call to edwards_tate_precompute_G2", false);
+    span.exit();
 
     result
 }
@@ -270,7 +279,7 @@ pub fn mixed_addition_step_for_miller_loop(
 }
 
 pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
-    enter_block("Call to edwards_tate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to edwards_tate_precompute_G1").entered();
     let mut result = edwards_tate_G1_precomp::default();
 
     let mut Pcopy = P.clone();
@@ -293,9 +302,9 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        edwards_modulus_r (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // edwards_modulus_r (skipping leading zeros) in MSB to LSB
+        // order */
         let mut cc = edwards_Fq_conic_coefficients::default();
         doubling_step_for_miller_loop(&mut R, &mut cc);
         result.0.push(cc.clone());
@@ -306,7 +315,7 @@ pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
         }
     }
 
-    leave_block("Call to edwards_tate_precompute_G1", false);
+    span.exit();
     result
 }
 
@@ -314,7 +323,7 @@ pub fn edwards_tate_miller_loop(
     prec_P: &edwards_tate_G1_precomp,
     prec_Q: &edwards_tate_G2_precomp,
 ) -> edwards_Fq6 {
-    enter_block("Call to edwards_tate_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to edwards_tate_miller_loop").entered();
 
     let mut f = edwards_Fq6::one();
 
@@ -328,9 +337,9 @@ pub fn edwards_tate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        edwards_modulus_r (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // edwards_modulus_r (skipping leading zeros) in MSB to LSB
+        // order */
         let mut cc = prec_P.0[idx].clone();
         idx += 1;
         let g_RR_at_Q = edwards_Fq6::new(
@@ -351,25 +360,25 @@ pub fn edwards_tate_miller_loop(
             f = f * g_RP_at_Q;
         }
     }
-    leave_block("Call to edwards_tate_miller_loop", false);
+    span.exit();
 
     f
 }
 
 pub fn edwards_tate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
-    enter_block("Call to edwards_tate_pairing", false);
+    let span = span!(Level::TRACE, "Call to edwards_tate_pairing").entered();
     let prec_P = edwards_tate_precompute_G1(P);
     let prec_Q = edwards_tate_precompute_G2(Q);
     let result = edwards_tate_miller_loop(&prec_P, &prec_Q);
-    leave_block("Call to edwards_tate_pairing", false);
+    span.exit();
     result
 }
 
 pub fn edwards_tate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_GT {
-    enter_block("Call to edwards_tate_reduced_pairing", false);
+    let span = span!(Level::TRACE, "Call to edwards_tate_reduced_pairing").entered();
     let f = edwards_tate_pairing(P, Q);
     let result = edwards_final_exponentiation(&f);
-    leave_block("Call to edwards_tate_reduce_pairing", false);
+    span.exit();
     result
 }
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -510,19 +519,19 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn edwards_ate_precompute_G1(P: &edwards_G1) -> edwards_ate_G1_precomp {
-    enter_block("Call to edwards_ate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_precompute_G1").entered();
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
     let mut result = edwards_ate_G1_precomp::default();
     result.P_XY = Pcopy.X * Pcopy.Y;
     result.P_XZ = Pcopy.X; // P.X * P.Z but P.Z = 1
     result.P_ZZplusYZ = (edwards_Fq::one() + Pcopy.Y); // (P.Z + P.Y) * P.Z but P.Z = 1
-    leave_block("Call to edwards_ate_precompute_G1", false);
+    span.exit();
     result
 }
 
 pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
-    enter_block("Call to edwards_ate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_precompute_G2").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
     let mut result = edwards_ate_G2_precomp::default();
 
@@ -555,7 +564,7 @@ pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
         }
     }
 
-    leave_block("Call to edwards_ate_precompute_G2", false);
+    span.exit();
     result
 }
 
@@ -563,7 +572,7 @@ pub fn edwards_ate_miller_loop(
     prec_P: &edwards_ate_G1_precomp,
     prec_Q: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
-    enter_block("Call to edwards_ate_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_miller_loop").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
     let mut f = edwards_Fq6::one();
@@ -578,9 +587,9 @@ pub fn edwards_ate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        edwards_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // edwards_param_p (skipping leading zeros) in MSB to LSB
+        // order */
         let mut cc = prec_Q.0[idx].clone();
         idx += 1;
 
@@ -599,7 +608,7 @@ pub fn edwards_ate_miller_loop(
             f = f * g_RQ_at_P;
         }
     }
-    leave_block("Call to edwards_ate_miller_loop", false);
+    span.exit();
 
     f
 }
@@ -610,7 +619,7 @@ pub fn edwards_ate_double_miller_loop(
     prec_P2: &edwards_ate_G1_precomp,
     prec_Q2: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
-    enter_block("Call to edwards_ate_double_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_double_miller_loop").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
     let mut f = edwards_Fq6::one();
@@ -625,9 +634,9 @@ pub fn edwards_ate_double_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        edwards_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // edwards_param_p (skipping leading zeros) in MSB to LSB
+        // order */
         let mut cc1 = prec_Q1.0[idx].clone();
         let mut cc2 = prec_Q2.0[idx].clone();
         idx += 1;
@@ -658,25 +667,25 @@ pub fn edwards_ate_double_miller_loop(
             f = f * g_RQ_at_P1 * g_RQ_at_P2;
         }
     }
-    leave_block("Call to edwards_ate_double_miller_loop", false);
+    span.exit();
 
     f
 }
 
 pub fn edwards_ate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
-    enter_block("Call to edwards_ate_pairing", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_pairing").entered();
     let prec_P = edwards_ate_precompute_G1(P);
     let prec_Q = edwards_ate_precompute_G2(Q);
     let result = edwards_ate_miller_loop(&prec_P, &prec_Q);
-    leave_block("Call to edwards_ate_pairing", false);
+    span.exit();
     result
 }
 
 pub fn edwards_ate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_GT {
-    enter_block("Call to edwards_ate_reduced_pairing", false);
+    let span = span!(Level::TRACE, "Call to edwards_ate_reduced_pairing").entered();
     let f = edwards_ate_pairing(P, Q);
     let result = edwards_final_exponentiation(&f);
-    leave_block("Call to edwards_ate_reduced_pairing", false);
+    span.exit();
     result
 }
 

@@ -65,14 +65,14 @@ where
     let auxiliary_input_size = 0;
     let num_outputs = num_gates / 2;
 
-    enter_block("Generate TBCS example", false);
+    let span = span!(Level::TRACE, "Generate TBCS example").entered();
     let example = generate_tbcs_example(
         primary_input_size,
         auxiliary_input_size,
         num_gates,
         num_outputs,
     );
-    leave_block("Generate TBCS example", false);
+    span.exit();
 
     println!("(enter) Profile TBCS ppzkSNARK");
     let mut test_serialization = true;

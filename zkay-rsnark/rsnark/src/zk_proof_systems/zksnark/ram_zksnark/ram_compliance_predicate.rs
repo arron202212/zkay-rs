@@ -91,10 +91,10 @@ use ffec::{One, Zero, bit_vector, div_ceil, int_list_to_bits, log2};
 use rccell::RcCell;
 use std::collections::BTreeSet;
 
-/**
- * A RAM message specializes the generic PCD message, in order to
- * obtain a more user-friendly print method.
- */
+// /**
+//  * A RAM message specializes the generic PCD message, in order to
+//  * obtain a more user-friendly print method.
+//  */
 //
 type FieldT<RamT> = ram_base_field<RamT>;
 
@@ -143,9 +143,9 @@ pub struct ram_pcd_local_data_variable<RamT: ram_params_type> {
     pub is_halt_case: variable<FieldT<RamT>, pb_variable>,
 }
 
-/**
- * A RAM compliance predicate.
- */
+// /**
+//  * A RAM compliance predicate.
+//  */
 
 type HashT<RamT> = CRH_with_bit_out_gadgets<FieldT<RamT>, <RamT as ppTConfig>::PB>;
 type base_handler<RamT> = compliance_predicate_handler<FieldT<RamT>, ram_protoboard<RamT>>;
@@ -558,30 +558,30 @@ impl<RamT: ram_params_type> LocalDataVariableConfig for ram_pcd_local_data_varia
         panic!("");
     }
 }
-/*
-  We need to perform the following checks:
+// /*
+//   We need to perform the following checks:
 
-  Always:
-  next.root_initial = cur.root_initial
-  next.pc_addr_init = cur.pc_addr_initial
-  next.cpu_state_initial = cur.cpu_state_initial
+//   Always:
+//   next.root_initial = cur.root_initial
+//   next.pc_addr_init = cur.pc_addr_initial
+//   next.cpu_state_initial = cur.cpu_state_initial
 
-  If is_is_base_case = 1: (base case)
-  that cur.timestamp = 0, cur.cpu_state = cpu_state_init, cur.pc_addr = pc_addr_initial, cur.has_accepted = 0
-  that cur.root = cur.root_initial
+//   If is_is_base_case = 1: (base case)
+//   that cur.timestamp = 0, cur.cpu_state = cpu_state_init, cur.pc_addr = pc_addr_initial, cur.has_accepted = 0
+//   that cur.root = cur.root_initial
 
-  If do_halt = 0: (regular case)
-  that instruction fetch was correctly executed
-  next.timestamp = cur.timestamp + 1
-  that CPU accepted on (cur, temp)
-  that load-then-store was correctly handled
-  that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
+//   If do_halt = 0: (regular case)
+//   that instruction fetch was correctly executed
+//   next.timestamp = cur.timestamp + 1
+//   that CPU accepted on (cur, temp)
+//   that load-then-store was correctly handled
+//   that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
 
-  If do_halt = 1: (final case)
-  that cur.has_accepted = 1
-  that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
-  that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
-*/
+//   If do_halt = 1: (final case)
+//   that cur.has_accepted = 1
+//   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
+//   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
+// */
 
 pub type ram_compliance_predicate_handlers<RamT> = compliance_predicate_handler<
     <RamT as ram_params_type>::CPH,
@@ -637,12 +637,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
 
         let chunk_size = FieldT::<RamT>::capacity();
 
-        /*
-          Always:
-          next.root_initial = cur.root_initial
-          next.pc_addr_init = cur.pc_addr_initial
-          next.cpu_state_initial = cur.cpu_state_initial
-        */
+        // /*
+        //   Always:
+        //   next.root_initial = cur.root_initial
+        //   next.pc_addr_init = cur.pc_addr_initial
+        //   next.cpu_state_initial = cur.cpu_state_initial
+        // */
         let copy_root_initial = RcCell::new(bit_vector_copy_gadget::<FieldT<RamT>, RamT::PB>::new(
             pb.clone(),
             cur.borrow().t.t.root_initial.clone(),
@@ -670,11 +670,11 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
                 "copy_cpu_state_initial".to_owned(),
             ));
 
-        /*
-          If is_base_case = 1: (base case)
-          that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
-          that cur.root = cur.root_initial
-        */
+        // /*
+        //   If is_base_case = 1: (base case)
+        //   that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
+        //   that cur.root = cur.root_initial
+        // */
         let mut packed_cur_timestamp = variable::<FieldT<RamT>, pb_variable>::default();
         packed_cur_timestamp.allocate(&pb, "packed_cur_timestamp");
         let pack_cur_timestamp = RcCell::new(packing_gadget::<FieldT<RamT>, RamT::PB>::new(
@@ -722,13 +722,13 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
             chunk_size,
             "initialize_root".to_owned(),
         ));
-        /*
-          If do_halt = 0: (regular case)
-          that instruction fetch was correctly executed
-          next.timestamp = cur.timestamp + 1
-          that CPU accepted on (cur, next)
-          that load-then-store was correctly handled
-        */
+        // /*
+        //   If do_halt = 0: (regular case)
+        //   that instruction fetch was correctly executed
+        //   next.timestamp = cur.timestamp + 1
+        //   that CPU accepted on (cur, next)
+        //   that load-then-store was correctly handled
+        // */
         let mut is_not_halt_case = variable::<FieldT<RamT>, pb_variable>::default();
         is_not_halt_case.allocate(&pb, "is_not_halt_case");
         // for performing instruction fetch
@@ -873,12 +873,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
             is_not_halt_case.clone().into(),
             "load_store_checker".to_owned(),
         ));
-        /*
-          If do_halt = 1: (final case)
-          that cur.has_accepted = 1
-          that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
-          that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
-        */
+        // /*
+        //   If do_halt = 1: (final case)
+        //   that cur.has_accepted = 1
+        //   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
+        //   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
+        // */
         let mut do_halt = variable::<FieldT<RamT>, pb_variable>::default();
         do_halt.allocate(&pb, "do_halt");
         let zero_root =
@@ -1106,14 +1106,14 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         );
 
         //recall that Booleanity of PCD messages has already been enforced by the PCD machine, which is explains the absence of Booleanity checks
-        /*
-          We need to perform the following checks:
+        // /*
+        //   We need to perform the following checks:
 
-          Always:
-          next.root_initial = cur.root_initial
-          next.pc_addr_init = cur.pc_addr_initial
-          next.cpu_state_initial = cur.cpu_state_initial
-        */
+        //   Always:
+        //   next.root_initial = cur.root_initial
+        //   next.pc_addr_init = cur.pc_addr_initial
+        //   next.cpu_state_initial = cur.cpu_state_initial
+        // */
         PROFILE_CONSTRAINTST(&self.pb, "copy root_initial");
         {
             self.t
@@ -1134,11 +1134,11 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
                 .generate_r1cs_constraints(false, false);
         }
 
-        /*
-          If is_base_case = 1: (base case)
-          that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
-          that cur.root = cur.root_initial
-        */
+        // /*
+        //   If is_base_case = 1: (base case)
+        //   that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
+        //   that cur.root = cur.root_initial
+        // */
         self.t
             .pack_cur_timestamp
             .borrow()
@@ -1178,14 +1178,14 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
                 .generate_r1cs_constraints(false, false);
         }
 
-        /*
-          If do_halt = 0: (regular case)
-          that instruction fetch was correctly executed
-          next.timestamp = cur.timestamp + 1
-          that CPU accepted on (cur, next)
-          that load-then-store was correctly handled
-          that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
-        */
+        // /*
+        //   If do_halt = 0: (regular case)
+        //   that instruction fetch was correctly executed
+        //   next.timestamp = cur.timestamp + 1
+        //   that CPU accepted on (cur, next)
+        //   that load-then-store was correctly handled
+        //   that next.root = temp.root, next.cpu_state = temp.cpu_state, next.pc_addr = temp.pc_addr
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 FieldT::<RamT>::from(1).into(),
@@ -1252,12 +1252,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
                 .generate_r1cs_constraints(true, false);
         }
 
-        /*
-          If do_halt = 1: (final case)
-          that cur.has_accepted = 1
-          that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
-          that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
-        */
+        // /*
+        //   If do_halt = 1: (final case)
+        //   that cur.has_accepted = 1
+        //   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
+        //   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.do_halt.clone().into(),
@@ -1340,12 +1340,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             });
 
         *self.pb.borrow_mut().val_ref(&self.t.zero) = FieldT::<RamT>::zero();
-        /*
-          Always:
-          next.root_initial = cur.root_initial
-          next.pc_addr_init = cur.pc_addr_initial
-          next.cpu_state_initial = cur.cpu_state_initial
-        */
+        // /*
+        //   Always:
+        //   next.root_initial = cur.root_initial
+        //   next.pc_addr_init = cur.pc_addr_initial
+        //   next.cpu_state_initial = cur.cpu_state_initial
+        // */
         self.t.copy_root_initial.borrow().generate_r1cs_witness();
         for i in 0..self.t.next.borrow().t.t.root_initial.len() {
             self.pb
@@ -1373,11 +1373,11 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             .borrow()
             .generate_r1cs_witness();
 
-        /*
-          If is_base_case = 1: (base case)
-          that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
-          that cur.root = cur.root_initial
-        */
+        // /*
+        //   If is_base_case = 1: (base case)
+        //   that cur.timestamp = 0, cur.cpu_state = 0, cur.pc_addr = 0, cur.has_accepted = 0
+        //   that cur.root = cur.root_initial
+        // */
         let base_case = (0 == incoming_message_values[0].borrow().types);
         *self.pb.borrow_mut().val_ref(&self.t.is_base_case) = if base_case {
             FieldT::<RamT>::one()
@@ -1413,13 +1413,13 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
 
         self.t.initialize_root.borrow().generate_r1cs_witness();
 
-        /*
-          If do_halt = 0: (regular case)
-          that instruction fetch was correctly executed
-          next.timestamp = cur.timestamp + 1
-          that CPU accepted on (cur, temp)
-          that load-then-store was correctly handled
-        */
+        // /*
+        //   If do_halt = 0: (regular case)
+        //   that instruction fetch was correctly executed
+        //   next.timestamp = cur.timestamp + 1
+        //   that CPU accepted on (cur, temp)
+        //   that load-then-store was correctly handled
+        // */
         *self.pb.borrow_mut().val_ref(&self.t.do_halt) =
             if ram_local_data_value.borrow().t.is_halt_case() {
                 FieldT::<RamT>::one()
@@ -1537,12 +1537,12 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
             .generate_r1cs_witness(int_ls_addr, prev_path);
         self.t.load_store_checker.borrow().generate_r1cs_witness();
 
-        /*
-          If do_halt = 1: (final case)
-          that cur.has_accepted = 1
-          that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
-          that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
-        */
+        // /*
+        //   If do_halt = 1: (final case)
+        //   that cur.has_accepted = 1
+        //   that next.root = 0, next.cpu_state = 0, next.pc_addr = 0
+        //   that next.timestamp = cur.timestamp and next.has_accepted = cur.has_accepted
+        // */
 
         // Order matters here: both witness maps touch next_root, but the
         // one that does not set values must be executed the last, so its

@@ -13,7 +13,9 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 };
 use crate::relations::variable::{linear_combination, variable};
 use ffec::FieldTConfig;
+
 use ffec::common::utils::div_ceil;
+use ffec::field_utils::bigint::BigIntegerT;
 use ffec::field_utils::bigint::bigint;
 use rccell::RcCell;
 use std::marker::PhantomData;
@@ -210,19 +212,17 @@ impl<FieldT: FieldTConfig, PB: PBConfig, T: Default + Clone> dual_variable_gadge
         )
     }
 
-    // pub fn generate_r1cs_constraints(enforce_bitness:bool);
-    // pub fn generate_r1cs_witness_from_packed();
-    // pub fn generate_r1cs_witness_from_bits();
+   
 }
 
-/*
-  the gadgets below are Fp specific:
-  I * X = R
-  (1-R) * X = 0
+// /*
+//   the gadgets below are Fp specific:
+//   I * X = R
+//   (1-R) * X = 0
 
-  if X = 0 then R = 0
-  if X != 0 then R = 1 and I = X^{-1}
-*/
+//   if X = 0 then R = 0
+//   if X != 0 then R = 1 and I = X^{-1}
+// */
 #[derive(Clone, Default)]
 pub struct disjunction_gadget<FieldT: FieldTConfig, PB: PBConfig> {
     pub inv: variable<FieldT, pb_variable>,
@@ -979,20 +979,20 @@ pub fn test_conjunction_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
 impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, comparison_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self) {
-        /*
-         packed(alpha) = 2^n + B - A
+        // /*
+        //  packed(alpha) = 2^n + B - A
 
-         not_all_zeros = \bigvee_{i=0}^{n-1} alpha_i
+        //  not_all_zeros = \bigvee_{i=0}^{n-1} alpha_i
 
-         if B - A > 0, then 2^n + B - A > 2^n,
-             so alpha_n = 1 and not_all_zeros = 1
-         if B - A = 0, then 2^n + B - A = 2^n,
-             so alpha_n = 1 and not_all_zeros = 0
-         if B - A < 0, then 2^n + B - A \in {0, 1, \ldots, 2^n-1},
-             so alpha_n = 0
+        //  if B - A > 0, then 2^n + B - A > 2^n,
+        //      so alpha_n = 1 and not_all_zeros = 1
+        //  if B - A = 0, then 2^n + B - A = 2^n,
+        //      so alpha_n = 1 and not_all_zeros = 0
+        //  if B - A < 0, then 2^n + B - A \in {0, 1, \ldots, 2^n-1},
+        //      so alpha_n = 0
 
-         therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
-        */
+        //  therefore alpha_n = less_or_eq and alpha_n * not_all_zeros = less
+        // */
 
         //not_all_zeros to be Boolean, alpha_i are Boolean by packing gadget
         generate_boolean_r1cs_constraint::<FieldT, PB>(
@@ -1099,11 +1099,11 @@ pub fn test_comparison_gadget<FieldT: FieldTConfig, PB: PBConfig>(n: usize) {
 
 impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, inner_product_gadget<FieldT, PB>> {
     pub fn generate_r1cs_constraints(&self) {
-        /*
-          S_i = \sum_{k=0}^{i+1} A[i] * B[i]
-          S[0] = A[0] * B[0]
-          S[i+1] - S[i] = A[i] * B[i]
-        */
+        // /*
+        //   S_i = \sum_{k=0}^{i+1} A[i] * B[i]
+        //   S[0] = A[0] * B[0]
+        //   S[i+1] - S[i] = A[i] * B[i]
+        // */
         for i in 0..self.t.A.len() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT,pb_variable,pb_linear_combination>::new(
@@ -1228,8 +1228,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
             prefix_format!(self.annotation_prefix, " main_constraint"),
         );
 
-        /* now success_flag is constrained to either 0 (if index is out of
-        range) or \alpha_i. constrain it and \alpha_i to zero */
+        // /* now success_flag is constrained to either 0 (if index is out of
+        // range) or \alpha_i. constrain it and \alpha_i to zero */
         generate_boolean_r1cs_constraint::<FieldT, PB>(
             &self.pb,
             &self.t.success_flag.clone().into(),
@@ -1247,8 +1247,8 @@ impl<FieldT: FieldTConfig, PB: PBConfig> gadget<FieldT, PB, loose_multiplexing_g
         let arrsize = bigint::<4>::new(self.t.arr.len() as u64);
 
         if idx >= self.t.arr.len()
-            || &valint.0.0[..FieldT::num_limbs as usize]
-                >= &arrsize.0.0[..FieldT::num_limbs as usize]
+            || &valint.as_ref()[..FieldT::num_limbs as usize]
+                >= &arrsize.as_ref()[..FieldT::num_limbs as usize]
         {
             for i in 0..self.t.arr.len() {
                 *self.pb.borrow_mut().val_ref(&self.t.alpha[i]) = FieldT::zero();

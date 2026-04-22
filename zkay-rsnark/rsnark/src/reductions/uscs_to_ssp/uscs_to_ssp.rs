@@ -28,45 +28,38 @@ use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils;
 use fqfft::evaluation_domain::{
     evaluation_domain::{EvaluationDomainConfig, evaluation_domain},
     get_evaluation_domain::get_evaluation_domain,
 };
 use std::collections::BTreeMap;
+
+use tracing::{span, Level};
+
+
+
+
+
+
+
+
+// /**
+//  * Instance map for the USCS-to-SSP reduction.
+//  *
+//  * Namely, given a USCS constraint system cs, construct a SSP instance for which:
+//  *   V := (V_0(z),V_1(z),...,V_m(z))
+//  * where
+//  *   m = number of variables of the SSP
+//  * and
+//  *   each V_i is expressed in the Lagrange basis.
+//  */
+
+
+
 // /**
 //  * Instance map for the USCS-to-SSP reduction.
 //  */
-// ssp_instance<FieldT> uscs_to_ssp_instance_map(cs:&uscs_constraint_system<FieldT>);
-
-// /**
-//  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
-//  */
-// ssp_instance_evaluation<FieldT> uscs_to_ssp_instance_map_with_evaluation(cs:&uscs_constraint_system<FieldT>,
-//                                                                          t:&FieldT);
-
-// /**
-//  * Witness map for the USCS-to-SSP reduction.
-//  *
-//  * The witness map takes zero knowledge into account when d is random.
-//  */
-// ssp_witness<FieldT> uscs_to_ssp_witness_map(cs:&uscs_constraint_system<FieldT>,
-//                                             primary_input:&uscs_primary_input<FieldT>,
-//                                             auxiliary_input:&uscs_auxiliary_input<FieldT>,
-//                                             d:&FieldT);
-
-/**
- * Instance map for the USCS-to-SSP reduction.
- *
- * Namely, given a USCS constraint system cs, construct a SSP instance for which:
- *   V := (V_0(z),V_1(z),...,V_m(z))
- * where
- *   m = number of variables of the SSP
- * and
- *   each V_i is expressed in the Lagrange basis.
- */
-
 pub fn uscs_to_ssp_instance_map<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -74,11 +67,11 @@ pub fn uscs_to_ssp_instance_map<
 >(
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
 ) -> ssp_instance<FieldT> {
-    enter_block("Call to uscs_to_ssp_instance_map", false);
+    let span = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map").entered();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
-    enter_block("Compute polynomials V in Lagrange basis", false);
+    let span = span!(Level::TRACE, "Compute polynomials V in Lagrange basis").entered();
     let mut V_in_Lagrange_basis = vec![BTreeMap::new(); cs.num_variables() + 1];
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
@@ -90,9 +83,9 @@ pub fn uscs_to_ssp_instance_map<
     for i in cs.num_constraints()..domain.borrow().m() {
         *V_in_Lagrange_basis[0].entry(i).or_insert(FieldT::zero()) += FieldT::one();
     }
-    leave_block("Compute polynomials V in Lagrange basis", false);
+    span.exit();
 
-    leave_block("Call to uscs_to_ssp_instance_map", false);
+    span.exit();
 
     ssp_instance::<FieldT>::new(
         domain.clone(),
@@ -103,19 +96,23 @@ pub fn uscs_to_ssp_instance_map<
     )
 }
 
-/**
- * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
- *
- * Namely, given a USCS constraint system cs and a field element t, construct
- * a SSP instance (evaluated at t) for which:
- *   Vt := (V_0(t),V_1(t),...,V_m(t))
- *   Ht := (1,t,t^2,...,t^n)
- *   Zt := Z(t) = "vanishing polynomial of a certain set S, evaluated at t"
- * where
- *   m = number of variables of the SSP
- *   n = degree of the SSP
- */
+// /**
+//  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
+//  *
+//  * Namely, given a USCS constraint system cs and a field element t, construct
+//  * a SSP instance (evaluated at t) for which:
+//  *   Vt := (V_0(t),V_1(t),...,V_m(t))
+//  *   Ht := (1,t,t^2,...,t^n)
+//  *   Zt := Z(t) = "vanishing polynomial of a certain set S, evaluated at t"
+//  * where
+//  *   m = number of variables of the SSP
+//  *   n = degree of the SSP
+//  */
 
+
+// /**
+//  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
+//  */
 pub fn uscs_to_ssp_instance_map_with_evaluation<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -124,7 +121,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
     t: &FieldT,
 ) -> ssp_instance_evaluation<FieldT> {
-    enter_block("Call to uscs_to_ssp_instance_map_with_evaluation", false);
+    let span = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map_with_evaluation").entered();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
@@ -133,7 +130,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 
     let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
-    enter_block("Compute evaluations of V and H at t", false);
+    let span = span!(Level::TRACE, "Compute evaluations of V and H at t").entered();
     let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
@@ -149,9 +146,9 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
         Ht[i] = ti.clone();
         ti *= t.clone();
     }
-    leave_block("Compute evaluations of V and H at t", false);
+    span.exit();
 
-    leave_block("Call to uscs_to_ssp_instance_map_with_evaluation", false);
+    span.exit();
 
     ssp_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -165,34 +162,40 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     )
 }
 
-/**
- * Witness map for the USCS-to-SSP reduction.
- *
- * The witness map takes zero knowledge into account when d is random.
- *
- * More precisely, compute the coefficients
- *     h_0,h_1,...,h_n
- * of the polynomial
- *     H(z)->Self= (V(z)^2-1)/Z(z)
- * where
- *   V(z)->Self= V_0(z) + \sum_{k=1}^{m} w_k V_k(z) + d * Z(z)
- *   Z(z)->Self= "vanishing polynomial of set S"
- * and
- *   m = number of variables of the SSP
- *   n = degree of the SSP
- *
- * This is done as follows:
- *  (1) compute evaluations of V on S = {sigma_1,...,sigma_n}
- *  (2) compute coefficients of V
- *  (3) compute evaluations of V on T = "coset of S"
- *  (4) compute evaluation of H on T
- *  (5) compute coefficients of H
- *  (6) patch H to account for d (i.e., add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) )
- *
- * The code below is not as simple as the above high-level description due to
- * some reshuffling to save space.
- */
+// /**
+//  * Witness map for the USCS-to-SSP reduction.
+//  *
+//  * The witness map takes zero knowledge into account when d is random.
+//  *
+//  * More precisely, compute the coefficients
+//  *     h_0,h_1,...,h_n
+//  * of the polynomial
+//  *     H(z)->Self= (V(z)^2-1)/Z(z)
+//  * where
+//  *   V(z)->Self= V_0(z) + \sum_{k=1}^{m} w_k V_k(z) + d * Z(z)
+//  *   Z(z)->Self= "vanishing polynomial of set S"
+//  * and
+//  *   m = number of variables of the SSP
+//  *   n = degree of the SSP
+//  *
+//  * This is done as follows:
+//  *  (1) compute evaluations of V on S = {sigma_1,...,sigma_n}
+//  *  (2) compute coefficients of V
+//  *  (3) compute evaluations of V on T = "coset of S"
+//  *  (4) compute evaluation of H on T
+//  *  (5) compute coefficients of H
+//  *  (6) patch H to account for d (i.e., add coefficients of the polynomial 2*d*V(z) + d*d*Z(z) )
+//  *
+//  * The code below is not as simple as the above high-level description due to
+//  * some reshuffling to save space.
+//  */
 
+
+// /**
+//  * Witness map for the USCS-to-SSP reduction.
+//  *
+//  * The witness map takes zero knowledge into account when d is random.
+//  */
 pub fn uscs_to_ssp_witness_map<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -203,7 +206,7 @@ pub fn uscs_to_ssp_witness_map<
     auxiliary_input: &uscs_auxiliary_input<FieldT>,
     d: &FieldT,
 ) -> ssp_witness<FieldT> {
-    enter_block("Call to uscs_to_ssp_witness_map", false);
+    let span = span!(Level::TRACE, "Call to uscs_to_ssp_witness_map").entered();
 
     //sanity check
 
@@ -217,7 +220,7 @@ pub fn uscs_to_ssp_witness_map<
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
-    enter_block("Compute evaluation of polynomial V on set S", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial V on set S").entered();
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
     assert!(domain.borrow().m() >= cs.num_constraints());
     for i in 0..cs.num_constraints() {
@@ -226,13 +229,13 @@ pub fn uscs_to_ssp_witness_map<
     for i in cs.num_constraints()..domain.borrow().m() {
         aA[i] += FieldT::one();
     }
-    leave_block("Compute evaluation of polynomial V on set S", false);
+    span.exit();
 
-    enter_block("Compute coefficients of polynomial V", false);
+    let span = span!(Level::TRACE, "Compute coefficients of polynomial V").entered();
     domain.borrow_mut().iFFT(&mut aA);
-    leave_block("Compute coefficients of polynomial V", false);
+    span.exit();
 
-    enter_block("Compute ZK-patch", false);
+    let span = span!(Level::TRACE, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -244,15 +247,15 @@ pub fn uscs_to_ssp_witness_map<
     domain
         .borrow_mut()
         .add_poly_Z(&d.squared(), &mut coefficients_for_H);
-    leave_block("Compute ZK-patch", false);
+    span.exit();
 
-    enter_block("Compute evaluation of polynomial V on set T", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
-    leave_block("Compute evaluation of polynomial V on set T", false);
+    span.exit();
 
-    enter_block("Compute evaluation of polynomial H on set T", false);
+    let span = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -261,28 +264,28 @@ pub fn uscs_to_ssp_witness_map<
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
 
-    enter_block("Divide by Z on set T", false);
+    let span = span!(Level::TRACE, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
-    leave_block("Divide by Z on set T", false);
+    span.exit();
 
-    leave_block("Compute evaluation of polynomial H on set T", false);
+    span.exit();
 
-    enter_block("Compute coefficients of polynomial H", false);
+    let span = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
-    leave_block("Compute coefficients of polynomial H", false);
+    span.exit();
 
-    enter_block("Compute sum of H and ZK-patch", false);
+    let span = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
     // #ifdef MULTICORE
     //#pragma omp parallel for
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
-    leave_block("Compute sum of H and ZK-patch", false);
+    span.exit();
 
-    leave_block("Call to uscs_to_ssp_witness_map", false);
+    span.exit();
 
     return ssp_witness::<FieldT>::new(
         cs.num_variables(),

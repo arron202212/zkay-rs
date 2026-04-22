@@ -11,10 +11,10 @@ use crate::polynomial_arithmetic::naive_evaluate::evaluate_polynomial;
 use ffec::common::double::Double;
 use rccell::RcCell;
 
-/**
- * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)
-// https://github.com/google/googletest/blob/main/docs/advanced.md#type-parameterized-tests
- */
+// /**
+//  * Note: Templatized type referenced with TypeParam (instead of canonical FieldT)
+// // https://github.com/google/googletest/blob/main/docs/advanced.md#type-parameterized-tests
+//  */
 #[cfg(test)]
 mod test {
     use super::*;

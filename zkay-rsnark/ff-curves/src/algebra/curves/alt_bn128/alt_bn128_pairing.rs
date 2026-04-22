@@ -12,8 +12,10 @@ use crate::algebra::curves::{
         },
         curves::{Bn254, Config, G1Affine, G2Affine},
     },
+    bn128::bn::g2::{EllCoeff, G2Prepared},
     pairing::{Pairing, prepare_g1, prepare_g2},
 };
+
 use ffec::{
     FieldTConfig,
     common::serialization::{
@@ -26,21 +28,14 @@ use ffec::{
         field_utils::bigint::{BigIntegerT, bigint},
     },
 };
-
-//ate pairing
-
-// pub type alt_bn128_ate_G1_precomp = <Bn254 as Pairing>::G1Prepared;
+use tracing::{Level, span};
 
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct alt_bn128_ate_G1_precomp {
     pub PX: alt_bn128_Fq,
     pub PY: alt_bn128_Fq,
 }
-// impl<const N:usize> PpConfig for alt_bn128_ate_G1_precomp{
-//     type T=bigint<N>;
-// }
-use crate::algebra::curves::bn128::bn::g2::EllCoeff;
-// pub type alt_bn128_ate_ell_coeffs = EllCoeff<Config>;
+
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct alt_bn128_ate_ell_coeffs {
     pub ell_0: alt_bn128_Fq2,
@@ -48,19 +43,12 @@ pub struct alt_bn128_ate_ell_coeffs {
     pub ell_VV: alt_bn128_Fq2,
 }
 
-use crate::algebra::curves::bn128::bn::g2::G2Prepared;
-// pub type alt_bn128_ate_G2_precomp = <Bn254 as Pairing>::G2Prepared;
 #[derive(Clone, Default, PartialEq, Eq)]
 pub struct alt_bn128_ate_G2_precomp {
     pub QX: alt_bn128_Fq2,
     pub QY: alt_bn128_Fq2,
     pub coeffs: Vec<alt_bn128_ate_ell_coeffs>,
 }
-// impl<const N:usize> PpConfig for alt_bn128_ate_G2_precomp{
-//     type T=bigint<N>;
-// }
-
-//choice of pairing
 
 pub type alt_bn128_G1_precomp = alt_bn128_ate_G1_precomp;
 pub type alt_bn128_G2_precomp = alt_bn128_ate_G2_precomp;
@@ -99,7 +87,11 @@ impl fmt::Display for alt_bn128_ate_G2_precomp {
 //final exponentiations
 
 pub fn alt_bn128_final_exponentiation_first_chunk(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_final_exponentiation_first_chunk", false);
+    let span = span!(
+        Level::TRACE,
+        "Call to alt_bn128_final_exponentiation_first_chunk"
+    )
+    .entered();
 
     //   Computes result = elt^((q^6-1)*(q^2+1)).
     //   Follows, e.g., Beuchat et al page 9, by computing result as follows:
@@ -117,26 +109,30 @@ pub fn alt_bn128_final_exponentiation_first_chunk(elt: &alt_bn128_Fq12) -> alt_b
     let D = C.Frobenius_map(2);
     let result = D * C;
 
-    leave_block("Call to alt_bn128_final_exponentiation_first_chunk", false);
+    span.exit();
 
     result
 }
 
 pub fn alt_bn128_exp_by_neg_z(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_exp_by_neg_z", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_exp_by_neg_z").entered();
 
     let mut result = elt.cyclotomic_exp(&alt_bn128_final_exponent_z);
     if !alt_bn128_final_exponent_is_z_neg {
         result = result.unitary_inverse();
     }
 
-    leave_block("Call to alt_bn128_exp_by_neg_z", false);
+    span.exit();
 
     result
 }
 
 pub fn alt_bn128_final_exponentiation_last_chunk(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_final_exponentiation_last_chunk", false);
+    let span = span!(
+        Level::TRACE,
+        "Call to alt_bn128_final_exponentiation_last_chunk"
+    )
+    .entered();
 
     //   Follows Laura Fuentes-Castaneda et al. "Faster hashing to G2"
     //   by computing:
@@ -200,17 +196,17 @@ pub fn alt_bn128_final_exponentiation_last_chunk(elt: &alt_bn128_Fq12) -> alt_bn
 
     let result = V;
 
-    leave_block("Call to alt_bn128_final_exponentiation_last_chunk", false);
+    span.exit();
 
     result
 }
 
 pub fn alt_bn128_final_exponentiation(elt: &alt_bn128_Fq12) -> alt_bn128_GT {
-    enter_block("Call to alt_bn128_final_exponentiation", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_final_exponentiation").entered();
     let A = alt_bn128_final_exponentiation_first_chunk(elt);
     let result = alt_bn128_final_exponentiation_last_chunk(&A);
 
-    leave_block("Call to alt_bn128_final_exponentiation", false);
+    span.exit();
     result
 }
 
@@ -268,7 +264,7 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp {
-    enter_block("Call to alt_bn128_ate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -277,12 +273,12 @@ pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp
     result.PX = Pcopy.X.clone();
     result.PY = Pcopy.Y.clone();
 
-    leave_block("Call to alt_bn128_ate_precompute_G1", false);
+    span.exit();
     result
 }
 
 pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp {
-    enter_block("Call to alt_bn128_ate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_precompute_G2").entered();
 
     let mut Qcopy = Q.clone();
     Qcopy.to_affine_coordinates();
@@ -340,7 +336,7 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
     mixed_addition_step_for_flipped_miller_loop(Q2, &mut R, &mut c);
     result.coeffs.push(c);
 
-    leave_block("Call to alt_bn128_ate_precompute_G2", false);
+    span.exit();
     result
 }
 
@@ -348,7 +344,7 @@ pub fn alt_bn128_ate_miller_loop(
     prec_P: &alt_bn128_ate_G1_precomp,
     prec_Q: &alt_bn128_ate_G2_precomp,
 ) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_ate_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_miller_loop").entered();
 
     let mut f = alt_bn128_Fq12::one();
 
@@ -366,9 +362,9 @@ pub fn alt_bn128_ate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        alt_bn128_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        //  code below gets executed for all bits (EXCEPT the MSB itself) of
+        // alt_bn128_param_p (skipping leading zeros) in MSB to LSB
+        // order
         c = prec_Q.coeffs[idx].clone();
         idx += 1;
         f = f.squared();
@@ -393,7 +389,7 @@ pub fn alt_bn128_ate_miller_loop(
     idx += 1;
     f = f.mul_by_024(&c.ell_0, &(c.ell_VW * prec_P.PY), &(c.ell_VV * prec_P.PX));
 
-    leave_block("Call to alt_bn128_ate_miller_loop", false);
+    span.exit();
     f
 }
 
@@ -403,7 +399,7 @@ pub fn alt_bn128_ate_double_miller_loop(
     prec_P2: &alt_bn128_ate_G1_precomp,
     prec_Q2: &alt_bn128_ate_G2_precomp,
 ) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_ate_double_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_double_miller_loop").entered();
 
     let mut f = alt_bn128_Fq12::one();
 
@@ -419,9 +415,9 @@ pub fn alt_bn128_ate_double_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        alt_bn128_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        //  code below gets executed for all bits (EXCEPT the MSB itself) of
+        // alt_bn128_param_p (skipping leading zeros) in MSB to LSB
+        // order
         let mut c1 = prec_Q1.coeffs[idx].clone();
         let mut c2 = prec_Q2.coeffs[idx].clone();
         idx += 1;
@@ -489,25 +485,25 @@ pub fn alt_bn128_ate_double_miller_loop(
         &(c2.ell_VV * prec_P2.PX),
     );
 
-    leave_block("Call to alt_bn128_ate_double_miller_loop", false);
+    span.exit();
 
     f
 }
 
 pub fn alt_bn128_ate_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_Fq12 {
-    enter_block("Call to alt_bn128_ate_pairing", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_pairing").entered();
     let mut prec_P = alt_bn128_ate_precompute_G1(P);
     let mut prec_Q = alt_bn128_ate_precompute_G2(Q);
     let mut result = alt_bn128_ate_miller_loop(&prec_P, &prec_Q);
-    leave_block("Call to alt_bn128_ate_pairing", false);
+    span.exit();
     result
 }
 
 pub fn alt_bn128_ate_reduced_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_GT {
-    enter_block("Call to alt_bn128_ate_reduced_pairing", false);
+    let span = span!(Level::TRACE, "Call to alt_bn128_ate_reduced_pairing").entered();
     let f = alt_bn128_ate_pairing(P, Q);
     let result = alt_bn128_final_exponentiation(&f);
-    leave_block("Call to alt_bn128_ate_reduced_pairing", false);
+    span.exit();
     result
 }
 

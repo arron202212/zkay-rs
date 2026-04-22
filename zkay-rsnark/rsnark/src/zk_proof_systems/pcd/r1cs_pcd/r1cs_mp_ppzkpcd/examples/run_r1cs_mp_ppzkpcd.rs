@@ -22,28 +22,22 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_pcd_params::{
     r1cs_pcd_compliance_predicate_auxiliary_input, r1cs_pcd_compliance_predicate_primary_input,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{span, Level};
 use ffec::common::serialization::reserialize;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::ops::Mul;
 
-/**
- * Runs the multi-predicate ppzkPCD (generator, prover, and verifier) for the
- * "tally compliance predicate", of a given wordsize, arity, and depth.
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- *
- * Optionally, also test the case of compliance predicates with different types.
- */
-//
-// bool run_r1cs_mp_ppzkpcd_tally_example(wordsize:usize,
-//                                        max_arity:usize,
-//                                        depth:usize,
-//                                        test_serialization:bool,
-//                                        test_multi_type:bool,
-//                                        test_same_type_optimization:bool);
+// /**
+//  * Runs the multi-predicate ppzkPCD (generator, prover, and verifier) for the
+//  * "tally compliance predicate", of a given wordsize, arity, and depth.
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  *
+//  * Optionally, also test the case of compliance predicates with different types.
+//  */
+
 
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 
@@ -105,11 +99,11 @@ where
             >,
         >,
 {
-    enter_block("Call to run_r1cs_mp_ppzkpcd_tally_example", false);
+    let span = span!(Level::TRACE, "Call to run_r1cs_mp_ppzkpcd_tally_example").entered();
 
     let mut all_accept = true;
 
-    enter_block("Generate all messages", false);
+    let span = span!(Level::TRACE, "Generate all messages").entered();
     let mut tree_size = 0;
     let mut nodes_in_layer = 1;
     for layer in 0..=depth {
@@ -145,13 +139,13 @@ where
         nodes_in_layer *= max_arity;
     }
 
-    leave_block("Generate all messages", false);
+    span.exit();
 
     let mut tree_proofs = vec![r1cs_mp_ppzkpcd_proof::<PCD_ppT>::default(); tree_size]; //Vec<r1cs_mp_ppzkpcd_proof<PCD_ppT> >
     let mut tree_messages =
         vec![r1cs_pcd_message::<FieldT<PCD_ppT>, PCD_ppT::M>::default(); tree_size];
 
-    enter_block("Generate compliance predicates", false);
+    let span = span!(Level::TRACE, "Generate compliance predicates").entered();
     let (mut tally_1_accepted_types, mut tally_2_accepted_types) =
         (BTreeSet::new(), BTreeSet::new());
     if test_same_type_optimization {
@@ -182,7 +176,7 @@ where
     tally_2.generate_r1cs_constraints();
     let mut cp_1 = tally_1.get_compliance_predicate();
     let mut cp_2 = tally_2.get_compliance_predicate();
-    leave_block("Generate compliance predicates", false);
+    span.exit();
 
     println!("R1CS ppzkPCD Generator");
     let mut keypair = r1cs_mp_ppzkpcd_generator::<PCD_ppT>(&vec![cp_1.clone(), cp_2.clone()]);
@@ -191,11 +185,11 @@ where
     let mut pvk = r1cs_mp_ppzkpcd_process_vk::<PCD_ppT>(&keypair.vk);
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_mp_ppzkpcd_proving_key<PCD_ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_mp_ppzkpcd_verification_key<PCD_ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>>(&pvk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     let mut base_msg = tally_1.get_base_case_message(); //we choose the base to always be tally_1
@@ -261,9 +255,9 @@ where
             );
 
             if test_serialization {
-                enter_block("Test serialization of proof", false);
+                let span = span!(Level::TRACE, "Test serialization of proof").entered();
                 proof = reserialize::<r1cs_mp_ppzkpcd_proof<PCD_ppT>>(&proof);
-                leave_block("Test serialization of proof", false);
+                span.exit();
             }
 
             tree_proofs[cur_idx] = proof;
@@ -310,7 +304,7 @@ where
         nodes_in_layer /= max_arity;
     }
 
-    leave_block("Call to run_r1cs_mp_ppzkpcd_tally_example", false);
+    span.exit();
 
     all_accept
 }

@@ -1,6 +1,5 @@
-// use ffec::common::default_types::ec_pp;
-use ff_curves::Fr;
-use ff_curves::default_ec_pp;
+
+use ff_curves::{Fr,default_ec_pp};
 
 type FieldT = Fr<default_ec_pp>;
 

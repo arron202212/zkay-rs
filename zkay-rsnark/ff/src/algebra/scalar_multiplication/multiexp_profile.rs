@@ -3,10 +3,8 @@
 
 
 
-use crate::algebra::curves::bn128::bn128_pp;
-use crate::algebra::scalar_multiplication::multiexp;
-use crate::common::profiling;
-use crate::common::rng;
+use crate::{algebra::{curves::bn128::bn128_pp,scalar_multiplication::multiexp},common::{profiling,rng}};
+
 
 
 type run_result_t<GroupT> = (i64, Vec<GroupT>) ;

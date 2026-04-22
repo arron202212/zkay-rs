@@ -29,15 +29,10 @@ use crate::gadgetlib1::gadgets::fields::fp6_gadgets::{
 };
 use ff_curves::{Fqe, Fqk, PublicParams};
 use std::marker::PhantomData;
-// pub struct FrT<T>(PhantomData<T>);
-// pub type Fr<T> = FrT<T>;
-// pub struct FqeT<T>(PhantomData<T>);
-// pub type Fqe<T> = FqeT<T>;
-// pub struct FqkT<T>(PhantomData<T>);
-// pub type Fqk<T> = FqkT<T>;
-/**
- * Specialization for MNT4.
- */
+
+// /**
+//  * Specialization for MNT4.
+//  */
 
 pub trait pairing_selector4<
     mnt4_pp: PublicParams,
@@ -70,16 +65,12 @@ pub trait pairing_selector4<
     type e_times_e_over_e_miller_loop_gadget_type;
     type final_exp_gadget_type;
 
-    // static pairing_loop_count:&constexpr bigint<mnt6_Fr::num_limbs> = mnt6_ate_loop_count;
 }
 
-//  type e_over_e_miller_loop_gadget_type = mnt_e_over_e_miller_loop_gadget<ppT,  PB>;
-//     type e_times_e_over_e_miller_loop_gadget_type =
-//         mnt_e_times_e_over_e_miller_loop_gadget<ppT,  PB>;
-//     type final_exp_gadget_type = mnt4_final_exp_gadget<ppT,  PB>;
-/**
- * Specialization for MNT6.
- */
+
+// /**
+//  * Specialization for MNT6.
+//  */
 
 pub trait pairing_selector6<
     mnt6_pp: PublicParams,

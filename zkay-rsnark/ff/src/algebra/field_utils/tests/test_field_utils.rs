@@ -1,11 +1,11 @@
 // Basic tests for some of the field utils in this directory, mainly bigint
 // and power.
 
-use crate::algebra::curves::edwards::edwards_fields;
-use crate::algebra::field_utils::algorithms;
-use crate::algebra::field_utils::bigint;
-use crate::algebra::field_utils::field_utils;
-use crate::algebra::fields::binary::gf64;
+use crate::algebra::{
+    curves::edwards::edwards_fields,
+    field_utils::{algorithms, bigint, field_utils},
+    fields::binary::gf64,
+};
 
 pub fn power_naive<FieldT>(base: &FieldT, exponent: usize) -> FieldT {
     let mut result = FieldT::one();

@@ -19,12 +19,15 @@ use crate::relations::ram_computations::rams::ram_params::{
 use crate::relations::ram_computations::rams::ram_params::{
     ram_architecture_params, ram_base_field, ram_boot_trace, ram_params_type, ram_protoboard,
 };
-use ffec::common::profiling::{enter_block, leave_block};
 use ffec::field_utils::field_utils::{
     convert_field_element_to_bit_vector1, pack_bit_vector_into_field_element_vector,
 };
 use rccell::RcCell;
 use std::collections::BTreeSet;
+use tracing::{span, Level};
+
+
+
 
 type FieldT<RamT> = ram_base_field<RamT>;
 
@@ -70,9 +73,9 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
     }
 
     pub fn instance_map(&self) {
-        enter_block("Call to instance_map of ram_to_r1cs", false);
+        let span = span!(Level::TRACE, "Call to instance_map of ram_to_r1cs").entered();
         self.universal_gadget.borrow().generate_r1cs_constraints();
-        leave_block("Call to instance_map of ram_to_r1cs", false);
+        span.exit();
     }
 
     pub fn get_constraint_system(
@@ -86,7 +89,7 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
         boot_trace: &ram_boot_trace,
         auxiliary_input: &ram_input_tape,
     ) -> r1cs_primary_input<ram_base_field<RamT>> {
-        enter_block("Call to witness_map of ram_to_r1cs", false);
+        let span = span!(Level::TRACE, "Call to witness_map of ram_to_r1cs").entered();
         self.universal_gadget
             .borrow()
             .generate_r1cs_witness(boot_trace, auxiliary_input);
@@ -102,7 +105,7 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
         let primary_input_from_witness_map = self.main_protoboard.borrow().primary_input();
         assert!(primary_input_from_input_map == primary_input_from_witness_map);
 
-        leave_block("Call to witness_map of ram_to_r1cs", false);
+        span.exit();
         self.main_protoboard.borrow().auxiliary_input()
     }
 

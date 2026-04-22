@@ -16,12 +16,10 @@ use crate::algebra::fields::binary::gf32;
 use crate::algebra::fields::binary::gf64;
 use crate::common::utils;
 
-//#include <gtest/gtest.h>
-//#include <set>
 
 using namespace libff;
 
-pub struct AllFieldsTest{//::testing::Test
+pub struct AllFieldsTest{
 
     // We test one field from each class.
     // p, q, r are three different primes.

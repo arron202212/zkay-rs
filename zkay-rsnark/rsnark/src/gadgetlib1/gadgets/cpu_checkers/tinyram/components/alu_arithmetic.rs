@@ -905,17 +905,17 @@ impl<FieldT: FieldTConfig> ALU_smul_gadget<FieldT> {
 
 #[derive(Clone, Default)]
 pub struct ALU_divmod_gadget<FieldT: FieldTConfig> {
-    /*
-      <<<<<<< Updated upstream
-      B * q + r = A_aux = A * B_nonzero
-      q * (1-B_nonzero) = 0
-      A<B_gadget<FieldT>(r < B, less=B_nonzero, leq=ONE)
-      =======
-      B * q + r = A
+    // /*
+    //   <<<<<<< Updated upstream
+    //   B * q + r = A_aux = A * B_nonzero
+    //   q * (1-B_nonzero) = 0
+    //   A<B_gadget<FieldT>(r < B, less=B_nonzero, leq=ONE)
+    //   =======
+    //   B * q + r = A
 
-      r <= B
-      >>>>>>> Stashed changes
-    */
+    //   r <= B
+    //   >>>>>>> Stashed changes
+    // */
     B_inv: variable<FieldT, pb_variable>,
     B_nonzero: variable<FieldT, pb_variable>,
     A_aux: variable<FieldT, pb_variable>,
@@ -1116,12 +1116,12 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
     }
 }
 
-/* the code here is full of template lambda magic, but it is better to
-have limited presence of such code than to have code duplication in
-testing functions, which basically do the same thing: brute force
-the range of inputs which different success predicates */
+// /* the code here is full of template lambda magic, but it is better to
+// have limited presence of such code than to have code duplication in
+// testing functions, which basically do the same thing: brute force
+// the range of inputs which different success predicates */
 
-//
+
 type initializer_fn<T, FieldT: FieldTConfig> = fn(
     &RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>, // pb
     &pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,  // opcode_indicators
@@ -1968,10 +1968,10 @@ pub fn test_ALU_mov_gadget<FieldT: FieldTConfig>(w: usize) {
 //cmov
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmov_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /*
-          flag1 * arg2val + (1-flag1) * desval = result
-          flag1 * (arg2val - desval) = result - desval
-        */
+        // /*
+        //   flag1 * arg2val + (1-flag1) * desval = result
+        //   flag1 * (arg2val - desval) = result - desval
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.flag.clone().into()],
@@ -2047,9 +2047,9 @@ pub fn test_ALU_cmov_gadget<FieldT: FieldTConfig>(w: usize) {
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         self.t.t.t.t.comparator.generate_r1cs_constraints();
-        /*
-          cmpe = cmpae * (1-cmpa)
-        */
+        // /*
+        //   cmpe = cmpae * (1-cmpa)
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.t.cmpae_result_flag.clone().into()],
@@ -2631,10 +2631,10 @@ pub fn test_ALU_umulh_gadget<FieldT: FieldTConfig>(w: usize) {
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
         //do multiplication
-        /*
-          from two's complement: (packed - 2^w * bits[w-1])
-          to two's complement: lower order bits of 2^{2w} + result_of_*
-        */
+        // /*
+        //   from two's complement: (packed - 2^w * bits[w-1])
+        //   to two's complement: lower order bits of 2^{2w} + result_of_*
+        // */
 
         let (mut a, mut b, mut c) = (
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -2678,14 +2678,14 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /*
-          the gadgets below are FieldT specific:
-          I * X = (1-R)
-          R * X = 0
+        // /*
+        //   the gadgets below are FieldT specific:
+        //   I * X = (1-R)
+        //   R * X = 0
 
-          if X = 0 then R = 1
-          if X != 0 then R = 0 and I = X^{-1}
-        */
+        //   if X = 0 then R = 1
+        //   if X != 0 then R = 0 and I = X^{-1}
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.t.is_top_empty_aux.clone().into()],
@@ -2753,10 +2753,10 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_smul_gadgets<F
 
     fn generate_r1cs_witness(&self) {
         //do multiplication
-        /*
-          from two's complement: (packed - 2^w * bits[w-1])
-          to two's complement: lower order bits of (2^{2w} + result_of_mul)
-        */
+        // /*
+        //   from two's complement: (packed - 2^w * bits[w-1])
+        //   to two's complement: lower order bits of (2^{2w} + result_of_mul)
+        // */
         *self
             .pb
             .borrow_mut()
@@ -3076,12 +3076,12 @@ pub fn test_ALU_umod_gadget<FieldT: FieldTConfig>(w: usize) {
 }
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /*
-          select the input for barrel shifter:
+        // /*
+        //   select the input for barrel shifter:
 
-          r = arg1val * opcode_indicators[SHR] + reverse(arg1val) * (1-opcode_indicators[SHR])
-          r - reverse(arg1val) = (arg1val - reverse(arg1val)) * opcode_indicators[SHR]
-        */
+        //   r = arg1val * opcode_indicators[SHR] + reverse(arg1val) * (1-opcode_indicators[SHR])
+        //   r - reverse(arg1val) = (arg1val - reverse(arg1val)) * opcode_indicators[SHR]
+        // */
         self.t
             .t
             .t
@@ -3110,9 +3110,9 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             format!("{} select_arg1val_or_reversed", self.annotation_prefix),
         );
 
-        /*
-          do logw iterations of barrel shifts
-        */
+        // /*
+        //   do logw iterations of barrel shifts
+        // */
         for i in 0..self.t.t.t.t.logw {
             //assert that shifted out part is bits
             for j in 0..1usize << i {
@@ -3123,16 +3123,16 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 );
             }
 
-            /*
-              add main shifting constraint
+            // /*
+            //   add main shifting constraint
 
 
-              old_result =
-              (shifted_result * 2^(i+1) + shifted_out_part) * need_to_shift +
-              (shfited_result) * (1-need_to_shift)
+            //   old_result =
+            //   (shifted_result * 2^(i+1) + shifted_out_part) * need_to_shift +
+            //   (shfited_result) * (1-need_to_shift)
 
-              old_result - shifted_result = (shifted_result * (2^(i+1) - 1) + shifted_out_part) * need_to_shift
-            */
+            //   old_result - shifted_result = (shifted_result * (2^(i+1) - 1) + shifted_out_part) * need_to_shift
+            // */
             let (mut a, mut b, mut c) = (
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
                 linear_combination::<FieldT, pb_variable, pb_linear_combination>::default(),
@@ -3161,11 +3161,11 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             );
         }
 
-        /*
-          get result as the logw iterations or zero if shift was oversized
+        // /*
+        //   get result as the logw iterations or zero if shift was oversized
 
-          result = (1-is_oversize_shift) * barrel_right_internal[logw]
-        */
+        //   result = (1-is_oversize_shift) * barrel_right_internal[logw]
+        // */
         self.t
             .t
             .t
@@ -3189,9 +3189,9 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             format!("{} result", self.annotation_prefix),
         );
 
-        /*
-          get reversed result for SHL
-        */
+        // /*
+        //   get reversed result for SHL
+        // */
         self.t
             .t
             .t
@@ -3207,11 +3207,11 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             .borrow()
             .generate_r1cs_constraints(false);
 
-        /*
-          select the correct output:
-          r = result * opcode_indicators[SHR] + reverse(result) * (1-opcode_indicators[SHR])
-          r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
-        */
+        // /*
+        //   select the correct output:
+        //   r = result * opcode_indicators[SHR] + reverse(result) * (1-opcode_indicators[SHR])
+        //   r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
@@ -3298,13 +3298,13 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 self.pb.borrow().val(&self.t.t.t.t.reversed_input)
             });
 
-        /*
-          do logw iterations of barrel shifts.
+        // /*
+        //   do logw iterations of barrel shifts.
 
-          old_result =
-          (shifted_result * 2^i + shifted_out_part) * need_to_shift +
-          (shfited_result) * (1-need_to_shift)
-        */
+        //   old_result =
+        //   (shifted_result * 2^i + shifted_out_part) * need_to_shift +
+        //   (shfited_result) * (1-need_to_shift)
+        // */
 
         for i in 0..self.t.t.t.t.logw {
             *self
@@ -3334,11 +3334,11 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             );
         }
 
-        /*
-          get result as the logw iterations or zero if shift was oversized
+        // /*
+        //   get result as the logw iterations or zero if shift was oversized
 
-          result = (1-is_oversize_shift) * barrel_right_internal[logw]
-        */
+        //   result = (1-is_oversize_shift) * barrel_right_internal[logw]
+        // */
         self.t
             .t
             .t
@@ -3353,9 +3353,9 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
                 .borrow()
                 .val(&self.t.t.t.t.barrel_right_internal[self.t.t.t.t.logw]);
 
-        /*
-          get reversed result for SHL
-        */
+        // /*
+        //   get reversed result for SHL
+        // */
         self.t
             .t
             .t
@@ -3371,11 +3371,11 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_shr_shl_gadget
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /*
-          select the correct output:
-          r = result * opcode_indicators[SHR] + reverse(result) * (1-opcode_indicators[SHR])
-          r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
-        */
+        // /*
+        //   select the correct output:
+        //   r = result * opcode_indicators[SHR] + reverse(result) * (1-opcode_indicators[SHR])
+        //   r - reverse(result) = (result - reverse(result)) * opcode_indicators[SHR]
+        // */
         *self.pb.borrow_mut().val_ref(&self.t.t.t.t.shr_result) = if (self.pb.borrow().val(
             &self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_SHR.clone() as usize],
         ) == FieldT::one())

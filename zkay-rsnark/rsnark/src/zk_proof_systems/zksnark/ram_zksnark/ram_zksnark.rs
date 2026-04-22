@@ -59,14 +59,14 @@ use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark_params::{
     ram_zksnark_machine_pp, ram_zksnark_primary_input,
 };
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{span, Level};
 use ffec::log2;
 use rccell::RcCell;
 use std::ops::Mul;
 
-/**
- * A proving key for the RAM zkSNARK.
- */
+// /**
+//  * A proving key for the RAM zkSNARK.
+//  */
 
 #[derive(Default, Clone)]
 pub struct ram_zksnark_proving_key<RamPpt: RamConfig> {
@@ -82,9 +82,9 @@ impl<RamPpt: RamConfig> ram_zksnark_proving_key<RamPpt> {
     }
 }
 
-/**
- * A verification key for the RAM zkSNARK.
- */
+// /**
+//  * A verification key for the RAM zkSNARK.
+//  */
 #[derive(Default, Clone)]
 pub struct ram_zksnark_verification_key<RamPpt: RamConfig> {
     pub ap: ram_zksnark_architecture_params<RamPpt>,
@@ -99,9 +99,9 @@ impl<RamPpt: RamConfig> ram_zksnark_verification_key<RamPpt> {
     }
 }
 
-/**
- * A key pair for the RAM zkSNARK, which consists of a proving key and a verification key.
- */
+// /**
+//  * A key pair for the RAM zkSNARK, which consists of a proving key and a verification key.
+//  */
 #[derive(Default, Clone)]
 pub struct ram_zksnark_keypair<RamPpt: RamConfig> {
     pub pk: ram_zksnark_proving_key<RamPpt>,
@@ -116,9 +116,9 @@ impl<RamPpt: RamConfig> ram_zksnark_keypair<RamPpt> {
     }
 }
 
-/**
- * A proof for the RAM zkSNARK.
- */
+// /**
+//  * A proof for the RAM zkSNARK.
+//  */
 #[derive(Default, Clone)]
 pub struct ram_zksnark_proof<RamPpt: RamConfig> {
     pub PCD_proof: r1cs_sp_ppzkpcd_proof<pcdT<RamPpt>>,
@@ -135,112 +135,6 @@ impl<RamPpt: RamConfig> ram_zksnark_proof<RamPpt> {
         r1cs_sp_ppzkpcd_proof::<pcdT<RamPpt>>::size_in_bits()
     }
 }
-
-// /**
-//  * A generator algorithm for the RAM zkSNARK.
-//  *
-//  * Given a choice of architecture parameters, this algorithm produces proving
-//  * and verification keys for all computations that respect this choice.
-//  */
-//
-// ram_zksnark_keypair<RamPpt> ram_zksnark_generator(ap:&ram_zksnark_architecture_params<RamPpt>);
-
-// /**
-//  * A prover algorithm for the RAM zkSNARK.
-//  *
-//  * Given a proving key, primary input X, time bound T, and auxiliary input Y, this algorithm
-//  * produces a proof (of knowledge) that attests to the following statement:
-//  *               ``there exists Y such that X(Y) accepts within T steps''.
-//  */
-//
-// ram_zksnark_proof<RamPpt> ram_zksnark_prover(pk:&ram_zksnark_proving_key<RamPpt>,
-//                                                       primary_input:&ram_zksnark_primary_input,
-//                                                       time_bound:&usize,
-//                                                       auxiliary_input:&ram_zksnark_auxiliary_input);
-
-// /**
-//  * A verifier algorithm for the RAM zkSNARK.
-//  *
-//  * This algorithm is universal in the sense that the verification key
-//  * supports proof verification for *any* choice of primary input and time bound.
-//  */
-//
-// bool ram_zksnark_verifier(vk:&ram_zksnark_verification_key<RamPpt>,
-//                           primary_input:&ram_zksnark_primary_input,
-//                           time_bound:&usize,
-//                           proof:&ram_zksnark_proof<RamPpt>);
-
-// use common::profiling;
-
-//
-// bool ram_zksnark_proving_key<RamPpt>::operator==(other:&ram_zksnark_proving_key<RamPpt>) const
-// {
-//     return (self.ap == other.ap &&
-//             self.pcd_pk == other.pcd_pk);
-// }
-
-//
-// std::ostream& operator<<(std::ostream &out, pk:&ram_zksnark_proving_key<RamPpt>)
-// {
-//     out << pk.ap;
-//     out << pk.pcd_pk;
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, ram_zksnark_proving_key<RamPpt> &pk)
-// {
-//     in >> pk.ap;
-//     in >> pk.pcd_pk;
-
-//     return in;
-// }
-
-//
-// bool ram_zksnark_verification_key<RamPpt>::operator==(other:&ram_zksnark_verification_key<RamPpt>) const
-// {
-//     return (self.ap == other.ap &&
-//             self.pcd_vk == other.pcd_vk);
-// }
-
-//
-// std::ostream& operator<<(std::ostream &out, vk:&ram_zksnark_verification_key<RamPpt>)
-// {
-//     out << vk.ap;
-//     out << vk.pcd_vk;
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, ram_zksnark_verification_key<RamPpt> &vk)
-// {
-//     in >> vk.ap;
-//     in >> vk.pcd_vk;
-
-//     return in;
-// }
-
-//
-// bool ram_zksnark_proof<RamPpt>::operator==(other:&ram_zksnark_proof<RamPpt>) const
-// {
-//     return (self.PCD_proof == other.PCD_proof);
-// }
-
-//
-// std::ostream& operator<<(std::ostream &out, proof:&ram_zksnark_proof<RamPpt>)
-// {
-//     out << proof.PCD_proof;
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, ram_zksnark_proof<RamPpt> &proof)
-// {
-//     in >> proof.PCD_proof;
-//     return in;
-// }
 
 impl<RamPpt: RamConfig> ram_zksnark_verification_key<RamPpt> {
     pub fn dummy_verification_key(
@@ -259,35 +153,41 @@ type RamT<RamPpt> = ram_zksnark_machine_pp<RamPpt>;
 type pcdT<RamPpt> = ram_zksnark_PCD_pp<RamPpt>;
 type A_pp<RamPpt> = <pcdT<RamPpt> as PcdPptConfig>::curve_A_pp;
 type FieldT<RamPpt> = Fr<<pcdT<RamPpt> as PcdPptConfig>::curve_A_pp>; // XXX
-
+//  * A generator algorithm for the RAM zkSNARK.
+//  *
+//  * Given a choice of architecture parameters, this algorithm produces proving
+//  * and verification keys for all computations that respect this choice.
 pub fn ram_zksnark_generator<RamPpt: RamConfig>(
     ap: &ram_zksnark_architecture_params<RamPpt>,
 ) -> ram_zksnark_keypair<RamPpt>
 where
     <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
 {
-    // type RamPpt=ram_zksnark_machine_pp<RamPpt>;
-    // type pcdT=ram_zksnark_PCD_pp<RamPpt>;
-    enter_block("Call to ram_zksnark_generator", false);
+   
+    let span = span!(Level::TRACE, "Call to ram_zksnark_generator").entered();
 
-    enter_block("Generate compliance predicate for RAM", false);
+    let span = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(ap.clone());
     cp_handler.generate_r1cs_constraints();
     let mut ram_compliance_predicate = cp_handler.get_compliance_predicate();
-    leave_block("Generate compliance predicate for RAM", false);
+    span.exit();
 
-    enter_block("Generate PCD key pair", false);
+    let span = span!(Level::TRACE, "Generate PCD key pair").entered();
     let mut kp = r1cs_sp_ppzkpcd_generator::<pcdT<RamPpt>>(&ram_compliance_predicate);
-    leave_block("Generate PCD key pair", false);
+    span.exit();
 
-    leave_block("Call to ram_zksnark_generator", false);
+    span.exit();
 
     let pk = ram_zksnark_proving_key::<RamPpt>::new(ap.clone(), kp.pk);
     let vk = ram_zksnark_verification_key::<RamPpt>::new(ap.clone(), kp.vk);
 
     ram_zksnark_keypair::<RamPpt>::new(pk, vk)
 }
-
+//  * A prover algorithm for the RAM zkSNARK.
+//  *
+//  * Given a proving key, primary input X, time bound T, and auxiliary input Y, this algorithm
+//  * produces a proof (of knowledge) that attests to the following statement:
+//  *               ``there exists Y such that X(Y) accepts within T steps''.
 pub fn ram_zksnark_prover<RamPpt: RamConfig>(
     pk: &ram_zksnark_proving_key<RamPpt>,
     primary_input: &ram_zksnark_primary_input,
@@ -339,12 +239,12 @@ where
 {
     assert!(log2(time_bound) <= RamT::<RamPpt>::timestamp_length);
 
-    enter_block("Call to ram_zksnark_prover", false);
-    enter_block("Generate compliance predicate for RAM", false);
+    let span = span!(Level::TRACE, "Call to ram_zksnark_prover").entered();
+    let span = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(pk.ap.clone());
-    leave_block("Generate compliance predicate for RAM", false);
+    span.exit();
 
-    enter_block("Initialize the RAM computation", false);
+    let span = span!(Level::TRACE, "Initialize the RAM computation").entered();
     let mut cur_proof = r1cs_sp_ppzkpcd_proof::<pcdT<RamPpt>>::default(); // start out with an empty proof
 
     //initialize memory with the correct values
@@ -367,9 +267,9 @@ where
     );
 
     // let aux_it = auxiliary_input.begin();
-    leave_block("Initialize the RAM computation", false);
+    span.exit();
 
-    enter_block("Execute and prove the computation", false);
+    let span = span!(Level::TRACE, "Execute and prove the computation").entered();
     let mut want_halt = false;
     for step in 1..=time_bound {
         enter_block(
@@ -377,7 +277,7 @@ where
             false,
         );
 
-        enter_block("Execute witness map", false);
+        let span = span!(Level::TRACE, "Execute witness map").entered();
 
         let local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
             want_halt,
@@ -398,17 +298,17 @@ where
                 <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD,
             >::new(vec![msg.clone()], local_data, cp_handler.get_witness());
 
-        // #ifdef DEBUG
+       
         print!("Current state:\n");
         msg.borrow().print();
 
         msg = cp_handler.get_outgoing_message();
 
-        // #ifdef DEBUG
+       
         print!("Next state:\n");
         msg.borrow().print();
 
-        leave_block("Execute witness map", false);
+        span.exit();
 
         cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT<RamPpt>>(
             &pk.pcd_pk,
@@ -421,12 +321,12 @@ where
             false,
         );
     }
-    leave_block("Execute and prove the computation", false);
+    span.exit();
 
-    enter_block("Finalize the computation", false);
+    let span = span!(Level::TRACE, "Finalize the computation").entered();
     want_halt = true;
 
-    enter_block("Execute witness map", false);
+    let span = span!(Level::TRACE, "Execute witness map").entered();
 
     let mut local_data = RcCell::new(ram_pcd_local_data::<RamT<RamPpt>>::new(
         want_halt,
@@ -445,7 +345,7 @@ where
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::LD,
     >::new(vec![msg.clone()], local_data, cp_handler.get_witness());
-    leave_block("Execute witness map", false);
+    span.exit();
 
     cur_proof = r1cs_sp_ppzkpcd_prover::<pcdT<RamPpt>>(
         &pk.pcd_pk,
@@ -453,24 +353,25 @@ where
         &cp_auxiliary_input,
         &vec![cur_proof],
     );
-    leave_block("Finalize the computation", false);
+    span.exit();
 
-    leave_block("Call to ram_zksnark_prover", false);
+    span.exit();
 
     cur_proof.into()
 }
-
+//  * A verifier algorithm for the RAM zkSNARK.
+//  *
+//  * This algorithm is universal in the sense that the verification key
+//  * supports proof verification for *any* choice of primary input and time bound.
 pub fn ram_zksnark_verifier<RamPpt: RamConfig>(
     vk: &ram_zksnark_verification_key<RamPpt>,
     primary_input: &ram_zksnark_primary_input,
     time_bound: usize,
     proof: &ram_zksnark_proof<RamPpt>,
 ) -> bool {
-    // type RamT=ram_zksnark_machine_pp<RamPpt>;
-    // type pcdT=ram_zksnark_PCD_pp<RamT>;
-    // type FieldT=Fr< pcdT::curve_A_pp>; // XXX
+  
 
-    enter_block("Call to ram_zksnark_verifier", false);
+    let span = span!(Level::TRACE, "Call to ram_zksnark_verifier").entered();
     let cp_primary_input = r1cs_pcd_compliance_predicate_primary_input::<
         FieldT<RamPpt>,
         <<<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp as ppTConfig>::M,
@@ -483,7 +384,7 @@ pub fn ram_zksnark_verifier<RamPpt: RamConfig>(
     );
     let ans =
         r1cs_sp_ppzkpcd_verifier::<pcdT<RamPpt>>(&vk.pcd_vk, &cp_primary_input, &proof.PCD_proof);
-    leave_block("Call to ram_zksnark_verifier", false);
+    span.exit();
 
     ans
 }

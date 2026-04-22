@@ -58,9 +58,9 @@ impl<FieldT: FieldTConfig> Default for EvaluationDomainType<FieldT> {
         Self::ArithmeticSequence(arithmetic_sequence_domains::<FieldT>::default())
     }
 }
-/**
- * An evaluation domain.
- */
+// /**
+//  * An evaluation domain.
+//  */
 
 #[enum_dispatch]
 pub trait EvaluationDomainConfig<FieldT> {

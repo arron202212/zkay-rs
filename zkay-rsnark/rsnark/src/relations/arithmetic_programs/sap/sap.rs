@@ -18,21 +18,19 @@ use fqfft::evaluation_domain::evaluation_domain::{
 };
 use rccell::RcCell;
 use std::collections::BTreeMap;
-//forward declaration
-//
-// pub struct sap_witness;
 
-/**
- * A SAP instance.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs; and
- * - coefficients of the A,C polynomials in the Lagrange basis.
- *
- * There is no need to store the Z polynomial because it is uniquely
- * determined by the domain (as Z is its vanishing polynomial).
- */
+
+// /**
+//  * A SAP instance.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs; and
+//  * - coefficients of the A,C polynomials in the Lagrange basis.
+//  *
+//  * There is no need to store the Z polynomial because it is uniquely
+//  * determined by the domain (as Z is its vanishing polynomial).
+//  */
 #[derive(Default, Clone)]
 pub struct sap_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
@@ -45,43 +43,17 @@ pub struct sap_instance<FieldT: FieldTConfig> {
     pub C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 
-//     sap_instance(domain:&RcCell<ED >,
-//                  num_variables:usize,
-//                  degree:usize,
-//                  num_inputs:usize,
-//                  A_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >,
-//                  C_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >);
-
-//     sap_instance(domain:&RcCell<ED >,
-//                  num_variables:usize,
-//                  degree:usize,
-//                  num_inputs:usize,
-//                  Vec<BTreeMap<usize, FieldT> > &&A_in_Lagrange_basis,
-//                  Vec<BTreeMap<usize, FieldT> > &&C_in_Lagrange_basis);
-
-//     sap_instance(other:&sap_instance<FieldT>) = default;
-//     sap_instance(sap_instance<FieldT> &&other) = default;
-//     sap_instance& operator=(other:&sap_instance<FieldT>) = default;
-//     sap_instance& operator=(sap_instance<FieldT> &&other) = default;
-
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-
-//     bool is_satisfied(witness:&sap_witness<FieldT>) const;
-// };
-
-/**
- * A SAP instance evaluation is a SAP instance that is evaluated at a field element t.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs;
- * - a field element t;
- * - evaluations of the A,C (and Z) polynomials at t;
- * - evaluations of all monomials of t;
- * - counts about how many of the above evaluations are in fact non-zero.
- */
+// /**
+//  * A SAP instance evaluation is a SAP instance that is evaluated at a field element t.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs;
+//  * - a field element t;
+//  * - evaluations of the A,C (and Z) polynomials at t;
+//  * - evaluations of all monomials of t;
+//  * - counts about how many of the above evaluations are in fact non-zero.
+//  */
 #[derive(Default, Clone)]
 pub struct sap_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
@@ -98,41 +70,11 @@ pub struct sap_instance_evaluation<FieldT: FieldTConfig> {
     pub Zt: FieldT,
 }
 
-//     sap_instance_evaluation(domain:&RcCell<ED >,
-//                             num_variables:usize,
-//                             degree:usize,
-//                             num_inputs:usize,
-//                             t:&FieldT,
-//                             At:&Vec<FieldT>,
-//                             Ct:&Vec<FieldT>,
-//                             Ht:&Vec<FieldT>,
-//                             Zt:&FieldT);
-//     sap_instance_evaluation(domain:&RcCell<ED >,
-//                             num_variables:usize,
-//                             degree:usize,
-//                             num_inputs:usize,
-//                             t:&FieldT,
-//                             Vec<FieldT> &&At,
-//                             Vec<FieldT> &&Ct,
-//                             Vec<FieldT> &&Ht,
-//                             Zt:&FieldT);
 
-//     sap_instance_evaluation(other:&sap_instance_evaluation<FieldT>) = default;
-//     sap_instance_evaluation(sap_instance_evaluation<FieldT> &&other) = default;
-//     sap_instance_evaluation& operator=(other:&sap_instance_evaluation<FieldT>) = default;
-//     sap_instance_evaluation& operator=(sap_instance_evaluation<FieldT> &&other) = default;
+// /**
+//  * A SAP witness.
+//  */
 
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-
-//     bool is_satisfied(witness:&sap_witness<FieldT>) const;
-// };
-
-/**
- * A SAP witness.
- */
-//
 #[derive(Default, Clone)]
 pub struct sap_witness<FieldT> {
     pub num_variables: usize,
@@ -145,38 +87,6 @@ pub struct sap_witness<FieldT> {
     pub coefficients_for_ACs: Vec<FieldT>,
     pub coefficients_for_H: Vec<FieldT>,
 }
-
-//     sap_witness(num_variables:usize,
-//                 degree:usize,
-//                 num_inputs:usize,
-//                 d1:&FieldT,
-//                 d2:&FieldT,
-//                 coefficients_for_ACs:&Vec<FieldT>,
-//                 coefficients_for_H:&Vec<FieldT>);
-
-//     sap_witness(num_variables:usize,
-//                 degree:usize,
-//                 num_inputs:usize,
-//                 d1:&FieldT,
-//                 d2:&FieldT,
-//                 coefficients_for_ACs:&Vec<FieldT>,
-//                 Vec<FieldT> &&coefficients_for_H);
-
-//     sap_witness(other:&sap_witness<FieldT>) = default;
-//     sap_witness(sap_witness<FieldT> &&other) = default;
-//     sap_witness& operator=(other:&sap_witness<FieldT>) = default;
-//     sap_witness& operator=(sap_witness<FieldT> &&other) = default;
-
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-// };
-
-// use crate::relations::arithmetic_programs::sap::sap;
-
-// use ffec::algebra::scalar_multiplication::multiexp;
-// use ffec::common::profiling;
-// use ffec::common::utils;
 
 impl<FieldT: FieldTConfig> sap_instance<FieldT> {
     pub fn new(

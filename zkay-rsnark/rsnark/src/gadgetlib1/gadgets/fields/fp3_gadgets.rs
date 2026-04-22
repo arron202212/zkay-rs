@@ -15,11 +15,10 @@ use ffec::One;
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-/**
- * Gadget that represents an Fp3 variable.
- */
+// /**
+//  * Gadget that represents an Fp3 variable.
+//  */
 pub trait Fp3TConfig<FieldT: FieldTConfig>: Default + Clone + std::ops::Mul<Output = Self> {
-    // type FieldT: FieldTConfig;
     fn c0(&self) -> FieldT;
     fn c1(&self) -> FieldT;
     fn c2(&self) -> FieldT;
@@ -32,8 +31,6 @@ pub trait Fp3TConfig<FieldT: FieldTConfig>: Default + Clone + std::ops::Mul<Outp
 }
 #[derive(Clone, Default)]
 pub struct Fp3_variable<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    //->Self public gadget<Fp3T::my_Fp>
-    // type FieldT=Fp3T::my_Fp;
     pub c0: linear_combination<FieldT, pb_variable, pb_linear_combination>,
     pub c1: linear_combination<FieldT, pb_variable, pb_linear_combination>,
     pub c2: linear_combination<FieldT, pb_variable, pb_linear_combination>,
@@ -41,13 +38,11 @@ pub struct Fp3_variable<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBCo
     _t: PhantomData<(Fp3T, PB)>,
 }
 
-/**
- * Gadget that creates constraints for Fp3 by Fp3 multiplication.
- */
+// /**
+//  * Gadget that creates constraints for Fp3 by Fp3 multiplication.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp3_mul_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp3T::my_Fp>
-    //     type FieldT=Fp3T::my_Fp;
     pub A: Fp3_variables<Fp3T, FieldT, PB>,
     pub B: Fp3_variables<Fp3T, FieldT, PB>,
     pub result: Fp3_variables<Fp3T, FieldT, PB>,
@@ -55,25 +50,21 @@ pub struct Fp3_mul_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
     pub v4: variable<FieldT, pb_variable>,
 }
 
-/**
- * Gadget that creates constraints for Fp3 multiplication by a linear combination.
- */
+// /**
+//  * Gadget that creates constraints for Fp3 multiplication by a linear combination.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp3_mul_by_lc_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp3T::my_Fp>
-    //     type FieldT=Fp3T::my_Fp;
     pub A: Fp3_variables<Fp3T, FieldT, PB>,
     pub lc: linear_combination<FieldT, pb_variable, pb_linear_combination>,
     pub result: Fp3_variables<Fp3T, FieldT, PB>,
 }
 
-/**
- * Gadget that creates constraints for Fp3 squaring.
- */
+// /**
+//  * Gadget that creates constraints for Fp3 squaring.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp3_sqr_gadget<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp3T::my_Fp>
-    //     type FieldT=Fp3T::my_Fp;
     pub A: Fp3_variables<Fp3T, FieldT, PB>,
     pub result: Fp3_variables<Fp3T, FieldT, PB>,
     pub mul: RcCell<Fp3_mul_gadgets<Fp3T, FieldT, PB>>,
@@ -336,41 +327,41 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
     Fp3_mul_gadgets<Fp3T, FieldT, PB>
 {
     pub fn generate_r1cs_constraints(&self) {
-        /*
-            Tom-Cook-3x for Fp3:
-                v0 = A.c0 * B.c0
-                v1 = (A.c0 + A.c1 + A.c2) * (B.c0 + B.c1 + B.c2)
-                v2 = (A.c0 - A.c1 + A.c2) * (B.c0 - B.c1 + B.c2)
-                v3 = (A.c0 + 2*A.c1 + 4*A.c2) * (B.c0 + 2*B.c1 + 4*B.c2)
-                v4 = A.c2 * B.c2
-                result.c0 = v0 + non_residue * (v0/2 - v1/2 - v2/6 + v3/6 - 2*v4)
-                result.c1 = -(1/2) v0 +  v1 - (1/3) v2 - (1/6) v3 + 2 v4 + non_residue*v4
-                result.c2 = -v0 + (1/2) v1 + (1/2) v2 - v4
+        // /*
+        //     Tom-Cook-3x for Fp3:
+        //         v0 = A.c0 * B.c0
+        //         v1 = (A.c0 + A.c1 + A.c2) * (B.c0 + B.c1 + B.c2)
+        //         v2 = (A.c0 - A.c1 + A.c2) * (B.c0 - B.c1 + B.c2)
+        //         v3 = (A.c0 + 2*A.c1 + 4*A.c2) * (B.c0 + 2*B.c1 + 4*B.c2)
+        //         v4 = A.c2 * B.c2
+        //         result.c0 = v0 + non_residue * (v0/2 - v1/2 - v2/6 + v3/6 - 2*v4)
+        //         result.c1 = -(1/2) v0 +  v1 - (1/3) v2 - (1/6) v3 + 2 v4 + non_residue*v4
+        //         result.c2 = -v0 + (1/2) v1 + (1/2) v2 - v4
 
-            Enforced with 5 constraints. Doing so requires some care, as we first
-            compute two of the v_i explicitly, and then "inline" result.c1/c2/c3
-            in computations of teh remaining three v_i.
+        //     Enforced with 5 constraints. Doing so requires some care, as we first
+        //     compute two of the v_i explicitly, and then "inline" result.c1/c2/c3
+        //     in computations of teh remaining three v_i.
 
-            Concretely, we first compute v0 and v4 explicitly, via 2 constraints:
-                A.c0 * B.c0 = v0
-                A.c2 * B.c2 = v4
-            Then we use the following 3 additional constraints:
-                v1 = result.c1 + result.c2 + (result.c0 - v0)/non_residue + v0 + v4 - non_residue v4
-                v2 = -result.c1 + result.c2 + v0 + (-result.c0 + v0)/non_residue + v4 + non_residue v4
-                v3 = 2 * result.c1 + 4 result.c2 + (8*(result.c0 - v0))/non_residue + v0 + 16 * v4 - 2 * non_residue * v4
+        //     Concretely, we first compute v0 and v4 explicitly, via 2 constraints:
+        //         A.c0 * B.c0 = v0
+        //         A.c2 * B.c2 = v4
+        //     Then we use the following 3 additional constraints:
+        //         v1 = result.c1 + result.c2 + (result.c0 - v0)/non_residue + v0 + v4 - non_residue v4
+        //         v2 = -result.c1 + result.c2 + v0 + (-result.c0 + v0)/non_residue + v4 + non_residue v4
+        //         v3 = 2 * result.c1 + 4 result.c2 + (8*(result.c0 - v0))/non_residue + v0 + 16 * v4 - 2 * non_residue * v4
 
-            Reference:
-                "Multiplication and Squaring on Pairing-Friendly Fields"
-                Devegili, OhEigeartaigh, Scott, Dahab
+        //     Reference:
+        //         "Multiplication and Squaring on Pairing-Friendly Fields"
+        //         Devegili, OhEigeartaigh, Scott, Dahab
 
-            NOTE: the expressions above were cherry-picked from the Mathematica result
-            of the following command:
+        //     NOTE: the expressions above were cherry-picked from the Mathematica result
+        //     of the following command:
 
-            (# -> Solve[{c0 == v0 + non_residue*(v0/2 - v1/2 - v2/6 + v3/6 - 2 v4),
-                        c1 == -(1/2) v0 + v1 - (1/3) v2 - (1/6) v3 + 2 v4 + non_residue*v4,
-                        c2 == -v0 + (1/2) v1 + (1/2) v2 - v4}, #] // FullSimplify) & /@
-            Subsets[{v0, v1, v2, v3, v4}, {3}]
-        */
+        //     (# -> Solve[{c0 == v0 + non_residue*(v0/2 - v1/2 - v2/6 + v3/6 - 2 v4),
+        //                 c1 == -(1/2) v0 + v1 - (1/3) v2 - (1/6) v3 + 2 v4 + non_residue*v4,
+        //                 c2 == -v0 + (1/2) v1 + (1/2) v2 - v4}, #] // FullSimplify) & /@
+        //     Subsets[{v0, v1, v2, v3, v4}, {3}]
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.A.t.c0.clone().into(),
@@ -532,33 +523,3 @@ impl<Fp3T: Fp3TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         self.t.mul.borrow().generate_r1cs_witness();
     }
 }
-
-//
-// Fp3_variable<Fp3T,FieldT, PB> pub fn operator*(coeff:&FieldT) const
-// {
-//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
-//     new_c0.assign(self.pb, self.c0 * coeff);
-//     new_c1.assign(self.pb, self.c1 * coeff);
-//     new_c2.assign(self.pb, self.c2 * coeff);
-//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator*"));
-// }
-
-//
-// Fp3_variable<Fp3T,FieldT, PB> pub fn operator+(other:&Fp3_variable<Fp3T,FieldT, PB> ) const
-// {
-//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
-//     new_c0.assign(self.pb, self.c0 + other.c0);
-//     new_c1.assign(self.pb, self.c1 + other.c1);
-//     new_c2.assign(self.pb, self.c2 + other.c2);
-//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
-// }
-
-//
-// Fp3_variable<Fp3T,FieldT, PB> pub fn operator+(other:&Fp3T) const
-// {
-//     linear_combination<FieldT, pb_variable, pb_linear_combination> new_c0, new_c1, new_c2;
-//     new_c0.assign(self.pb, self.c0 + other.c0);
-//     new_c1.assign(self.pb, self.c1 + other.c1);
-//     new_c2.assign(self.pb, self.c2 + other.c2);
-//     return Fp3_variable<Fp3T,FieldT, PB> (self.pb, new_c0, new_c1, new_c2, prefix_format!(self.annotation_prefix, " operator+"));
-// }

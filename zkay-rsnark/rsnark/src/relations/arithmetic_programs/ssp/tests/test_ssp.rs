@@ -13,13 +13,15 @@ use ffec::common::profiling::{
     enter_block, leave_block, print_header, print_indent, start_profiling,
 };
 use std::marker::PhantomData;
+use tracing::{span, Level};
+
 
 pub fn test_ssp<FieldT: FieldTConfig>(
     num_constraints: usize,
     num_inputs: usize,
     binary_input: bool,
 ) {
-    enter_block("Call to test_ssp", false);
+    let span = span!(Level::TRACE, "Call to test_ssp").entered();
 
     print_indent();
     print!("* Number of constraints: {}\n", num_constraints);
@@ -31,7 +33,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
         if binary_input { "binary" } else { "field" }
     );
 
-    enter_block("Generate constraint system and assignment", false);
+    let span = span!(Level::TRACE, "Generate constraint system and assignment").entered();
     let example = if binary_input {
         generate_uscs_example_with_binary_input::<FieldT, pb_variable, pb_linear_combination>(
             num_constraints,
@@ -43,45 +45,45 @@ pub fn test_ssp<FieldT: FieldTConfig>(
             num_inputs,
         )
     };
-    leave_block("Generate constraint system and assignment", false);
+    span.exit();
 
-    enter_block("Check satisfiability of constraint system", false);
+    let span = span!(Level::TRACE, "Check satisfiability of constraint system").entered();
     assert!(
         example
             .constraint_system
             .is_satisfied(&example.primary_input, &example.auxiliary_input)
     );
-    leave_block("Check satisfiability of constraint system", false);
+    span.exit();
 
     let t = FieldT::random_element();
     let d = FieldT::random_element();
 
-    enter_block("Compute SSP instance 1", false);
+    let span = span!(Level::TRACE, "Compute SSP instance 1").entered();
     let ssp_inst_1 = uscs_to_ssp_instance_map(&example.constraint_system);
-    leave_block("Compute SSP instance 1", false);
+    span.exit();
 
-    enter_block("Compute SSP instance 2", false);
+    let span = span!(Level::TRACE, "Compute SSP instance 2").entered();
     let ssp_inst_2 = uscs_to_ssp_instance_map_with_evaluation(&example.constraint_system, &t);
-    leave_block("Compute SSP instance 2", false);
+    span.exit();
 
-    enter_block("Compute SSP witness", false);
+    let span = span!(Level::TRACE, "Compute SSP witness").entered();
     let ssp_wit = uscs_to_ssp_witness_map(
         &example.constraint_system,
         &example.primary_input,
         &example.auxiliary_input,
         &d,
     );
-    leave_block("Compute SSP witness", false);
+    span.exit();
 
-    enter_block("Check satisfiability of SSP instance 1", false);
+    let span = span!(Level::TRACE, "Check satisfiability of SSP instance 1").entered();
     assert!(ssp_inst_1.is_satisfied(&ssp_wit));
-    leave_block("Check satisfiability of SSP instance 1", false);
+    span.exit();
 
-    enter_block("Check satisfiability of SSP instance 2", false);
+    let span = span!(Level::TRACE, "Check satisfiability of SSP instance 2").entered();
     assert!(ssp_inst_2.is_satisfied(&ssp_wit));
-    leave_block("Check satisfiability of SSP instance 2", false);
+    span.exit();
 
-    leave_block("Call to test_ssp", false);
+    span.exit();
 }
 
 fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
@@ -96,22 +98,22 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
     let extended_domain_size = 1usize << (mnt6_Fr::s + 1);
     let extended_domain_size_special = extended_domain_size - 1;
 
-    enter_block("Test SSP for binary inputs", false);
+    let span = span!(Level::TRACE, "Test SSP for binary inputs").entered();
 
     test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, true);
     test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, true);
     test_ssp::<Fr<mnt6_pp>>(extended_domain_size, num_inputs, true);
     test_ssp::<Fr<mnt6_pp>>(extended_domain_size_special, num_inputs, true);
 
-    leave_block("Test SSP for binary inputs", false);
+    span.exit();
 
-    enter_block("Test SSP for field inputs", false);
+    let span = span!(Level::TRACE, "Test SSP for field inputs").entered();
 
     test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, false);
     test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, false);
     test_ssp::<Fr<mnt6_pp>>(extended_domain_size, num_inputs, false);
     test_ssp::<Fr<mnt6_pp>>(extended_domain_size_special, num_inputs, false);
 
-    leave_block("Test SSP for field inputs", false);
+    span.exit();
     0
 }

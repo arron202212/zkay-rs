@@ -6,9 +6,9 @@ use crate::relations::circuit_satisfaction_problems::tbcs::tbcs::{
     tbcs_primary_input, tbcs_variable_assignment,
 };
 use num_enum::FromPrimitive;
-/**
- * A TBCS example comprises a TBCS circuit, TBCS primary input, and TBCS auxiliary input.
- */
+// /**
+//  * A TBCS example comprises a TBCS circuit, TBCS primary input, and TBCS auxiliary input.
+//  */
 #[derive(Default)]
 pub struct tbcs_example {
     pub circuit: tbcs_circuit,
@@ -16,8 +16,7 @@ pub struct tbcs_example {
     pub auxiliary_input: tbcs_auxiliary_input,
 }
 impl tbcs_example {
-    // tbcs_example() = default;
-    // tbcs_example(other:&tbcs_example) = default;
+  
     pub fn new(
         circuit: tbcs_circuit,
         primary_input: tbcs_primary_input,
@@ -31,24 +30,17 @@ impl tbcs_example {
     }
 }
 
-/**
- * Generate a TBCS example such that:
- * - the primary input has size primary_input_size;
- * - the auxiliary input has size auxiliary_input_size;
- * - the circuit has num_gates gates;
- * - the circuit has num_outputs (<= num_gates) output gates.
- *
- * This is done by first selecting primary and auxiliary inputs uniformly at random, and then for each gate:
- * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
- * - selecting a gate type at random (subject to the constraint "output = 0" if this is an output gate).
- */
-// tbcs_example generate_tbcs_example(primary_input_size:usize,
-//                                    auxiliary_input_size:usize,
-//                                    num_gates:usize,
-//                                    num_outputs:usize);
-use ffec::common::utils;
-
-// use crate::relations::circuit_satisfaction_problems/tbcs/examples/tbcs_examples;
+// /**
+//  * Generate a TBCS example such that:
+//  * - the primary input has size primary_input_size;
+//  * - the auxiliary input has size auxiliary_input_size;
+//  * - the circuit has num_gates gates;
+//  * - the circuit has num_outputs (<= num_gates) output gates.
+//  *
+//  * This is done by first selecting primary and auxiliary inputs uniformly at random, and then for each gate:
+//  * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
+//  * - selecting a gate type at random (subject to the constraint "output = 0" if this is an output gate).
+//  */
 
 pub fn generate_tbcs_example(
     primary_input_size: usize,

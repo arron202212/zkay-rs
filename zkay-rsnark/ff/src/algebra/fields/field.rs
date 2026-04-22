@@ -10,11 +10,11 @@
 // range of n. All of these finite fields must implement all functions declared
 // in this class.
 
-use crate::algebra::field_utils::bigint;
-
-use super::fpn_field::PrimeField;
-use super::sqrt::{LegendreSymbol, SqrtPrecomputation};
-use crate::algebra::UniformRand;
+use super::{
+    fpn_field::PrimeField,
+    sqrt::{LegendreSymbol, SqrtPrecomputation},
+};
+use crate::algebra::{UniformRand, field_utils::bigint};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalDeserializeWithFlags, CanonicalSerialize,
     CanonicalSerializeWithFlags, EmptyFlags, Flags,
@@ -26,8 +26,6 @@ use ark_std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     vec::*,
 };
-
-// pub use ff_macros;
 pub use num_traits::{One, Zero};
 use zeroize::Zeroize;
 

@@ -186,10 +186,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> XOR3_gadget<FieldT, PB> {
 }
 impl<FieldT: FieldTConfig, PB: PBConfig> XOR3_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
-        /*
-          tmp = A + B - 2AB i.e. tmp = A xor B
-          out = tmp + C - 2tmp C i.e. out = tmp xor C
-        */
+        // /*
+        //   tmp = A + B - 2AB i.e. tmp = A xor B
+        //   out = tmp + C - 2tmp C i.e. out = tmp xor C
+        // */
         if self.t.assume_C_is_zero {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -427,10 +427,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> choice_gadget<FieldT, PB> {
 impl<FieldT: FieldTConfig, PB: PBConfig> choice_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         for i in 0..32 {
-            /*
-              result = x * y + (1-x) * z
-              result - z = x * (y - z)
-            */
+            // /*
+            //   result = x * y + (1-x) * z
+            //   result - z = x * (y - z)
+            // */
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.X[i].clone(),
@@ -497,11 +497,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig> majority_gadget<FieldT, PB> {
 impl<FieldT: FieldTConfig, PB: PBConfig> majority_gadgets<FieldT, PB> {
     pub fn generate_r1cs_constraints(&self) {
         for i in 0..32 {
-            /*
-              2*result + aux = x + y + z
-              x, y, z, aux -- bits
-              aux = x + y + z - 2*result
-            */
+            // /*
+            //   2*result + aux = x + y + z
+            //   x, y, z, aux -- bits
+            //   aux = x + y + z - 2*result
+            // */
             generate_boolean_r1cs_constraint::<FieldT, PB>(
                 &self.pb,
                 &(self.t.result_bits[i].clone().into()),

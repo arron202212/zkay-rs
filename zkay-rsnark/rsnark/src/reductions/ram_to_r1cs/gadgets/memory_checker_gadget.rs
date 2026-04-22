@@ -108,15 +108,15 @@ impl<RamT: ram_params_type> memory_checker_gadget<RamT> {
             prefix_format!(annotation_prefix, " compare_addresses"),
         ));
 
-        /*
-         Add variables that will contain flags representing the following relations:
-         - "line1.contents_after = line2.contents_before" (to check that contents do not change between instructions);
-         - "line2.contents_before = 0" (for the first access at an address); and
-         - "line2.timestamp = 0" (for wrap-around checks to ensure only one 'cycle' in the memory sort).
+        // /*
+        //  Add variables that will contain flags representing the following relations:
+        //  - "line1.contents_after = line2.contents_before" (to check that contents do not change between instructions);
+        //  - "line2.contents_before = 0" (for the first access at an address); and
+        //  - "line2.timestamp = 0" (for wrap-around checks to ensure only one 'cycle' in the memory sort).
 
-         More precisely, each of the above flags is "loose" (i.e., it equals 0 if
-         the relation holds, but can be either 0 or 1 if the relation does not hold).
-        */
+        //  More precisely, each of the above flags is "loose" (i.e., it equals 0 if
+        //  the relation holds, but can be either 0 or 1 if the relation does not hold).
+        // */
         loose_contents_after1_equals_contents_before2.allocate(
             &pb.borrow().clone().into_p(),
             prefix_format!(
@@ -176,12 +176,12 @@ impl<RamT: ram_params_type> memory_checker_gadgets<RamT> {
             prefix_format!(self.annotation_prefix, " addresses_eq"),
         );
 
-        /*
-         Add constraints for the following three flags:
-          - loose_contents_after1_equals_contents_before2;
-          - loose_contents_before2_equals_zero;
-          - loose_timestamp2_is_zero.
-        */
+        // /*
+        //  Add constraints for the following three flags:
+        //   - loose_contents_after1_equals_contents_before2;
+        //   - loose_contents_before2_equals_zero;
+        //   - loose_timestamp2_is_zero.
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t
@@ -254,22 +254,22 @@ impl<RamT: ram_params_type> memory_checker_gadgets<RamT> {
             prefix_format!(self.annotation_prefix, " loose_timestamp2_is_zero"),
         );
 
-        /*
-          The three cases that need to be checked are:
+        // /*
+        //   The three cases that need to be checked are:
 
-          line1.address = line2.address => line1.contents_after = line2.contents_before
-          (i.e. contents do not change between accesses to the same address)
+        //   line1.address = line2.address => line1.contents_after = line2.contents_before
+        //   (i.e. contents do not change between accesses to the same address)
 
-          line1.address < line2.address => line2.contents_before = 0
-          (i.e. access to new address has the "before" value set to 0)
+        //   line1.address < line2.address => line2.contents_before = 0
+        //   (i.e. access to new address has the "before" value set to 0)
 
-          line1.address > line2.address => line2.timestamp = 0
-          (i.e. there is only one cycle with non-decreasing addresses, except
-          for the case where we go back to a unique pre-set timestamp; we choose
-          timestamp 0 to be the one that touches address 0)
+        //   line1.address > line2.address => line2.timestamp = 0
+        //   (i.e. there is only one cycle with non-decreasing addresses, except
+        //   for the case where we go back to a unique pre-set timestamp; we choose
+        //   timestamp 0 to be the one that touches address 0)
 
-          As usual, we implement "A => B" as "NOT (A AND (NOT B))".
-        */
+        //   As usual, we implement "A => B" as "NOT (A AND (NOT B))".
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT<RamT>, pb_variable, pb_linear_combination>::new(
                 self.t.addresses_eq.clone().into(),
@@ -317,12 +317,12 @@ impl<RamT: ram_params_type> memory_checker_gadgets<RamT> {
         //compare the two timestamps
         self.t.compare_timestamps.borrow().generate_r1cs_witness();
 
-        /*
-         compare the values of:
-         - loose_contents_after1_equals_contents_before2;
-         - loose_contents_before2_equals_zero;
-         - loose_timestamp2_is_zero.
-        */
+        // /*
+        //  compare the values of:
+        //  - loose_contents_after1_equals_contents_before2;
+        //  - loose_contents_before2_equals_zero;
+        //  - loose_timestamp2_is_zero.
+        // */
         *self
             .pb
             .borrow_mut()

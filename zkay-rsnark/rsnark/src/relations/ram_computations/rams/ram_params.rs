@@ -24,22 +24,22 @@ pub trait InstructionConfig {
 pub trait ProgramConfig<IC: InstructionConfig> {
     fn instructions(&self) -> &Vec<IC>;
 }
-/*
-  When declaring a new RamT one should do a make it a pub struct that declares typedefs for:
+// /*
+//   When declaring a new RamT one should do a make it a pub struct that declares typedefs for:
 
-  base_field_type
-  ram_cpu_checker_type
-  architecture_params_type
+//   base_field_type
+//   ram_cpu_checker_type
+//   architecture_params_type
 
-  For ram_to_r1cs reduction currently the following are also necessary:
-  protoboard_type (e.g. tinyram_protoboard<FieldT>)
-  gadget_base_type (e.g. tinyram_gadget<FieldT>)
-  cpu_state_variable_type (must have pb_variable_array<FieldT> all_vars)
+//   For ram_to_r1cs reduction currently the following are also necessary:
+//   protoboard_type (e.g. tinyram_protoboard<FieldT>)
+//   gadget_base_type (e.g. tinyram_gadget<FieldT>)
+//   cpu_state_variable_type (must have pb_variable_array<FieldT> all_vars)
 
-  The RamT pub struct must also have a static usize variable
-  timestamp_length, which specifies the zk-SNARK reduction timestamp
-  length.
-*/
+//   The RamT pub struct must also have a static usize variable
+//   timestamp_length, which specifies the zk-SNARK reduction timestamp
+//   length.
+// */
 pub trait ArchitectureParamsTypeConfig: Default + Clone {
     fn froms(w: usize) -> Self {
         Default::default()
@@ -143,9 +143,7 @@ pub trait CpuCheckConfig: Default + Clone {
     fn generate_r1cs_witness_other(&self, aut: &[usize]);
     fn dump(&self);
 }
-// pub trait PBSubConfig{
-//     fn new_with_ap<RPT:ram_params_type>(ap:ram_architecture_params<RPT>)-> RPT::protoboard_type;
-// }
+
 pub trait ram_params_type: ppTConfig<FieldT = Self::base_field_type> {
     const timestamp_length: usize;
     type HashT: HashTConfig;
@@ -179,17 +177,17 @@ pub type ram_architecture_params<RamT> = <RamT as ram_params_type>::architecture
 
 pub type ram_input_tape = Vec<usize>;
 
-/*
-  One should also make the following methods for ram_architecture_params
+// /*
+//   One should also make the following methods for ram_architecture_params
 
-  (We are not yet making a ram_architecture_params base class, as it
-  would require base pub struct for ram_program
+//   (We are not yet making a ram_architecture_params base class, as it
+//   would require base pub struct for ram_program
 
-  TODO: make this base class)
+//   TODO: make this base class)
 
-  usize address_size();
-  usize value_size();
-  usize cpu_state_size();
-  usize initial_pc_addr();
-  bit_vector initial_cpu_state();
-*/
+//   usize address_size();
+//   usize value_size();
+//   usize cpu_state_size();
+//   usize initial_pc_addr();
+//   bit_vector initial_cpu_state();
+// */

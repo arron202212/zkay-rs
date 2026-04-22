@@ -42,16 +42,6 @@ pub struct alt_bn128_G1 {
     pub Z: alt_bn128_Fq,
 }
 
-// alt_bn128_G1 operator*(lhs:&bigint<m>, rhs:&alt_bn128_G1)
-// {
-//     return scalar_mul<alt_bn128_G1, m>(rhs, lhs);
-// }
-
-// alt_bn128_G1 operator*(lhs:&Fp_model<m,modulus_p>, rhs:&alt_bn128_G1)
-// {
-//     return scalar_mul<alt_bn128_G1, m>(rhs, lhs.as_bigint());
-// }
-
 pub trait alt_bn128_G1Config: Send + Sync + Sized + 'static {
     const wnaf_window_table: &'static [usize];
     const fixed_base_exp_window_table: &'static [usize];
@@ -221,15 +211,15 @@ impl PpConfig for alt_bn128_G1 {
         if self.is_zero() {
             return true;
         }
-        /*
-            y^2 = x^3 + b
 
-            We are using Jacobian coordinates, so equation we need to check is actually
+        // y^2 = x^3 + b
 
-            (y/z^3)^2 = (x/z^2)^3 + b
-            y^2 / z^6 = x^3 / z^6 + b
-            y^2 = x^3 + b z^6
-        */
+        // We are using Jacobian coordinates, so equation we need to check is actually
+
+        // (y/z^3)^2 = (x/z^2)^3 + b
+        // y^2 / z^6 = x^3 / z^6 + b
+        // y^2 = x^3 + b z^6
+
         let X2 = self.X.squared();
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();

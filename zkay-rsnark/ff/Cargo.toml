@@ -58,7 +58,7 @@ rand_pcg={workspace = true}
 rand_core={workspace = true}
 rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
-
+tracing={workspace = true}
 # [dev-dependencies]
 # criterion = "0.5"
 

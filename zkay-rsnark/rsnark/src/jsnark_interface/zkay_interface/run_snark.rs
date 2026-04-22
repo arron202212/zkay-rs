@@ -1,48 +1,55 @@
-use crate::jsnark_interface::circuit_reader::{CircuitReader, FieldT};
-// use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark;
-// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
-// use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark;
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
-use crate::gadgetlib2::adapters::GLA;
-use crate::gadgetlib2::adapters::GadgetLibAdapter;
-use crate::gadgetlib2::integration::{
-    get_constraint_system_from_gadgetlib2, get_variable_assignment_from_gadgetlib2,
+use crate::{
+    gadgetlib1::{
+        gadgets::pairing::pairing_params::ppTConfig,
+        pb_variable::{pb_linear_combination, pb_variable},
+    },
+    gadgetlib2::{
+        adapters::{GLA, GadgetLibAdapter},
+        integration::{
+            get_constraint_system_from_gadgetlib2, get_variable_assignment_from_gadgetlib2,
+        },
+        pp::initPublicParamsFromDefaultPp,
+        protoboard::Protoboard,
+        variable::FieldType,
+    },
+    jsnark_interface::circuit_reader::{CircuitReader, FieldT},
+    relations::constraint_satisfaction_problems::r1cs::r1cs::{
+        r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
+    },
+    zk_proof_systems::ppzksnark::{
+        r1cs_gg_ppzksnark::r1cs_gg_ppzksnark::{
+            r1cs_gg_ppzksnark_generator, r1cs_gg_ppzksnark_keypair, r1cs_gg_ppzksnark_proof,
+            r1cs_gg_ppzksnark_prover, r1cs_gg_ppzksnark_proving_key,
+            r1cs_gg_ppzksnark_verification_key, r1cs_gg_ppzksnark_verifier_strong_IC,
+        },
+        r1cs_ppzksnark::r1cs_ppzksnark::{
+            r1cs_ppzksnark_generator, r1cs_ppzksnark_keypair, r1cs_ppzksnark_proof,
+            r1cs_ppzksnark_prover, r1cs_ppzksnark_proving_key, r1cs_ppzksnark_verification_key,
+            r1cs_ppzksnark_verifier_strong_IC,
+        },
+        r1cs_se_ppzksnark::r1cs_se_ppzksnark::{
+            r1cs_se_ppzksnark_generator, r1cs_se_ppzksnark_keypair, r1cs_se_ppzksnark_proof,
+            r1cs_se_ppzksnark_prover, r1cs_se_ppzksnark_proving_key,
+            r1cs_se_ppzksnark_verification_key, r1cs_se_ppzksnark_verifier_strong_IC,
+        },
+        {KeyPairTConfig, ProofTConfig, ProvingKeyTConfig, VerificationKeyTConfig},
+    },
 };
-use crate::gadgetlib2::pp::initPublicParamsFromDefaultPp;
-use crate::gadgetlib2::protoboard::Protoboard;
-use crate::gadgetlib2::variable::FieldType;
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::r1cs_constraint_system;
-use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
-    r1cs_auxiliary_input, r1cs_primary_input,
+use ff_curves::{
+    FpmConfig, algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fq, default_ec_pp,
 };
-use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::r1cs_gg_ppzksnark::{
-    r1cs_gg_ppzksnark_generator, r1cs_gg_ppzksnark_keypair, r1cs_gg_ppzksnark_proof,
-    r1cs_gg_ppzksnark_prover, r1cs_gg_ppzksnark_proving_key, r1cs_gg_ppzksnark_verification_key,
-    r1cs_gg_ppzksnark_verifier_strong_IC,
+use ffec::{
+    PpConfig,
+    common::profiling::{enter_block, leave_block, start_profiling},
 };
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark::{
-    r1cs_ppzksnark_generator, r1cs_ppzksnark_keypair, r1cs_ppzksnark_proof, r1cs_ppzksnark_prover,
-    r1cs_ppzksnark_proving_key, r1cs_ppzksnark_verification_key, r1cs_ppzksnark_verifier_strong_IC,
-};
-use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark::{
-    r1cs_se_ppzksnark_generator, r1cs_se_ppzksnark_keypair, r1cs_se_ppzksnark_proof,
-    r1cs_se_ppzksnark_prover, r1cs_se_ppzksnark_proving_key, r1cs_se_ppzksnark_verification_key,
-    r1cs_se_ppzksnark_verifier_strong_IC,
-};
-use crate::zk_proof_systems::ppzksnark::{
-    KeyPairTConfig, ProofTConfig, ProvingKeyTConfig, VerificationKeyTConfig,
-};
-use ff_curves::FpmConfig;
-use ff_curves::algebra::curves::alt_bn128::alt_bn128_fields::alt_bn128_Fq;
-use ff_curves::default_ec_pp;
-use ffec::PpConfig;
-use ffec::common::profiling::{enter_block, leave_block, start_profiling};
-use std::fs;
 use std::fs::File;
 
 use num_enum::{FromPrimitive, IntoPrimitive};
 use strum::Display;
+use tracing::{span, Level};
+
+
+
 #[derive(Display, Debug, Default, Clone, FromPrimitive, IntoPrimitive)]
 #[repr(u8)]
 enum ProvingScheme {
@@ -225,16 +232,17 @@ fn keygen<KeyPairT: KeyPairTConfig, F>(
     // Generate keypair
     let keypair = generate(cs);
 
+
     // Dump proving key to binary file
-    enter_block("WritingProverKey", false);
+    let span = span!(Level::TRACE, "WritingProverKey").entered();
     writeToFile(prover_key_filename, keypair.pk());
-    leave_block("WritingProverKey", false);
+   
 
     // Dump verification key in text format
-    enter_block("SerializeVk", false);
+    let span = span!(Level::TRACE, "SerializeVk").entered();
     let mut vk_out = fs::read_to_string(verification_key_filename).unwrap();
     serialize_vk::<KeyPairT>(&mut vk_out, &keypair);
-    leave_block("SerializeVk", false);
+    span.exit(); 
 
     // Also dump in binary format for local verification
     writeToFile(
@@ -243,10 +251,7 @@ fn keygen<KeyPairT: KeyPairTConfig, F>(
     );
 }
 
-// template<ProofT, ProvingKeyT,
-//         ProofT (*prove)():&ProvingKeyT &, const &, const
-//         VerificationKeyT,
-//         bool (*verify)(:&VerificationKeyT &, &:r1cs_primary_input<FieldT> const ProofT)>
+
 fn proofgen<
     ProofT: ProofTConfig,
     ProvingKeyT: ProvingKeyTConfig,
@@ -271,32 +276,32 @@ where
     let mut proof;
     {
         // Read proving key
-        enter_block("ReadingProverKey", false);
+        let span = span!(Level::TRACE, "ReadingProverKey").entered();
         let pk = loadFromFile::<ProvingKeyT>(prover_key_filename);
-        leave_block("ReadingProverKey", false);
+        span.exit();
 
         // Generate proof
         proof = prove(pk, public_inputs.clone(), private_inputs.clone());
     }
 
     // Dump proof in text format
-    enter_block("SerializeProof", false);
+    let span = span!(Level::TRACE, "SerializeProof").entered();
     let mut p = proof_filename.to_string();
     ProofSerializer::serialize_proof(&mut p, &proof);
-    leave_block("SerializeProof", false);
+    span.exit();
 
     if check_verification {
         // Check if verification works
         let vk = loadFromFile::<VerificationKeyT>(verification_key_filename);
 
-        enter_block("Verifying proof", false);
+        let span = span!(Level::TRACE, "Verifying proof").entered();
         let ans = verify(vk, public_inputs.clone(), proof);
         println!("\n");
         println!(
             "* The verification result is: {}\n",
             if ans { "PASS" } else { "FAIL" }
         );
-        leave_block("Verifying proof", false);
+        span.exit();
         return ans;
     }
     true
@@ -320,14 +325,14 @@ fn generate_keys(input_directory: &str, output_directory: &str, proving_scheme: 
     let mut cs;
     {
         let pb = Protoboard::create(FieldType::R1P, None);
-        enter_block("CircuitReading", false);
+        let span = span!(Level::TRACE, "CircuitReading").entered();
         let reader = CircuitReader::new(&arith_filename, &dummy_input_filename, pb.clone());
-        leave_block("CircuitReading", false);
-        enter_block("Extract constraint system", false);
+        span.exit();
+        let span = span!(Level::TRACE, "Extract constraint system").entered();
         cs = get_constraint_system_from_gadgetlib2(&pb.as_ref().unwrap().borrow());
         cs.primary_input_size = (reader.getNumInputs() + reader.getNumOutputs()) as usize;
         cs.auxiliary_input_size = <GLA as GadgetLibAdapter>::getNextFreeIndex() - cs.num_inputs();
-        leave_block("Extract constraint system", false);
+        span.exit();
     }
 
     match ps {
@@ -392,7 +397,7 @@ fn generate_proof(
         let mut cs;
         {
             // Read the circuit, evaluate, and translate constraints
-            enter_block("CircuitReading", false);
+            let span = span!(Level::TRACE, "CircuitReading").entered();
             let mut full_assignment;
             {
                 let mut pb = Protoboard::create(FieldType::R1P, None);
@@ -410,7 +415,7 @@ fn generate_proof(
                 >(&pb.as_ref().unwrap().borrow());
                 cs.primary_input_size = primary_input_size;
                 cs.auxiliary_input_size = full_assignment.len() - primary_input_size;
-                leave_block("CircuitReading", false);
+                span.exit();
             }
 
             // extract primary and auxiliary input

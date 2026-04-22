@@ -1,20 +1,23 @@
 //  Declaration of interfaces for public parameters of MNT6.
 
-use crate::PublicParams;
-use crate::PublicParamsType;
-use crate::algebra::curves::mnt::mnt6::mnt6_fields::{
-    mnt6_Fq, mnt6_Fq3, mnt6_Fq6, mnt6_Fr, mnt6_GT,
+use crate::{
+    PublicParams, PublicParamsType,
+    algebra::curves::mnt::mnt6::{
+        mnt6_fields::{mnt6_Fq, mnt6_Fq3, mnt6_Fq6, mnt6_Fr, mnt6_GT},
+        mnt6_g1::mnt6_G1,
+        mnt6_g2::mnt6_G2,
+        mnt6_init::init_mnt6_params,
+        mnt6_pairing::{
+            mnt6_G1_precomp, mnt6_G2_precomp, mnt6_affine_ate_G1_precomputation,
+            mnt6_affine_ate_G2_precomputation, mnt6_affine_ate_miller_loop,
+            mnt6_affine_ate_precompute_G1, mnt6_affine_ate_precompute_G2,
+            mnt6_affine_reduced_pairing, mnt6_double_miller_loop, mnt6_final_exponentiation,
+            mnt6_miller_loop, mnt6_pairing, mnt6_precompute_G1, mnt6_precompute_G2,
+            mnt6_reduced_pairing,
+        },
+    },
 };
-use crate::algebra::curves::mnt::mnt6::mnt6_g1::mnt6_G1;
-use crate::algebra::curves::mnt::mnt6::mnt6_g2::mnt6_G2;
-use crate::algebra::curves::mnt::mnt6::mnt6_init::init_mnt6_params;
-use crate::algebra::curves::mnt::mnt6::mnt6_pairing::{
-    mnt6_G1_precomp, mnt6_G2_precomp, mnt6_affine_ate_G1_precomputation,
-    mnt6_affine_ate_G2_precomputation, mnt6_affine_ate_miller_loop, mnt6_affine_ate_precompute_G1,
-    mnt6_affine_ate_precompute_G2, mnt6_affine_reduced_pairing, mnt6_double_miller_loop,
-    mnt6_final_exponentiation, mnt6_miller_loop, mnt6_pairing, mnt6_precompute_G1,
-    mnt6_precompute_G2, mnt6_reduced_pairing,
-};
+
 #[derive(Default, Clone)]
 pub struct mnt6_pp;
 impl PublicParamsType for mnt6_pp {

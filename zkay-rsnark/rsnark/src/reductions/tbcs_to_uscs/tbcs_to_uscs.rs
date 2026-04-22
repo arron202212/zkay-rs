@@ -31,18 +31,14 @@ use ffec::FieldTConfig;
 use ffec::common::utils::FMT;
 use ffec::field_utils::field_utils::convert_bit_vector_to_field_element_vector;
 
+
+
 // /**
 //  * Instance map for the TBCS-to-USCS reduction.
 //  */
-// uscs_constraint_system<FieldT> tbcs_to_uscs_instance_map(circuit:&tbcs_circuit);
-
 // /**
 //  * Witness map for the TBCS-to-USCS reduction.
 //  */
-// uscs_variable_assignment<FieldT> tbcs_to_uscs_witness_map(circuit:&tbcs_circuit,
-//                                                                primary_input:&tbcs_primary_input,
-//                                                                auxiliary_input:&tbcs_auxiliary_input);
-
 pub fn tbcs_to_uscs_instance_map<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -81,8 +77,8 @@ pub fn tbcs_to_uscs_instance_map<
 
         match g.types {
             tbcs_gate_type::TBCS_GATE_CONSTANT_0 => {
-                /* Truth table (00, 01, 10, 11): (0, 0, 0, 0)
-                0 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 0, 0, 0)
+                // 0 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(0)
                         + y * FieldT::from(0)
@@ -92,8 +88,8 @@ pub fn tbcs_to_uscs_instance_map<
                 );
             }
             tbcs_gate_type::TBCS_GATE_AND => {
-                /* Truth table (00, 01, 10, 11): (0, 0, 0, 1)
-                -2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 0, 0, 1)
+                // -2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-2)
                         + y * FieldT::from(-2)
@@ -103,8 +99,8 @@ pub fn tbcs_to_uscs_instance_map<
                 );
             }
             tbcs_gate_type::TBCS_GATE_X_AND_NOT_Y => {
-                /* Truth table (00, 01, 10, 11): (0, 0, 1, 0)
-                -2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 0, 1, 0)
+                // -2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-2)
                         + y * FieldT::from(2)
@@ -115,8 +111,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_X => {
-                /* Truth table (00, 01, 10, 11): (0, 0, 1, 1)
-                -1 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 0, 1, 1)
+                // -1 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-1)
                         + y * FieldT::from(0)
@@ -127,8 +123,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_NOT_X_AND_Y => {
-                /* Truth table (00, 01, 10, 11): (0, 1, 0, 0)
-                2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 1, 0, 0)
+                // 2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(2)
                         + y * FieldT::from(-2)
@@ -139,8 +135,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_Y => {
-                /* Truth table (00, 01, 10, 11): (0, 1, 0, 1)
-                0 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 1, 0, 1)
+                // 0 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(0)
                         + y * FieldT::from(1)
@@ -151,8 +147,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_XOR => {
-                /* Truth table (00, 01, 10, 11): (0, 1, 1, 0)
-                1 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 1, 1, 0)
+                // 1 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(1)
                         + y * FieldT::from(1)
@@ -163,8 +159,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_OR => {
-                /* Truth table (00, 01, 10, 11): (0, 1, 1, 1)
-                -2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (0, 1, 1, 1)
+                // -2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-1) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-2)
                         + y * FieldT::from(-2)
@@ -175,8 +171,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_NOR => {
-                /* Truth table (00, 01, 10, 11): (1, 0, 0, 0)
-                2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 0, 0, 0)
+                // 2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(2)
                         + y * FieldT::from(2)
@@ -187,8 +183,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_EQUIVALENCE => {
-                /* Truth table (00, 01, 10, 11): (1, 0, 0, 1)
-                1 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-2) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 0, 0, 1)
+                // 1 * x + FieldT::from(1) * y + FieldT::from(1) * z + FieldT::from(-2) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(1)
                         + y * FieldT::from(1)
@@ -199,8 +195,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_NOT_Y => {
-                /* Truth table (00, 01, 10, 11): (1, 0, 1, 0)
-                0 * x + FieldT::from(-1) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 0, 1, 0)
+                // 0 * x + FieldT::from(-1) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(0)
                         + y * FieldT::from(-1)
@@ -211,8 +207,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_IF_Y_THEN_X => {
-                /* Truth table (00, 01, 10, 11): (1, 0, 1, 1)
-                -2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 0, 1, 1)
+                // -2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-2)
                         + y * FieldT::from(2)
@@ -223,8 +219,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_NOT_X => {
-                /* Truth table (00, 01, 10, 11): (1, 1, 0, 0)
-                -1 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 1, 0, 0)
+                // -1 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(-1)
                         + y * FieldT::from(0)
@@ -235,8 +231,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_IF_X_THEN_Y => {
-                /* Truth table (00, 01, 10, 11): (1, 1, 0, 1)
-                2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 1, 0, 1)
+                // 2 * x + FieldT::from(-2) * y + FieldT::from(4) * z + FieldT::from(-3) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(2)
                         + y * FieldT::from(-2)
@@ -247,8 +243,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_NAND => {
-                /* Truth table (00, 01, 10, 11): (1, 1, 1, 0)
-                2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-5) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 1, 1, 0)
+                // 2 * x + FieldT::from(2) * y + FieldT::from(4) * z + FieldT::from(-5) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(2)
                         + y * FieldT::from(2)
@@ -259,8 +255,8 @@ pub fn tbcs_to_uscs_instance_map<
             }
 
             tbcs_gate_type::TBCS_GATE_CONSTANT_1 => {
-                /* Truth table (00, 01, 10, 11): (1, 1, 1, 1)
-                0 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
+                // /* Truth table (00, 01, 10, 11): (1, 1, 1, 1)
+                // 0 * x + FieldT::from(0) * y + FieldT::from(1) * z + FieldT::from(0) \in {-1, 1} */
                 result.add_constraint(
                     x * FieldT::from(0)
                         + y * FieldT::from(0)

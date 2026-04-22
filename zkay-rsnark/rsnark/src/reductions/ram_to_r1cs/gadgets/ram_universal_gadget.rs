@@ -62,49 +62,46 @@ use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::scalar_multiplication::multiexp::inhibit_profiling_info;
 use ffec::{FieldTConfig, One, Zero, div_ceil, log2};
 use rccell::RcCell;
+use tracing::{span, Level};
 
-// use algebra::field_utils::field_utils;
 
-// use crate::common::data_structures::integer_permutation;
-// use crate::relations::ram_computations::memory::ra_memory;
 
-/*
-  Memory layout for our reduction is as follows:
+// /*
+//   Memory layout for our reduction is as follows:
 
-  (1) An initial execution line carrying the initial state (set
-      to all zeros)
-  (2) program_size_bound + primary_input_size_bound memory lines for
-      storing input and program (boot)
-  (3) time_bound pairs for (fetch instruction memory line, execute
-      instruction execution line)
+//   (1) An initial execution line carrying the initial state (set
+//       to all zeros)
+//   (2) program_size_bound + primary_input_size_bound memory lines for
+//       storing input and program (boot)
+//   (3) time_bound pairs for (fetch instruction memory line, execute
+//       instruction execution line)
 
-  Memory line stores address, previous value and the next value of the
-  memory cell specified by the address. An execution line additionally
-  carries the CPU state.
+//   Memory line stores address, previous value and the next value of the
+//   memory cell specified by the address. An execution line additionally
+//   carries the CPU state.
 
-  Our memory handling technique has a technical requirement that
-  address 0 must be accessed. We fulfill this by requiring the initial
-  execution line to act as "store 0 to address 0".
+//   Our memory handling technique has a technical requirement that
+//   address 0 must be accessed. We fulfill this by requiring the initial
+//   execution line to act as "store 0 to address 0".
 
-  ---
+//   ---
 
-  As an implementation detail if less than program_size_bound +
-  primary_input_size_bound are used in the initial memory map, then we
-  pre-pend (!) them with "store 0 to address 0" lines. This
-  pre-pending means that memory maps that have non-zero value at
-  address 0 will still be handled correctly.
+//   As an implementation detail if less than program_size_bound +
+//   primary_input_size_bound are used in the initial memory map, then we
+//   pre-pend (!) them with "store 0 to address 0" lines. This
+//   pre-pending means that memory maps that have non-zero value at
+//   address 0 will still be handled correctly.
 
-  The R1CS input packs the memory map starting from the last entry to
-  the first. This way, the prepended zeros arrive at the end of R1CS
-  input and thus can be ignored by the "weak" input consistency R1CS
-  verifier.
-*/
+//   The R1CS input packs the memory map starting from the last entry to
+//   the first. This way, the prepended zeros arrive at the end of R1CS
+//   input and thus can be ignored by the "weak" input consistency R1CS
+//   verifier.
+// */
 
 type FieldT<RamT> = ram_base_field<RamT>;
 
 #[derive(Clone, Default)]
 pub struct ram_universal_gadget<RamT: ram_params_type> {
-    // : public ram_gadget_base
     pub num_memory_lines: usize,
     pub boot_lines: Vec<execution_line_variable_gadgets<RamT>>,
     pub boot_line_bits: Vec<pb_variable_array<FieldT<RamT>, RamT::PB>>,
@@ -138,7 +135,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         let timestamp_size = log2(num_memory_lines);
 
         //allocate all lines on the execution side of the routing network
-        enter_block("Allocate initial state line", false);
+        let span = span!(Level::TRACE, "Allocate initial state line").entered();
         let mut unrouted_memory_lines = vec![];
         let mut execution_lines = Vec::with_capacity(1 + time_bound);
         execution_lines.push(execution_line_variable_gadget::<RamT>::new(
@@ -148,9 +145,9 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
             prefix_format!(annotation_prefix, " execution_lines_{}", 0),
         ));
         unrouted_memory_lines.push(execution_lines[0].clone());
-        leave_block("Allocate initial state line", false);
+        span.exit();
 
-        enter_block("Allocate boot lines", false);
+        let span = span!(Level::TRACE, "Allocate boot lines").entered();
         let mut boot_lines = Vec::with_capacity(boot_trace_size_bound);
         for i in 0..boot_trace_size_bound {
             boot_lines.push(memory_line_variable_gadget::<
@@ -165,9 +162,9 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
             ));
             unrouted_memory_lines.push(boot_lines[i].clone());
         }
-        leave_block("Allocate boot lines", false);
+        span.exit();
 
-        enter_block("Allocate instruction fetch and execution lines", false);
+        let span = span!(Level::TRACE, "Allocate instruction fetch and execution lines").entered();
         let mut load_instruction_lines = Vec::with_capacity(time_bound + 1); //the last line is NOT a memory line, but here just for uniform coding (i.e. the (unused) result of next PC)
         for i in 0..time_bound {
             load_instruction_lines.push(memory_line_variable_gadget::<
@@ -200,10 +197,10 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
             prefix_format!(annotation_prefix, " load_instruction_lines_{}", time_bound),
             execution_line_variable_gadget::<RamT>::default(),
         ));
-        leave_block("Allocate instruction fetch and execution lines", false);
+        span.exit();
 
         //deal with packing of the input
-        enter_block("Pack input", false);
+        let span = span!(Level::TRACE, "Pack input").entered();
         let line_size_bits = pb
             .borrow()
             .ap::<ram_architecture_params<RamT>>()
@@ -251,10 +248,10 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
                 prefix_format!(annotation_prefix, " unpack_boot_lines_{}", i),
             ));
         }
-        leave_block("Pack input", false);
+        span.exit();
 
         //deal with routing
-        enter_block("Allocate routed memory lines", false);
+        let span = span!(Level::TRACE, "Allocate routed memory lines").entered();
         let mut routed_memory_lines = vec![];
         for i in 0..num_memory_lines {
             routed_memory_lines.push(memory_line_variable_gadget::<
@@ -268,9 +265,9 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
                 execution_line_variable_gadget::<RamT>::default(),
             ));
         }
-        leave_block("Allocate routed memory lines", false);
+        span.exit();
 
-        enter_block("Collect inputs/outputs for the routing network", false);
+        let span = span!(Level::TRACE, "Collect inputs/outputs for the routing network").entered();
         let mut routing_inputs = Vec::with_capacity(num_memory_lines);
         let mut routing_outputs = Vec::with_capacity(num_memory_lines);
 
@@ -278,9 +275,9 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
             routing_inputs.push(unrouted_memory_lines[i].all_vars());
             routing_outputs.push(routed_memory_lines[i].all_vars());
         }
-        leave_block("Collect inputs/outputs for the routing network", false);
+        span.exit();
 
-        enter_block("Allocate routing network", false);
+        let span = span!(Level::TRACE, "Allocate routing network").entered();
         let routing_network =
             RcCell::new(as_waksman_routing_gadget::<FieldT<RamT>, RamT::PB>::new(
                 pb.borrow().clone().into_p(),
@@ -289,10 +286,10 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
                 routing_outputs.clone(),
                 prefix_format!(annotation_prefix, " routing_network"),
             ));
-        leave_block("Allocate routing network", false);
+        span.exit();
 
         //deal with all checkers
-        enter_block("Allocate execution checkers", false);
+        let span = span!(Level::TRACE, "Allocate execution checkers").entered();
         let mut execution_checkers = Vec::with_capacity(time_bound);
         for i in 0..time_bound {
             execution_checkers.push(ram_cpu_checker::<RamT>::new(
@@ -333,9 +330,9 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
                 prefix_format!(annotation_prefix, " execution_checkers_{}", i),
             ));
         }
-        leave_block("Allocate execution checkers", false);
+        span.exit();
 
-        enter_block("Allocate all memory checkers", false);
+        let span = span!(Level::TRACE, "Allocate all memory checkers").entered();
         let mut memory_checkers = Vec::with_capacity(num_memory_lines);
         for i in 0..num_memory_lines {
             memory_checkers.push(memory_checker_gadget::<RamT>::new(
@@ -346,7 +343,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
                 prefix_format!(annotation_prefix, " memory_checkers_{}", i),
             ));
         }
-        leave_block("Allocate all memory checkers", false);
+        span.exit();
 
         //done
         gadget::<RamT::FieldT, RamT::PB, Self>::new(
@@ -708,19 +705,18 @@ impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
                 .generate_r1cs_witness_from_bits();
         }
 
-        /*
-          Get the correct memory permutation.
+        // /*
+        //   Get the correct memory permutation.
 
-          We sort all memory accesses by address breaking ties by
-          timestamp. In our routing configuration we pair each memory
-          access with subsequent access in this ordering.
+        //   We sort all memory accesses by address breaking ties by
+        //   timestamp. In our routing configuration we pair each memory
+        //   access with subsequent access in this ordering.
 
-          That way num_memory_pairs of memory checkers will do a full
-          cycle over all memory accesses, enforced by the proper ordering
-          property.
-        */
+        //   That way num_memory_pairs of memory checkers will do a full
+        //   cycle over all memory accesses, enforced by the proper ordering
+        //   property.
+        // */
 
-        // type mem_pair = std::pair<usize, usize>; //a pair of address, timestamp
         let mut mem_pairs = vec![];
 
         for i in 0..self.t.num_memory_lines {

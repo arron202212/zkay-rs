@@ -21,13 +21,13 @@ use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
 
-/**
- * A message for R1CS PCD.
- *
- * It is a pair, consisting of
- * - a type (a positive integer), and
- * - a payload (a vector of field elements).
- */
+// /**
+//  * A message for R1CS PCD.
+//  *
+//  * It is a pair, consisting of
+//  * - a type (a positive integer), and
+//  * - a payload (a vector of field elements).
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_pcd_message<FieldT: FieldTConfig, T: MessageConfig> {
     pub types: usize,
@@ -39,9 +39,9 @@ pub trait MessageConfig: Default + Clone {
     fn payload_as_r1cs_variable_assignment(&self) -> r1cs_variable_assignment<Self::FieldT>;
 }
 
-/**
- * A local data for R1CS PCD.
- */
+// /**
+//  * A local data for R1CS PCD.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_pcd_local_data<FieldT: FieldTConfig, T: LocalDataConfig> {
     pub t: T,
@@ -75,37 +75,37 @@ impl<FieldT: FieldTConfig, T: LocalDataConfig> LocalDataConfig for r1cs_pcd_loca
 
 pub type r1cs_pcd_witness<FieldT> = Vec<FieldT>;
 
-/**
- * A compliance predicate for R1CS PCD.
- *
- * It is a wrapper around R1CS that also specifies how to parse a
- * variable assignment as:
- * - output message (the input)
- * - some number of input messages (part of the witness)
- * - local data (also part of the witness)
- * - auxiliary information (the remaining variables of the witness)
- *
- * A compliance predicate also has a type, allegedly the same
- * as the type of the output message.
- *
- * The input wires of R1CS appear in the following order:
- * - (1 + outgoing_message_payload_length) wires for outgoing message
- * - 1 wire for arity (allegedly, 0 <= arity <= max_arity)
- * - for i = 0, ..., max_arity-1:
- * - (1 + incoming_message_payload_lengths[i]) wires for i-th message of
- *   the input (in the array that's padded to max_arity messages)
- * - local_data_length wires for local data
- *
- * The rest witness_length wires of the R1CS constitute the witness.
- *
- * To allow for optimizations, the compliance predicate also
- * specififies a flag, called relies_on_same_type_inputs, denoting
- * whether the predicate works under the assumption that all input
- * messages have the same type. In such case a member
- * accepted_input_types lists all types accepted by the predicate
- * (accepted_input_types has no meaning if
- * relies_on_same_type_inputs=false).
- */
+// /**
+//  * A compliance predicate for R1CS PCD.
+//  *
+//  * It is a wrapper around R1CS that also specifies how to parse a
+//  * variable assignment as:
+//  * - output message (the input)
+//  * - some number of input messages (part of the witness)
+//  * - local data (also part of the witness)
+//  * - auxiliary information (the remaining variables of the witness)
+//  *
+//  * A compliance predicate also has a type, allegedly the same
+//  * as the type of the output message.
+//  *
+//  * The input wires of R1CS appear in the following order:
+//  * - (1 + outgoing_message_payload_length) wires for outgoing message
+//  * - 1 wire for arity (allegedly, 0 <= arity <= max_arity)
+//  * - for i = 0, ..., max_arity-1:
+//  * - (1 + incoming_message_payload_lengths[i]) wires for i-th message of
+//  *   the input (in the array that's padded to max_arity messages)
+//  * - local_data_length wires for local data
+//  *
+//  * The rest witness_length wires of the R1CS constitute the witness.
+//  *
+//  * To allow for optimizations, the compliance predicate also
+//  * specififies a flag, called relies_on_same_type_inputs, denoting
+//  * whether the predicate works under the assumption that all input
+//  * messages have the same type. In such case a member
+//  * accepted_input_types lists all types accepted by the predicate
+//  * (accepted_input_types has no meaning if
+//  * relies_on_same_type_inputs=false).
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_pcd_compliance_predicate<FieldT: FieldTConfig, ppT: ppTConfig> {
     pub name: usize,
@@ -267,71 +267,6 @@ impl<FieldT: FieldTConfig, ppT: ppTConfig<FieldT = FieldT>>
         true
     }
 
-    //
-    // bool r1cs_pcd_compliance_predicate<FieldT>::operator==(other:r1cs_pcd_compliance_predicate<FieldT>) const
-    // {
-    //     return (self.name == other.name &&
-    //             self.types == other.types &&
-    //             self.constraint_system == other.constraint_system &&
-    //             self.outgoing_message_payload_length == other.outgoing_message_payload_length &&
-    //             self.max_arity == other.max_arity &&
-    //             self.incoming_message_payload_lengths == other.incoming_message_payload_lengths &&
-    //             self.local_data_length == other.local_data_length &&
-    //             self.witness_length == other.witness_length &&
-    //             self.relies_on_same_type_inputs == other.relies_on_same_type_inputs &&
-    //             self.accepted_input_types == other.accepted_input_types);
-    // }
-
-    //
-    // std::ostream& operator<<(std::ostream &out, cp:r1cs_pcd_compliance_predicate<FieldT>)
-    // {
-    //     out << cp.name << "\n";
-    //     out << cp.types << "\n";
-    //     out << cp.max_arity << "\n";
-    //     assert!(cp.max_arity == cp.incoming_message_payload_lengths.len());
-    //     for i in 0..cp.max_arity
-    //     {
-    //         out << cp.incoming_message_payload_lengths[i] << "\n";
-    //     }
-    //     out << cp.outgoing_message_payload_length << "\n";
-    //     out << cp.local_data_length << "\n";
-    //     out << cp.witness_length << "\n";
-    //     ffec::output_bool(out, cp.relies_on_same_type_inputs);
-    //     ffec::operator<<(out, cp.accepted_input_types);
-    //     out << "\n" << cp.constraint_system << "\n";
-
-    //     return out;
-    // }
-
-    //
-    // std::istream& operator>>(std::istream &in, r1cs_pcd_compliance_predicate<FieldT> &cp)
-    // {
-    //     in >> cp.name;
-    //     ffec::consume_newline(in);
-    //     in >> cp.types;
-    //     ffec::consume_newline(in);
-    //     in >> cp.max_arity;
-    //     ffec::consume_newline(in);
-    //     cp.incoming_message_payload_lengths.resize(cp.max_arity);
-    //     for i in 0..cp.max_arity
-    //     {
-    //         in >> cp.incoming_message_payload_lengths[i];
-    //         ffec::consume_newline(in);
-    //     }
-    //     in >> cp.outgoing_message_payload_length;
-    //     ffec::consume_newline(in);
-    //     in >> cp.local_data_length;
-    //     ffec::consume_newline(in);
-    //     in >> cp.witness_length;
-    //     ffec::consume_newline(in);
-    //     ffec::input_bool(in, cp.relies_on_same_type_inputs);
-    //     ffec::operator>>(in, cp.accepted_input_types);
-    //     ffec::consume_newline(in);
-    //     in >> cp.constraint_system;
-    //     ffec::consume_newline(in);
-
-    //     return in;
-    // }
 
     pub fn is_satisfied(
         &self,

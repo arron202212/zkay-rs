@@ -7,7 +7,7 @@ use crate::algebra::curves::bn128::{
     bn128_g2::bn128_G2,
     bn128_gt::bn128_GT,
 };
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{Level, span};
 
 #[derive(PartialEq, Clone, Default)]
 pub struct bn128_ate_G1_precomp {
@@ -36,26 +36,26 @@ impl fmt::Display for bn128_ate_G2_precomp {
 }
 
 pub fn bn128_ate_precompute_G1(P: &bn128_G1) -> bn128_ate_G1_precomp {
-    enter_block("Call to bn128_ate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to bn128_ate_precompute_G1").entered();
 
     let mut result = bn128_ate_G1_precomp::default();
     let mut P_coord = [Fp::default(); 3];
     P.fill_coord(&mut P_coord);
     // ecop::NormalizeJac(result.P, P_coord);
 
-    leave_block("Call to bn128_ate_precompute_G1", false);
+    span.exit();
     result
 }
 
 pub fn bn128_ate_precompute_G2(Q: &bn128_G2) -> bn128_ate_G2_precomp {
-    enter_block("Call to bn128_ate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to bn128_ate_precompute_G2").entered();
 
     let mut result = bn128_ate_G2_precomp::default();
     let mut Q_coord = [Fp2::default(); 3];
     Q.fill_coord(&mut Q_coord);
     // components::precomputeG2(result.coeffs, result.Q, Q_coord);
 
-    leave_block("Call to bn128_ate_precompute_G2", false);
+    span.exit();
     result
 }
 
@@ -80,10 +80,10 @@ pub fn bn128_double_ate_miller_loop(
 }
 
 pub fn bn128_final_exponentiation(elt: &bn128_Fq12) -> bn128_GT {
-    enter_block("Call to bn128_final_exponentiation", false);
+    let span = span!(Level::TRACE, "Call to bn128_final_exponentiation").entered();
     let mut eltcopy: bn128_GT = elt.clone().into();
     eltcopy.elem.final_exp();
-    leave_block("Call to bn128_final_exponentiation", false);
+    span.exit();
     return eltcopy;
 }
 // 假设使用 arkworks 类似的库架构

@@ -29,15 +29,13 @@ use std::{
 
 use num_traits::{One, Zero};
 
-/**
- * Arithmetic in the field F[p^2].
- *
- * Let p := modulus. This interface provides arithmetic for the extension field
- * Fp2 = Fp[U]/(U^2-T::non_residue), where T::non_residue is in Fp.
- *
- * ASSUMPTION: p = 1 (mod 6)
- */
-//
+//  * Arithmetic in the field F[p^2].
+//  *
+//  * Let p := modulus. This interface provides arithmetic for the extension field
+//  * Fp2 = Fp[U]/(U^2-T::non_residue), where T::non_residue is in Fp.
+//  *
+//  * ASSUMPTION: p = 1 (mod 6)
+
 type Fp_modelConfig<const N: usize, const N2: usize, T> =
     <T as Fp2_modelConfig<N, N2>>::Fp_modelConfig;
 
@@ -230,11 +228,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
     }
 }
 
-//
-// bool Fp2_model<n,modulus>::operator==(other:&Fp2_model<n,modulus>) const
-// {
-//     return (self.c0 == other.c0 && self.c1 == other.c1);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PartialEq for Fp2_model<N, N2, T> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -242,15 +235,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PartialEq for F
     }
 }
 
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator+(other:&Fp2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-//
-//     return Fp2_model<n,modulus>(self.c0 + other.c0,
-//                                 self.c1 + other.c1);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>> Add<O>
     for Fp2_model<N, N2, T>
 {
@@ -261,15 +245,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>
     }
 }
 
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-(other:&Fp2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-//
-//     return Fp2_model<n,modulus>(self.c0 - other.c0,
-//                                 self.c1 - other.c1);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Sub for Fp2_model<N, N2, T> {
     type Output = Self;
 
@@ -278,15 +253,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Sub for Fp2_mod
     }
 }
 
-//
-// Fp2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp2_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     return Fp2_model<n,modulus>(lhs*rhs.c0,
-//                                 lhs*rhs.c1);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, TC: FpmConfig<N>>
     Mul<Fp_model<N, TC>> for Fp2_model<N, N2, T>
 {
@@ -296,23 +262,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, TC: FpmConfig<N
         Fp2_model::<N, N2, T>::new(self.c0 * rhs, self.c1 * rhs)
     }
 }
-
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator*(other:&Fp2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-//
-//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba)
-//     const my_Fp<N,T::Fp2_modelConfig>
-//         &A = other.c0, &B = other.c1,
-//         &a = self.c0, &b = self.c1;
-//     let aA= a * A;
-//     let bB= b * B;
-
-//     return Fp2_model<n,modulus>(aA + T::non_residue * bB,
-//                                 (a + b)*(A+B) - aA - bB);
-// }
 
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>> Mul<O>
     for Fp2_model<N, N2, T>
@@ -325,12 +274,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>
         Self::new(ac + T::non_residue * bd, (a + b) * (c + d) - ac - bd)
     }
 }
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator-() const
-// {
-//     return Fp2_model<n,modulus>(-self.c0,
-//                                 -self.c1);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Neg for Fp2_model<N, N2, T> {
     type Output = Self;
 
@@ -338,11 +281,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Neg for Fp2_mod
         Self::new(-self.c0, -self.c1)
     }
 }
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(const u64 pow) const
-// {
-//     return power<Fp2_model<n, modulus>>(*this, pow);
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<u64>
     for Fp2_model<N, N2, T>
 {
@@ -353,12 +291,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<u64>
         Powers::power::<Fp2_model<N, N2, T>>(&self, rhs)
     }
 }
-//
-//
-// Fp2_model<n,modulus> Fp2_model<n,modulus>::operator^(pow:&bigint<m>) const
-// {
-//     return power<Fp2_model<n, modulus>, m>(*this, pow);
-// }
+
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<bigint<N2>>
     for Fp2_model<N, N2, T>
 {
@@ -370,12 +303,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXor<bigint<N
     }
 }
 
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator+=(const Fp2_model<n,modulus>& other)
-// {
-//     *self = *this + other;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>> AddAssign<O>
     for Fp2_model<N, N2, T>
 {
@@ -384,12 +311,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>
     }
 }
 
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator-=(const Fp2_model<n,modulus>& other)
-// {
-//     *self = *this - other;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>> SubAssign<O>
     for Fp2_model<N, N2, T>
 {
@@ -397,12 +318,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>
         *self = *self - *other.borrow();
     }
 }
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator*=(const Fp2_model<n,modulus>& other)
-// {
-//     *self = *this * other;
-//     return *self;
-// }
+
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>> MulAssign<O>
     for Fp2_model<N, N2, T>
 {
@@ -410,12 +326,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>, O: Borrow<Self>
         *self = *self * other.borrow();
     }
 }
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(const u64 pow)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<u64>
     for Fp2_model<N, N2, T>
 {
@@ -423,13 +333,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<u6
         *self = *self ^ rhs;
     }
 }
-//
-//
-// Fp2_model<n,modulus>& Fp2_model<n,modulus>::operator^=(pow:&bigint<m>)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<bigint<N2>>
     for Fp2_model<N, N2, T>
 {
@@ -437,19 +340,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> BitXorAssign<bi
         *self = *self ^ rhs;
     }
 }
-// impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Mul<bigint<N>>
-//     for Fp2_model<N, N2, T>
-// {
-//     type Output = Self;
-
-//     fn mul(self, rhs: bigint<N>) -> Self::Output {
-//         let mut r = self;
-//         // r *= *rhs.borrow();
-//         r
-//     }
-// }
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> PpConfig for Fp2_model<N, N2, T> {
-    
     type BigIntT = bigint<N>;
     fn dbl(&self) -> Self {
         self.clone()
@@ -582,8 +473,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> fmt::Display
 use std::fmt;
 use std::io::{self, Read};
 
-// 对应: std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
-// Rust 中通常通过自定义函数或实现特定 Trait 来处理流输入
 impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2, T> {
     pub fn read<R: io::BufRead>(reader: &mut R) -> io::Result<Self> {
         let mut line = String::new();
@@ -600,7 +489,6 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Fp2_model<N, N2
     }
 }
 
-// 对应: std::ostream& operator<<(std::ostream& out, const std::vector<Fp2_model> &v)
 pub fn write_vector<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>>(
     v: &[Fp2_model<N, N2, T>],
 ) -> String {
@@ -612,7 +500,6 @@ pub fn write_vector<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>>(
     out
 }
 
-// 对应: std::istream& operator>>(std::istream& in, std::vector<Fp2_model> &v)
 pub fn read_vector<R: io::BufRead, const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>>(
     reader: &mut R,
 ) -> io::Result<Vec<Fp2_model<N, N2, T>>> {

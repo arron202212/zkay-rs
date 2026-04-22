@@ -69,7 +69,7 @@ where
     let auxiliary_input_size = 0;
     let num_outputs = num_gates / 2;
 
-    enter_block("Generate BACS example", false);
+    let span = span!(Level::TRACE, "Generate BACS example").entered();
     let example =
         generate_bacs_example::<Fr<default_bacs_ppzksnark_pp>, pb_variable, pb_linear_combination>(
             primary_input_size,
@@ -77,7 +77,7 @@ where
             num_gates,
             num_outputs,
         );
-    leave_block("Generate BACS example", false);
+    span.exit();
 
     println!("(enter) Profile BACS ppzkSNARK");
     let mut test_serialization = true;

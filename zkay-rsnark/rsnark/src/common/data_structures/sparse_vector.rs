@@ -4,54 +4,18 @@ use ffec::common::serialization::OUTPUT_NEWLINE;
 use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::{KCConfig, multi_exp, multi_exp_method};
 use ffec::{FieldTConfig, PpConfig, Zero};
-// pub trait SparseVectorConfig:
-//     Default
-//     + std::fmt::Display
-//     + std::cmp::PartialEq
-//     + std::ops::Add<Output = Self>
-//     + ffec::Zero
-//     + Clone
-//     + std::ops::Sub<Output = Self>
-//     + ffec::scalar_multiplication::wnaf::Config
-// {
-//     fn size_in_bits() -> usize;
-//     // fn zero()->Self;
-// }
 
-/**
- * A sparse vector is a list of indices along with corresponding values.
- * The indices are selected from the set {0,1,...,domain_size-1}.
- */
+
+// /**
+//  * A sparse vector is a list of indices along with corresponding values.
+//  * The indices are selected from the set {0,1,...,domain_size-1}.
+//  */
 #[derive(Default, Clone)]
 pub struct sparse_vector<T: PpConfig> {
     pub indices: Vec<usize>,
     pub values: Vec<T>,
     pub domain_size_: usize,
-    // sparse_vector() = default;
-    // sparse_vector(&other:sparse_vector<T>) = default;
-    // sparse_vector(sparse_vector<T> &&other) = default;
-    // pub fn new(v:Vec<T>); //constructor from Vec
-
-    // sparse_vector<T>& operator=(&other:sparse_vector<T>) = default;
-    // sparse_vector<T>& operator=(sparse_vector<T> &&other) = default;
-
-    // T operator[](idx:usize) const;
-
-    // bool operator==(&other:sparse_vector<T>) const;
-    // bool operator==(&other:Vec<T>) const;
-
-    // bool is_valid() const;
-    // bool empty() const;
-
-    // usize domain_size() const; // return domain_size_
-    // usize size() const; // return the number of indices (representing the number of non-zero entries)
-    //  pub fn size_in_bits(&self)->usize; // return the number bits needed to store the sparse vector
-
-    // //return a pair consisting of the accumulated value and the sparse vector of non-accumulated values
-    //
-    // std::pair<T, sparse_vector<T> > accumulate(it_begin:&Vec<FieldT>::const_iterator
-    //                                            it_end:&Vec<FieldT>::const_iterator
-    //                                            offset:usize) const;
+   
 }
 
 impl<T: PpConfig> sparse_vector<T> {
@@ -103,11 +67,9 @@ impl<T: PpConfig> sparse_vector<T> {
         it: &[FieldT],
         offset: usize,
     ) -> (T, sparse_vector<T>) {
-        // // #ifdef MULTICORE
-        //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-        // #else
+      
         let mut chunks = 1;
-        //
+     
 
         let mut accumulated_value = T::zero();
         let mut resulting_vector = sparse_vector::<T>::default();
@@ -116,11 +78,10 @@ impl<T: PpConfig> sparse_vector<T> {
         let mut range_len = it.len();
         let mut in_block = false;
         let mut first_pos = -1;
-        let mut last_pos = -1; // g++ -flto emits unitialized warning, even though in_block guards for such cases.
+        let mut last_pos = -1; 
 
         for i in 0..self.indices.len() {
             let matching_pos = (offset <= self.indices[i] && self.indices[i] < offset + range_len);
-            // print!("i = {}, pos[i] = {}, offset = {}, w_size = {}\n", i, indices[i], offset, w_size);
             let mut copy_over;
 
             if in_block {
@@ -133,9 +94,7 @@ impl<T: PpConfig> sparse_vector<T> {
                     in_block = false;
                     copy_over = true;
 
-                    // // #ifdef DEBUG
-                    //                 ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
-                    //
+           
                     accumulated_value = accumulated_value
                         + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
                             &self.values[first_pos as usize..last_pos as usize + 1],
@@ -163,9 +122,6 @@ impl<T: PpConfig> sparse_vector<T> {
         }
 
         if in_block {
-            // // #ifdef DEBUG
-            //         ffec::print_indent(); print!("doing multiexp for w_{} ... w_{}\n", indices[first_pos], indices[last_pos]);
-            //
             accumulated_value = accumulated_value
                 + multi_exp::<T, FieldT, { multi_exp_method::multi_exp_method_bos_coster }>(
                     &self.values[first_pos as usize..last_pos as usize + 1],
@@ -193,12 +149,7 @@ impl<T: PpConfig> Index<usize> for sparse_vector<T> {
     }
 }
 
-// pub fn
-// T sparse_vector<T>::operator[](idx:usize) const
-// {
-//     auto it = std::lower_bound(indices.begin(), indices.end(), idx);
-//     return if (it != indices.end() && *it == idx) {values[it - indices.begin()]} else{T()};
-// }
+
 
 impl<T: PpConfig> PartialEq for sparse_vector<T> {
     #[inline]
@@ -272,36 +223,6 @@ impl<T: PpConfig> PartialEq<Vec<T>> for sparse_vector<T> {
     }
 }
 
-// pub fn
-// bool sparse_vector<T>::operator==(&other:Vec<T>) const
-// {
-//     if self.domain_size_ < other.len()
-//     {
-//         return false;
-//     }
-
-//     usize j = 0;
-//     for i in 0..other.len()
-//     {
-//         if self.indices[j] == i
-//         {
-//             if self.values[j] != other[j]
-//             {
-//                 return false;
-//             }
-//             j+=1;
-//         }
-//         else
-//         {
-//             if !other[j].is_zero()
-//             {
-//                 return false;
-//             }
-//         }
-//     }
-
-//     return true;
-// }
 
 use std::fmt;
 
@@ -324,35 +245,3 @@ impl<T: PpConfig> fmt::Display for sparse_vector<T> {
         )
     }
 }
-
-// pub fn
-// std::istream& operator>>(std::istream& in, sparse_vector<T> &v)
-// {
-//     in >> self.domain_size_;
-//     ffec::consume_newline(in);
-
-//     usize s;
-//     in >> s;
-//     ffec::consume_newline(in);
-//     self.indices.resize(s);
-//     for i in 0..s
-//     {
-//         in >> self.indices[i];
-//         ffec::consume_newline(in);
-//     }
-
-//     self.values.clear();
-//     in >> s;
-//     ffec::consume_newline(in);
-//     self.values.reserve(s);
-
-//     for i in 0..s
-//     {
-//         T t;
-//         in >> t;
-//         ffec::consume_OUTPUT_NEWLINE(in);
-//         self.values.push(t);
-//     }
-
-//     return in;
-// }

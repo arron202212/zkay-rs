@@ -161,13 +161,13 @@ fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptCo
     let mut f_primary_input = primary_input_fn;
     let mut f_auxiliary_input = auxiliary_input_fn;
 
-    enter_block("Loading primary input", false);
+    let span = span!(Level::TRACE, "Loading primary input").entered();
     let primary_input = load_tape(&f_primary_input);
-    leave_block("Loading primary input", false);
+    span.exit();
 
-    enter_block("Loading auxiliary input", false);
+    let span = span!(Level::TRACE, "Loading auxiliary input").entered();
     let auxiliary_input = load_tape(&f_auxiliary_input);
-    leave_block("Loading auxiliary input", false);
+    span.exit();
 
     print!("\nPress enter to continue.\n");
     // std::cin.get();

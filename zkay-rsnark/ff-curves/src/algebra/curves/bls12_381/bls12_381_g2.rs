@@ -222,15 +222,15 @@ impl bls12_381_G2 {
         if self.is_zero() {
             return true;
         }
-        /*
-            y^2 = x^3 + b
+       
+            // y^2 = x^3 + b
 
-            We are using Jacobian coordinates, so equation we need to check is actually
+            // We are using Jacobian coordinates, so equation we need to check is actually
 
-            (y/z^3)^2 = (x/z^2)^3 + b
-            y^2 / z^6 = x^3 / z^6 + b
-            y^2 = x^3 + b z^6
-        */
+            // (y/z^3)^2 = (x/z^2)^3 + b
+            // y^2 / z^6 = x^3 / z^6 + b
+            // y^2 = x^3 + b z^6
+      
         let mut X2 = self.X.squared();
         let mut Y2 = self.Y.squared();
         let mut Z2 = self.Z.squared();

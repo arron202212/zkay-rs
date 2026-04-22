@@ -9,18 +9,18 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-/**
- * A Merkle tree is maintained as two maps:
- * - a map from addresses to values, and
- * - a map from addresses to hashes.
- *
- * The second map maintains the intermediate hashes of a Merkle tree
- * built atop the values currently stored in the tree (the
- * implementation admits a very efficient support for sparse
- * trees). Besides offering methods to load and store values, the
- * pub struct offers methods to retrieve the root of the Merkle tree and to
- * obtain the authentication paths for (the value at) a given address.
- */
+// /**
+//  * A Merkle tree is maintained as two maps:
+//  * - a map from addresses to values, and
+//  * - a map from addresses to hashes.
+//  *
+//  * The second map maintains the intermediate hashes of a Merkle tree
+//  * built atop the values currently stored in the tree (the
+//  * implementation admits a very efficient support for sparse
+//  * trees). Besides offering methods to load and store values, the
+//  * pub struct offers methods to retrieve the root of the Merkle tree and to
+//  * obtain the authentication paths for (the value at) a given address.
+//  */
 
 pub type merkle_authentication_node = bit_vector;
 pub type merkle_authentication_path = Vec<merkle_authentication_node>;
@@ -36,17 +36,6 @@ pub struct merkle_tree<HashT: HashTConfig> {
     value_size: usize,
     digest_size: usize,
 
-    // merkle_tree(depth:usize, value_size:usize);
-    // merkle_tree(depth:usize, value_size:usize, contents_as_vector:&Vec<bit_vector>);
-    // merkle_tree(depth:usize, value_size:usize, contents:&Vec<usize, bit_vector>);
-
-    // bit_vector get_value(address:usize) const;
-    // pub fn  set_value(address:usize, value:&bit_vector);
-
-    // hash_value_type get_root() const;
-    // merkle_authentication_path_type get_path(address:usize) const;
-
-    // pub fn  dump() const;
     _t: PhantomData<HashT>,
 }
 
@@ -57,8 +46,7 @@ pub trait VecConfig {
 pub trait GConfig: Default + Clone {}
 pub trait PConfig: Default + Clone {}
 pub trait HashTConfig: Default + Clone {
-    // type hash_value_type=hash_value_type;
-    // type merkle_authentication_path_type=merkle_authentication_path_type;
+    
     fn new5<P: PConfig, G: GConfig, G2: GConfig>(
         pb: RcCell<P>,
         sz: usize,
@@ -129,7 +117,6 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         }
     }
 
-    //
     pub fn new2(depth: usize, value_size: usize, contents_as_vector: Vec<bit_vector>) -> Self {
         assert!(log2(contents_as_vector.len()) <= depth);
         let mut hash_defaults = Vec::with_capacity(depth + 1);
@@ -139,7 +126,6 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
             let idx = address + (1usize << depth) - 1;
             values[idx] = contents_as_vector[address].clone();
             hashes[idx] = contents_as_vector[address].clone();
-            // hashes[idx].resize(digest_size);
         }
 
         let mut idx_begin = (1usize << depth) - 1;
@@ -164,7 +150,7 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         Self::new(depth, value_size)
     }
 
-    //
+ 
     pub fn new3(depth: usize, value_size: usize, contents: BTreeMap<usize, bit_vector>) -> Self {
         let mut hash_defaults: Vec<_> = Vec::<Self>::with_capacity(depth + 1);
         let (mut values, mut hashes) = (Vec::new(), Vec::new());
@@ -176,7 +162,6 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
 
                 values[address] = value.clone();
                 hashes[idx] = value.clone();
-                // hashes[idx].resize(digest_size);
             }
 
             let mut last_it = hashes.iter();
@@ -259,8 +244,7 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         } else {
             self.hash_defaults[0].clone()
         }
-        // auto it = hashes.get(0);
-        // return (it == hashes.end() ? hash_defaults[0] : it[1]);
+        
     }
 
     pub fn get_path(&self, address: usize) -> merkle_authentication_path_type {
@@ -310,6 +294,3 @@ impl<HashT: HashTConfig> merkle_tree<HashT> {
         print!("\n");
     }
 }
-// } // libsnark
-
-// #endif // MERKLE_TREE_TCC

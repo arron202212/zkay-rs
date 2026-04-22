@@ -6,6 +6,7 @@
 // also, each output gives rise to a corresponding R1CS constraint that enforces
 // that the output is zero.
 
+
 use crate::relations::circuit_satisfaction_problems::bacs::bacs::{
     bacs_auxiliary_input, bacs_circuit, bacs_primary_input,
 };
@@ -16,8 +17,9 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block};
 use ffec::common::utils::FMT;
+use tracing::{span, Level};
+
 // /**
 //  * Instance map for the BACS-to-R1CS reduction.
 //  */
@@ -42,7 +44,7 @@ pub fn bacs_to_r1cs_instance_map<
 >(
     circuit: &bacs_circuit<FieldT, SV, SLC>,
 ) -> r1cs_constraint_system<FieldT, SV, SLC> {
-    enter_block("Call to bacs_to_r1cs_instance_map", false);
+    let span = span!(Level::TRACE, "Call to bacs_to_r1cs_instance_map").entered();
     assert!(circuit.is_valid());
     let mut result = r1cs_constraint_system::<FieldT, SV, SLC>::default();
 
@@ -86,7 +88,7 @@ pub fn bacs_to_r1cs_instance_map<
         }
     }
 
-    leave_block("Call to bacs_to_r1cs_instance_map", false);
+    span.exit();
 
     return result;
 }
@@ -100,9 +102,9 @@ pub fn bacs_to_r1cs_witness_map<
     primary_input: &bacs_primary_input<FieldT>,
     auxiliary_input: &bacs_auxiliary_input<FieldT>,
 ) -> r1cs_variable_assignment<FieldT> {
-    enter_block("Call to bacs_to_r1cs_witness_map", false);
+    let span = span!(Level::TRACE, "Call to bacs_to_r1cs_witness_map").entered();
     let result = circuit.get_all_wires(primary_input, auxiliary_input);
-    leave_block("Call to bacs_to_r1cs_witness_map", false);
+    span.exit();
 
     return result;
 }

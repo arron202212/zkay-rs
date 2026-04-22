@@ -65,28 +65,9 @@ use rccell::RcCell;
 // */
 #[derive(Clone, Default)]
 pub struct Gadget<T: Default + Clone> {
-    // DISALLOW_COPY_AND_ASSIGN(Gadget);
     pub pb_: ProtoboardPtr,
     pub t: T,
-    // Gadget(pb:ProtoboardPtr);
-    // virtual pub fn  init() = 0;
-    // /* generate constraints must have this interface, however generateWitness for some gadgets
-    //    (like CTime) will take auxiliary information (like memory contents). We do not want to force
-    //    the interface for generateWitness but do want to make sure it is never invoked from base
-    //    class.
-    // */
-    // virtual pub fn  generateConstraints() = 0;
-    // virtual pub fn  generateWitness(); // Not abstract as this method may have different signatures.
-    // pub fn addUnaryConstraint(const LinearCombination& a, const ::std::string& name);
-    // pub fn  addRank1Constraint(a:LinearCombination,
-    //                         b:LinearCombination,
-    //                         c:LinearCombination,
-    //                         name:&str);
-    // pub fn  enforceBooleanity(var:&Variable) {pb_.enforceBooleanity(var);}
-    // FElem& self.val(& var:&Variable) {return pb_.self.val(& var);}
-    // FElem self.val(& lc:&LinearCombination) {return pb_.self.val(& lc);}
-    // FieldType fieldType() const {return pb_.fieldType_;}
-    // bool flagIsSet(flag:&FlagVariable) const {return pb_.flagIsSet(flag);}
+    
 }
 use strum_macros::{EnumIs, EnumTryAs};
 #[enum_dispatch(FElemInterface)]
@@ -128,170 +109,79 @@ impl Default for GadgetType {
 pub type GadgetPtr = RcCell<GadgetType>; // Not a unique_ptr because sometimes we need to cast
 // these pointers for specific gadget operations.
 
-/*
-  We use multiple inheritance in order to use much needed syntactic sugar. We want self.val(& ) to be
-  able to return different types depending on the field so we need to differentiate the interfaces
-  between R1P and other fields. We also want the interfaces of specific logical gadgets
-  (for instance AND_Gadget which has n inputs and 1 output) in order to construct higher level
-  gadgets without specific knowledge of the underlying field. Both interfaces (for instance
-  R1P_gadget and AND_Gadget) inherit from Gadget using virtual inheritance (this means only one
-  instance of Gadget will be created. For a more thorough discussion on virtual inheritance see
-  http://www.phpcompiler.org/articles/virtualinheritance.html
-*/
+// /*
+//   We use multiple inheritance in order to use much needed syntactic sugar. We want self.val(& ) to be
+//   able to return different types depending on the field so we need to differentiate the interfaces
+//   between R1P and other fields. We also want the interfaces of specific logical gadgets
+//   (for instance AND_Gadget which has n inputs and 1 output) in order to construct higher level
+//   gadgets without specific knowledge of the underlying field. Both interfaces (for instance
+//   R1P_gadget and AND_Gadget) inherit from Gadget using virtual inheritance (this means only one
+//   instance of Gadget will be created. For a more thorough discussion on virtual inheritance see
+//   http://www.phpcompiler.org/articles/virtualinheritance.html
+// */
 
 pub trait R1P_Gadget {
-    // : virtual public Gadget
-    // R1P_Gadget(pb:ProtoboardPtr)->Self Gadget(pb) {}
-    // virtual ~R1P_Gadget() = 0;
+    
+} 
 
-    // virtual pub fn  addRank1Constraint(a:LinearCombination,
-    //                                 b:LinearCombination,
-    //                                 c:LinearCombination,
-    //                                 name:&str);
-
-    // virtual pub fn  init() = 0; // private in order to force programmer to invoke from a Gadget* only
-    // DISALLOW_COPY_AND_ASSIGN(R1P_Gadget);
-} // pub struct R1P_Gadget
-
-// CREATE_GADGET_BASE_CLASS(AND_GadgetBase);
 pub trait AND_GadgetBase {}
 impl AND_GadgetBase for BinaryAND_Gadget {}
 /// Specific case for and AND with two inputs. Field agnostic
 #[derive(Default, Clone)]
 pub struct BinaryAND_Gadget {
-    //AND_GadgetBase
-
-    // BinaryAND_Gadget(pb:ProtoboardPtr,
-    //                  input1:LinearCombination,
-    //                  input2:LinearCombination,
-    //                  result:Variable);
-    // pub fn  init();
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-
-    // friend pub struct AND_Gadget;
-
-    //external variables
+   
     input1_: LinearCombination,
     input2_: LinearCombination,
     result_: Variable,
-    // DISALLOW_COPY_AND_ASSIGN(BinaryAND_Gadget);
-} // pub struct BinaryAND_Gadget
+} 
 
 impl AND_GadgetBase for R1P_AND_Gadget {}
 impl R1P_Gadget for R1P_AND_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_AND_Gadget {
-    //AND_GadgetBase, public R1P_Gadget
-
-    // R1P_AND_Gadget(pb:ProtoboardPtr, input:VariableArrayType, result:Variable);
-    // virtual pub fn  init();
-
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct AND_Gadget;
-
-    //external variables
+   
     input_: VariableArrayType,
     result_: Variable,
     //internal variables
     sum_: LinearCombination,
     sumInverse_: Variable,
-    // DISALLOW_COPY_AND_ASSIGN(R1P_AND_Gadget);
 }
 
 pub struct AND_Gadget;
-//  {
-// static GadgetPtr create(pb:ProtoboardPtr, input:VariableArrayType, result:Variable);
-// static GadgetPtr create(pb:ProtoboardPtr,
-//                         input1:LinearCombination,
-//                         input2:LinearCombination,
-//                         result:Variable);
 
-// DISALLOW_CONSTRUCTION(AND_Gadget);
-// DISALLOW_COPY_AND_ASSIGN(AND_Gadget);
-// } // pub struct GadgetType
-
-// CREATE_GADGET_BASE_CLASS(OR_GadgetBase);
 pub trait OR_GadgetBase {}
 impl OR_GadgetBase for BinaryOR_Gadget {}
 /// Specific case for and OR with two inputs. Field agnostic
 #[derive(Default, Clone)]
 pub struct BinaryOR_Gadget {
-    //OR_GadgetBase
-
-    // BinaryOR_Gadget(pb:ProtoboardPtr,
-    //                 input1:LinearCombination,
-    //                 input2:LinearCombination,
-    //                 result:Variable);
-    // pub fn  init();
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-
-    // friend pub struct OR_Gadget;
-
-    //external variables
+   
     input1_: LinearCombination,
     input2_: LinearCombination,
     result_: Variable,
-    // DISALLOW_COPY_AND_ASSIGN(BinaryOR_Gadget);
-} // pub struct BinaryOR_Gadget
+} 
 impl OR_GadgetBase for R1P_OR_Gadget {}
 impl R1P_Gadget for R1P_OR_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_OR_Gadget {
-    //OR_GadgetBase, public R1P_Gadget
     sum_: LinearCombination,
     sumInverse_: Variable,
-    // R1P_OR_Gadget(pb:ProtoboardPtr, input:VariableArrayType, result:Variable);
-    // virtual pub fn  init();
+
     input_: VariableArrayType,
     result_: Variable,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct OR_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_OR_Gadget);
-}
-
-pub struct OR_Gadget;
-//  {
-// static GadgetPtr create(pb:ProtoboardPtr, input:VariableArrayType, result:Variable);
-// static GadgetPtr create(pb:ProtoboardPtr,
-//                         input1:LinearCombination,
-//                         input2:LinearCombination,
-//                         result:Variable);
-
-// DISALLOW_CONSTRUCTION(OR_Gadget);
-// DISALLOW_COPY_AND_ASSIGN(OR_Gadget);
-// } // pub struct GadgetType
-
-// CREATE_GADGET_BASE_CLASS(InnerProduct_GadgetBase);
+  
 pub trait InnerProduct_GadgetBase {}
 impl InnerProduct_GadgetBase for R1P_InnerProduct_Gadget {}
 impl R1P_Gadget for R1P_InnerProduct_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_InnerProduct_Gadget {
-    //InnerProduct_GadgetBase, public R1P_Gadget
     partialSums_: VariableArrayType,
-    // R1P_InnerProduct_Gadget(pb:ProtoboardPtr,
-    //                         A:VariableArrayType,
-    //                         B:VariableArrayType,
-    //                         result:Variable);
-    // virtual pub fn  init();
+    
     A_: VariableArrayType,
     B_: VariableArrayType,
     result_: Variable,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct InnerProduct_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_InnerProduct_Gadget);
+    
 }
 
-// CREATE_GADGET_FACTORY_CLASS_3(InnerProduct_Gadget, VariableArrayType, A,
-//    VariableArrayType, B,
-//    Variable, result);
 pub struct InnerProduct_Gadget;
 impl InnerProduct_Gadget {
     pub fn create(
@@ -311,66 +201,34 @@ impl InnerProduct_Gadget {
     }
 }
 
-/*
-    Loose Multiplexer (MUX):
-    Multiplexes one Variable
-    index not in bounds -> success_flag = 0
-    index in bounds && success_flag = 1 -> result is correct
-    index is in bounds, we can also set success_flag to 0 -> result will be forced to 0
-*/
+// /*
+//     Loose Multiplexer (MUX):
+//     Multiplexes one Variable
+//     index not in bounds -> success_flag = 0
+//     index in bounds && success_flag = 1 -> result is correct
+//     index is in bounds, we can also set success_flag to 0 -> result will be forced to 0
+// */
 
 pub trait LooseMUX_GadgetBase {
-    // : virtual public Gadget
-    // LooseMUX_GadgetBase(pb:ProtoboardPtr)->Self Gadget(pb) {}
-
-    // virtual ~LooseMUX_GadgetBase() = 0;
+    
     fn indicatorVariables(&self) -> &VariableArrayType;
 
-    // virtual pub fn  init() = 0;
-    // DISALLOW_COPY_AND_ASSIGN(LooseMUX_GadgetBase);
-} // pub struct LooseMUX_GadgetBase
-// impl LooseMUX_GadgetBase for R1P_LooseMUX_Gadget {
-// }
+} 
 impl R1P_Gadget for R1P_LooseMUX_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_LooseMUX_Gadget {
-    //LooseMUX_GadgetBase, public R1P_Gadget
     indicators_: VariableArrayType,
     computeResult_: Vec<GadgetPtr>, // Inner product gadgets
-    // R1P_LooseMUX_Gadget(pb:ProtoboardPtr,
-    //                     inputs:MultiPackedWordArray,
-    //                     index:Variable,
-    //                     output:VariableArrayType,
-    //                     successFlag:&Variable);
-    // virtual pub fn  init();
+ 
     inputs_: MultiPackedWordArray,
     index_: Variable,
     output_: VariableArrayType,
     successFlag_: Variable,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // virtual VariableArrayType indicatorVariables() const;
-    // friend pub struct LooseMUX_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_LooseMUX_Gadget);
+   
 }
 
 pub struct LooseMUX_Gadget;
-//  {
-// static GadgetPtr create(pb:ProtoboardPtr,
-//                         inputs:MultiPackedWordArray,
-//                         index:Variable,
-//                         output:VariableArrayType,
-//                         successFlag:&Variable);
-// static GadgetPtr create(pb:ProtoboardPtr,
-//                         inputs:VariableArrayType,
-//                         index:Variable,
-//                         output:Variable,
-//                         successFlag:&Variable);
 
-// DISALLOW_CONSTRUCTION(LooseMUX_Gadget);
-// DISALLOW_COPY_AND_ASSIGN(LooseMUX_Gadget);
-// } // pub struct GadgetType
 
 // TODO change pub struct name to bitpacking
 #[derive(Default, Clone, Debug, PartialEq)]
@@ -380,30 +238,18 @@ pub enum PackingMode {
     UNPACK,
 }
 
-// CREATE_GADGET_BASE_CLASS(CompressionPacking_GadgetBase);
 pub trait CompressionPacking_GadgetBase {}
 impl CompressionPacking_GadgetBase for R1P_CompressionPacking_Gadget {}
 impl R1P_Gadget for R1P_CompressionPacking_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_CompressionPacking_Gadget {
-    //CompressionPacking_GadgetBase, public R1P_Gadget
     packingMode_: PackingMode,
-    // R1P_CompressionPacking_Gadget(pb:ProtoboardPtr,
-    //                               unpacked:VariableArrayType,
-    //                               packed:VariableArrayType,
-    //                               packingMode:PackingMode);
-    // virtual pub fn  init();
+   
     unpacked_: VariableArrayType,
     packed_: VariableArrayType,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct CompressionPacking_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_CompressionPacking_Gadget);
+   
 }
 
-// CREATE_GADGET_FACTORY_CLASS_3(CompressionPacking_Gadget, VariableArrayType, unpacked, VariableArrayType,
-//                               packed, PackingMode, packingMode);
 pub struct CompressionPacking_Gadget;
 impl CompressionPacking_Gadget {
     pub fn create(
@@ -423,7 +269,6 @@ impl CompressionPacking_Gadget {
     }
 }
 
-// CREATE_GADGET_BASE_CLASS(IntegerPacking_GadgetBase);
 pub trait IntegerPacking_GadgetBase {}
 impl IntegerPacking_GadgetBase for R1P_IntegerPacking_Gadget {}
 impl R1P_Gadget for R1P_IntegerPacking_Gadget {}
@@ -431,25 +276,14 @@ impl R1P_Gadget for R1P_IntegerPacking_Gadget {}
 // instantiates an R1P_CompressionPacking_Gadget
 #[derive(Default, Clone)]
 pub struct R1P_IntegerPacking_Gadget {
-    //IntegerPacking_GadgetBase, public R1P_Gadget
     packingMode_: PackingMode,
     compressionPackingGadget_: GadgetPtr,
-    // R1P_IntegerPacking_Gadget(pb:ProtoboardPtr,
-    //                           unpacked:VariableArrayType,
-    //                           packed:VariableArrayType,
-    //                           packingMode:PackingMode);
-    // virtual pub fn  init();
+    
     unpacked_: VariableArrayType,
     packed_: VariableArrayType,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct IntegerPacking_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_IntegerPacking_Gadget);
+   
 }
 
-// CREATE_GADGET_FACTORY_CLASS_3(IntegerPacking_Gadget, VariableArrayType, unpacked, VariableArrayType,
-//                               packed, PackingMode, packingMode);
 pub struct IntegerPacking_Gadget;
 impl IntegerPacking_Gadget {
     pub fn create(
@@ -469,38 +303,26 @@ impl IntegerPacking_Gadget {
     }
 }
 
-/*
-    Gadgets recieve a constant field element n, and an input.
-    input == n ==> result = 1
-    input != n ==> result = 0
-*/
+// /*
+//     Gadgets recieve a constant field element n, and an input.
+//     input == n ==> result = 1
+//     input != n ==> result = 0
+// */
 
 // TODO change to take LinearCombination as input and change AND/OR to use this
-// CREATE_GADGET_BASE_CLASS(EqualsConst_GadgetBase);
 pub trait EqualsConst_GadgetBase {}
 impl EqualsConst_GadgetBase for R1P_EqualsConst_Gadget {}
 impl R1P_Gadget for R1P_EqualsConst_Gadget {}
 #[derive(Default, Clone)]
 pub struct R1P_EqualsConst_Gadget {
-    //EqualsConst_GadgetBase, public R1P_Gadget
     n_: FElem,
     aux_: Variable,
-    // R1P_EqualsConst_Gadget(pb:ProtoboardPtr,
-    //                        n:FElem,
-    //                        input:LinearCombination,
-    //                        result:Variable);
-    // virtual pub fn  init();
+    
     input_: LinearCombination,
     result_: Variable,
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct EqualsConst_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_EqualsConst_Gadget);
+   
 }
 
-// CREATE_GADGET_FACTORY_CLASS_3(EqualsConst_Gadget, FElem, n, LinearCombination, input,
-//                               Variable, result);
 pub struct EqualsConst_Gadget;
 impl EqualsConst_Gadget {
     pub fn create(
@@ -523,39 +345,21 @@ impl EqualsConst_Gadget {
 //TODO add test
 #[derive(Default, Clone)]
 pub struct DualWord_Gadget {
-    //Gadget
     var_: DualWord,
     packingMode_: PackingMode,
 
     packingGadget_: GadgetPtr,
-    // DualWord_Gadget(pb:ProtoboardPtr, var:DualWord, packingMode:PackingMode);
-    // virtual pub fn  init();
-    // DISALLOW_COPY_AND_ASSIGN(DualWord_Gadget);
-
-    // static GadgetPtr create(pb:ProtoboardPtr, var:DualWord, packingMode:PackingMode);
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
+   
 }
 
 //TODO add test
 #[derive(Default, Clone)]
 pub struct DualWordArray_Gadget {
-    //Gadget
     vars_: DualWordArray,
     packingMode_: PackingMode,
 
     packingGadgets_: Vec<GadgetPtr>,
-    // DualWordArray_Gadget(pb:ProtoboardPtr,
-    //                          vars:DualWordArray,
-    //                          packingMode:PackingMode);
-    // virtual pub fn  init();
-    // DISALLOW_COPY_AND_ASSIGN(DualWordArray_Gadget);
-
-    // static GadgetPtr create(pb:ProtoboardPtr,
-    //                         vars:DualWordArray,
-    //                         packingMode:PackingMode);
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
+   
 }
 
 //TODO add test
@@ -571,23 +375,7 @@ pub struct Toggle_Gadget {
     zeroValue_: LinearCombination,
     oneValue_: LinearCombination,
     result_: Variable,
-    // Toggle_Gadget(pb:ProtoboardPtr,
-    //               toggle:FlagVariable,
-    //               zeroValue:LinearCombination,
-    //               oneValue:LinearCombination,
-    //               result:Variable);
-
-    // virtual pub fn  init() {}
-    // DISALLOW_COPY_AND_ASSIGN(Toggle_Gadget);
-
-    // static GadgetPtr create(pb:ProtoboardPtr,
-    //                         toggle:FlagVariable,
-    //                         zeroValue:LinearCombination,
-    //                         oneValue:LinearCombination,
-    //                         result:Variable);
-
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
+   
 }
 
 /// A gadget for the following semantics:
@@ -600,19 +388,7 @@ pub struct ConditionalFlag_Gadget {
     flag_: FlagVariable,
     condition_: LinearCombination,
     auxConditionInverse_: Variable,
-    //     ConditionalFlag_Gadget(pb:ProtoboardPtr,
-    //                            condition:LinearCombination,
-    //                            flag:&FlagVariable);
-
-    //     virtual pub fn  init() {}
-    //     DISALLOW_COPY_AND_ASSIGN(ConditionalFlag_Gadget);
-
-    //     static GadgetPtr create(pb:ProtoboardPtr,
-    //                             condition:LinearCombination,
-    //                             flag:&FlagVariable);
-
-    //     pub fn  generateConstraints();
-    //     pub fn  generateWitness();
+   
 }
 
 /// A gadget for the following semantics:
@@ -623,26 +399,12 @@ pub struct LogicImplication_Gadget {
     //Gadget
     flag_: FlagVariable,
     condition_: LinearCombination,
-    // LogicImplication_Gadget(pb:ProtoboardPtr,
-    //                         condition:LinearCombination,
-    //                         flag:&FlagVariable);
-
-    // virtual pub fn  init() {}
-    // DISALLOW_COPY_AND_ASSIGN(LogicImplication_Gadget);
-
-    // static GadgetPtr create(pb:ProtoboardPtr,
-    //                         condition:LinearCombination,
-    //                         flag:&FlagVariable);
-
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
+    
 }
 
 // TODO create unit test
-// CREATE_GADGET_BASE_CLASS(Comparison_GadgetBase);
 #[derive(Default, Clone)]
 pub struct R1P_Comparison_Gadget {
-    //Comparison_GadgetBase, public R1P_Gadget
     wordBitSize_: usize,
     lhs_: PackedWord,
     rhs_: PackedWord,
@@ -653,41 +415,14 @@ pub struct R1P_Comparison_Gadget {
     notAllZeroes_: FlagVariable,
     allZeroesTest_: GadgetPtr,
     alphaDualVariablePacker_: GadgetPtr,
-    // R1P_Comparison_Gadget(pb:ProtoboardPtr,
-    //                       wordBitSize:usize,
-    //                       lhs:PackedWord,
-    //                       rhs:PackedWord,
-    //                       less:FlagVariable,
-    //                       lessOrEqual:&FlagVariable);
-    // virtual pub fn  init();
-
-    // static GadgetPtr create(pb:ProtoboardPtr,
-    // 						wordBitSize:usize,
-    // 						lhs:PackedWord,
-    // 						rhs:PackedWord,
-    // 						less:FlagVariable,
-    // 						lessOrEqual:&FlagVariable);
-
-    // pub fn  generateConstraints();
-    // pub fn  generateWitness();
-    // friend pub struct Comparison_Gadget;
-
-    // DISALLOW_COPY_AND_ASSIGN(R1P_Comparison_Gadget);
+   
 }
-
-// CREATE_GADGET_FACTORY_CLASS_5(Comparison_Gadget, // TODO uncomment this
-//                               usize, wordBitSize,
-//                               PackedWord, lhs,
-//                               PackedWord, rhs,
-//                               FlagVariable, less,
-//                               FlagVariable, lessOrEqual);
 
 // Declarations of the interfaces and basic gadgets for R1P (Rank 1 prime characteristic)
 // constraint systems.
 
 impl<T: Default + Clone> Gadget<T> {
     pub fn new(pb: ProtoboardPtr, t: T) -> Self {
-        //  pb_(pb)
         assert!(
             pb.is_some(),
             "Attempted to create gadget with uninitialized Protoboard."
@@ -744,27 +479,10 @@ impl<T: Default + Clone> Gadget<T> {
     }
 }
 
-// impl R1P_Gadget {
-//     // R1P_Gadget::~R1P_Gadget() {}
-
-//     pub fn addRank1Constraint(
-//         a: LinearCombination,
-//         b: LinearCombination,
-//         c: LinearCombination,
-//         name: &string,
-//     ) {
-//         pb_.addRank1Constraint(a, b, c, name);
-//     }
-// }
-
-// impl AND_GadgetBase{
-// AND_GadgetBase::~AND_GadgetBase() {}
-// }
-
-/*
-    Constraint breakdown:
-    (1) input1 * input2 = result
-*/
+// /*
+//     Constraint breakdown:
+//     (1) input1 * input2 = result
+// */
 impl BinaryAND_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -772,7 +490,6 @@ impl BinaryAND_Gadget {
         input2: LinearCombination,
         result: Variable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), AND_GadgetBase(pb), input1_(input1), input2_(input2), result_(result)
         Gadget::<Self>::new(
             pb,
             Self {
@@ -805,23 +522,21 @@ impl GadgetConfig for Gadget<BinaryAND_Gadget> {
     }
 }
 
-/*
-    Constraint breakdown:
+// /*
+//     Constraint breakdown:
 
-    (*) sum = sum(input[i]) - n
-    (1) sum * result = 0
-    (2) sum * sumInverse = 1 - result
+//     (*) sum = sum(input[i]) - n
+//     (1) sum * result = 0
+//     (2) sum * sumInverse = 1 - result
 
-    [ AND(inputs) == 1 ] (*)==> [sum == 0] (2)==> [result == 1]
-    [ AND(inputs) == 0 ] (*)==> [sum != 0] (1)==> [result == 0]
-*/
+//     [ AND(inputs) == 1 ] (*)==> [sum == 0] (2)==> [result == 1]
+//     [ AND(inputs) == 0 ] (*)==> [sum != 0] (1)==> [result == 0]
+// */
 impl R1P_AND_Gadget {
     pub fn new(pb: ProtoboardPtr, input: VariableArrayType, result: Variable) -> Gadget<Self> {
-        // : Gadget(pb), AND_GadgetBase(pb), R1P_Gadget(pb), input_(input), result_(result),
-        //       sumInverse_("sumInverse")
+
         // assert!(input.len() > 0, "Attempted to create an R1P_AND_Gadget with 0 inputs.");
-        // assert!(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_AND_Gadget with too "
-        //                                                           "many inputs. Will cause overflow!");
+        // assert!(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_AND_Gadget with too many inputs. Will cause overflow!");
         Gadget::<Self>::new(
             pb,
             Self {
@@ -896,13 +611,13 @@ impl AND_Gadget {
     }
 }
 
-// OR_GadgetBase::~OR_GadgetBase() {}
 
-/*
-    Constraint breakdown:
-    (1) result = input1 + input2 - input1 * input2
-        input1 * input2 = input1 + input2 - result
-*/
+
+// /*
+//     Constraint breakdown:
+//     (1) result = input1 + input2 - input1 * input2
+//         input1 * input2 = input1 + input2 - result
+// */
 impl BinaryOR_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -910,7 +625,6 @@ impl BinaryOR_Gadget {
         input2: LinearCombination,
         result: Variable,
     ) -> Gadget<Self> {
-        //  : Gadget(pb), OR_GadgetBase(pb), input1_(input1), input2_(input2), result_(result)
         Gadget::<Self>::new(
             pb,
             Self {
@@ -944,23 +658,21 @@ impl GadgetConfig for Gadget<BinaryOR_Gadget> {
         }
     }
 }
-/*
-    Constraint breakdown:
+// /*
+//     Constraint breakdown:
 
-    (*) sum = sum(input[i])
-    (1) sum * (1 - result) = 0
-    (2) sum * sumInverse = result
+//     (*) sum = sum(input[i])
+//     (1) sum * (1 - result) = 0
+//     (2) sum * sumInverse = result
 
-    [ OR(inputs) == 1 ] (*)==> [sum != 0] (1)==> [result == 1]
-    [ OR(inputs) == 0 ] (*)==> [sum == 0] (2)==> [result == 0]
-*/
+//     [ OR(inputs) == 1 ] (*)==> [sum != 0] (1)==> [result == 1]
+//     [ OR(inputs) == 0 ] (*)==> [sum == 0] (2)==> [result == 0]
+// */
 impl R1P_OR_Gadget {
     pub fn new(pb: ProtoboardPtr, input: VariableArrayType, result: Variable) -> Gadget<Self> {
-        // : Gadget(pb), OR_GadgetBase(pb), R1P_Gadget(pb), sumInverse_("sumInverse"), input_(input),
-        //           result_(result)
+        
         // assert!(input.len() > 0, "Attempted to create an R1P_OR_Gadget with 0 inputs.");
-        // assert!(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_OR_Gadget with too "
-        //                                                           "many inputs. Will cause overflow!");
+        // assert!(input.len() <= Fp(-1).as_ulong(), "Attempted to create R1P_OR_Gadget with too many inputs. Will cause overflow!");
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1034,18 +746,18 @@ impl OR_Gadget {
     }
 }
 
-// InnerProduct_GadgetBase::~InnerProduct_GadgetBase() {}
 
-/*
-    Constraint breakdown:
 
-    (1) partialSums[0] = A[0] * B[0]
-    (2) partialSums[i] = partialSums[i-1] + A[0] * B[0] ==>                     i = 1..n-2
-        partialSums[i] - partialSums[i-1] = A[i] * B[i]
-    (3) result = partialSums[n-1] = partialSums[n-2] + A[n-1] * B[n-1] ==>
-        result - partialSums[n-2] = A[n-1] * B[n-1]
+// /*
+//     Constraint breakdown:
 
-*/
+//     (1) partialSums[0] = A[0] * B[0]
+//     (2) partialSums[i] = partialSums[i-1] + A[0] * B[0] ==>                     i = 1..n-2
+//         partialSums[i] - partialSums[i-1] = A[i] * B[i]
+//     (3) result = partialSums[n-1] = partialSums[n-2] + A[n-1] * B[n-1] ==>
+//         result - partialSums[n-2] = A[n-1] * B[n-1]
+
+// */
 
 impl R1P_InnerProduct_Gadget {
     pub fn new(
@@ -1054,11 +766,9 @@ impl R1P_InnerProduct_Gadget {
         B: VariableArrayType,
         result: Variable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), InnerProduct_GadgetBase(pb), R1P_Gadget(pb), partialSums_(A.len(),
-        //           "partialSums"), A_(A), B_(B), result_(result)
+
         // assert!(A.len() > 0, "Attempted to create an R1P_InnerProduct_Gadget with 0 inputs.");
-        // assert!(A.len() == B.len(), format!("Inner product vector sizes not equal. Sizes are: "
-        //                                                     "(A) - {}, (B) - {}", A.len(), B.len()));
+        // assert!(A.len() == B.len(), format!("Inner product vector sizes not equal. Sizes are: (A) - {}, (B) - {}", A.len(), B.len()));
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1147,17 +857,17 @@ impl GadgetConfig for Gadget<R1P_InnerProduct_Gadget> {
     }
 }
 
-// LooseMUX_GadgetBase::~LooseMUX_GadgetBase() {}
 
-/*
-    Constraint breakdown:
-    (1) indicators[i] * (index - i) = 0  | i = 0..n-1 ==> only indicators[index] will be non-zero
-    (2) sum(indicators[i]) = successFlag ==> successFlag = indicators[index]
-    (3) successFlag is boolean
-    (4) result[j] = <indicators> * <inputs[index][j]>  |  j = 1..output.len()   ==>
-        result[j] = inputs[index][j]
 
-*/
+// /*
+//     Constraint breakdown:
+//     (1) indicators[i] * (index - i) = 0  | i = 0..n-1 ==> only indicators[index] will be non-zero
+//     (2) sum(indicators[i]) = successFlag ==> successFlag = indicators[index]
+//     (3) successFlag is boolean
+//     (4) result[j] = <indicators> * <inputs[index][j]>  |  j = 1..output.len()   ==>
+//         result[j] = inputs[index][j]
+
+// */
 impl R1P_LooseMUX_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1166,22 +876,18 @@ impl R1P_LooseMUX_Gadget {
         output: VariableArrayType,
         successFlag: Variable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), LooseMUX_GadgetBase(pb), R1P_Gadget(pb),
-        //           indicators_(inputs.len(), "indicators"), inputs_(inputs.len()), index_(index),
-        //           output_(output), successFlag_(successFlag)
+    
 
         assert!(
             inputs.len() <= Fp::from(-1i64).as_ulong() as usize,
             "Attempted to create R1P_LooseMUX_Gadget with too many inputs. May cause overflow!"
         );
-        //    for inpArr  inputs) {
         for i in 0..inputs.len() {
             assert!(
                 inputs[i].len() == output.len(),
                 "Input VariableArrayType is of incorrect size."
             );
         }
-        // ::std::copy(inputs.begin(), inputs.end(), inputs_.begin()); // change type to R1P_VariableArray
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1285,10 +991,10 @@ impl LooseMUX_Gadget {
         RcCell::new(GadgetType::R1PLooseMux(pGadget))
     }
 
-    /**
-        An overload for the private case in which we only want to multiplex one Variable. This is
-        usually the case in R1P.
-    **/
+    // /**
+    //     An overload for the private case in which we only want to multiplex one Variable. This is
+    //     usually the case in R1P.
+    // **/
     pub fn create(
         pb: ProtoboardPtr,
         inputs: VariableArrayType,
@@ -1311,22 +1017,21 @@ impl LooseMUX_Gadget {
     }
 }
 
-/*
-    Compression Packing gadgets have two modes, which differ in the way the witness and constraints
-    are created. In PACK mode  gerateWitness() will take the bits and create a packed element (or
-    number of elements) while generateConstraints() will not enforce that bits are indeed Boolean.
-    In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
-    generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
-*/
+// /*
+//     Compression Packing gadgets have two modes, which differ in the way the witness and constraints
+//     are created. In PACK mode  gerateWitness() will take the bits and create a packed element (or
+//     number of elements) while generateConstraints() will not enforce that bits are indeed Boolean.
+//     In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
+//     generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
+// */
 
-// CompressionPacking_GadgetBase::~CompressionPacking_GadgetBase() {}
 
-/*
-    Constraint breakdown:
+// /*
+//     Constraint breakdown:
 
-    (1) packed = sum(unpacked[i] * 2^i)
-    (2) (UNPACK only) unpacked[i] is Boolean.
-*/
+//     (1) packed = sum(unpacked[i] * 2^i)
+//     (2) (UNPACK only) unpacked[i] is Boolean.
+// */
 impl R1P_CompressionPacking_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1334,8 +1039,7 @@ impl R1P_CompressionPacking_Gadget {
         packed: VariableArrayType,
         packingMode: PackingMode,
     ) -> Gadget<Self> {
-        // : Gadget(pb), CompressionPacking_GadgetBase(pb), R1P_Gadget(pb), packingMode_(packingMode),
-        //       unpacked_(unpacked), packed_(packed)
+      
         let n = unpacked.len();
         assert!(n > 0, "Attempted to pack 0 bits in R1P.");
         assert!(
@@ -1411,22 +1115,21 @@ impl GadgetConfig for Gadget<R1P_CompressionPacking_Gadget> {
     }
 }
 
-/*
-    Arithmetic Packing gadgets have two modes, which differ in the way the witness and constraints
-    are created. In PACK mode  gerateWitness() will take the bits and create a packed element (or
-    number of elements) while generateConstraints() will not enforce that bits are indeed Boolean.
-    In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
-    generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
-*/
+// /*
+//     Arithmetic Packing gadgets have two modes, which differ in the way the witness and constraints
+//     are created. In PACK mode  gerateWitness() will take the bits and create a packed element (or
+//     number of elements) while generateConstraints() will not enforce that bits are indeed Boolean.
+//     In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
+//     generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
+// */
 
-// IntegerPacking_GadgetBase::~IntegerPacking_GadgetBase() {}
 
-/*
-    Constraint breakdown:
+// /*
+//     Constraint breakdown:
 
-    (1) packed = sum(unpacked[i] * 2^i)
-    (2) (UNPACK only) unpacked[i] is Boolean.
-*/
+//     (1) packed = sum(unpacked[i] * 2^i)
+//     (2) (UNPACK only) unpacked[i] is Boolean.
+// */
 impl R1P_IntegerPacking_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1434,8 +1137,7 @@ impl R1P_IntegerPacking_Gadget {
         packed: VariableArrayType,
         packingMode: PackingMode,
     ) -> Gadget<Self> {
-        // : Gadget(pb), IntegerPacking_GadgetBase(pb), R1P_Gadget(pb), packingMode_(packingMode),
-        //   unpacked_(unpacked), packed_(packed)
+     
         let n = unpacked.len();
         assert!(n > 0, "Attempted to pack 0 bits in R1P.");
         assert!(
@@ -1476,17 +1178,15 @@ impl GadgetConfig for Gadget<R1P_IntegerPacking_Gadget> {
     }
 }
 
-// EqualsConst_GadgetBase::~EqualsConst_GadgetBase() {}
+// /*
+//     Constraint breakdown:
 
-/*
-    Constraint breakdown:
+//     (1) (input - n) * result = 0
+//     (2) (input - n) * aux = 1 - result
 
-    (1) (input - n) * result = 0
-    (2) (input - n) * aux = 1 - result
-
-    [ input == n ] (2)==> [result == 1]    (aux can ake any value)
-    [ input != n ] (1)==> [result == 0]    (aux == inverse(input - n))
-*/
+//     [ input == n ] (2)==> [result == 1]    (aux can ake any value)
+//     [ input != n ] (1)==> [result == 0]    (aux == inverse(input - n))
+// */
 impl R1P_EqualsConst_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1494,8 +1194,7 @@ impl R1P_EqualsConst_Gadget {
         input: LinearCombination,
         result: Variable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), EqualsConst_GadgetBase(pb), R1P_Gadget(pb), n_(n),
-        //           aux_("aux (R1P_EqualsConst_Gadget)"), input_(input), result_(result)
+       
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1548,7 +1247,6 @@ impl GadgetConfig for Gadget<R1P_EqualsConst_Gadget> {
 
 impl DualWord_Gadget {
     pub fn new(pb: ProtoboardPtr, var: DualWord, packingMode: PackingMode) -> Gadget<Self> {
-        // : Gadget(pb), var_(var), packingMode_(packingMode), packingGadget_()
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1586,7 +1284,6 @@ impl GadgetConfig for Gadget<DualWord_Gadget> {
 
 impl DualWordArray_Gadget {
     pub fn new(pb: ProtoboardPtr, vars: DualWordArray, packingMode: PackingMode) -> Gadget<Self> {
-        //  : Gadget(pb), vars_(vars), packingMode_(packingMode), packingGadgets_()
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1631,13 +1328,13 @@ impl GadgetConfig for Gadget<DualWordArray_Gadget> {
     }
 }
 
-/*
-    Constraint breakdown:
+// /*
+//     Constraint breakdown:
 
-    (1) result = (1 - toggle) * zeroValue + toggle * oneValue
-        (rank 1 format) ==> toggle * (oneValue - zeroValue) = result - zeroValue
+//     (1) result = (1 - toggle) * zeroValue + toggle * oneValue
+//         (rank 1 format) ==> toggle * (oneValue - zeroValue) = result - zeroValue
 
-*/
+// */
 impl Toggle_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1646,8 +1343,7 @@ impl Toggle_Gadget {
         oneValue: LinearCombination,
         result: Variable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), toggle_(toggle), zeroValue_(zeroValue), oneValue_(oneValue),
-        //           result_(result)
+      
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1693,23 +1389,22 @@ impl GadgetConfig for Gadget<Toggle_Gadget> {
     }
 }
 
-/*
-   semantics: condition != 0 --> flag = 1
-              condition == 0 --> flag = 0
+// /*
+//    semantics: condition != 0 --> flag = 1
+//               condition == 0 --> flag = 0
 
-   Constraint breakdown:
-   (1) condition * not(flag) = 0
-   (2) condition * auxConditionInverse = flag
+//    Constraint breakdown:
+//    (1) condition * not(flag) = 0
+//    (2) condition * auxConditionInverse = flag
 
-*/
+// */
 impl ConditionalFlag_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
         condition: LinearCombination,
         flag: FlagVariable,
     ) -> Gadget<Self> {
-        //  : Gadget(pb), flag_(flag), condition_(condition),
-        //           auxConditionInverse_("ConditionalFlag_Gadget::auxConditionInverse_")
+       
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1763,13 +1458,13 @@ impl GadgetConfig for Gadget<ConditionalFlag_Gadget> {
     }
 }
 
-/*
-   semantics: condition == 1 --> flag = 1
+// /*
+//    semantics: condition == 1 --> flag = 1
 
-   Constraint breakdown:
-   (1) condition * (1 - flag) = 0
+//    Constraint breakdown:
+//    (1) condition * (1 - flag) = 0
 
-*/
+// */
 
 impl LogicImplication_Gadget {
     pub fn new(
@@ -1777,7 +1472,6 @@ impl LogicImplication_Gadget {
         condition: LinearCombination,
         flag: FlagVariable,
     ) -> Gadget<Self> {
-        //  : Gadget(pb), flag_(flag), condition_(condition)
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1815,7 +1509,7 @@ impl GadgetConfig for Gadget<LogicImplication_Gadget> {
     }
 }
 
-// Comparison_GadgetBase::~Comparison_GadgetBase() {}
+
 impl R1P_Comparison_Gadget {
     pub fn new(
         pb: ProtoboardPtr,
@@ -1825,9 +1519,7 @@ impl R1P_Comparison_Gadget {
         less: FlagVariable,
         lessOrEqual: FlagVariable,
     ) -> Gadget<Self> {
-        // : Gadget(pb), Comparison_GadgetBase(pb), R1P_Gadget(pb), wordBitSize_(wordBitSize),
-        //           lhs_(lhs), rhs_(rhs), less_(less), lessOrEqual_(lessOrEqual),
-        //           alpha_u_(wordBitSize,  "alpha"), notAllZeroes_("notAllZeroes")
+  
         Gadget::<Self>::new(
             pb,
             Self {
@@ -1866,30 +1558,28 @@ impl GadgetConfig for Gadget<R1P_Comparison_Gadget> {
         );
     }
 
-    /*
-        Constraint breakdown:
 
-        for succinctness we shall define:
-        (1) wordBitSize == n
-        (2) lhs == A
-        (3) rhs == B
+    //     Constraint breakdown:
 
-        packed(alpha) = 2^n + B - A
-        not_all_zeros = OR(alpha.unpacked)
+    //     for succinctness we shall define:
+    //     (1) wordBitSize == n
+    //     (2) lhs == A
+    //     (3) rhs == B
 
-        if B - A > 0, then: alpha > 2^n,
-        so alpha[n] = 1 and notAllZeroes = 1
-        if B - A = 0, then: alpha = 2^n,
-        so alpha[n] = 1 and notAllZeroes = 0
-        if B - A < 0, then: 0 <= alpha <= 2^n-1
-        so alpha[n] = 0
+    //     packed(alpha) = 2^n + B - A
+    //     not_all_zeros = OR(alpha.unpacked)
 
-        therefore:
-        (1) alpha[n] = lessOrEqual
-        (2) alpha[n] * notAllZeroes = less
+    //     if B - A > 0, then: alpha > 2^n,
+    //     so alpha[n] = 1 and notAllZeroes = 1
+    //     if B - A = 0, then: alpha = 2^n,
+    //     so alpha[n] = 1 and notAllZeroes = 0
+    //     if B - A < 0, then: 0 <= alpha <= 2^n-1
+    //     so alpha[n] = 0
 
+    //     therefore:
+    //     (1) alpha[n] = lessOrEqual
+    //     (2) alpha[n] * notAllZeroes = less
 
-    */
     fn generateConstraints(&self) {
         self.enforceBooleanity(&self.t.notAllZeroes_);
         let two_n = POW2(self.t.wordBitSize_ as i32) as i64;

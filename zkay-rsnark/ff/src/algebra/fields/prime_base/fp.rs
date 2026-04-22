@@ -7,7 +7,7 @@ use crate::{
             algorithms::{
                 FPMConfig, FieldTForPowersConfig, PowerConfig, Powers, tonelli_shanks_sqrt,
             },
-            bigint::{GMP_NUMB_BITS,BigIntegerT, bigint},
+            bigint::{BigIntegerT, GMP_NUMB_BITS, bigint},
             field_utils, fp_aux, {BigInt, algorithms},
         },
         fields::{
@@ -33,18 +33,16 @@ use std::{
 };
 //  use crate::algebra::field_utils::bigint::bigint;
 
-/**
- * Arithmetic in the finite field F[p], for prime p of fixed length.
- *
- * This pub struct implements Fp-arithmetic, for a large prime p, using a fixed number
- * of words. It is optimized for tight memory consumption, so the modulus p is
- * passed as a template parameter, to avoid per-element overheads.
- *
- * The implementation is mostly a wrapper around GMP's MPN (constant-size integers).
- * But for the integer sizes of interest for libff (3 to 5 limbs of 64 bits each),
- * we implement performance-critical routines, like addition and multiplication,
- * using hand-optimzied assembly code.
- */
+//  * Arithmetic in the finite field F[p], for prime p of fixed length.
+//  *
+//  * This pub struct implements Fp-arithmetic, for a large prime p, using a fixed number
+//  * of words. It is optimized for tight memory consumption, so the modulus p is
+//  * passed as a template parameter, to avoid per-element overheads.
+//  *
+//  * The implementation is mostly a wrapper around GMP's MPN (constant-size integers).
+//  * But for the integer sizes of interest for libff (3 to 5 limbs of 64 bits each),
+//  * we implement performance-critical routines, like addition and multiplication,
+//  * using hand-optimzied assembly code.
 
 pub trait Fp_modelConfig<const N: usize>:
     Send + Sync + 'static + Sized + Default + Clone + Copy + Eq + Debug
@@ -139,7 +137,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
-    
     type BigIntT = bigint<N>;
     const num_limbs: usize = N;
     fn size_in_bits() -> usize {

@@ -121,9 +121,9 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checker<FieldT> {
         next_has_accepted: variable<FieldT, pb_variable>,
         annotation_prefix: String,
     ) -> tinyram_cpu_checkers<FieldT> {
-        /* parse previous PC value as an instruction (note that we start
-        parsing from LSB of the instruction doubleword and go to the
-        MSB) */
+        // /* parse previous PC value as an instruction (note that we start
+        // parsing from LSB of the instruction doubleword and go to the
+        // MSB) */
         let prev_pc_val_contents = &prev_pc_val.contents;
         let mut pc_val_it = 0;
 
@@ -508,14 +508,14 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             ),
         );
 
-        /* We require that if opcode is one of load.{b,w}, then
-        subcontents is appropriately stored in instruction_results. If
-        opcode is store.b we only take the necessary portion of arg1val
-        (i.e. last byte), and take entire arg1val for store.w.
+        // /* We require that if opcode is one of load.{b,w}, then
+        // subcontents is appropriately stored in instruction_results. If
+        // opcode is store.b we only take the necessary portion of arg1val
+        // (i.e. last byte), and take entire arg1val for store.w.
 
-        Note that ls_addr is *always* going to be arg2val. If the
-        instruction is a non-memory instruction, we will treat it as a
-        load from that memory location. */
+        // Note that ls_addr is *always* going to be arg2val. If the
+        // instruction is a non-memory instruction, we will treat it as a
+        // load from that memory location. */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.opcode_indicators[tinyram_opcode::tinyram_opcode_LOADB.clone() as usize]
@@ -638,15 +638,15 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             ),
         );
 
-        /*
-           handle tapes:
+        // /*
+        //    handle tapes:
 
-           we require that:
-           prev_tape1_exhausted implies next_tape1_exhausted,
-           prev_tape1_exhausted implies flag to be set
-           reads other than from tape 1 imply flag to be set
-           flag implies result to be 0
-        */
+        //    we require that:
+        //    prev_tape1_exhausted implies next_tape1_exhausted,
+        //    prev_tape1_exhausted implies flag to be set
+        //    reads other than from tape 1 imply flag to be set
+        //    flag implies result to be 0
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.prev_tape1_exhausted.clone().into(),
@@ -761,8 +761,8 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
     }
 
     pub fn generate_r1cs_witness_other(&self, aux: &[usize]) {
-        /* now ls_prev_val is filled with memory contents at ls_addr. we
-        now ensure consistency with its doubleword representation */
+        // /* now ls_prev_val is filled with memory contents at ls_addr. we
+        // now ensure consistency with its doubleword representation */
         self.t
             .t
             .t
@@ -808,11 +808,11 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
             .borrow()
             .generate_r1cs_witness_from_bits();
 
-        /* we distinguish four cases for memory handling:
-        a) load.b
-        b) store.b
-        c) store.w
-        d) load.w or any non-memory instruction */
+        // /* we distinguish four cases for memory handling:
+        // a) load.b
+        // b) store.b
+        // c) store.w
+        // d) load.w or any non-memory instruction */
         let prev_doubleword = self
             .pb
             .borrow()
@@ -903,9 +903,9 @@ impl<FieldT: FieldTConfig> tinyram_cpu_checkers<FieldT> {
 
         //handle reads
         if self.pb.borrow().val(&self.t.t.t.prev_tape1_exhausted) == FieldT::one() {
-            /* if tape was exhausted before, it will always be
-            exhausted. we also need to only handle reads from tape 1,
-            so we can safely set flag here */
+            // /* if tape was exhausted before, it will always be
+            // exhausted. we also need to only handle reads from tape 1,
+            // so we can safely set flag here */
             *self
                 .pb
                 .borrow_mut()

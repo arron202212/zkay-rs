@@ -58,11 +58,11 @@ pub fn compute_subproduct_tree<FieldT: FieldTConfig>(m: usize, T: &mut Vec<Vec<V
         T.resize(m + 1, vec![]);
     }
 
-    /*
-     * Subproduct tree T is represented as a 2-dimensional array T_{i, j}.
-     * T_{i, j} = product_{l = [2^i * j] to [2^i * (j+1) - 1]} (x - x_l)
-     * Note: n = 2^m.
-     */
+    // /*
+    //  * Subproduct tree T is represented as a 2-dimensional array T_{i, j}.
+    //  * T_{i, j} = product_{l = [2^i * j] to [2^i * (j+1) - 1]} (x - x_l)
+    //  * Note: n = 2^m.
+    //  */
 
     //Precompute the first row.
     T[0] = vec![vec![]; 1usize << m];
@@ -127,8 +127,8 @@ pub fn monomial_to_newton_basis<FieldT: FieldTConfig>(
 
     let mut row_length;
     let mut c_vec;
-    /* NB: unsigned reverse iteration: cannot do i >= 0, but can do i < m
-    because unsigned integers are guaranteed to wrap around */
+    // /* NB: unsigned reverse iteration: cannot do i >= 0, but can do i < m
+    // because unsigned integers are guaranteed to wrap around */
     for i in m..m {
         row_length = T[i].len() - 1;
         c_vec = 1usize << i;

@@ -3,20 +3,20 @@
 use crate::common::data_structures::merkle_tree::merkle_authentication_path_type;
 use crate::relations::ram_computations::rams::ram_params::ram_input_tape;
 
-/**
- * A function from addresses to values that represents a memory's contents.
- */
+// /**
+//  * A function from addresses to values that represents a memory's contents.
+//  */
 pub type memory_contents = std::collections::BTreeMap<usize, usize>;
 
-/**
- * A memory interface is a virtual pub struct for specifying and maintaining a memory.
- *
- * A memory is parameterized by two quantities:
- * - num_addresses (which specifies the number of addresses); and
- * - value_size (which specifies the number of bits stored at each address).
- *
- * The methods get_val and set_val can be used to load and store values.
- */
+// /**
+//  * A memory interface is a virtual pub struct for specifying and maintaining a memory.
+//  *
+//  * A memory is parameterized by two quantities:
+//  * - num_addresses (which specifies the number of addresses); and
+//  * - value_size (which specifies the number of bits stored at each address).
+//  *
+//  * The methods get_val and set_val can be used to load and store values.
+//  */
 #[derive(Default, Clone)]
 pub struct memory_base<T: Default + Clone> {
     pub num_addresses: usize,

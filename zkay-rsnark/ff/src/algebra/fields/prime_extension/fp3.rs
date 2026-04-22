@@ -27,15 +27,14 @@ use std::{
 };
 
 use num_traits::{One, Zero};
-// /**
+
 //  * Arithmetic in the field F[p^3].
 //  *
 //  * Let p := modulus. This interface provides arithmetic for the extension field
 //  * Fp3 = Fp[U]/(U^3-T::non_residue), where T::non_residue is in Fp.
 //  *
 //  * ASSUMPTION: p = 1 (mod 6)
-//  */
-//
+
 type Fp_modelConfig<const N: usize, const N3: usize, T> =
     <T as Fp3_modelConfig<N, N3>>::Fp_modelConfig;
 pub trait Fp3_modelConfig<const N: usize, const N3: usize>:
@@ -83,7 +82,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> FieldTForPowers
         self.squared()
     }
 }
-// use crate::algebra::field_utils::field_utils;
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3, T> {
     pub const fn const_new(b: BigInt<N>) -> Self {
         Self {
@@ -404,7 +402,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Neg for Fp3_mod
 }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PpConfig for Fp3_model<N, N3, T> {
-    
     type BigIntT = bigint<N>;
 }
 
@@ -437,17 +434,14 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Zero for Fp3_mo
 use std::fmt;
 use std::io::{self, BufRead};
 
-// 1. 对应: operator<<(std::ostream &out, const Fp3_model &el)
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> fmt::Display
     for Fp3_model<N, N3, T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 使用空格作为 OUTPUT_SEPARATOR
         write!(f, "{} {} {}", self.c0, self.c1, self.c2)
     }
 }
 
-// 2. 对应: operator>>(std::istream &in, Fp3_model &el)
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3, T> {
     pub fn read<R: BufRead>(reader: &mut R) -> io::Result<Self> {
         let mut line = String::new();
@@ -473,7 +467,6 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Fp3_model<N, N3
     }
 }
 
-// 3. 对应: operator<<(std::ostream& out, const std::vector<Fp3_model> &v)
 pub fn write_vector<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>>(
     v: &[Fp3_model<N, N3, T>],
 ) -> String {
@@ -484,26 +477,20 @@ pub fn write_vector<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>>(
     out
 }
 
-// 4. 对应: operator>>(std::istream& in, std::vector<Fp3_model> &v)
 pub fn read_vector<R: BufRead, const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>>(
     reader: &mut R,
 ) -> io::Result<Vec<Fp3_model<N, N3, T>>> {
-    // v.clear() 在 Rust 中通过新建 Vec 或传入 &mut Vec 处理
     let mut line = String::new();
 
-    // 读取大小 s
     reader.read_line(&mut line)?;
     let s: usize = line
         .trim()
         .parse()
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "长度解析错误"))?;
 
-    // 对应 v.reserve(s)
     let mut v = Vec::with_capacity(s);
 
-    // 对应 for (size_t i = 0; i < s; ++i)
     for _ in 0..s {
-        // 对应 in >> el; v.emplace_back(el);
         let el = Fp3_model::<N, N3, T>::read(reader)?;
         v.push(el);
     }

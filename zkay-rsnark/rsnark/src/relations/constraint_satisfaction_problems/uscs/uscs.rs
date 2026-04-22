@@ -13,22 +13,22 @@ use ffec::FieldTConfig;
 use std::collections::BTreeMap;
 use std::fmt;
 
-/**
- * A USCS constraint is a formal expression of the form
- *
- *                \sum_{i=1}^{m} a_i * x_{i} ,
- *
- * where each a_i is in <FieldT> and each x_{i} is a formal variable.
- *
- * A USCS constraint is used to construct a USCS constraint system (see below).
- */
+// /**
+//  * A USCS constraint is a formal expression of the form
+//  *
+//  *                \sum_{i=1}^{m} a_i * x_{i} ,
+//  *
+//  * where each a_i is in <FieldT> and each x_{i} is a formal variable.
+//  *
+//  * A USCS constraint is used to construct a USCS constraint system (see below).
+//  */
 
 pub type uscs_constraint<FieldT, SV, SLC> = linear_combination<FieldT, SV, SLC>;
 
-/**
- * A USCS variable assignment is a vector of <FieldT> elements that represents
- * a candidate solution to a USCS constraint system (see below).
- */
+// /**
+//  * A USCS variable assignment is a vector of <FieldT> elements that represents
+//  * a candidate solution to a USCS constraint system (see below).
+//  */
 
 pub type uscs_primary_input<FieldT> = Vec<FieldT>;
 
@@ -36,24 +36,19 @@ pub type uscs_auxiliary_input<FieldT> = Vec<FieldT>;
 
 pub type uscs_variable_assignment<FieldT> = Vec<FieldT>;
 
-// pub struct uscs_constraint_system;
 
-// std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
-
-// std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs);
-
-/**
- * A system of USCS constraints looks like
- *
- *     { ( \sum_{i=1}^{m_k} a_{k,i} * x_{k,i} )^2 = 1 }_{k=1}^{n}  .
- *
- * In other words, the system is satisfied if and only if there exist a
- * USCS variable assignment for which each USCS constraint evaluates to -1 or 1.
- *
- * NOTE:
- * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
- * Thus, the 0-th variable is not included in num_variables.
- */
+// /**
+//  * A system of USCS constraints looks like
+//  *
+//  *     { ( \sum_{i=1}^{m_k} a_{k,i} * x_{k,i} )^2 = 1 }_{k=1}^{n}  .
+//  *
+//  * In other words, the system is satisfied if and only if there exist a
+//  * USCS variable assignment for which each USCS constraint evaluates to -1 or 1.
+//  *
+//  * NOTE:
+//  * The 0-th variable (i.e., "x_{0}") always represents the constant 1.
+//  * Thus, the 0-th variable is not included in num_variables.
+//  */
 #[derive(Default, Clone)]
 pub struct uscs_constraint_system<
     FieldT: FieldTConfig,
@@ -73,24 +68,9 @@ pub struct uscs_constraint_system<
     // // #ifdef DEBUG
     pub constraint_annotations: BTreeMap<usize, String>,
     pub variable_annotations: BTreeMap<usize, String>,
-    //
-
-    //     bool is_valid() const;
-    //     bool is_satisfied(primary_input:&uscs_primary_input<FieldT>,
-    //                       auxiliary_input:&uscs_auxiliary_input<FieldT>) const;
-
-    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT,SLC>);
-    //     pub fn  add_constraint(constraint:&uscs_constraint<FieldT,SLC>, annotation:&String);
-
-    //     bool operator==(other:&uscs_constraint_system<FieldT>) const;
-
-    //     friend std::ostream& operator<< <FieldT>(std::ostream &out, cs:&uscs_constraint_system<FieldT>);
-    //     friend std::istream& operator>> <FieldT>(std::istream &in, uscs_constraint_system<FieldT> &cs);
-
-    //     pub fn  report_linear_constraint_statistics() const;
+   
 }
 
-// use crate::relations::constraint_satisfaction_problems/uscs/uscs;
 
 use ffec::algebra::field_utils::bigint::bigint;
 use ffec::common::profiling;
@@ -218,12 +198,6 @@ pub fn dump_uscs_constraint<
     constraint.print_with_assignment(full_variable_assignment, variable_annotations);
 }
 
-// bool uscs_constraint_system<FieldT>::operator==(other:&uscs_constraint_system<FieldT>) const
-// {
-//     return (self.constraints == other.constraints &&
-//             self.primary_input_size == other.primary_input_size &&
-//             self.auxiliary_input_size == other.auxiliary_input_size);
-// }
 
 impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfig> PartialEq
     for uscs_constraint_system<FieldT, SV, SLC>
@@ -253,41 +227,3 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         )
     }
 }
-// std::ostream& operator<<(std::ostream &out, cs:&uscs_constraint_system<FieldT>)
-// {
-//     out << cs.primary_input_size << "\n";
-//     out << cs.auxiliary_input_size << "\n";
-
-//     out << cs.num_constraints() << "\n";
-//     for c in &cs.constraints
-//     {
-//         out << c;
-//     }
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, uscs_constraint_system<FieldT> &cs)
-// {
-//     in >> cs.primary_input_size;
-//     in >> cs.auxiliary_input_size;
-
-//     cs.constraints.clear();
-
-//     usize s;
-//     in >> s;
-
-//     char b;
-//     in.read(&b, 1);
-
-//     cs.constraints.reserve(s);
-
-//     for i in 0..s
-//     {
-//         uscs_constraint<FieldT,SLC> c;
-//         in >> c;
-//         cs.constraints.push(c);
-//     }
-
-//     return in;
-// }

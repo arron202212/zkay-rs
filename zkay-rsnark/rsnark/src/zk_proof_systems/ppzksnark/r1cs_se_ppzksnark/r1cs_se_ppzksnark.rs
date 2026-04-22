@@ -59,8 +59,7 @@ use ffec::{One, Zero};
 use fqfft::evaluation_domain::evaluation_domain::{EvaluationDomainConfig, evaluation_domain};
 use rccell::RcCell;
 use std::ops::{Add, Mul};
-// use crate::common::data_structures::accumulation_vector;
-// use crate::knowledge_commitment::knowledge_commitment;
+
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint_system, r1cs_primary_input,
 };
@@ -69,12 +68,10 @@ use crate::zk_proof_systems::ppzksnark::r1cs_se_ppzksnark::r1cs_se_ppzksnark_par
     r1cs_se_ppzksnark_primary_input,
 };
 
-//
 
-//
-/**
- * A proving key for the R1CS SEppzkSNARK.
- */
+// /**
+//  * A proving key for the R1CS SEppzkSNARK.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_se_ppzksnark_proving_key<ppT: PublicParams> {
     // G^{gamma * A_i(t)} for 0 <= i <= sap.num_variables()
@@ -111,10 +108,7 @@ pub struct r1cs_se_ppzksnark_proving_key<ppT: PublicParams> {
 impl<ppT: PublicParams> ProvingKeyTConfig for r1cs_se_ppzksnark_proving_key<ppT> {}
 
 impl<ppT: PublicParams> r1cs_se_ppzksnark_proving_key<ppT> {
-    // r1cs_se_ppzksnark_proving_key() {};
-    // r1cs_se_ppzksnark_proving_key<ppT>& operator=(other:&r1cs_se_ppzksnark_proving_key<ppT>) = default;
-    // r1cs_se_ppzksnark_proving_key(other:&r1cs_se_ppzksnark_proving_key<ppT>) = default;
-    // r1cs_se_ppzksnark_proving_key(r1cs_se_ppzksnark_proving_key<ppT> &&other) = default;
+
     pub fn new(
         A_query: G1_vector<ppT>,
         B_query: G2_vector<ppT>,
@@ -167,9 +161,9 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_proving_key<ppT> {
     }
 }
 
-/**
- * A verification key for the R1CS SEppzkSNARK.
- */
+// /**
+//  * A verification key for the R1CS SEppzkSNARK.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_se_ppzksnark_verification_key<ppT: PublicParams> {
     // H
@@ -194,7 +188,6 @@ pub struct r1cs_se_ppzksnark_verification_key<ppT: PublicParams> {
 impl<ppT: PublicParams> VerificationKeyTConfig for r1cs_se_ppzksnark_verification_key<ppT> {}
 
 impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
-    // r1cs_se_ppzksnark_verification_key() = default;
     pub fn new(
         H: G2<ppT>,
         G_alpha: G1<ppT>,
@@ -235,13 +228,13 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
     }
 }
 
-/**
- * A processed verification key for the R1CS SEppzkSNARK.
- *
- * Compared to a (non-processed) verification key, a processed verification key
- * contains a small constant amount of additional pre-computed information that
- * enables a faster verification time.
- */
+// /**
+//  * A processed verification key for the R1CS SEppzkSNARK.
+//  *
+//  * Compared to a (non-processed) verification key, a processed verification key
+//  * contains a small constant amount of additional pre-computed information that
+//  * enables a faster verification time.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: PublicParams> {
     pub G_alpha: G1<ppT>,
@@ -254,9 +247,9 @@ pub struct r1cs_se_ppzksnark_processed_verification_key<ppT: PublicParams> {
     pub query: G1_vector<ppT>,
 }
 
-/**
- * A key pair for the R1CS SEppzkSNARK, which consists of a proving key and a verification key.
- */
+// /**
+//  * A key pair for the R1CS SEppzkSNARK, which consists of a proving key and a verification key.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_se_ppzksnark_keypair<ppT: PublicParams> {
     pub pk: r1cs_se_ppzksnark_proving_key<ppT>,
@@ -273,8 +266,7 @@ impl<ppT: PublicParams> KeyPairTConfig for r1cs_se_ppzksnark_keypair<ppT> {
     }
 }
 impl<ppT: PublicParams> r1cs_se_ppzksnark_keypair<ppT> {
-    // r1cs_se_ppzksnark_keypair() = default;
-    // r1cs_se_ppzksnark_keypair(other:&r1cs_se_ppzksnark_keypair<ppT>) = default;
+
     pub fn new(
         pk: r1cs_se_ppzksnark_proving_key<ppT>,
         vk: r1cs_se_ppzksnark_verification_key<ppT>,
@@ -282,16 +274,15 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_keypair<ppT> {
         Self { pk, vk }
     }
 
-    // r1cs_se_ppzksnark_keypair(r1cs_se_ppzksnark_keypair<ppT> &&other) = default;
 }
 
-/**
- * A proof for the R1CS SEppzkSNARK.
- *
- * While the proof has a structure, externally one merely opaquely produces,
- * serializes/deserializes, and verifies proofs. We only expose some information
- * about the structure for statistics purposes.
- */
+// /**
+//  * A proof for the R1CS SEppzkSNARK.
+//  *
+//  * While the proof has a structure, externally one merely opaquely produces,
+//  * serializes/deserializes, and verifies proofs. We only expose some information
+//  * about the structure for statistics purposes.
+//  */
 #[derive(Default, Clone)]
 pub struct r1cs_se_ppzksnark_proof<ppT: PublicParams> {
     pub A: G1<ppT>,
@@ -332,35 +323,24 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_proof<ppT> {
     }
 }
 
-/**
- * A generator algorithm for the R1CS SEppzkSNARK.
- *
- * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
- */
-// pub fn
-// r1cs_se_ppzksnark_keypair<ppT> r1cs_se_ppzksnark_generator(cs:&r1cs_se_ppzksnark_constraint_system<ppT>);
 
-/**
- * A prover algorithm for the R1CS SEppzkSNARK.
- *
- * Given a R1CS primary input X and a R1CS auxiliary input Y, this algorithm
- * produces a proof (of knowledge) that attests to the following statement:
- *               ``there exists Y such that CS(X,Y)=0''.
- * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
- */
+
+// /**
+//  * A prover algorithm for the R1CS SEppzkSNARK.
+//  *
+//  * Given a R1CS primary input X and a R1CS auxiliary input Y, this algorithm
+//  * produces a proof (of knowledge) that attests to the following statement:
+//  *               ``there exists Y such that CS(X,Y)=0''.
+//  * Above, CS is the R1CS constraint system that was given as input to the generator algorithm.
+//  */
 pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     pk: &r1cs_se_ppzksnark_proving_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_se_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_se_ppzksnark_proof<ppT>
-// where
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-//     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
+
 {
-    enter_block("Call to r1cs_se_ppzksnark_prover", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_prover").entered();
 
     // // #ifdef DEBUG
     //     assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
@@ -368,7 +348,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 
     let (d1, d2) = (ppT::Fr::random_element(), ppT::Fr::random_element());
 
-    enter_block("Compute the polynomial H", false);
+    let span = span!(Level::TRACE, "Compute the polynomial H").entered();
     let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
@@ -376,7 +356,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
         &d1,
         &d2,
     );
-    leave_block("Compute the polynomial H", false);
+    span.exit();
 
     // // #ifdef DEBUG
     //     ppT::Fr::random_element(:Fr<ppT> t =);
@@ -392,23 +372,21 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     //     assert!(pk.G_gamma2_Z_t.len() >= sap_wit.degree() - 1);
     //
 
-    // // #ifdef MULTICORE
-    //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-    // #else
+  
     let chunks = 1;
     //
 
     let r = ppT::Fr::random_element();
 
-    enter_block("Compute the proof", false);
+    let span = span!(Level::TRACE, "Compute the proof").entered();
 
-    enter_block("Compute answer to A-query", false);
-    /**
-     * compute A = G^{gamma * (\sum_{i=0}^m input_i * A_i(t) + r * Z(t))}
-     *           = \prod_{i=0}^m (G^{gamma * A_i(t)})^{input_i)
-     *             * (G^{gamma * Z(t)})^r
-     *           = \prod_{i=0}^m A_query[i]^{input_i} * G_gamma_Z^r
-     */
+    let span = span!(Level::TRACE, "Compute answer to A-query").entered();
+    // /**
+    //  * compute A = G^{gamma * (\sum_{i=0}^m input_i * A_i(t) + r * Z(t))}
+    //  *           = \prod_{i=0}^m (G^{gamma * A_i(t)})^{input_i)
+    //  *             * (G^{gamma * Z(t)})^r
+    //  *           = \prod_{i=0}^m A_query[i]^{input_i} * G_gamma_Z^r
+    //  */
     let A = pk.G_gamma_Z.clone()*r.clone() +
         pk.A_query[0].clone() + // i = 0 is a special case because input_i = 1
         pk.G_gamma_Z.clone()* sap_wit.d1.clone()  + // ZK-patch
@@ -418,12 +396,12 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
             &sap_wit.coefficients_for_ACs,
             chunks);
 
-    leave_block("Compute answer to A-query", false);
+    span.exit();
 
-    enter_block("Compute answer to B-query", false);
-    /**
-     * compute B exactly as A, except with H as the base
-     */
+    let span = span!(Level::TRACE, "Compute answer to B-query").entered();
+    // /**
+    //  * compute B exactly as A, except with H as the base
+    //  */
     let B = pk.H_gamma_Z.clone()*r.clone()  +
         pk.B_query[0].clone() + // i = 0 is a special case because input_i = 1
          pk.H_gamma_Z.clone()*sap_wit.d1.clone()  + // ZK-patch
@@ -432,19 +410,19 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
             &pk.B_query[1..],
             &sap_wit.coefficients_for_ACs,
             chunks);
-    leave_block("Compute answer to B-query", false);
+    span.exit();
 
-    enter_block("Compute answer to C-query", false);
-    /**
-     * compute C = G^{f(input) +
-     *                r^2 * gamma^2 * Z(t)^2 +
-     *                r * (alpha + beta) * gamma * Z(t) +
-     *                2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t) +
-     *                gamma^2 * Z(t) * H(t)}
-     * where G^{f(input)} = \prod_{i=l+1}^m C_query_1 * input_i
-     * and G^{2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t)} =
-     *              = \prod_{i=0}^m C_query_2 * input_i
-     */
+    let span = span!(Level::TRACE, "Compute answer to C-query").entered();
+    // /**
+    //  * compute C = G^{f(input) +
+    //  *                r^2 * gamma^2 * Z(t)^2 +
+    //  *                r * (alpha + beta) * gamma * Z(t) +
+    //  *                2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t) +
+    //  *                gamma^2 * Z(t) * H(t)}
+    //  * where G^{f(input)} = \prod_{i=l+1}^m C_query_1 * input_i
+    //  * and G^{2 * r * gamma^2 * Z(t) * \sum_{i=0}^m input_i A_i(t)} =
+    //  *              = \prod_{i=0}^m C_query_2 * input_i
+    //  */
     let C = multi_exp::<G1<ppT>,Fr<ppT>,
                                         {multi_exp_method::multi_exp_method_BDLO12}>(
             &pk.C_query_1,
@@ -466,11 +444,11 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
             &pk.G_gamma2_Z_t,
             &sap_wit.coefficients_for_H,
             chunks);
-    leave_block("Compute answer to C-query", false);
+    span.exit();
 
-    leave_block("Compute the proof", false);
+    span.exit();
 
-    leave_block("Call to r1cs_se_ppzksnark_prover", false);
+    span.exit();
 
     let proof = r1cs_se_ppzksnark_proof::<ppT>::new(A, B, C);
     r1cs_se_ppzksnark_proof::<ppT>::print_size();
@@ -478,61 +456,61 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     proof
 }
 
-/*
-Below are four variants of verifier algorithm for the R1CS SEppzkSNARK.
+// /*
+// Below are four variants of verifier algorithm for the R1CS SEppzkSNARK.
 
-These are the four cases that arise from the following two choices:
+// These are the four cases that arise from the following two choices:
 
-(1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
-    In the latter case, we call the algorithm an "online verifier".
+// (1) The verifier accepts a (non-processed) verification key or, instead, a processed verification key.
+//     In the latter case, we call the algorithm an "online verifier".
 
-(2) The verifier checks for "weak" input consistency or, instead, "strong" input consistency.
-    Strong input consistency requires that |primary_input| = CS.num_inputs, whereas
-    weak input consistency requires that |primary_input| <= CS.num_inputs (and
-    the primary input is implicitly padded with zeros up to length CS.num_inputs).
-*/
+// (2) The verifier checks for "weak" input consistency or, instead, "strong" input consistency.
+//     Strong input consistency requires that |primary_input| = CS.num_inputs, whereas
+//     weak input consistency requires that |primary_input| <= CS.num_inputs (and
+//     the primary input is implicitly padded with zeros up to length CS.num_inputs).
+// */
 
-/**
- * A verifier algorithm for the R1CS SEppzkSNARK that:
- * (1) accepts a non-processed verification key, and
- * (2) has weak input consistency.
- */
+// /**
+//  * A verifier algorithm for the R1CS SEppzkSNARK that:
+//  * (1) accepts a non-processed verification key, and
+//  * (2) has weak input consistency.
+//  */
 pub fn r1cs_se_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to r1cs_se_ppzksnark_verifier_weak_IC", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_weak_IC").entered();
     let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
     let result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
-    leave_block("Call to r1cs_se_ppzksnark_verifier_weak_IC", false);
+    span.exit();
     result
 }
 
-/**
- * A verifier algorithm for the R1CS SEppzkSNARK that:
- * (1) accepts a non-processed verification key, and
- * (2) has strong input consistency.
- */
+// /**
+//  * A verifier algorithm for the R1CS SEppzkSNARK that:
+//  * (1) accepts a non-processed verification key, and
+//  * (2) has strong input consistency.
+//  */
 pub fn r1cs_se_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to r1cs_se_ppzksnark_verifier_strong_IC", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_strong_IC").entered();
     let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
     let result = r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
-    leave_block("Call to r1cs_se_ppzksnark_verifier_strong_IC", false);
+    span.exit();
     result
 }
 
-/**
- * Convert a (non-processed) verification key into a processed verification key.
- */
+// /**
+//  * Convert a (non-processed) verification key into a processed verification key.
+//  */
 pub fn r1cs_se_ppzksnark_verifier_process_vk<ppT: PublicParams>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
 ) -> r1cs_se_ppzksnark_processed_verification_key<ppT> {
-    enter_block("Call to r1cs_se_ppzksnark_verifier_process_vk", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_process_vk").entered();
 
     let G_alpha_pc = ppT::precompute_G1(&vk.G_alpha);
     let H_beta_pc = ppT::precompute_G2(&vk.H_beta);
@@ -547,26 +525,26 @@ pub fn r1cs_se_ppzksnark_verifier_process_vk<ppT: PublicParams>(
 
     pvk.query = vk.query.clone();
 
-    leave_block("Call to r1cs_se_ppzksnark_verifier_process_vk", false);
+    span.exit();
 
     pvk
 }
 
-/**
- * A verifier algorithm for the R1CS ppzkSNARK that:
- * (1) accepts a processed verification key, and
- * (2) has weak input consistency.
- */
+// /**
+//  * A verifier algorithm for the R1CS ppzkSNARK that:
+//  * (1) accepts a processed verification key, and
+//  * (2) has weak input consistency.
+//  */
 fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     pvk: &r1cs_se_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to r1cs_se_ppzksnark_online_verifier_weak_IC", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_online_verifier_weak_IC").entered();
 
     let mut result = true;
 
-    enter_block("Check if the proof is well-formed", false);
+    let span = span!(Level::TRACE, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -574,22 +552,20 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
         }
         result = false;
     }
-    leave_block("Check if the proof is well-formed", false);
+    span.exit();
 
-    enter_block("Pairing computations", false);
+    let span = span!(Level::TRACE, "Pairing computations").entered();
 
-    // // #ifdef MULTICORE
-    //     override:usize chunks = omp_get_max_threads(); // to set OMP_NUM_THREADS env var or call omp_set_num_threads()
-    // #else
+
     let chunks = 1;
     //
 
-    enter_block("Check first test", false);
-    /**
-     * e(A*G^{alpha}, B*H^{beta}) = e(G^{alpha}, H^{beta}) * e(G^{psi}, H^{gamma})
-     *                              * e(C, H)
-     * where psi = \sum_{i=0}^l input_i pvk.query[i]
-     */
+    let span = span!(Level::TRACE, "Check first test").entered();
+    // /**
+    //  * e(A*G^{alpha}, B*H^{beta}) = e(G^{alpha}, H^{beta}) * e(G^{psi}, H^{gamma})
+    //  *                              * e(C, H)
+    //  * where psi = \sum_{i=0}^l input_i pvk.query[i]
+    //  */
     let G_psi = pvk.query[0].clone()
         + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_bos_coster }>(
             &pvk.query[1..],
@@ -614,12 +590,12 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
         }
         result = false;
     }
-    leave_block("Check first test", false);
+    span.exit();
 
-    enter_block("Check second test", false);
-    /**
-     * e(A, H^{gamma}) = e(G^{gamma}, B)
-     */
+    let span = span!(Level::TRACE, "Check second test").entered();
+    // /**
+    //  * e(A, H^{gamma}) = e(G^{gamma}, B)
+    //  */
     let test2_l = ppT::miller_loop(&ppT::precompute_G1(&proof.A), &pvk.H_gamma_pc);
     let test2_r = ppT::miller_loop(&pvk.G_gamma_pc, &ppT::precompute_G2(&proof.B));
     let test2 = ppT::final_exponentiation(&(test2_l * test2_r.unitary_inverse()));
@@ -631,24 +607,24 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
         }
         result = false;
     }
-    leave_block("Check second test", false);
-    leave_block("Pairing computations", false);
-    leave_block("Call to r1cs_se_ppzksnark_online_verifier_weak_IC", false);
+    span.exit();
+    span.exit();
+    span.exit();
 
     result
 }
 
-/**
- * A verifier algorithm for the R1CS ppzkSNARK that:
- * (1) accepts a processed verification key, and
- * (2) has strong input consistency.
- */
+// /**
+//  * A verifier algorithm for the R1CS ppzkSNARK that:
+//  * (1) accepts a processed verification key, and
+//  * (2) has strong input consistency.
+//  */
 pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     pvk: &r1cs_se_ppzksnark_processed_verification_key<ppT>,
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    enter_block("Call to r1cs_se_ppzksnark_online_verifier_strong_IC", false);
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_online_verifier_strong_IC").entered();
     let mut result = true;
 
     if pvk.query.len() != primary_input.len() + 1 {
@@ -663,22 +639,10 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
         result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT>(pvk, primary_input, proof);
     }
 
-    leave_block("Call to r1cs_se_ppzksnark_online_verifier_strong_IC", false);
+    span.exit();
     result
 }
 
-// use algebra::scalar_multiplication::multiexp;
-// use common::profiling;
-// use common::utils;
-
-// // #ifdef MULTICORE
-// use  <omp.h>
-//
-
-// use crate::knowledge_commitment::kc_multiexp;
-// use crate::reductions::r1cs_to_sap::r1cs_to_sap;
-
-//
 
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_proving_key<ppT> {
     #[inline]
@@ -736,22 +700,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_proving_key<ppT> {
     }
 }
 
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_se_ppzksnark_proving_key<ppT> &pk)
-// {
-//     in >> pk.A_query;
-//     in >> pk.B_query;
-//     in >> pk.C_query_1;
-//     in >> pk.C_query_2;
-//     in >> pk.G_gamma_Z;
-//     in >> pk.H_gamma_Z;
-//     in >> pk.G_ab_gamma_Z;
-//     in >> pk.G_gamma2_Z2;
-//     in >> pk.G_gamma2_Z_t;
-//     in >> pk.constraint_system;
-
-//     return in;
-// }
 
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_verification_key<ppT> {
     #[inline]
@@ -783,25 +731,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_verification_key<ppT>
         )
     }
 }
-
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_se_ppzksnark_verification_key<ppT> &vk)
-// {
-//     in >> vk.H;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.G_alpha;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.H_beta;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.G_gamma;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.H_gamma;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> vk.query;
-//     consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }
 
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_processed_verification_key<ppT> {
     #[inline]
@@ -841,26 +770,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_processed_verificatio
     }
 }
 
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_se_ppzksnark_processed_verification_key<ppT> &pvk)
-// {
-//     in >> pvk.G_alpha;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.H_beta;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.G_alpha_H_beta_ml;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.G_gamma_pc;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.H_gamma_pc;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.H_pc;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> pvk.query;
-//     consume_OUTPUT_NEWLINE(in);
-//     return in;
-// }
-
 impl<ppT: PublicParams> PartialEq for r1cs_se_ppzksnark_proof<ppT> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -874,18 +783,6 @@ impl<ppT: PublicParams> fmt::Display for r1cs_se_ppzksnark_proof<ppT> {
     }
 }
 
-// pub fn
-// std::istream& operator>>(std::istream &in, r1cs_se_ppzksnark_proof<ppT> &proof)
-// {
-//     in >> proof.A;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> proof.B;
-//     consume_OUTPUT_NEWLINE(in);
-//     in >> proof.C;
-//     consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }
 
 impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
     pub fn dummy_verification_key(
@@ -912,31 +809,23 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
         return result;
     }
 }
+
+// /**
+//  * A generator algorithm for the R1CS SEppzkSNARK.
+//  *
+//  * Given a R1CS constraint system CS, this algorithm produces proving and verification keys for CS.
+//  */
 pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     cs: &r1cs_se_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_se_ppzksnark_keypair<ppT>
-// where
-//     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-//         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-//         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-//     <ppT as ff_curves::PublicParams>::Fr:
-//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::Fr>,
-//     <ppT as ff_curves::PublicParams>::G1:
-//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
-//     <ppT as ff_curves::PublicParams>::G2:
-//         Mul<FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
-{
-    enter_block("Call to r1cs_se_ppzksnark_generator", false);
 
-    /**
-     * draw random element t at which the SAP is evaluated.
-     * it should be the case that Z(t) != 0
-     */
+{
+    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_generator").entered();
+
+    // /**
+    //  * draw random element t at which the SAP is evaluated.
+    //  * it should be the case that Z(t) != 0
+    //  */
     let domain = r1cs_to_sap_get_domain(&cs);
     let mut t;
     loop {
@@ -964,22 +853,22 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         sap_inst.num_inputs()
     );
 
-    enter_block("Compute query densities", false);
+    let span = span!(Level::TRACE, "Compute query densities").entered();
     let mut non_zero_At = 0;
     for i in 0..=sap_inst.num_variables() {
         if !sap_inst.At[i].is_zero() {
             non_zero_At += 1;
         }
     }
-    leave_block("Compute query densities", false);
+    span.exit();
 
     let At = (sap_inst.At.clone());
     let Ct = (sap_inst.Ct.clone());
     let Ht = (sap_inst.Ht.clone());
-    /**
-     * sap_inst.{A,C,H}t are now in an unspecified state,
-     * but we do not use them below
-     */
+    // /**
+    //  * sap_inst.{A,C,H}t are now in an unspecified state,
+    //  * but we do not use them below
+    //  */
     let (alpha, beta, gamma, G, H) = (
         ppT::Fr::random_element(),
         ppT::Fr::random_element(),
@@ -988,7 +877,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         ppT::G2::random_element(),
     );
 
-    enter_block("Generating G multiexp table", false);
+    let span = span!(Level::TRACE, "Generating G multiexp table").entered();
     let G_exp_count = sap_inst.num_inputs() + 1 // verifier_query
                          + non_zero_At // A_query
                          + sap_inst.degree() + 1 // G_gamma2_Z_t
@@ -1001,9 +890,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     print_indent();
     print!("* G window: {}\n", G_window);
     let G_table = get_window_table(ppT::Fr::size_in_bits(), G_window, G.clone());
-    leave_block("Generating G multiexp table", false);
+    span.exit();
 
-    enter_block("Generating H_gamma multiexp table", false);
+    let span = span!(Level::TRACE, "Generating H_gamma multiexp table").entered();
     let mut H_gamma = H.clone() * gamma.clone();
     let mut H_gamma_exp_count = non_zero_At; // B_query
     let mut H_gamma_window = get_exp_window_size::<ppT::G2>(H_gamma_exp_count);
@@ -1011,9 +900,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     print!("* H_gamma window: {}\n", H_gamma_window);
     let mut H_gamma_table =
         get_window_table(ppT::Fr::size_in_bits(), H_gamma_window, H_gamma.clone());
-    leave_block("Generating H_gamma multiexp table", false);
+    span.exit();
 
-    enter_block("Generate R1CS verification key", false);
+    let span = span!(Level::TRACE, "Generate R1CS verification key").entered();
     let mut G_alpha = G.clone() * alpha.clone();
     let mut H_beta = H.clone() * beta.clone();
 
@@ -1027,11 +916,11 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         batch_exp::<G1<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), G_window, &G_table, &tmp_exponents);
     tmp_exponents.clear();
 
-    leave_block("Generate R1CS verification key", false);
+    span.exit();
 
-    enter_block("Generate R1CS proving key", false);
+    let span = span!(Level::TRACE, "Generate R1CS proving key").entered();
 
-    enter_block("Compute the A-query", false);
+    let span = span!(Level::TRACE, "Compute the A-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     for i in 0..At.len() {
         tmp_exponents.push(gamma.clone() * At[i].clone());
@@ -1043,17 +932,17 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(A_query);
     //
-    leave_block("Compute the A-query", false);
+    span.exit();
 
-    enter_block("Compute the B-query", false);
+    let span = span!(Level::TRACE, "Compute the B-query").entered();
     let B_query =
         batch_exp::<G2<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G2<ppT> >(B_query);
     //
-    leave_block("Compute the B-query", false);
+    span.exit();
 
-    enter_block("Compute the G_gamma-query", false);
+    let span = span!(Level::TRACE, "Compute the G_gamma-query").entered();
     let G_gamma = G.clone() * gamma.clone();
     let G_gamma_Z = G_gamma.clone() * sap_inst.Zt.clone();
     let H_gamma_Z = H_gamma.clone() * sap_inst.Zt.clone();
@@ -1074,9 +963,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(G_gamma2_Z_t);
     //
-    leave_block("Compute the G_gamma-query", false);
+    span.exit();
 
-    enter_block("Compute the C_1-query", false);
+    let span = span!(Level::TRACE, "Compute the C_1-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() - sap_inst.num_inputs());
     for i in sap_inst.num_inputs() + 1..=sap_inst.num_variables() {
         tmp_exponents.push(
@@ -1090,9 +979,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_1);
     //
-    leave_block("Compute the C_1-query", false);
+    span.exit();
 
-    enter_block("Compute the C_2-query", false);
+    let span = span!(Level::TRACE, "Compute the C_2-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     let mut double_gamma2_Z = gamma.clone() * gamma.clone() * sap_inst.Zt.clone();
     double_gamma2_Z = double_gamma2_Z.clone() + double_gamma2_Z.clone();
@@ -1105,11 +994,11 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     // // #ifdef USE_MIXED_ADDITION
     //     batch_to_special<G1<ppT> >(C_query_2);
     //
-    leave_block("Compute the C_2-query", false);
+    span.exit();
 
-    leave_block("Generate R1CS proving key", false);
+    span.exit();
 
-    leave_block("Call to r1cs_se_ppzksnark_generator", false);
+    span.exit();
 
     let vk = r1cs_se_ppzksnark_verification_key::<ppT>::new(
         H,

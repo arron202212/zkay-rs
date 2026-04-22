@@ -1,7 +1,9 @@
 //  Declaration of interfaces for a R1CS example, as well as functions to sample
 //  R1CS examples with prescribed parameters (according to some distribution).
 
-// #define R1CS_EXAMPLES_HPP_
+
+
+use rand::Rng;
 use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
     r1cs_auxiliary_input, r1cs_constraint, r1cs_constraint_system, r1cs_primary_input,
     r1cs_variable_assignment,
@@ -10,11 +12,11 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination,
 };
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block};
 use std::collections::BTreeMap;
-/**
- * A R1CS example comprises a R1CS constraint system, R1CS input, and R1CS witness.
- */
+use tracing::{span, Level};
+// /**
+//  * A R1CS example comprises a R1CS constraint system, R1CS input, and R1CS witness.
+//  */
 
 pub struct r1cs_example<
     FieldT: FieldTConfig,
@@ -54,33 +56,14 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-/**
- * Generate a R1CS example such that:
- * - the number of constraints of the R1CS constraint system is num_constraints;
- * - the number of variables of the R1CS constraint system is (approximately) num_constraints;
- * - the number of inputs of the R1CS constraint system is num_inputs;
- * - the R1CS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
-//  */
-// < FieldT>
-// r1cs_example<FieldT> generate_r1cs_example_with_field_input(num_constraints:usize,
-//                                                             num_inputs:usize);
 
 // /**
 //  * Generate a R1CS example such that:
 //  * - the number of constraints of the R1CS constraint system is num_constraints;
 //  * - the number of variables of the R1CS constraint system is (approximately) num_constraints;
 //  * - the number of inputs of the R1CS constraint system is num_inputs;
-//  * - the R1CS input consists of binary values (as opposed to ``full'' field elements).
-//  */
-// < FieldT>
-// r1cs_example<FieldT> generate_r1cs_example_with_binary_input(num_constraints:usize,
-//                                                              num_inputs:usize);
-
-// use crate::relations::constraint_satisfaction_problems/r1cs/examples/r1cs_examples;
-use ffec::common::utils;
-
-use rand::Rng;
-
+//  * - the R1CS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
+// //  */
 pub fn generate_r1cs_example_with_field_input<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -89,7 +72,7 @@ pub fn generate_r1cs_example_with_field_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
-    enter_block("Call to generate_r1cs_example_with_field_input", false);
+    let span = span!(Level::TRACE, "Call to generate_r1cs_example_with_field_input").entered();
 
     assert!(num_inputs <= num_constraints + 2);
 
@@ -160,11 +143,17 @@ pub fn generate_r1cs_example_with_field_input<
     assert!(cs.num_constraints() == num_constraints);
     assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
-    leave_block("Call to generate_r1cs_example_with_field_input", false);
+    span.exit();
 
     return r1cs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
-
+// /**
+//  * Generate a R1CS example such that:
+//  * - the number of constraints of the R1CS constraint system is num_constraints;
+//  * - the number of variables of the R1CS constraint system is (approximately) num_constraints;
+//  * - the number of inputs of the R1CS constraint system is num_inputs;
+//  * - the R1CS input consists of binary values (as opposed to ``full'' field elements).
+//  */
 pub fn generate_r1cs_example_with_binary_input<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -173,7 +162,7 @@ pub fn generate_r1cs_example_with_binary_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
-    enter_block("Call to generate_r1cs_example_with_binary_input", false);
+    let span = span!(Level::TRACE, "Call to generate_r1cs_example_with_binary_input").entered();
 
     assert!(num_inputs >= 1);
 
@@ -199,10 +188,10 @@ pub fn generate_r1cs_example_with_binary_input<
             rand::random::<usize>() % i
         });
 
-        /* chose two random bits and XOR them together:
-           res = u + v - 2 * u * v
-           2 * u * v = u + v - res
-        */
+        // /* chose two random bits and XOR them together:
+        //    res = u + v - 2 * u * v
+        //    2 * u * v = u + v - res
+        // */
         let (mut A, mut B, mut C) = (
             linear_combination::<FieldT, SV, SLC>::default(),
             linear_combination::<FieldT, SV, SLC>::default(),
@@ -237,7 +226,7 @@ pub fn generate_r1cs_example_with_binary_input<
     assert!(cs.num_constraints() == num_constraints);
     assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
-    leave_block("Call to generate_r1cs_example_with_binary_input", false);
+    span.exit();
 
     return r1cs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }

@@ -22,23 +22,18 @@ use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd::{
 };
 use crate::zk_proof_systems::pcd::r1cs_pcd::r1cs_sp_ppzkpcd::r1cs_sp_ppzkpcd_params::r1cs_sp_ppzkpcd_primary_input;
 use ff_curves::Fr;
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{span, Level};
 use ffec::common::serialization::reserialize;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 use std::ops::Mul;
-/**
- * Runs the single-predicate ppzkPCD (generator, prover, and verifier) for the
- * "tally compliance predicate", of a given wordsize, arity, and depth.
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- */
-//
-// bool run_r1cs_sp_ppzkpcd_tally_example(wordsize:usize,
-//                                        arity:usize,
-//                                        depth:usize,
-//                                        test_serialization:bool);
+// /**
+//  * Runs the single-predicate ppzkPCD (generator, prover, and verifier) for the
+//  * "tally compliance predicate", of a given wordsize, arity, and depth.
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  */
 
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 pub fn run_r1cs_sp_ppzkpcd_tally_example<
@@ -97,11 +92,11 @@ where
             >,
         >,
 {
-    enter_block("Call to run_r1cs_sp_ppzkpcd_tally_example", false);
+    let span = span!(Level::TRACE, "Call to run_r1cs_sp_ppzkpcd_tally_example").entered();
 
     let mut all_accept = true;
 
-    enter_block("Generate all messages", false);
+    let span = span!(Level::TRACE, "Generate all messages").entered();
     let mut tree_size = 0;
     let mut nodes_in_layer = 1;
     for layer in 0..=depth {
@@ -113,19 +108,19 @@ where
         tree_elems[i] = rand::random::<usize>() % 10;
         print!("tree_elems[{}] = {}\n", i, tree_elems[i]);
     }
-    leave_block("Generate all messages", false);
+    span.exit();
 
     let mut tree_proofs = vec![r1cs_sp_ppzkpcd_proof::<PCD_ppT>::default(); tree_size];
     let mut tree_messages =
         vec![r1cs_pcd_message::<FieldT<PCD_ppT>, PCD_ppT::M>::default(); tree_size];
 
-    enter_block("Generate compliance predicate", false);
+    let span = span!(Level::TRACE, "Generate compliance predicate").entered();
     let types = 1;
     let mut tally =
         tally_cp_handler::<PCD_ppT>::new(types, arity, wordsize, false, BTreeSet::new());
     tally.generate_r1cs_constraints();
     let mut tally_cp = tally.get_compliance_predicate();
-    leave_block("Generate compliance predicate", false);
+    span.exit();
 
     println!("R1CS ppzkPCD Generator");
     let mut keypair = r1cs_sp_ppzkpcd_generator::<PCD_ppT>(&tally_cp);
@@ -134,11 +129,11 @@ where
     let mut pvk = r1cs_sp_ppzkpcd_process_vk::<PCD_ppT>(&keypair.vk);
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_sp_ppzkpcd_proving_key<PCD_ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_sp_ppzkpcd_verification_key<PCD_ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT>>(&pvk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     let mut base_msg = tally.get_base_case_message();
@@ -184,9 +179,9 @@ where
             );
 
             if test_serialization {
-                enter_block("Test serialization of proof", false);
+                let span = span!(Level::TRACE, "Test serialization of proof").entered();
                 proof = reserialize::<r1cs_sp_ppzkpcd_proof<PCD_ppT>>(&proof);
-                leave_block("Test serialization of proof", false);
+                span.exit();
             }
 
             tree_proofs[cur_idx] = proof;
@@ -233,7 +228,7 @@ where
         nodes_in_layer /= arity;
     }
 
-    leave_block("Call to run_r1cs_sp_ppzkpcd_tally_example", false);
+    span.exit();
 
     all_accept
 }

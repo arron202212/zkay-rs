@@ -290,12 +290,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_constraints();
 
-        /*
-          compute new PC address (in double words, not bytes!):
+        // /*
+        //   compute new PC address (in double words, not bytes!):
 
-          PC' = computed_result * is_control_flow_instruction + PC * is_stall_instruction + (PC+1) * (1-is_control_flow_instruction - is_stall_instruction)
-          PC' - pc_from_cf_or_zero - (1-is_control_flow_instruction - is_stall_instruction) = PC * (1 - is_control_flow_instruction)
-        */
+        //   PC' = computed_result * is_control_flow_instruction + PC * is_stall_instruction + (PC+1) * (1-is_control_flow_instruction - is_stall_instruction)
+        //   PC' - pc_from_cf_or_zero - (1-is_control_flow_instruction - is_stall_instruction) = PC * (1 - is_control_flow_instruction)
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.computed_result.clone().into(),
@@ -322,12 +322,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             format!("{} packed_outgoing_pc", self.annotation_prefix),
         );
 
-        /*
-          enforce new flag:
+        // /*
+        //   enforce new flag:
 
-          flag' = computed_flag * is_register_instruction + flag * (1-is_register_instruction)
-          flag' - flag = (computed_flag - flag) * is_register_instruction
-        */
+        //   flag' = computed_flag * is_register_instruction + flag * (1-is_register_instruction)
+        //   flag' - flag = (computed_flag - flag) * is_register_instruction
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
@@ -343,14 +343,14 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             format!("{} outgoing_flag", self.annotation_prefix),
         );
 
-        /*
-          force carryover of unchanged registers
+        // /*
+        //   force carryover of unchanged registers
 
-          (1-indicator) * (new-old) = 0
+        //   (1-indicator) * (new-old) = 0
 
-          In order to save constraints we "borrow" indicator variables
-          from loose multiplexing gadget.
-        */
+        //   In order to save constraints we "borrow" indicator variables
+        //   from loose multiplexing gadget.
+        // */
         for i in 0..self.pb.borrow().t.ap.k {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
@@ -370,12 +370,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             );
         }
 
-        /*
-          enforce correct destination register value:
+        // /*
+        //   enforce correct destination register value:
 
-          next_desval = computed_result * is_register_instruction + packed_incoming_desval * (1-is_register_instruction)
-          next_desval - packed_incoming_desval = (computed_result - packed_incoming_desval) * is_register_instruction
-        */
+        //   next_desval = computed_result * is_register_instruction + packed_incoming_desval * (1-is_register_instruction)
+        //   next_desval - packed_incoming_desval = (computed_result - packed_incoming_desval) * is_register_instruction
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
@@ -462,12 +462,12 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
             .borrow()
             .generate_r1cs_witness();
 
-        /*
-          compute new PC address (in double words, not bytes!):
+        // /*
+        //   compute new PC address (in double words, not bytes!):
 
-          PC' = computed_result * is_control_flow_instruction + PC * is_stall_instruction + (PC+1) * (1-is_control_flow_instruction - is_stall_instruction)
-          PC' - pc_from_cf_or_zero - (1-is_control_flow_instruction - is_stall_instruction) = PC * (1 - is_control_flow_instruction)
-        */
+        //   PC' = computed_result * is_control_flow_instruction + PC * is_stall_instruction + (PC+1) * (1-is_control_flow_instruction - is_stall_instruction)
+        //   PC' - pc_from_cf_or_zero - (1-is_control_flow_instruction - is_stall_instruction) = PC * (1 - is_control_flow_instruction)
+        // */
         *self.pb.borrow_mut().val_ref(&self.t.t.t.pc_from_cf_or_zero) =
             self.pb.borrow().val(&self.t.t.t.computed_result)
                 * self
@@ -486,23 +486,23 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
                             .val(&self.t.t.t.is_control_flow_instruction)
                         - self.pb.borrow().val(&self.t.t.t.is_stall_instruction));
 
-        /*
-          enforce new flag:
+        // /*
+        //   enforce new flag:
 
-          flag' = computed_flag * is_register_instruction + flag * (1-is_register_instruction)
-          flag' - flag = (computed_flag - flag) * is_register_instruction
-        */
+        //   flag' = computed_flag * is_register_instruction + flag * (1-is_register_instruction)
+        //   flag' - flag = (computed_flag - flag) * is_register_instruction
+        // */
         *self.pb.borrow_mut().val_ref(&self.t.t.t.outgoing_flag) =
             self.pb.borrow().val(&self.t.t.t.computed_flag)
                 * self.pb.borrow().val(&self.t.t.t.is_register_instruction)
                 + self.pb.borrow().val(&self.t.t.t.incoming_flag)
                     * (FieldT::one() - self.pb.borrow().val(&self.t.t.t.is_register_instruction));
 
-        /*
-          update registers (changed and unchanged)
+        // /*
+        //   update registers (changed and unchanged)
 
-          next_desval = computed_result * is_register_instruction + packed_incoming_desval * (1-is_register_instruction)
-        */
+        //   next_desval = computed_result * is_register_instruction + packed_incoming_desval * (1-is_register_instruction)
+        // */
         let changed_register_contents = self.pb.borrow().val(&self.t.t.t.computed_result)
             * self.pb.borrow().val(&self.t.t.t.is_register_instruction)
             + self.pb.borrow().val(&self.t.t.t.packed_incoming_desval)
@@ -522,9 +522,9 @@ impl<FieldT: FieldTConfig> consistency_enforcer_gadgets<FieldT> {
                 };
         }
 
-        /* demux result register (it is important to do witness generation
-        here after all registers have been set to the correct
-        values!) */
+        // /* demux result register (it is important to do witness generation
+        // here after all registers have been set to the correct
+        // values!) */
         self.t
             .t
             .t

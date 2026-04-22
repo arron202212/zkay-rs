@@ -1,7 +1,5 @@
 //  Declaration of arithmetic in the finite field F[(p^2)^3]
 
-// use crate::algebra::fields::prime_base::fp;
-// use crate::algebra::fields::prime_extension::fp2;
 use crate::{
     Fp_model, Fp_modelConfig, Fp2_model, Fp2_modelConfig, PpConfig,
     algebra::{
@@ -28,15 +26,13 @@ use std::{
     ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     str::FromStr,
 };
-// /**
+
 //  * Arithmetic in the finite field F[(p^2)^3].
 //  *
 //  * Let p := modulus. This interface provides arithmetic for the extension field
 //  *  Fp6 = Fp2[V]/(V^3-T::non_residue) where T::non_residue is in Fp.
 //  *
 //  * ASSUMPTION: p = 1 (mod 6)
-//  */
-//
 
 pub trait Fp6_modelConfig<const N: usize, const N2: usize, const N6: usize>:
     'static + Send + Sync + Sized + Default + Clone + Copy + Eq + Debug
@@ -273,11 +269,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
     }
 }
 
-//
-// bool Fp6_3over2_model<n,modulus>::operator==(other:&Fp6_3over2_model<n,modulus>) const
-// {
-//     return (self.c0 == other.c0 && self.c1 == other.c1 && self.c2 == other.c2);
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PartialEq
     for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -286,23 +277,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         self.c0 == other.c0 && self.c1 == other.c1 && self.c2 == other.c2
     }
 }
-
-//
-// bool Fp6_3over2_model<n,modulus>::operator!=(other:&Fp6_3over2_model<n,modulus>) const
-// {
-//     return !(operator==(other));
-// }
-
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator+(other:&Fp6_3over2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.add_cnt++;
-//
-//     Self::new(self.c0 + other.c0,
-//                                        self.c1 + other.c1,
-//                                        self.c2 + other.c2);
-// }
 
 impl<
     const N: usize,
@@ -323,17 +297,6 @@ impl<
     }
 }
 
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator-(other:&Fp6_3over2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.sub_cnt++;
-//
-//     Self::new(self.c0 - other.c0,
-//                                        self.c1 - other.c1,
-//                                        self.c2 - other.c2);
-// }
-
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Sub
     for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -348,16 +311,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
     }
 }
 
-//
-// Fp6_3over2_model<n, modulus> operator*(lhs:&Fp_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     Self::new(lhs*rhs.c0,
-//                                        lhs*rhs.c1,
-//                                        lhs*rhs.c2);
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -373,16 +326,6 @@ impl<
     }
 }
 
-//
-// Fp6_3over2_model<n, modulus> operator*(lhs:&Fp2_model<n, modulus>, rhs:&Fp6_3over2_model<n, modulus>)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     rhs.mul_cnt++;
-//
-//     Self::new(lhs*rhs.c0,
-//                                        lhs*rhs.c1,
-//                                        lhs*rhs.c2);
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     Mul<Fp2_model<N, N2, T::Fp2_modelConfig>> for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -392,24 +335,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         Fp6_3over2_model::<N, N2, N6, T>::new(self.c0 * rhs, self.c1 * rhs, self.c2 * rhs)
     }
 }
-
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator*(other:&Fp6_3over2_model<n,modulus>) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     self.mul_cnt++;
-//
-//     //Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (Karatsuba)
-//     A:&my_Fp2<N,T::Fp2_modelConfig> = other.c0, &B = other.c1, &C = other.c2,
-//                  &a = self.c0, &b = self.c1, &c = self.c2;
-//     let aA= a*A;
-//     let bB= b*B;
-//     let cC= c*C;
-
-//     Self::new(aA + Fp6_3over2_model<n,modulus>::mul_by_non_residue((b+c)*(B+C)-bB-cC),
-//                                        (a+b)*(A+B)-aA-bB+Fp6_3over2_model<n,modulus>::mul_by_non_residue(cC),
-//                                        (a+c)*(A+C)-aA+bB-cC);
-// }
 
 impl<
     const N: usize,
@@ -441,25 +366,6 @@ impl<
         )
     }
 }
-// impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Mul<bigint<N>>
-//     for Fp6_3over2_model<N, N2, N6, T>
-// {
-//     type Output = Self;
-
-//     fn mul(self, rhs: bigint<N>) -> Self::Output {
-//         let mut r = self;
-//         // r *= *rhs.borrow();
-//         r
-//     }
-// }
-
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator-() const
-// {
-//     Self::new(-self.c0,
-//                                        -self.c1,
-//                                        -self.c2);
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> Neg
     for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -469,11 +375,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         Self::new(-self.c0, -self.c1, -self.c2)
     }
 }
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator^(const u64 pow) const
-// {
-//     return power<Fp6_3over2_model<n, modulus> >(*this, pow);
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> BitXor<u64>
     for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -484,12 +385,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         Powers::power::<Fp6_3over2_model<N, N2, N6, T>>(&self, rhs)
     }
 }
-//
-//
-// Fp6_3over2_model<n,modulus> Fp6_3over2_model<n,modulus>::operator^(pow:&bigint<m>) const
-// {
-//     return power<Fp6_3over2_model<n, modulus>, m>(*this, pow);
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     BitXor<bigint<N6>> for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -500,12 +395,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         Powers::power::<Fp6_3over2_model<N, N2, N6, T>>(&self, rhs)
     }
 }
-//
-// Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator+=(const Fp6_3over2_model<n,modulus>& other)
-// {
-//     *self = *this + other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -519,12 +408,6 @@ impl<
     }
 }
 
-//
-// Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator-=(const Fp6_3over2_model<n,modulus>& other)
-// {
-//     *self = *this - other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -537,12 +420,6 @@ impl<
         *self = *self - *other.borrow();
     }
 }
-//
-// Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator*=(const Fp6_3over2_model<n,modulus>& other)
-// {
-//     *self = *this * other;
-//     return *self;
-// }
 impl<
     const N: usize,
     const N2: usize,
@@ -555,12 +432,6 @@ impl<
         *self = *self * other.borrow();
     }
 }
-//
-// Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator^=(const u64 pow)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     BitXorAssign<u64> for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -569,13 +440,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
     }
 }
 
-//
-//
-// Fp6_3over2_model<n,modulus>& Fp6_3over2_model<n,modulus>::operator^=(pow:&bigint<m>)
-// {
-//     *self = *this ^ pow;
-//     return *self;
-// }
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     BitXorAssign<bigint<N6>> for Fp6_3over2_model<N, N2, N6, T>
 {
@@ -587,7 +451,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> PpConfig
     for Fp6_3over2_model<N, N2, N6, T>
 {
-    
     type BigIntT = bigint<N>;
 }
 
@@ -613,17 +476,14 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
 use std::fmt;
 use std::io::{self, BufRead};
 
-// 1. 对应: operator<<(std::ostream &out, const Fp3_model &el)
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>> fmt::Display
     for Fp6_3over2_model<N, N2, N6, T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 使用空格作为 OUTPUT_SEPARATOR
         write!(f, "{} {} {}", self.c0, self.c1, self.c2)
     }
 }
 
-// 2. 对应: operator>>(std::istream &in, Fp3_model &el)
 impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2, N6>>
     Fp6_3over2_model<N, N2, N6, T>
 {
@@ -651,7 +511,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
     }
 }
 
-// 3. 对应: operator<<(std::ostream& out, const std::vector<Fp3_model> &v)
 pub fn write_vector<
     const N: usize,
     const N2: usize,
@@ -660,14 +519,13 @@ pub fn write_vector<
 >(
     v: &[Fp6_3over2_model<N, N2, N6, T>],
 ) -> String {
-    let mut out = format!("{}\n", v.len()); // 写入长度
+    let mut out = format!("{}\n", v.len());
     for el in v {
-        out.push_str(&format!("{}\n", el)); // 逐个写入元素并换行
+        out.push_str(&format!("{}\n", el));
     }
     out
 }
 
-// 4. 对应: operator>>(std::istream& in, std::vector<Fp3_model> &v)
 pub fn read_vector<
     R: BufRead,
     const N: usize,
@@ -677,22 +535,17 @@ pub fn read_vector<
 >(
     reader: &mut R,
 ) -> io::Result<Vec<Fp6_3over2_model<N, N2, N6, T>>> {
-    // v.clear() 在 Rust 中通过新建 Vec 或传入 &mut Vec 处理
     let mut line = String::new();
 
-    // 读取大小 s
     reader.read_line(&mut line)?;
     let s: usize = line
         .trim()
         .parse()
         .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "长度解析错误"))?;
 
-    // 对应 v.reserve(s)
     let mut v = Vec::with_capacity(s);
 
-    // 对应 for (size_t i = 0; i < s; ++i)
     for _ in 0..s {
-        // 对应 in >> el; v.emplace_back(el);
         let el = Fp6_3over2_model::<N, N2, N6, T>::read(reader)?;
         v.push(el);
     }
@@ -724,55 +577,6 @@ impl<const N: usize, const N2: usize, const N6: usize, T: Fp6_modelConfig<N, N2,
         Ok(Self::default())
     }
 }
-
-//
-// std::ostream& operator<<(std::ostream &out, el:&Fp6_3over2_model<n, modulus>)
-// {
-//     out << el.c0 << OUTPUT_SEPARATOR << el.c1 << OUTPUT_SEPARATOR << el.c2;
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream &in, Fp6_3over2_model<n, modulus> &el)
-// {
-//     in >> el.c0 >> el.c1 >> el.c2;
-//     return in;
-// }
-
-//
-// std::ostream& operator<<(std::ostream& out, v:&Vec<Fp6_3over2_model<n, modulus> >)
-// {
-//     out << v.len() << "\n";
-//     for t in &v
-//     {
-//         out << t << OUTPUT_NEWLINE;
-//     }
-
-//     return out;
-// }
-
-//
-// std::istream& operator>>(std::istream& in, Vec<Fp6_3over2_model<n, modulus> > &v)
-// {
-//     v.clear();
-
-//     usize s;
-//     in >> s;
-
-//     char b;
-//     in.read(&b, 1);
-
-//     v.reserve(s);
-
-//     for i in 0..s
-//     {
-//         Fp6_3over2_model<n, modulus> el;
-//         in >> el;
-//         v.emplace_back(el);
-//     }
-
-//     return in;
-// }
 
 use super::cubic_extension::{CubicExtConfig, CubicExtField};
 use crate::algebra::fields::{

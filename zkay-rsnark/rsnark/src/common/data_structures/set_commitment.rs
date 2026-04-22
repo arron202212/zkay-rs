@@ -15,13 +15,10 @@ pub type set_commitment = bit_vector;
 pub struct set_membership_proof {
     pub address: usize,
     pub merkle_path: merkle_authentication_path,
-    // bool operator==(other:&set_membership_proof) const;
-    // usize size_in_bits() const;
-    // friend std::ostream& operator<<(std::ostream &out, other:&set_membership_proof);
-    // friend std::istream& operator>>(std::istream &in, set_membership_proof &other);
+   
 }
 
-//
+
 pub struct set_commitment_accumulator<HashT: HashTConfig> {
     pub tree: RcCell<merkle_tree<HashT>>,
     pub hash_to_pos: BTreeMap<bit_vector, usize>,
@@ -30,13 +27,12 @@ pub struct set_commitment_accumulator<HashT: HashTConfig> {
     pub value_size: usize,
 }
 
-/* note that set_commitment has both .cpp, for implementation of
-non-templatized code (methods of set_membership_proof) and .tcc
-(implementation of set_commitment_accumulator<HashT> */
+// /* note that set_commitment has both .cpp, for implementation of
+// non-templatized code (methods of set_membership_proof) and .tcc
+// (implementation of set_commitment_accumulator<HashT> */
 
 use ffec::common::serialization;
 use std::mem;
-// use crate::common::data_structures::set_commitment;
 impl set_membership_proof {
     pub fn size_in_bits(&self) -> usize {
         if self.merkle_path.is_empty() {
@@ -47,40 +43,7 @@ impl set_membership_proof {
         }
     }
 }
-// bool set_membership_proof::operator==(other:&set_membership_proof) const
-// {
-//     return (self.address == other.address &&
-//             self.merkle_path == other.merkle_path);
-// }
 
-// std::ostream& operator<<(std::ostream &out, proof:&set_membership_proof)
-// {
-//     out << proof.address << "\n";
-//     out << proof.merkle_path.len() << "\n";
-//     for i in 0..proof.merkle_path.len()
-//     {
-//         ffec::output_bool_vector(out, proof.merkle_path[i]);
-//     }
-
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, set_membership_proof &proof)
-// {
-//     in >> proof.address;
-//     ffec::consume_newline(in);
-//     usize tree_depth;
-//     in >> tree_depth;
-//     ffec::consume_newline(in);
-//     proof.merkle_path.resize(tree_depth);
-
-//     for i in 0..tree_depth
-//     {
-//         ffec::input_bool_vector(in, proof.merkle_path[i]);
-//     }
-
-//     return in;
-// }
 
 impl<HashT: HashTConfig> set_commitment_accumulator<HashT> {
     pub fn new(max_entries: usize, value_size: usize) -> Self {

@@ -23,49 +23,37 @@ use ffec::{FieldTConfig, One, PpConfig, Zero};
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-// const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT,P>>::coeff_a;
-// const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT,P>>::coeff_b;
-// pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT,P>>;
-/**
- * Gadget that represents a G1 variable.
- */
-// pub trait ppTConfig<FieldT: FieldTConfig>: Clone + Default {
-//     type Fr: FieldTConfig;
-//     fn X(&self) -> FieldT;
-//     fn Y(&self) -> FieldT;
-//     fn to_affine_coordinates(&self);
-// }
+// /**
+//  * Gadget that represents a G1 variable.
+//  */
+
 
 type FieldT<ppT> = Fr<ppT>;
 #[derive(Clone, Default)]
 pub struct G1_variable<ppT: ppTConfig> {
-    //  : public gadget<ffec::Fr<ppT> >
     pub X: linear_combination<ppT::FieldT, pb_variable, pb_linear_combination>,
     pub Y: linear_combination<ppT::FieldT, pb_variable, pb_linear_combination>,
     pub all_vars: pb_linear_combination_array<ppT::FieldT, ppT::PB>,
 }
 
-/**
- * Gadget that creates constraints for the validity of a G1 variable.
- */
+// /**
+//  * Gadget that creates constraints for the validity of a G1 variable.
+//  */
 
 #[derive(Clone, Default)]
 pub struct G1_checker_gadget<ppT: ppTConfig> {
-    // : public gadget<ffec::Fr<ppT> >
-    // type FieldT=ffec::Fr<ppT>;
+
     pub P: G1_variables<ppT>,
     pub P_X_squared: variable<ppT::FieldT, pb_variable>,
     pub P_Y_squared: variable<ppT::FieldT, pb_variable>,
 }
 
-/**
- * Gadget that creates constraints for G1 addition.
- */
+// /**
+//  * Gadget that creates constraints for G1 addition.
+//  */
 
 #[derive(Clone, Default)]
 pub struct G1_add_gadget<ppT: ppTConfig> {
-    // : public gadget<ffec::Fr<ppT> >
-    // type FieldT=ffec::Fr<ppT>;
     pub lambda: variable<ppT::FieldT, pb_variable>,
     pub inv: variable<ppT::FieldT, pb_variable>,
     pub A: G1_variables<ppT>,
@@ -73,26 +61,22 @@ pub struct G1_add_gadget<ppT: ppTConfig> {
     pub C: G1_variables<ppT>,
 }
 
-/**
- * Gadget that creates constraints for G1 doubling.
- */
+// /**
+//  * Gadget that creates constraints for G1 doubling.
+//  */
 #[derive(Clone, Default)]
 pub struct G1_dbl_gadget<ppT: ppTConfig> {
-    // : public gadget<ffec::Fr<ppT> >
-    // type FieldT=ffec::Fr<ppT>;
     pub Xsquared: variable<ppT::FieldT, pb_variable>,
     pub lambda: variable<ppT::FieldT, pb_variable>,
     pub A: G1_variables<ppT>,
     pub B: G1_variables<ppT>,
 }
 
-/**
- * Gadget that creates constraints for G1 multi-scalar multiplication.
- */
+// /**
+//  * Gadget that creates constraints for G1 multi-scalar multiplication.
+//  */
 #[derive(Clone, Default)]
 pub struct G1_multiscalar_mul_gadget<ppT: ppTConfig> {
-    //  : public gadget<ffec::Fr<ppT> >
-    //     type FieldT=ffec::Fr<ppT>;
     pub computed_results: Vec<G1_variables<ppT>>,
     pub chosen_results: Vec<G1_variables<ppT>>,
     pub adders: Vec<G1_add_gadgets<ppT>>,
@@ -174,9 +158,6 @@ impl<ppT: ppTConfig> G1_variables<ppT> {
     pub fn generate_r1cs_witness(&self, el: &G1<other_curve<ppT>>) {
         let mut el_normalized = el.clone();
         el_normalized.to_affine_coordinates();
-
-        // *self.pb.borrow_mut().lc_val_ref(&self.t.X) = el_normalized.X();
-        // *self.pb.borrow_mut().lc_val_ref(&self.t.Y) = el_normalized.Y();
     }
 }
 
@@ -259,23 +240,23 @@ impl<ppT: ppTConfig> G1_add_gadget<ppT> {
         C: G1_variables<ppT>,
         annotation_prefix: String,
     ) -> G1_add_gadgets<ppT> {
-        /*
-          lambda = (B.y - A.y)/(B.x - A.x)
-          C.x = lambda^2 - A.x - B.x
-          C.y = lambda(A.x - C.x) - A.y
+        // /*
+        //   lambda = (B.y - A.y)/(B.x - A.x)
+        //   C.x = lambda^2 - A.x - B.x
+        //   C.y = lambda(A.x - C.x) - A.y
 
-          Special cases:
+        //   Special cases:
 
-          doubling: if B.y = A.y and B.x = A.x then lambda is unbound and
-          C = (lambda^2, lambda^3)
+        //   doubling: if B.y = A.y and B.x = A.x then lambda is unbound and
+        //   C = (lambda^2, lambda^3)
 
-          addition of negative point: if B.y = -A.y and B.x = A.x then no
-          lambda can satisfy the first equation unless B.y - A.y = 0. But
-          then this reduces to doubling.
+        //   addition of negative point: if B.y = -A.y and B.x = A.x then no
+        //   lambda can satisfy the first equation unless B.y - A.y = 0. But
+        //   then this reduces to doubling.
 
-          So we need to check that A.x - B.x != 0, which can be done by
-          enforcing I * (B.x - A.x) = 1
-        */
+        //   So we need to check that A.x - B.x != 0, which can be done by
+        //   enforcing I * (B.x - A.x) = 1
+        // */
         let mut lambda = variable::<ppT::FieldT, pb_variable>::default();
         let mut inv = variable::<ppT::FieldT, pb_variable>::default();
         lambda.allocate(&pb, prefix_format!(annotation_prefix, " lambda"));
@@ -549,10 +530,10 @@ impl<ppT: ppTConfig> G1_multiscalar_mul_gadgets<ppT> {
         for i in 0..self.t.scalar_size {
             self.t.adders[i].generate_r1cs_constraints();
 
-            /*
-              chosen_results[i+1].X = scalars[i] * computed_results[i].X + (1-scalars[i]) *  chosen_results[i].X
-              chosen_results[i+1].X - chosen_results[i].X = scalars[i] * (computed_results[i].X - chosen_results[i].X)
-            */
+            // /*
+            //   chosen_results[i+1].X = scalars[i] * computed_results[i].X + (1-scalars[i]) *  chosen_results[i].X
+            //   chosen_results[i+1].X - chosen_results[i].X = scalars[i] * (computed_results[i].X - chosen_results[i].X)
+            // */
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<ppT::FieldT, pb_variable, pb_linear_combination>::new(
                     self.t.scalars[i].clone().into(),

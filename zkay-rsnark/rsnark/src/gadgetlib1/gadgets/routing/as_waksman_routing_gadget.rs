@@ -23,37 +23,36 @@ use rccell::RcCell;
 use std::collections::BTreeMap;
 #[derive(Clone, Default)]
 pub struct as_waksman_routing_gadget<FieldT: FieldTConfig, PB: PBConfig> {
-    //gadget<FieldT>
 
-    /*
-      Indexing conventions:
+    // /*
+    //   Indexing conventions:
 
-      routed_packets[column_idx][packet_idx][subpacket_idx]
-      pack_inputs/unpack_outputs[packet_idx]
-      asw_switch_bits[column_idx][row_idx]
+    //   routed_packets[column_idx][packet_idx][subpacket_idx]
+    //   pack_inputs/unpack_outputs[packet_idx]
+    //   asw_switch_bits[column_idx][row_idx]
 
-      Where column_idx ranges is in range 0 .. width and packet_idx is
-      in range 0 .. num_packets-1.
+    //   Where column_idx ranges is in range 0 .. width and packet_idx is
+    //   in range 0 .. num_packets-1.
 
-      Note that unlike in Bene\v{s} routing networks row_idx are
-      *not* necessarily consecutive; similarly for straight edges
-      routed_packets[column_idx][packet_idx] will *reuse* previously
-      allocated variables.
+    //   Note that unlike in Bene\v{s} routing networks row_idx are
+    //   *not* necessarily consecutive; similarly for straight edges
+    //   routed_packets[column_idx][packet_idx] will *reuse* previously
+    //   allocated variables.
 
-    */
+    // */
     routed_packets: Vec<Vec<pb_variable_array<FieldT, PB>>>,
     unpack_outputs: Vec<multipacking_gadgets<FieldT, PB>>,
     pack_inputs: Vec<multipacking_gadgets<FieldT, PB>>,
 
-    /*
-      If #packets = 1 then we can route without explicit switch bits
-      (and save half the constraints); in this case asw_switch_bits will
-      be unused.
+    // /*
+    //   If #packets = 1 then we can route without explicit switch bits
+    //   (and save half the constraints); in this case asw_switch_bits will
+    //   be unused.
 
-      For asw_switch_bits 0 corresponds to switch off (straight
-      connection), and 1 corresponds to switch on (crossed
-      connection).
-    */
+    //   For asw_switch_bits 0 corresponds to switch off (straight
+    //   connection), and 1 corresponds to switch on (crossed
+    //   connection).
+    // */
     asw_switch_bits: Vec<BTreeMap<usize, variable<FieldT, pb_variable>>>,
     neighbors: as_waksman_topology,
 
@@ -83,9 +82,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadget<FieldT, PB> {
         let mut neighbors = generate_as_waksman_topology(num_packets);
         let mut routed_packets = vec![vec![]; num_columns + 1];
 
-        /* Two pass allocation. First allocate LHS packets, then for every
-        switch either copy over the variables from previously allocated
-        to allocate target packets */
+        // /* Two pass allocation. First allocate LHS packets, then for every
+        // switch either copy over the variables from previously allocated
+        // to allocate target packets */
         routed_packets[0] = vec![pb_variable_array::<FieldT, PB>::default(); num_packets];
         for packet_idx in 0..num_packets {
             routed_packets[0][packet_idx].allocate(
@@ -223,9 +222,9 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
                 }
 
                 if self.t.num_subpackets == 1 {
-                    /* easy case: require that
-                    (cur-straight_edge)*(cur-cross_edge) = 0 for both
-                    switch inputs */
+                    // /* easy case: require that
+                    // (cur-straight_edge)*(cur-cross_edge) = 0 for both
+                    // switch inputs */
                     for switch_input in row_idx..=row_idx + 1 {
                         let straight_edge = self.t.neighbors[column_idx][switch_input].0.clone();
                         let cross_edge = self.t.neighbors[column_idx][switch_input].1.clone();
@@ -277,10 +276,10 @@ impl<FieldT: FieldTConfig, PB: PBConfig> as_waksman_routing_gadgets<FieldT, PB> 
 
                     //route forward according to the switch bit
                     for subpacket_idx in 0..self.t.num_subpackets {
-                        /*
-                         (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
-                         switch_bit * (cross_edge-straight_edge) = cur-straight_edge
-                        */
+                        // /*
+                        //  (1-switch_bit) * (cur-straight_edge) + switch_bit * (cur-cross_edge) = 0
+                        //  switch_bit * (cross_edge-straight_edge) = cur-straight_edge
+                        // */
                         for &switch_input in &[row_idx, row_idx + 1] {
                             let (straight_edge, cross_edge) =
                                 self.t.neighbors[column_idx][switch_input];

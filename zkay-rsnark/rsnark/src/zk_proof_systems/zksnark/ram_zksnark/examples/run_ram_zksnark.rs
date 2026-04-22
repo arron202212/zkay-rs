@@ -24,29 +24,29 @@ use std::ops::Mul;
 
 // use crate::zk_proof_systems::zksnark::ram_zksnark::ram_zksnark;
 
-/**
- * Runs the zkSNARK (generator, prover, and verifier) for a given
- * RAM example (specified by an architecture, boot trace, auxiliary input, and time bound).
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- */
+// /**
+//  * Runs the zkSNARK (generator, prover, and verifier) for a given
+//  * RAM example (specified by an architecture, boot trace, auxiliary input, and time bound).
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  */
 //
 // bool run_ram_zksnark(example:&ram_example<ram_zksnark_machine_pp<RamT> >,
 //                      test_serialization:bool);
 
-/**
- * The code below provides an example of all stages of running a RAM zkSNARK.
- *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which runs the zkSNARK generator on input a given
- *     architecture.
- * (2) The "prover", which runs the zkSNARK prover on input the proving key,
- *     a boot trace, and an auxiliary input.
- * (3) The "verifier", which runs the zkSNARK verifier on input the verification key,
- *     a boot trace, a time bound, and a proof.
- */
+// /**
+//  * The code below provides an example of all stages of running a RAM zkSNARK.
+//  *
+//  * Of course, in a real-life scenario, we would have three distinct entities,
+//  * mangled into one in the demonstration below. The three entities are as follows.
+//  * (1) The "generator", which runs the zkSNARK generator on input a given
+//  *     architecture.
+//  * (2) The "prover", which runs the zkSNARK prover on input the proving key,
+//  *     a boot trace, and an auxiliary input.
+//  * (3) The "verifier", which runs the zkSNARK verifier on input the verification key,
+//  *     a boot trace, a time bound, and a proof.
+//  */
 //
 pub fn run_ram_zksnark<RamT: RamConfig>(
     example: &ram_example<ram_zksnark_machine_pp<RamT>>,
@@ -95,7 +95,7 @@ where
     >,
         >,
 {
-    enter_block("Call to run_ram_zksnark", false);
+    let span = span!(Level::TRACE, "Call to run_ram_zksnark").entered();
 
     print!("This run uses an example with the following parameters:\n");
     example.ap.print();
@@ -108,10 +108,10 @@ where
     println!("after generator");
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<ram_zksnark_proving_key<RamT>>(&keypair.pk);
         keypair.vk = reserialize::<ram_zksnark_verification_key<RamT>>(&keypair.vk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     println!("RAM zkSNARK Prover");
@@ -126,9 +126,9 @@ where
     println!("after prover");
 
     if test_serialization {
-        enter_block("Test serialization of proof", false);
+        let span = span!(Level::TRACE, "Test serialization of proof").entered();
         proof = reserialize::<ram_zksnark_proof<RamT>>(&proof);
-        leave_block("Test serialization of proof", false);
+        span.exit();
     }
 
     println!("RAM zkSNARK Verifier");
@@ -142,7 +142,7 @@ where
         if ans { "PASS" } else { "FAIL" }
     );
 
-    leave_block("Call to run_ram_zksnark", false);
+    span.exit();
 
     return ans;
 }

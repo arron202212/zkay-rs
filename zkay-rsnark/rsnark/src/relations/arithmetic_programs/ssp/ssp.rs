@@ -22,17 +22,17 @@ use std::collections::BTreeMap;
 
 // pub struct ssp_witness;
 
-/**
- * A SSP instance.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs; and
- * - coefficients of the V polynomials in the Lagrange basis.
- *
- * There is no need to store the Z polynomial because it is uniquely
- * determined by the domain (as Z is its vanishing polynomial).
- */
+// /**
+//  * A SSP instance.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs; and
+//  * - coefficients of the V polynomials in the Lagrange basis.
+//  *
+//  * There is no need to store the Z polynomial because it is uniquely
+//  * determined by the domain (as Z is its vanishing polynomial).
+//  */
 
 pub struct ssp_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
@@ -44,16 +44,16 @@ pub struct ssp_instance<FieldT: FieldTConfig> {
     pub V_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
 
-/**
- * A SSP instance evaluation is a SSP instance that is evaluated at a field element t.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs;
- * - a field element t;
- * - evaluations of the V (and Z) polynomials at t;
- * - evaluations of all monomials of t.
- */
+// /**
+//  * A SSP instance evaluation is a SSP instance that is evaluated at a field element t.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs;
+//  * - a field element t;
+//  * - evaluations of the V (and Z) polynomials at t;
+//  * - evaluations of all monomials of t.
+//  */
 
 pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
@@ -70,9 +70,9 @@ pub struct ssp_instance_evaluation<FieldT: FieldTConfig> {
     pub Zt: FieldT,
 }
 
-/**
- * A SSP witness.
- */
+// /**
+//  * A SSP witness.
+//  */
 
 pub struct ssp_witness<FieldT> {
     pub num_variables: usize,

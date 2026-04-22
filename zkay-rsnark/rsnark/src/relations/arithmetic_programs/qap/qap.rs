@@ -17,22 +17,20 @@ use fqfft::evaluation_domain::evaluation_domain::{
 };
 use rccell::RcCell;
 use std::collections::BTreeMap;
-//forward declaration
-//
-// pub struct qap_witness;
 
-/**
- * A QAP instance.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs; and
- * - coefficients of the A,B,C polynomials in the Lagrange basis.
- *
- * There is no need to store the Z polynomial because it is uniquely
- * determined by the domain (as Z is its vanishing polynomial).
- */
-//
+
+// /**
+//  * A QAP instance.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs; and
+//  * - coefficients of the A,B,C polynomials in the Lagrange basis.
+//  *
+//  * There is no need to store the Z polynomial because it is uniquely
+//  * determined by the domain (as Z is its vanishing polynomial).
+//  */
+
 pub struct qap_instance<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -44,47 +42,20 @@ pub struct qap_instance<FieldT: FieldTConfig> {
     pub B_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
     pub C_in_Lagrange_basis: Vec<BTreeMap<usize, FieldT>>,
 }
-// impl qap_instance<FieldT>{
-//     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
-//                  num_variables:usize
-//                  degree:usize
-//                  num_inputs:usize
-//                  A_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >
-//                  B_in_Lagrange_basis:&Vec<BTreeMap<usize, FieldT> >
-//                  &C_in_Lagrange_basis:Vec<BTreeMap<usize, FieldT> >);
 
-//     qap_instance(domain:&RcCell<EvaluationDomainType<FieldT>>
-//                  num_variables:usize
-//                  degree:usize
-//                  num_inputs:usize
-//                 Vec<BTreeMap<usize, FieldT> > &&A_in_Lagrange_basis,
-//                 Vec<BTreeMap<usize, FieldT> > &&B_in_Lagrange_basis,
-//                 Vec<BTreeMap<usize, FieldT> > &&C_in_Lagrange_basis);
 
-//     qap_instance(&other:qap_instance<FieldT>) = default;
-//     qap_instance(qap_instance<FieldT> &&other) = default;
-//     qap_instance& operator=(&other:qap_instance<FieldT>) = default;
-//     qap_instance& operator=(qap_instance<FieldT> &&other) = default;
+// /**
+//  * A QAP instance evaluation is a QAP instance that is evaluated at a field element t.
+//  *
+//  * Specifically, the datastructure stores:
+//  * - a choice of domain (corresponding to a certain subset of the field);
+//  * - the number of variables, the degree, and the number of inputs;
+//  * - a field element t;
+//  * - evaluations of the A,B,C (and Z) polynomials at t;
+//  * - evaluations of all monomials of t;
+//  * - counts about how many of the above evaluations are in fact non-zero.
+//  */
 
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-
-//     bool is_satisfied(&witness:qap_witness<FieldT>) const;
-// }
-
-/**
- * A QAP instance evaluation is a QAP instance that is evaluated at a field element t.
- *
- * Specifically, the datastructure stores:
- * - a choice of domain (corresponding to a certain subset of the field);
- * - the number of variables, the degree, and the number of inputs;
- * - a field element t;
- * - evaluations of the A,B,C (and Z) polynomials at t;
- * - evaluations of all monomials of t;
- * - counts about how many of the above evaluations are in fact non-zero.
- */
-//
 pub struct qap_instance_evaluation<FieldT: FieldTConfig> {
     pub num_variables: usize,
     pub degree: usize,
@@ -102,43 +73,10 @@ pub struct qap_instance_evaluation<FieldT: FieldTConfig> {
     pub Zt: FieldT,
 }
 
-//     qap_instance_evaluation(domain:&RcCell<EvaluationDomainType<FieldT>>
-//                             num_variables:usize
-//                             degree:usize
-//                             num_inputs:usize
-//                             t:&FieldT
-//                             At:&Vec<FieldT>
-//                             Bt:&Vec<FieldT>
-//                             Ct:&Vec<FieldT>
-//                             Ht:&Vec<FieldT>
-//                             &Zt:FieldT);
-//     qap_instance_evaluation(domain:&RcCell<EvaluationDomainType<FieldT>>
-//                             num_variables:usize
-//                             degree:usize
-//                             num_inputs:usize
-//                             t:&FieldT
-//                            Vec<FieldT> &&At,
-//                            Vec<FieldT> &&Bt,
-//                            Vec<FieldT> &&Ct,
-//                            Vec<FieldT> &&Ht,
-//                             &Zt:FieldT);
 
-//     qap_instance_evaluation(&other:qap_instance_evaluation<FieldT>) = default;
-//     qap_instance_evaluation(qap_instance_evaluation<FieldT> &&other) = default;
-//     qap_instance_evaluation& operator=(&other:qap_instance_evaluation<FieldT>) = default;
-//     qap_instance_evaluation& operator=(qap_instance_evaluation<FieldT> &&other) = default;
-
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-
-//     bool is_satisfied(&witness:qap_witness<FieldT>) const;
-// };
-
-/**
- * A QAP witness.
- */
-//
+// /**
+//  * A QAP witness.
+//  */
 pub struct qap_witness<FieldT> {
     pub num_variables: usize,
     pub degree: usize,
@@ -152,37 +90,6 @@ pub struct qap_witness<FieldT> {
     pub coefficients_for_H: Vec<FieldT>,
 }
 
-//     qap_witness(num_variables:usize
-//                 degree:usize
-//                 num_inputs:usize
-//                 d1:&FieldT
-//                 d2:&FieldT
-//                 d3:&FieldT
-//                 coefficients_for_ABCs:&Vec<FieldT>
-//                 &coefficients_for_H:Vec<FieldT>);
-
-//     qap_witness(num_variables:usize
-//                 degree:usize
-//                 num_inputs:usize
-//                 d1:&FieldT
-//                 d2:&FieldT
-//                 d3:&FieldT
-//                 coefficients_for_ABCs:&Vec<FieldT>
-//                Vec<FieldT> &&coefficients_for_H);
-
-//     qap_witness(&other:qap_witness<FieldT>) = default;
-//     qap_witness(qap_witness<FieldT> &&other) = default;
-//     qap_witness& operator=(&other:qap_witness<FieldT>) = default;
-//     qap_witness& operator=(qap_witness<FieldT> &&other) = default;
-
-//     usize num_variables() const;
-//     usize degree() const;
-//     usize num_inputs() const;
-// };
-
-// use ffec::algebra::scalar_multiplication::multiexp;
-// use ffec::common::profiling;
-// use ffec::common::utils;
 
 impl<FieldT: FieldTConfig> qap_instance<FieldT> {
     pub fn new(

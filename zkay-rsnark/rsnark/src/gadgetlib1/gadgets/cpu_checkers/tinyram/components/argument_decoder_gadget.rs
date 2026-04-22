@@ -215,8 +215,8 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
 
         //enforce correct handling of arg2val
 
-        /* it is false that arg2 is reg and demux failed:
-        (1 - arg2_is_imm) * (1 - arg2_demux_success) = 0 */
+        // /* it is false that arg2 is reg and demux failed:
+        // (1 - arg2_is_imm) * (1 - arg2_demux_success) = 0 */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![
@@ -232,12 +232,12 @@ impl<FieldT: FieldTConfig> argument_decoder_gadgets<FieldT> {
             format!("{} ensure_correc_demux", self.annotation_prefix),
         );
 
-        /*
-          arg2val = arg2_is_imm * packed_arg2idx +
-          (1 - arg2_is_imm) * arg2_demux_result
+        // /*
+        //   arg2val = arg2_is_imm * packed_arg2idx +
+        //   (1 - arg2_is_imm) * arg2_demux_result
 
-          arg2val - arg2_demux_result = arg2_is_imm * (packed_arg2idx - arg2_demux_result)
-        */
+        //   arg2val - arg2_demux_result = arg2_is_imm * (packed_arg2idx - arg2_demux_result)
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new_with_vec(
                 vec![self.t.t.t.arg2_is_imm.clone().into()],

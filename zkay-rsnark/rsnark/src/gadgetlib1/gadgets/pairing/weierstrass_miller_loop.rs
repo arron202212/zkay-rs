@@ -41,18 +41,18 @@ use ffec::{One, Zero};
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-/**
- * Gadget for doubling step in the Miller loop.
- *
- * Technical note:
- *
- * mnt_Fqk g_RR_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
- *                             -prec_P.PX * c.gamma_twist + c.t.gamma_X - c.old_RY);
- *
- *(later in Miller loop: f = f.squared() * g_RR_at_P)
- *
- * Note the slight interface change: this gadget allocates g_RR_at_P inside itself (!)
- */
+// /**
+//  * Gadget for doubling step in the Miller loop.
+//  *
+//  * Technical note:
+//  *
+//  * mnt_Fqk g_RR_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
+//  *                             -prec_P.PX * c.gamma_twist + c.t.gamma_X - c.old_RY);
+//  *
+//  *(later in Miller loop: f = f.squared() * g_RR_at_P)
+//  *
+//  * Note the slight interface change: this gadget allocates g_RR_at_P inside itself (!)
+//  */
 type FieldT<ppT> = Fr<ppT>;
 type FqeT<ppT> = Fqe<other_curve<ppT>>;
 type FqkT<ppT> = Fqk<other_curve<ppT>>;
@@ -68,25 +68,21 @@ pub struct mnt_miller_loop_dbl_line_eval<ppT: ppTConfig> {
     compute_g_RR_at_P_c1: RcCell<Fqe_mul_by_lc_gadget<ppT>>,
 }
 
-/**
- * Gadget for addition step in the Miller loop.
- *
- * Technical note:
- *
- * mnt_Fqk g_RQ_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
- *                            -prec_P.PX * c.gamma_twist + c.t.gamma_X - prec_Q.QY);
- *
- * (later in Miller loop: f = f * g_RQ_at_P)
- *
- * Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
- */
+// /**
+//  * Gadget for addition step in the Miller loop.
+//  *
+//  * Technical note:
+//  *
+//  * mnt_Fqk g_RQ_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
+//  *                            -prec_P.PX * c.gamma_twist + c.t.gamma_X - prec_Q.QY);
+//  *
+//  * (later in Miller loop: f = f * g_RQ_at_P)
+//  *
+//  * Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
+//  */
 #[derive(Clone, Default)]
 pub struct mnt_miller_loop_add_line_eval<ppT: ppTConfig> {
-    //gadget<ppT::Fr >
-
-    // type FieldT=ppT::Fr;
-    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
-    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
+   
     invert_Q: bool,
     prec_P: G1_precomputations<ppT>,
     c: precompute_G2_gadget_coeffss<ppT>,
@@ -98,16 +94,11 @@ pub struct mnt_miller_loop_add_line_eval<ppT: ppTConfig> {
     compute_g_RQ_at_P_c1: RcCell<Fqe_mul_by_lc_gadget<ppT>>,
 }
 
-/**
- * Gadget for verifying a single Miller loop.
- */
+// /**
+//  * Gadget for verifying a single Miller loop.
+//  */
 #[derive(Clone, Default)]
 pub struct mnt_miller_loop_gadget<ppT: ppTConfig> {
-    //gadget<ppT::Fr >
-
-    // type FieldT=ppT::Fr;
-    // type FqeT=ffec::Fqe<other_curve::<ppT> >;
-    // type FqkT=ffec::Fqk<other_curve::<ppT> >;
     g_RR_at_Ps: Vec<RcCell<Fqk_variable<ppT>>>,
     g_RQ_at_Ps: Vec<RcCell<Fqk_variable<ppT>>>,
     fs: Vec<RcCell<Fqk_variable<ppT>>>,
@@ -128,16 +119,13 @@ pub struct mnt_miller_loop_gadget<ppT: ppTConfig> {
     result: Fqk_variable<ppT>,
 }
 
-/**
- * Gadget for verifying a double Miller loop (where the second is inverted).
- */
+// /**
+//  * Gadget for verifying a double Miller loop (where the second is inverted).
+//  */
 
-// type FieldT=ppT::Fr;
-//     type FqeT=ffec::Fqe<other_curve::<ppT> >;
-//     type FqkT=ffec::Fqk<other_curve::<ppT> >;
+
 #[derive(Clone, Default)]
 pub struct mnt_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
-    //gadget<ppT::Fr >
     g_RR_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
     g_RQ_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
     g_RR_at_P2s: Vec<RcCell<Fqk_variable<ppT>>>,
@@ -166,16 +154,12 @@ pub struct mnt_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
     result: Fqk_variable<ppT>,
 }
 
-/**
- * Gadget for verifying a triple Miller loop (where the third is inverted).
- */
+// /**
+//  * Gadget for verifying a triple Miller loop (where the third is inverted).
+//  */
 
-// type FieldT<ppT> = Fr<ppT>;
-// type FqeT<ppT,P> = Fqe<other_curve<ppT,P>>;
-// type FqkT<ppT,P> = Fqk<other_curve<ppT,P>>;
 #[derive(Clone, Default)]
 pub struct mnt_e_times_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
-    //gadget<ppT::Fr >
     g_RR_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
     g_RQ_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,
     g_RR_at_P2s: Vec<RcCell<Fqk_variable<ppT>>>,
@@ -212,14 +196,14 @@ pub struct mnt_e_times_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
     result: Fqk_variable<ppT>,
 }
 
-/*
-  performs
+// /*
+//   performs
 
-  mnt_Fqk g_RR_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
-  -prec_P.PX * c.gamma_twist + c.t.gamma_X - c.old_RY);
+//   mnt_Fqk g_RR_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
+//   -prec_P.PX * c.gamma_twist + c.t.gamma_X - c.old_RY);
 
-  (later in Miller loop: f = f.squared() * g_RR_at_P)
-*/
+//   (later in Miller loop: f = f.squared() * g_RR_at_P)
+// */
 
 //Note the slight interface change: this gadget will allocate g_RR_at_P inside itself (!)
 pub type mnt_miller_loop_dbl_line_evals<ppT> =
@@ -324,15 +308,15 @@ impl<ppT: ppTConfig> mnt_miller_loop_dbl_line_evals<ppT> {
     }
 }
 
-/*
-  performs
-  mnt_Fqk g_RQ_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
-  -prec_P.PX * c.gamma_twist + c.t.gamma_X - prec_Q.QY);
+// /*
+//   performs
+//   mnt_Fqk g_RQ_at_P = mnt_Fqk(prec_P.t.PY_twist_squared,
+//   -prec_P.PX * c.gamma_twist + c.t.gamma_X - prec_Q.QY);
 
-  (later in Miller loop: f = f * g_RQ_at_P)
+//   (later in Miller loop: f = f * g_RQ_at_P)
 
-  If invert_Q is set to true: use -QY in place of QY everywhere above.
-*/
+//   If invert_Q is set to true: use -QY in place of QY everywhere above.
+// */
 
 //Note the slight interface change: this gadget will allocate g_RQ_at_P inside itself (!)
 pub type mnt_miller_loop_add_line_evals<ppT> =
@@ -666,11 +650,7 @@ impl<ppT: ppTConfig> mnt_miller_loop_gadgets<ppT> {
 }
 
 pub fn test_mnt_miller_loop<ppT: ppTConfig>(annotation: &str)
-// where
-// <ppT as ff_curves::PublicParams>::G1:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
-// <ppT as ff_curves::PublicParams>::G2:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
+
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut P_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();
@@ -1037,11 +1017,7 @@ impl<ppT: ppTConfig> mnt_e_over_e_miller_loop_gadgets<ppT> {
 }
 
 pub fn test_mnt_e_over_e_miller_loop<ppT: ppTConfig>(annotation: &str)
-// where
-// <ppT as ff_curves::PublicParams>::G1:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
-// <ppT as ff_curves::PublicParams>::G2:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
+
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut P1_val = ppT::FieldT::random_element() * G1::<other_curve<ppT>>::one();

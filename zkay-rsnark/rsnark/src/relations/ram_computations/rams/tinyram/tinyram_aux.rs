@@ -82,10 +82,10 @@ pub enum tinyram_opcode_args {
     tinyram_opcode_args_arg2_des = 6,
 }
 
-/**
- * Instructions that may change a register or the flag.
- * All other instructions leave all registers and the flag intact.
- */
+// /**
+//  * Instructions that may change a register or the flag.
+//  * All other instructions leave all registers and the flag intact.
+//  */
 pub const tinyram_opcodes_register: [tinyram_opcode; 23] = [
     tinyram_opcode::tinyram_opcode_AND,
     tinyram_opcode::tinyram_opcode_OR,
@@ -112,20 +112,20 @@ pub const tinyram_opcodes_register: [tinyram_opcode; 23] = [
     tinyram_opcode::tinyram_opcode_READ,
 ];
 
-/**
- * Instructions that modify the program counter.
- * All other instructions either advance it (+1) or stall (see below).
- */
+// /**
+//  * Instructions that modify the program counter.
+//  * All other instructions either advance it (+1) or stall (see below).
+//  */
 pub const tinyram_opcodes_control_flow: [tinyram_opcode; 3] = [
     tinyram_opcode::tinyram_opcode_JMP,
     tinyram_opcode::tinyram_opcode_CJMP,
     tinyram_opcode::tinyram_opcode_CNJMP,
 ];
 
-/**
- * Instructions that make the program counter stall;
- * these are "answer" plus all the undefined opcodes.
- */
+// /**
+//  * Instructions that make the program counter stall;
+//  * these are "answer" plus all the undefined opcodes.
+//  */
 pub const tinyram_opcodes_stall: [tinyram_opcode; 4] = [
     tinyram_opcode::tinyram_opcode_10111,
     tinyram_opcode::tinyram_opcode_11000,
@@ -138,61 +138,24 @@ pub type reg_width_t = usize; // type for the width of a register
 pub fn opcode_values() -> BTreeMap<String, tinyram_opcode> {
     BTreeMap::new()
 }
-// extern BTreeMap<tinyram_opcode, String> tinyram_opcode_names;
 
-// extern BTreeMap<String, tinyram_opcode> opcode_values;
 
-// extern BTreeMap<tinyram_opcode, tinyram_opcode_args> opcode_args;
-
-// pub fn  ensure_tinyram_opcode_value_map();
-
-// pub struct tinyram_program;
 pub type tinyram_input_tape = Vec<usize>;
-// pub type tinyram_input_tape_iterator =  <Vec<usize> as Example>::into_iterator;
 #[derive(Default, Clone)]
 pub struct tinyram_architecture_params {
-    //
     pub w: reg_width_t, //width of a register
     pub k: reg_count_t, //number of registers
 }
-//     tinyram_architecture_params() {};
 impl tinyram_architecture_params {
     pub fn new(w: reg_width_t, k: reg_count_t) -> Self {
         assert!(w == 1usize << log2(w));
         Self { w, k }
     }
 }
-//     usize address_size() const;
-//     usize value_size() const;
-//     usize cpu_state_size() const;
-//     usize initial_pc_addr() const;
 
-//     bit_vector initial_cpu_state() const;
-//     memory_contents initial_memory_contents(program:&tinyram_program,
-//                                             primary_input:&tinyram_input_tape) const;
 
-//     usize opcode_width() const;
-//     usize reg_arg_width() const;
-//     usize instruction_padding_width() const;
-//     usize reg_arg_or_imm_width() const;
-
-//     usize dwaddr_len() const;
-//     usize subaddr_len() const;
-
-//     usize bytes_in_word() const;
-
-//     usize instr_size() const;
-
-//     bool operator==(other:&tinyram_architecture_params) const;
-
-//     friend std::ostream& operator<<(std::ostream &out, ap:&tinyram_architecture_params);
-//     friend std::istream& operator>>(std::istream &in, tinyram_architecture_params &ap);
-
-//     pub fn  print() const;
-// };
-
-/* order everywhere is reversed (i.e. MSB comes first),
-corresponding to the order in memory */
+// /* order everywhere is reversed (i.e. MSB comes first),
+// corresponding to the order in memory */
 
 pub struct tinyram_instruction {
     //
@@ -579,28 +542,6 @@ impl ArchitectureParamsTypeConfig for tinyram_architecture_params {
     }
 }
 
-// bool tinyram_architecture_params::operator==(other:&tinyram_architecture_params) const
-// {
-//     return (self.w == other.w &&
-//             self.k == other.k);
-// }
-
-// std::ostream& operator<<(std::ostream &out, ap:&tinyram_architecture_params)
-// {
-//     out << ap.w() << "\n";
-//     out << ap.k() << "\n";
-//     return out;
-// }
-
-// std::istream& operator>>(std::istream &in, tinyram_architecture_params &ap)
-// {
-//     in >> ap.w();
-//     consume_newline(in);
-//     in >> ap.k();
-//     consume_newline(in);
-//     return in;
-// }
-
 impl tinyram_instruction {
     pub fn new(
         opcode: tinyram_opcode,
@@ -662,7 +603,7 @@ pub fn load_preprocessed_program(
 
     let mut program = tinyram_program::default();
 
-    enter_block("Loading program", false);
+    let span = span!(Level::TRACE, "Loading program").entered();
     let (mut instr, mut line) = (String::new(), String::new());
     let mut it = preprocessed.split_ascii_whitespace();
     while let Some(instr) = it.next() {
@@ -681,7 +622,7 @@ pub fn load_preprocessed_program(
             a2,
         ));
     }
-    leave_block("Loading program", false);
+    span.exit();
 
     return program;
 }
@@ -719,7 +660,7 @@ pub fn tinyram_boot_trace_from_program_and_input(
 }
 
 pub fn load_tape(tape: &String) -> tinyram_input_tape {
-    enter_block("Loading tape", false);
+    let span = span!(Level::TRACE, "Loading tape").entered();
     let mut result = tinyram_input_tape::new();
 
     print_indent();
@@ -731,6 +672,6 @@ pub fn load_tape(tape: &String) -> tinyram_input_tape {
     }
     print!("\n");
 
-    leave_block("Loading tape", false);
+    span.exit();
     return result;
 }

@@ -1,8 +1,7 @@
 // Declaration of functionality that runs the RAM ppzkSNARK for
 // a given RAM example.
 
-// use crate::relations::ram_computations::rams::examples::ram_examples;
-// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark_params;
+
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
 use crate::relations::ram_computations::rams::examples::ram_examples::ram_example;
 use crate::relations::ram_computations::rams::ram_params::ArchitectureParamsTypeConfig;
@@ -19,34 +18,30 @@ use ffec::common::serialization::reserialize;
 use ffec::log2;
 use std::ops::Mul;
 
-/**
- * Runs the ppzkSNARK (generator, prover, and verifier) for a given
- * RAM example (specified by an architecture, boot trace, auxiliary input, and time bound).
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- */
-//
-// bool run_ram_ppzksnark(example:&ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT> >,
-//                        test_serialization:bool);
 
-// use common::profiling;
 
-// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
+// /**
+//  * The code below provides an example of all stages of running a RAM ppzkSNARK.
+//  *
+//  * Of course, in a real-life scenario, we would have three distinct entities,
+//  * mangled into one in the demonstration below. The three entities are as follows.
+//  * (1) The "generator", which runs the ppzkSNARK generator on input a given
+//  *     architecture and bounds on the computation.
+//  * (2) The "prover", which runs the ppzkSNARK prover on input the proving key,
+//  *     a boot trace, and an auxiliary input.
+//  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
+//  *     a boot trace, and a proof.
+//  */
 
-/**
- * The code below provides an example of all stages of running a RAM ppzkSNARK.
- *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which runs the ppzkSNARK generator on input a given
- *     architecture and bounds on the computation.
- * (2) The "prover", which runs the ppzkSNARK prover on input the proving key,
- *     a boot trace, and an auxiliary input.
- * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
- *     a boot trace, and a proof.
- */
-//
+
+
+// /**
+//  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
+//  * RAM example (specified by an architecture, boot trace, auxiliary input, and time bound).
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  */
 pub fn run_ram_ppzksnark<ram_ppzksnark_ppT: RamPptConfig>(
     example: &ram_example<ram_ppzksnark_machine_pp<ram_ppzksnark_ppT>>,
     test_serialization: bool,
@@ -73,7 +68,7 @@ where
             >,
         >,
 {
-    enter_block("Call to run_ram_ppzksnark", false);
+    let span = span!(Level::TRACE, "Call to run_ram_ppzksnark").entered();
 
     print!("This run uses an example with the following parameters:\n");
     example.ap.print();
@@ -98,10 +93,10 @@ where
     println!("after generator");
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<ram_ppzksnark_proving_key<ram_ppzksnark_ppT>>(&keypair.pk);
         keypair.vk = reserialize::<ram_ppzksnark_verification_key<ram_ppzksnark_ppT>>(&keypair.vk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     println!("RAM ppzkSNARK Prover");
@@ -115,9 +110,9 @@ where
     println!("after prover");
 
     if test_serialization {
-        enter_block("Test serialization of proof", false);
+        let span = span!(Level::TRACE, "Test serialization of proof").entered();
         proof = reserialize::<ram_ppzksnark_proof<ram_ppzksnark_ppT>>(&proof);
-        leave_block("Test serialization of proof", false);
+        span.exit();
     }
 
     println!("RAM ppzkSNARK Verifier");
@@ -130,7 +125,7 @@ where
         if ans { "PASS" } else { "FAIL" }
     );
 
-    leave_block("Call to run_ram_ppzksnark", false);
+    span.exit();
 
     ans
 }

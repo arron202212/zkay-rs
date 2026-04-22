@@ -9,6 +9,7 @@ use crate::relations::variable::{
 };
 use ffec::FieldTConfig;
 use ffec::common::utils;
+use ffec::field_utils::bigint::BigIntegerT;
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use rccell::RcCell;
 

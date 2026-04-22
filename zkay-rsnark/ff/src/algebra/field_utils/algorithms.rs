@@ -3,11 +3,10 @@
 // Declaration of interfaces for (square-and-multiply) exponentiation and
 // Tonelli-Shanks square root.
 
-use crate::bigint;
-use crate::algebra::field_utils::bigint::BigIntegerT;
+use crate::{algebra::field_utils::bigint::BigIntegerT, bigint};
 use num_traits::{One, Zero};
-use std::fmt::Debug;
-use std::ops::BitXor;
+use std::{fmt::Debug, ops::BitXor};
+
 pub trait FPMConfig: Zero + One {}
 // #![feature(generic_const_exprs)]
 pub trait FieldTForPowersConfig<const N: usize>:
@@ -63,8 +62,6 @@ pub trait FieldTForPowersConfig<const N: usize>:
 //
 //
 // FieldT tonelli_shanks_sqrt<(value:&FieldT);
-
-// use crate::common::utils;
 
 pub struct Powers;
 

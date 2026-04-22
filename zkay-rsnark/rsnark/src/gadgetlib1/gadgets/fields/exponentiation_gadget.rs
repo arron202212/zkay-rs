@@ -7,29 +7,23 @@ use crate::gadgetlib1::gadgets::pairing::pairing_params::{
 use crate::gadgetlib1::protoboard::{PBConfig, ProtoboardConfig, protoboard};
 use crate::prefix_format;
 use ffec::algebra::field_utils::bigint::bigint;
+use ffec::field_utils::bigint::BigIntegerT;
 use ffec::scalar_multiplication::wnaf::find_wnaf;
 use ffec::{FieldTConfig, One, PpConfig};
 use rccell::RcCell;
 use std::marker::PhantomData;
 
-/**
- * The exponentiation gadget verifies field exponentiation in the field F_{p^k}.
- *
- * Note that the power is a constant (i.e., hardcoded into the gadget).
- */
+// /**
+//  * The exponentiation gadget verifies field exponentiation in the field F_{p^k}.
+//  *
+//  * Note that the power is a constant (i.e., hardcoded into the gadget).
+//  */
 
-// pub type Fpk_variableT<FpkT,P> = <FpkT as ppTConfig>::Fpk_variableT;
-// pub type Fpk_mul_gadgetT<FpkT,P> = <FpkT as ppTConfig>::Fpk_mul_gadgetT;
-// pub type Fpk_sqr_gadgetT<FpkT,P> = <FpkT as ppTConfig>::Fpk_sqr_gadgetT;
 type FieldT<FpkT> = <FpkT as ppTConfig>::my_Fp;
-// pub type Fqk_variable<FpkT> = <FpkT as ppTConfig>::Fpk_variableT;
-// pub type Fqk_mul_gadget<FpkT> = <FpkT as ppTConfig>::Fpk_mul_gadgetT;
-// pub type Fqk_sqr_gadget<FpkT> = <FpkT as ppTConfig>::Fpk_sqr_gadgetT;
+
 
 #[derive(Clone, Default)]
 pub struct exponentiation_gadget<FpkT: ppTConfig> {
-    // : gadget<FpkT::my_Fp>
-    // type FieldT=FpkT::my_Fp;
     pub NAF: Vec<i64>,
 
     pub intermediate: Vec<RcCell<Fpk_variableT<FpkT>>>,

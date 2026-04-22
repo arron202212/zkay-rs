@@ -8,9 +8,9 @@ use crate::relations::constraint_satisfaction_problems::r1cs::r1cs::{
 use crate::zk_proof_systems::pcd::r1cs_pcd::ppzkpcd_compliance_predicate::PcdPptConfig;
 use ff_curves::Fr;
 
-/**
- * Below are various template aliases (used for convenience).
- */
+// /**
+//  * Below are various template aliases (used for convenience).
+//  */
 
 pub type r1cs_ppzksnark_constraint_system<ppT> =
     r1cs_constraint_system<Fr<ppT>, pb_variable, pb_linear_combination>;

@@ -213,16 +213,16 @@ pub fn test_ALU_jmp_gadget<FieldT: FieldTConfig>() {
 //cjmp
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cjmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /*
-          flag1 * argval2 + (1-flag1) * (pc1 + 1) = cjmp_result
-          flag1 * (argval2 - pc1 - 1) = cjmp_result - pc1 - 1
+        // /*
+        //   flag1 * argval2 + (1-flag1) * (pc1 + 1) = cjmp_result
+        //   flag1 * (argval2 - pc1 - 1) = cjmp_result - pc1 - 1
 
-          Note that instruction fetch semantics require program counter to
-          be aligned to the double word by rounding down, and pc_addr in
-          the outer reduction is expressed as a double word address. To
-          achieve this we just discard the first ap.subaddr_len() bits of
-          the byte address of the PC.
-        */
+        //   Note that instruction fetch semantics require program counter to
+        //   be aligned to the double word by rounding down, and pc_addr in
+        //   the outer reduction is expressed as a double word address. To
+        //   achieve this we just discard the first ap.subaddr_len() bits of
+        //   the byte address of the PC.
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.flag.clone().into(),
@@ -322,16 +322,16 @@ pub fn test_ALU_cjmp_gadget<FieldT: FieldTConfig>() {
 //cnjmp
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for ALU_cnjmp_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /*
-          flag1 * (pc1 + inc) + (1-flag1) * argval2 = cnjmp_result
-          flag1 * (pc1 + inc - argval2) = cnjmp_result - argval2
+        // /*
+        //   flag1 * (pc1 + inc) + (1-flag1) * argval2 = cnjmp_result
+        //   flag1 * (pc1 + inc - argval2) = cnjmp_result - argval2
 
-          Note that instruction fetch semantics require program counter to
-          be aligned to the double word by rounding down, and pc_addr in
-          the outer reduction is expressed as a double word address. To
-          achieve this we just discard the first ap.subaddr_len() bits of
-          the byte address of the PC.
-        */
+        //   Note that instruction fetch semantics require program counter to
+        //   be aligned to the double word by rounding down, and pc_addr in
+        //   the outer reduction is expressed as a double word address. To
+        //   achieve this we just discard the first ap.subaddr_len() bits of
+        //   the byte address of the PC.
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.flag.clone().into(),

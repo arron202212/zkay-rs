@@ -24,30 +24,26 @@ use ffec::{FieldTConfig, One, PpConfig, Zero};
 use rccell::RcCell;
 use std::marker::PhantomData;
 use std::ops::Add;
-/**
- * Gadget that represents a G2 variable.
- */
+// /**
+//  * Gadget that represents a G2 variable.
+//  */
 
 type FieldT<ppT> = Fr<ppT>;
 type FqeT<ppT> = Fqe<other_curve<ppT>>;
 type FqkT<ppT> = Fqk<other_curve<ppT>>;
 #[derive(Clone, Default)]
 pub struct G2_variable<ppT: ppTConfig> {
-    // : public gadget<ffec::Fr<ppT> >
     pub X: RcCell<Fqe_variable<ppT>>,
     pub Y: RcCell<Fqe_variable<ppT>>,
     pub all_vars: pb_linear_combination_array<ppT::FieldT, ppT::PB>,
 }
 
-/**
- * Gadget that creates constraints for the validity of a G2 variable.
- */
+// /**
+//  * Gadget that creates constraints for the validity of a G2 variable.
+//  */
 #[derive(Clone, Default)]
 pub struct G2_checker_gadget<ppT: ppTConfig> {
-    //  : public gadget<ffec::Fr<ppT> >
-    //     type FieldT=ffec::Fr<ppT>;
-    //     type FqeT=ffec::Fqe<other_curve<ppT> >;
-    //     type FqkT=ffec::Fqk<other_curve<ppT> >;
+
     pub Q: G2_variables<ppT>,
     pub Xsquared: RcCell<Fqe_variable<ppT>>,
     pub Ysquared: RcCell<Fqe_variable<ppT>>,

@@ -1,13 +1,12 @@
 //  Declaration of complex domain data type.
 
-use crate::{FieldTConfig, PpConfig};
-use crate::{One, Zero};
+use crate::{FieldTConfig, One, PpConfig, Zero, algebra::field_utils::bigint::bigint};
 use num_complex::{Complex, Complex64, ComplexFloat};
-use std::borrow::Borrow;
-use std::cmp::Ordering;
-use std::ops::{Add, AddAssign, BitXor, Mul, MulAssign, Neg, Sub, SubAssign};
-// #include <complex>
-// #include <libff/algebra/fields/bigint.hpp>
+use std::{
+    borrow::Borrow,
+    cmp::Ordering,
+    ops::{Add, AddAssign, BitXor, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 #[derive(Clone, Debug)]
 pub struct Double {
@@ -16,7 +15,6 @@ pub struct Double {
 }
 impl FieldTConfig for Double {}
 impl PpConfig for Double {
-    
     type BigIntT = bigint<1>;
 }
 impl Eq for Double {}
@@ -26,61 +24,7 @@ impl AsMut<[u64]> for Double {
         self.v.as_mut().unwrap()
     }
 }
-//       Double();
 
-//       Double(f64 real);
-
-//       Double(f64 real, f64 imag);
-
-//       Double(Complex64 num);
-
-//       static unsigned add_cnt;
-//       static unsigned sub_cnt;
-//       static unsigned mul_cnt;
-//       static unsigned inv_cnt;
-
-//       Double operator+(other:&Double) const;
-//       Double operator-(other:&Double) const;
-//       Double operator*(other:&Double) const;
-//       Double operator-() const;
-
-//       Double& operator+=(other:&Double);
-//       Double& operator-=(other:&Double);
-//       Double& operator*=(other:&Double);
-
-//       bool operator==(other:&Double) const;
-//       bool operator!=(other:&Double) const;
-
-//       bool operator<(other:&Double) const;
-//       bool operator>(other:&Double) const;
-
-//       Double operator^(const:bigint<1> power),
-//       Double operator^(power:usize) const;
-
-//       bigint<1> as_bigint() const;
-//       u64 as_ulong() const;
-//       Double inverse() const;
-//       Double squared() const;
-
-//       static Double one();
-//       static Double zero();
-//       static Double random_element();
-//       static Double geometric_generator();
-//       static Double arithmetic_generator();
-
-//       static Double multiplicative_generator;
-//       static Double root_of_unity; // See get_root_of_unity() in field_utils
-//       static usize s;
-//   };
-
-//#include <cmath>
-//#include <complex>
-
-//#include <math.h>
-use crate::algebra::field_utils::bigint::bigint;
-// use crate::common::f64;
-
-// using std::usize;
 impl Default for Double {
     fn default() -> Self {
         Self::new(0.0, 0.0)
@@ -125,15 +69,7 @@ impl Double {
         }
     }
 
-    // unsigned pub fn add_cnt = 0;
-    // unsigned pub fn sub_cnt = 0;
-    // unsigned pub fn mul_cnt = 0;
-    // unsigned pub fn inv_cnt = 0;
-
     pub fn inverse(&self) -> Self {
-        // #ifdef PROFILE_OP_COUNTS
-        // ++inv_cnt;
-
         Self::from(Complex::<f64>::new(1.0, 0.0) / self.val.clone())
     }
 
@@ -198,14 +134,6 @@ impl Zero for Double {
     }
 }
 
-// pub fn operator+(other:&Double) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++add_cnt;
-//
-
-//     return Self::new(val + other.val);
-// }
 impl<O: Borrow<Self>> Add<O> for Double {
     type Output = Self;
 
@@ -224,14 +152,6 @@ impl Add<i32> for Double {
         r
     }
 }
-// pub fn operator-(other:&Double) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++sub_cnt;
-//
-
-//     return Self::new(val - other.val);
-// }
 impl Sub for Double {
     type Output = Self;
 
@@ -250,14 +170,7 @@ impl Sub<i32> for Double {
         r
     }
 }
-// pub fn operator*(other:&Double) const
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++mul_cnt;
-//
 
-//     return Self::new(val * other.val);
-// }
 impl<O: Borrow<Self>> Mul<O> for Double {
     type Output = Double;
 
@@ -285,14 +198,6 @@ impl Mul<i32> for Double {
         r
     }
 }
-// pub fn operator-() const
-// {
-//     if val.imag() == 0 {
-//         return Self::new(-val.real());
-//     }
-
-//     return Self::new(-val.real(), -val.imag());
-// }
 impl Neg for Double {
     type Output = Self;
 
@@ -300,49 +205,18 @@ impl Neg for Double {
         self
     }
 }
-// Double& pub fn operator+=(other:&Double)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++add_cnt;
-//
-
-//     this->val = Complex::<f64>::new(val + other.val);
-//     return *this;
-// }
 impl<O: Borrow<Self>> AddAssign<O> for Double {
     fn add_assign(&mut self, other: O) {}
 }
-// Double& pub fn operator-=(other:&Double)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++sub_cnt;
-//
 
-//     this->val = Complex::<f64>::new(val - other.val);
-//     return *this;
-// }
 impl<O: Borrow<Self>> SubAssign<O> for Double {
     fn sub_assign(&mut self, other: O) {}
 }
 
-// Double& pub fn operator*=(other:&Double)
-// {
-// // #ifdef PROFILE_OP_COUNTS
-//     ++mul_cnt;
-//
-
-//     this->val *= Complex::<f64>::new(other.val);
-//     return *this;
-// }
 impl<O: Borrow<Self>> MulAssign<O> for Double {
     fn mul_assign(&mut self, rhs: O) {}
 }
 
-// bool pub fn operator==(other:&Double) const
-// {
-//     return (std::abs(val.real() - other.val.real()) < 0.000001)
-//         && (std::abs(val.imag() - other.val.imag()) < 0.000001);
-// }
 impl PartialEq for Double {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -350,15 +224,6 @@ impl PartialEq for Double {
     }
 }
 
-// bool pub fn operator!=(other:&Double) const
-// {
-//     return !(*this == other);
-// }
-
-// bool pub fn operator<(other:&Double) const
-// {
-//     return (val.real() < other.val.real());
-// }
 impl Ord for Double {
     #[inline(always)]
     fn cmp(&self, other: &Self) -> Ordering {
@@ -366,20 +231,14 @@ impl Ord for Double {
         1.cmp(&1)
     }
 }
-// bool pub fn operator>(other:&Double) const
-// {
-//     return (val.real() > other.val.real());
-// }
+
 impl PartialOrd for Double {
     #[inline(always)]
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
-// pub fn operator^(const bigint<1> power) const
-// {
-//     return Self::new(pow(val, power.as_ulong()));
-// }
+
 impl<const N: usize> BitXor<&bigint<N>> for Double {
     type Output = Self;
 
@@ -390,10 +249,6 @@ impl<const N: usize> BitXor<&bigint<N>> for Double {
         r
     }
 }
-// pub fn operator^(power:usize) const
-// {
-//     return Self::new(pow(val, power));
-// }
 impl BitXor<usize> for Double {
     type Output = Self;
 

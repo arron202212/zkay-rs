@@ -6,22 +6,12 @@ use ffec::field_utils::BigInteger;
 use ffec::scalar_multiplication::multiexp::KCConfig;
 use ffec::{One, PpConfig, Zero};
 
-/**
- * An accumulation vector comprises an accumulation value and a sparse vector.
- * The method "accumulate_chunk" allows one to accumlate portions of the sparse
- * vector into the accumualation value.
- */
-// pub trait AccumulationVectorConfig:
-//     Clone
-//     + Default
-//     + std::cmp::PartialEq
-//     + std::fmt::Display
-//     + std::ops::Add
-//     + Sized
-// {
-//     // fn zero()->Self;
-//     // fn size_in_bits()->usize;
-// }
+// /**
+//  * An accumulation vector comprises an accumulation value and a sparse vector.
+//  * The method "accumulate_chunk" allows one to accumlate portions of the sparse
+//  * vector into the accumualation value.
+//  */
+
 #[derive(Clone, Default)]
 pub struct accumulation_vector<T: PpConfig> {
     pub first: T,
@@ -37,9 +27,7 @@ impl<T: PpConfig> From<Vec<T>> for accumulation_vector<T> {
 }
 
 impl<T: PpConfig> accumulation_vector<T> {
-    // accumulation_vector() = default;
-    // accumulation_vector(&other:accumulation_vector<T>) = default;
-    // accumulation_vector(accumulation_vector<T> &&other) = default;
+    
     pub fn new(first: T, rest: sparse_vector<T>) -> Self {
         Self { first, rest }
     }
@@ -50,24 +38,7 @@ impl<T: PpConfig> accumulation_vector<T> {
         }
     }
 
-    // accumulation_vector<T>& operator=(&other:accumulation_vector<T>) = default;
-    // accumulation_vector<T>& operator=(accumulation_vector<T> &&other) = default;
-
-    // bool operator==(&other:accumulation_vector<T>) const;
-
-    // bool is_fully_accumulated() const;
-
-    // usize domain_size() const;
-    // usize size() const;
-    //  pub fn size_in_bits(&self)->usize;
-
-    //
-    // accumulation_vector<T> accumulate_chunk(it_begin:&Vec<FieldT>::const_iterator
-    //                                         it_end:&Vec<FieldT>::const_iterator
-    //                                         offset:usize) const;
 }
-
-// use crate::common::data_structures::accumulation_vector;
 
 //  Implementation of interfaces for an accumulation vector.
 
@@ -114,14 +85,3 @@ impl<T: PpConfig> fmt::Display for accumulation_vector<T> {
         )
     }
 }
-
-//
-// std::istream& operator>>(std::istream& in, accumulation_vector<T> &v)
-// {
-//     in >> v.first;
-//     ffec::consume_OUTPUT_NEWLINE(in);
-//     in >> v.rest;
-//     ffec::consume_OUTPUT_NEWLINE(in);
-
-//     return in;
-// }

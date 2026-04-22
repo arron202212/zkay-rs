@@ -20,27 +20,27 @@ use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::FieldTConfig;
 use rccell::RcCell;
 
-/*
-    This test gives the first example of a construction of a constraint system. We use the terms
-    'Constraint System' and 'Circuit' interchangeably rather loosely. It is easy to
-    visualize a circuit with inputs and outputs. Each gate imposes some logic on the inputs and
-    output wires. For instance, AND(inp1, inp2) will impose the 'constraint' (inp1 & inp2 = out)
-    Thus, we can also think of this circuit as a system of constraints. Each gate is a mathematical
-    constraint and each wire is a variable. In the AND example over a boolean field {0,1} we would
-    write the constraint as (inp1 * inp2 == out). This constraint is 'satisfied' relative to an
-    assignment if we assign values to {inp1, inp2, out} such that the constraint evaluates to TRUE.
-    All following examples will be either field agnostic or of a specific form of prime fields:
-    (1) Field agnostic case: In these examples we create high level circuits by using lower level
-        circuits. This way we can ignore the specifics of a field and assume the lower level takes
-        care of this. If we must explicitly write constraints in these circuits, they will always
-        be very basic constraints which are defined over every field (e.g. x + y = 0).
-    (2) All field specific examples in this library are for a prime characteristic field with the
-        special form of 'quadratic rank 1 polynomials', or R1P. This is the only form used with the
-        current implementation of SNARKs. The form for these constraints is
-        (Linear Combination) * (Linear Combination) == (Linear Combination).
-        The library has been designed to allow future addition of other characteristics/forms in
-        the future by implementing only low level circuits for these forms.
-*/
+// /*
+//     This test gives the first example of a construction of a constraint system. We use the terms
+//     'Constraint System' and 'Circuit' interchangeably rather loosely. It is easy to
+//     visualize a circuit with inputs and outputs. Each gate imposes some logic on the inputs and
+//     output wires. For instance, AND(inp1, inp2) will impose the 'constraint' (inp1 & inp2 = out)
+//     Thus, we can also think of this circuit as a system of constraints. Each gate is a mathematical
+//     constraint and each wire is a variable. In the AND example over a boolean field {0,1} we would
+//     write the constraint as (inp1 * inp2 == out). This constraint is 'satisfied' relative to an
+//     assignment if we assign values to {inp1, inp2, out} such that the constraint evaluates to TRUE.
+//     All following examples will be either field agnostic or of a specific form of prime fields:
+//     (1) Field agnostic case: In these examples we create high level circuits by using lower level
+//         circuits. This way we can ignore the specifics of a field and assume the lower level takes
+//         care of this. If we must explicitly write constraints in these circuits, they will always
+//         be very basic constraints which are defined over every field (e.g. x + y = 0).
+//     (2) All field specific examples in this library are for a prime characteristic field with the
+//         special form of 'quadratic rank 1 polynomials', or R1P. This is the only form used with the
+//         current implementation of SNARKs. The form for these constraints is
+//         (Linear Combination) * (Linear Combination) == (Linear Combination).
+//         The library has been designed to allow future addition of other characteristics/forms in
+//         the future by implementing only low level circuits for these forms.
+// */
 
 pub fn test_ProtoboardUsage<
     FieldT: FieldTConfig,
@@ -669,10 +669,10 @@ pub fn TEST_R1P_VerifyTransactionAmounts_Gadget<
     );
 }
 
-/*
-    Below is an example of integrating gadgetlib2 constructed constraint systems with the
-    ppzkSNARK.
-*/
+// /*
+//     Below is an example of integrating gadgetlib2 constructed constraint systems with the
+//     ppzkSNARK.
+// */
 
 pub fn TEST_Integration<
     FieldT: FieldTConfig,

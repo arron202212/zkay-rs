@@ -9,9 +9,10 @@ use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_inst
 use crate::relations::ram_computations::rams::tinyram::tinyram_aux::{
     generate_tinyram_prelude, random_tinyram_instruction, tinyram_opcode, tinyram_program,
 };
-// use crate::relations::ram_computations::rams::tinyram::tinyram_aux::tinyram_instruction;
 
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{span, Level};
+
+
 #[derive(Default)]
 pub struct ram_example<RamT: ram_params_type> {
     pub ap: ram_architecture_params<RamT>,
@@ -38,7 +39,7 @@ pub fn gen_ram_example_simple<RamT: ram_params_type>(
     time_bound: usize,
     satisfiable: bool,
 ) -> ram_example<RamT> {
-    enter_block("Call to gen_ram_example_simple", false);
+    let span = span!(Level::TRACE, "Call to gen_ram_example_simple").entered();
 
     let program_size = boot_trace_size_bound / 2;
     let input_size = boot_trace_size_bound - program_size;
@@ -93,7 +94,7 @@ pub fn gen_ram_example_simple<RamT: ram_params_type>(
 
     assert!(boot_pos == boot_trace_size_bound);
 
-    leave_block("Call to gen_ram_example_simple", false);
+    span.exit();
     return result;
 }
 
@@ -103,7 +104,7 @@ pub fn gen_ram_example_complex<RamT: ram_params_type>(
     time_bound: usize,
     satisfiable: bool,
 ) -> ram_example<RamT> {
-    enter_block("Call to gen_ram_example_complex", false);
+    let span = span!(Level::TRACE, "Call to gen_ram_example_complex").entered();
 
     let program_size = boot_trace_size_bound / 2;
     let input_size = boot_trace_size_bound - program_size;
@@ -213,6 +214,6 @@ pub fn gen_ram_example_complex<RamT: ram_params_type>(
         boot_pos += 1;
     }
 
-    leave_block("Call to gen_ram_example_complex", false);
+    span.exit();
     return result;
 }

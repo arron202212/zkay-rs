@@ -24,20 +24,8 @@ use ffec::common::profiling::{enter_block, leave_block, print_indent};
 use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
-/**
- * Runs the ppzkSNARK (generator, prover, and verifier) for a given
- * R1CS example (specified by a constraint system, input, and witness).
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- */
-//
-// bool run_r1cs_ppzksnark(example:&r1cs_example<Fr<ppT> >,
-//                         test_serialization:bool);
 
-// use common::profiling;
 
-// use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::r1cs_ppzksnark;
 
 pub enum Assert<const CHECK: bool> {}
 
@@ -82,19 +70,26 @@ impl TestAffineVerifier for has_affine_pairing_holder<false> {
     }
 }
 
-/**
- * The code below provides an example of all stages of running a R1CS ppzkSNARK.
- *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which runs the ppzkSNARK generator on input a given
- *     constraint system CS to create a proving and a verification key for CS.
- * (2) The "prover", which runs the ppzkSNARK prover on input the proving key,
- *     a primary input for CS, and an auxiliary input for CS.
- * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
- *     a primary input for CS, and a proof.
- */
+// /**
+//  * The code below provides an example of all stages of running a R1CS ppzkSNARK.
+//  *
+//  * Of course, in a real-life scenario, we would have three distinct entities,
+//  * mangled into one in the demonstration below. The three entities are as follows.
+//  * (1) The "generator", which runs the ppzkSNARK generator on input a given
+//  *     constraint system CS to create a proving and a verification key for CS.
+//  * (2) The "prover", which runs the ppzkSNARK prover on input the proving key,
+//  *     a primary input for CS, and an auxiliary input for CS.
+//  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
+//  *     a primary input for CS, and a proof.
+//  */
 
+// /**
+//  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
+//  * R1CS example (specified by a constraint system, input, and witness).
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  */
 pub fn run_r1cs_ppzksnark<ppT: PublicParams>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
@@ -104,36 +99,9 @@ where
         Mul<Fr<ppT>, Output = knowledge_commitment<G2<ppT>, G1<ppT>>>,
     knowledge_commitment<G1<ppT>, G1<ppT>>:
         Mul<Fr<ppT>, Output = knowledge_commitment<G1<ppT>, G1<ppT>>>,
-    // where
-    //     ED: evaluation_domain<<ppT as PublicParams>::Fr>,
-    //     for<'a> &'a <ppT as ff_curves::PublicParams>::G1:
-    //         Add<Output = <ppT as ff_curves::PublicParams>::G1>,
-    //     <ppT as ff_curves::PublicParams>::Fr:
-    //         Mul<<ppT as ff_curves::PublicParams>::G2, Output = <ppT as ff_curves::PublicParams>::G2>,
-    //     <ppT as ff_curves::PublicParams>::Fr: Mul<
-    //             knowledge_commitment<ppT>,
-    //             Output = knowledge_commitment<
-    //                 <ppT as ff_curves::PublicParams>::G2,
-    //                 <ppT as ff_curves::PublicParams>::G1,
-    //             >,
-    //         >,
-    //     for<'a> &'a <ppT as ff_curves::PublicParams>::G2:
-    //         Add<Output = <ppT as ff_curves::PublicParams>::G2>,
-    //     <ppT as ff_curves::PublicParams>::Fr: Mul<
-    //             knowledge_commitment<
-    //                 <ppT as ff_curves::PublicParams>::G1,
-    //                 <ppT as ff_curves::PublicParams>::G1,
-    //             >,
-    //             Output = knowledge_commitment<
-    //                 <ppT as ff_curves::PublicParams>::G1,
-    //                 <ppT as ff_curves::PublicParams>::G1,
-    //             >,
-    //         >,
-    //     <ppT as ff_curves::PublicParams>::Fr:
-    //         Mul<<ppT as ff_curves::PublicParams>::G1, Output = <ppT as ff_curves::PublicParams>::G1>,
-    //     [(); { ppT::has_affine_pairing } as usize]:,
+    
 {
-    enter_block("Call to run_r1cs_ppzksnark", false);
+    let span = span!(Level::TRACE, "Call to run_r1cs_ppzksnark").entered();
 
     println!("R1CS ppzkSNARK Generator");
     let mut keypair = r1cs_ppzksnark_generator::<ppT>(&example.constraint_system);
@@ -145,11 +113,11 @@ where
     let mut pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_ppzksnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_ppzksnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_ppzksnark_processed_verification_key<ppT>>(&pvk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     println!("R1CS ppzkSNARK Prover");
@@ -163,9 +131,9 @@ where
     println!("after prover");
 
     if test_serialization {
-        enter_block("Test serialization of proof", false);
+        let span = span!(Level::TRACE, "Test serialization of proof").entered();
         proof = reserialize::<r1cs_ppzksnark_proof<ppT>>(&proof);
-        leave_block("Test serialization of proof", false);
+        span.exit();
     }
 
     println!("R1CS ppzkSNARK Verifier");
@@ -200,7 +168,7 @@ where
         );
     }
 
-    leave_block("Call to run_r1cs_ppzksnark", false);
+    span.exit();
 
     ans
 }

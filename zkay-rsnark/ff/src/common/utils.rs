@@ -13,56 +13,6 @@ use crate::PpConfig;
 
 pub type bit_vector = Vec<bool>;
 
-//
-// struct enable_if { type type=pub fn *; };
-
-//
-// struct enable_if<true, T> { type type=T; };
-
-// std::usize get_power_of_two(std::usize n);
-
-// std::usize round_to_next_power_of_2(n:std::usize);
-// bool is_power_of_2(n:std::usize);
-
-// /// returns ceil(log2(n)), so 1u64<<log2(n) is the smallest power of 2, that is not less than n
-// std::usize log2(std::usize n);
-
-// inline std::usize exp2(std::usize k) { return std::usize(1) << k; }
-
-// std::usize to_twos_complement(i32 i, std::usize w);
-// i32 from_twos_complement(std::usize i, std::usize w);
-
-// std::usize bitreverse(std::usize n, const std::usize l);
-// bit_vector int_list_to_bits(l:&const std::initializer_list<u64>, const std::usize wordsize);
-// //throws error if y = 0
-// i64 div_ceil(i64 x, i64 y);
-
-// bool is_little_endian();
-
-// String FORMAT(prefix:&format:String, const char*, ...);
-
-//A variadic template to suppress unused argument warnings
-//
-// pub fn  UNUSED(Types&&...) {}
-
-// #ifdef DEBUG
-// #define FMT FORMAT
-// #else
-// #define FMT(...) (UNUSED(__VA_ARGS__), "")
-
-pub fn FMT(s: &str, c: &str) {}
-// pub fn  serialize_bit_vector(out:&String,v:& const bit_vector);
-// pub fn  deserialize_bit_vector(in:&mut String,v:& bit_vector);
-
-////Should not be used for fields, because the field function is named ceil_size_in_bits instead.
-//
-// std::usize curve_size_in_bits(v:&Vec <CurveT>);
-
-/* Print a vector in the form { elem0 elem1 elem2 ... }, with a newline at the end
-
-pub fn  print_vector(Vec <T> &vec);
-
-pub fn  print_vector(Vec <T> vec);*/
 use std::fmt::Write;
 pub fn print_vector<T: std::fmt::Display>(vec: &Vec<T>) {
     print!("{{ ");
@@ -72,38 +22,13 @@ pub fn print_vector<T: std::fmt::Display>(vec: &Vec<T>) {
     print!("}}\n");
 }
 
-// /**
-//  * Returns a random element of T that is not zero or one.
-//  * T can be a field or elliptic curve group.
-//  * Used for testing to generate a test example that doesn't error.
-//  */
-//
-// T random_element_non_zero_one();
-// /**
-//  * Returns a random element of T that is not zero.
-//  * T can be a field or elliptic curve group.
-//  * Used for testing to generate a test example that doesn't error.
-//  */
-//
-// T random_element_non_zero();
-// /**
-//  * Returns a random element of T that is not equal to y.
-//  * T can be a field or elliptic curve group.
-//  * Used for testing to generate a test example that doesn't error.
-//  */
-//
-// T random_element_exclude(T y);
-
-// #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
-
 //  note that utils has a templatized part (utils.tcc) and non-templatized part (utils.cpp)
 
 // Implementation of misc math and serialization utility functions.
 
-/**
- * Round n to the next power of two.
- * If n is a power of two, return n
- */
+//  * Round n to the next power of two.
+//  * If n is a power of two, return n
+
 pub fn get_power_of_two(mut n: usize) -> usize {
     n -= 1;
     n |= n >> 1;
@@ -126,8 +51,8 @@ pub fn is_power_of_2(n: usize) -> bool {
     return (n != 0) && ((n & (n - 1)) == 0);
 }
 
-/* returns ceil(log2(n)), so 1u64<<log2(n) is the smallest power of 2,
-that is not less than n. */
+//  returns ceil(log2(n)), so 1u64<<log2(n) is the smallest power of 2,
+// that is not less than n.
 pub fn log2(mut n: usize) -> usize {
     let mut r = if n & (n - 1) == 0 { 0 } else { 1 }; // add 1 if n is not power of 2
 
@@ -190,17 +115,6 @@ pub fn is_little_endian() -> bool {
     // a.to_le()==a.to_ne()
 }
 
-// pub fn FORMAT(prefix:&format:String, const char*, ...)->string{
-//     256:static usize MAX_FMT =,
-//     char buf[MAX_FMT];
-//     va_list args;
-//     va_start(args, format);
-//     vsnprintf(buf, MAX_FMT, format, args);
-//     va_end(args);
-
-//     return prefix + String(buf);
-// }
-
 pub fn serialize_bit_vector(out: &mut String, v: &bit_vector) {
     write!(out, "{}\n", v.len());
     for b in v {
@@ -220,6 +134,9 @@ pub fn deserialize_bit_vector(ins: &String, v: &mut bit_vector) {
 pub fn size_in_bits<CurveT: PpConfig>(v: &Vec<CurveT>) -> usize {
     v.len() * CurveT::size_in_bits()
 }
+//  * Returns a random element of T that is not zero or one.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
 
 pub fn random_element_non_zero_one<T: PpConfig>() -> T {
     let mut x: T = T::random_element();
@@ -228,6 +145,9 @@ pub fn random_element_non_zero_one<T: PpConfig>() -> T {
     }
     return x;
 }
+//  * Returns a random element of T that is not zero.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
 
 pub fn random_element_non_zero<T: PpConfig>() -> T {
     let mut x: T = T::random_element();
@@ -236,6 +156,9 @@ pub fn random_element_non_zero<T: PpConfig>() -> T {
     }
     return x;
 }
+//  * Returns a random element of T that is not equal to y.
+//  * T can be a field or elliptic curve group.
+//  * Used for testing to generate a test example that doesn't error.
 
 pub fn random_element_exclude<T: PpConfig>(y: T) -> T {
     let mut x: T = T::random_element();

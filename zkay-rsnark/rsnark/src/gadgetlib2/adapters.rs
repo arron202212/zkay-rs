@@ -150,7 +150,6 @@ impl ConvertConfig<&VariableAssignment, assignment_t> for GLA {
 // */
 impl ConvertConfig<&Protoboard, protoboard_t> for GLA {
     fn convert(pb: &Protoboard) -> protoboard_t {
-        //GADGETLIB_ASSERT(pb.numVars()==getNextFreeIndex(), "Some Variables were created and not used, or, more than one protoboard was used.");
         (
             Self::convert(pb.constraintSystem()),
             Self::convert(pb.assignment()),
@@ -159,7 +158,6 @@ impl ConvertConfig<&Protoboard, protoboard_t> for GLA {
 }
 impl ConvertConfig<&FElem, Fp_elem_t> for GLA {
     fn convert(fElem: &FElem) -> Fp_elem_t {
-        // using gadgetlib2::R1P_Elem;
         fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
         fElem
             .elem_
@@ -170,34 +168,3 @@ impl ConvertConfig<&FElem, Fp_elem_t> for GLA {
             .clone()
     }
 }
-
-// impl<FieldT: FieldTConfig> ConvertConfig<&FElem, FieldT> for GLA {
-//     fn convert(fElem: &FElem) -> FieldT {
-//         // using gadgetlib2::R1P_Elem;
-//         // fElem.promoteToFieldType(&FieldType::R1P); // convert fElem from FConst to R1P_Elem
-//         // fElem
-//         //     .elem_
-//         //     .borrow()
-//         //     .try_as_elem_ref()
-//         //     .unwrap()
-//         //     .elem_
-//         //     .clone()
-//         FieldT::default()
-//     }
-// }
-
-// impl PartialEq <&linear_term_t> for linear_combination_t {
-//     #[inline]
-//     fn eq(&self, other: &linear_term_t) -> bool {
-//         self.0.len() == 1 && &self.0[0] == other && self.1 == Fp::from(0i64)
-//     }
-// }
-
-// bool operator==(lhs:linear_combination_t&,
-//     rhs:&linear_term_t) {
-//     return lhs.first.len() == 1 &&
-//         lhs.first.at(0) == rhs &&
-//         lhs.second == Fp(0);
-// }
-
-// }

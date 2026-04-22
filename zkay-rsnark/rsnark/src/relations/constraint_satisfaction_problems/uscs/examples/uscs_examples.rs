@@ -7,11 +7,10 @@ use crate::relations::constraint_satisfaction_problems::uscs::uscs::{
 };
 use crate::relations::variable::{SubLinearCombinationConfig, SubVariableConfig};
 use ffec::FieldTConfig;
-use ffec::common::profiling::{enter_block, leave_block};
-
-/**
- * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
- */
+use tracing::{span, Level};
+// /**
+//  * A USCS example comprises a USCS constraint system, USCS input, and USCS witness.
+//  */
 
 pub struct uscs_example<
     FieldT: FieldTConfig,
@@ -40,42 +39,19 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-/**
- * Generate a USCS example such that:
- * - the number of constraints of the USCS constraint system is num_constraints;
- * - the number of variables of the USCS constraint system is (approximately) num_constraints;
- * - the number of inputs of the USCS constraint system is num_inputs;
- * - the USCS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
- */
 
-// uscs_example<FieldT> generate_uscs_example_with_field_input(num_constraints:usize,
-//                                                             num_inputs:usize);
-
-/**
- * Generate a USCS example such that:
- * - the number of constraints of the USCS constraint system is num_constraints;
- * - the number of variables of the USCS constraint system is (approximately) num_constraints;
- * - the number of inputs of the USCS constraint system is num_inputs;
- * - the USCS input consists of binary values (as opposed to ``full'' field elements).
- */
-// uscs_example<FieldT> generate_uscs_example_with_binary_input(num_constraints:usize,
-//                                                              num_inputs:usize);
-
-// // use crate::relations::constraint_satisfaction_problems/uscs/examples/uscs_examples;
-
-//
 
 //  Implementation of functions to sample USCS examples with prescribed parameters
 //  (according to some distribution).
 
-//  See uscs_examples.hpp .
 
-//
-// // #define USCS_EXAMPLES_TCC_
-
-// use  <cassert>
-use ffec::common::utils;
-
+// /**
+//  * Generate a USCS example such that:
+//  * - the number of constraints of the USCS constraint system is num_constraints;
+//  * - the number of variables of the USCS constraint system is (approximately) num_constraints;
+//  * - the number of inputs of the USCS constraint system is num_inputs;
+//  * - the USCS input consists of ``full'' field elements (typically require the whole log|Field| bits to represent).
+//  */
 pub fn generate_uscs_example_with_field_input<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -84,7 +60,7 @@ pub fn generate_uscs_example_with_field_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
-    enter_block("Call to generate_uscs_example_with_field_input", false);
+    let span = span!(Level::TRACE, "Call to generate_uscs_example_with_field_input").entered();
 
     assert!(num_inputs >= 1);
     assert!(num_constraints >= num_inputs);
@@ -142,11 +118,17 @@ pub fn generate_uscs_example_with_field_input<
     assert!(cs.num_constraints() == num_constraints);
     assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
-    leave_block("Call to generate_uscs_example_with_field_input", false);
+    span.exit();
 
     return uscs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }
-
+// /**
+//  * Generate a USCS example such that:
+//  * - the number of constraints of the USCS constraint system is num_constraints;
+//  * - the number of variables of the USCS constraint system is (approximately) num_constraints;
+//  * - the number of inputs of the USCS constraint system is num_inputs;
+//  * - the USCS input consists of binary values (as opposed to ``full'' field elements).
+//  */
 pub fn generate_uscs_example_with_binary_input<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -155,7 +137,7 @@ pub fn generate_uscs_example_with_binary_input<
     num_constraints: usize,
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
-    enter_block("Call to generate_uscs_example_with_binary_input", false);
+    let span = span!(Level::TRACE, "Call to generate_uscs_example_with_binary_input").entered();
 
     assert!(num_inputs >= 1);
 
@@ -209,7 +191,7 @@ pub fn generate_uscs_example_with_binary_input<
     assert!(cs.num_constraints() == num_constraints);
     assert!(cs.is_satisfied(&primary_input, &auxiliary_input));
 
-    leave_block("Call to generate_uscs_example_with_binary_input", false);
+    span.exit();
 
     return uscs_example::<FieldT, SV, SLC>::new(cs, primary_input, auxiliary_input);
 }

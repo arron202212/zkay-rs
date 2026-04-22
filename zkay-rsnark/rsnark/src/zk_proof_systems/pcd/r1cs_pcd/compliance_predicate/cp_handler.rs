@@ -21,43 +21,36 @@ use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::collections::BTreeSet;
 
-/**
- * A variable to represent an r1cs_pcd_message.
- */
+// /**
+//  * A variable to represent an r1cs_pcd_message.
+//  */
 #[derive(Clone, Default)]
 pub struct r1cs_pcd_message_variable<T: MessageVariableConfig> {
-    //  : public gadget
     pub num_vars_at_construction: usize,
     pub types: variable<T::FieldT, pb_variable>,
     pub all_vars: pb_variable_array<T::FieldT, T::PB>,
     pub t: T,
 }
 
-/**
- * A variable to represent an r1cs_pcd_local_data.
- */
+// /**
+//  * A variable to represent an r1cs_pcd_local_data.
+//  */
 
 #[derive(Clone, Default)]
 pub struct r1cs_pcd_local_data_variable<T: LocalDataVariableConfig> {
-    // : public gadget
     pub num_vars_at_construction: usize,
     pub all_vars: pb_variable_array<T::FieldT, T::PB>,
     pub t: T,
 }
 
-/**
- * A base pub struct for creating compliance predicates.
- */
+// /**
+//  * A base pub struct for creating compliance predicates.
+//  */
 
 pub trait CPHConfig: ppTConfig {
-    // type ppT: ppTConfig;
-    // type FieldT: FieldTConfig;
-    // type PB: PBConfig;
     type protoboardT: ProtoboardConfig<FieldT = Self::FieldT, PB = Self::PB>;
     type MV: MessageVariableConfig<Output = Self::M, FieldT = Self::FieldT, PB = Self::PB>;
     type LDV: LocalDataVariableConfig<Output = Self::LD, FieldT = Self::FieldT, PB = Self::PB>;
-    // type M: MessageConfig<FieldT = Self::FieldT>;
-    // type LD: LocalDataConfig<FieldT = Self::FieldT>;
 }
 #[derive(Clone, Default)]
 pub struct compliance_predicate_handler<CPH: CPHConfig, T: Default + Clone> {
@@ -109,19 +102,12 @@ pub trait MessageVariableConfig: Default + Clone {
     type Output: MessageConfig<FieldT = Self::FieldT>;
     fn get_message(&self) -> RcCell<r1cs_pcd_message<Self::FieldT, Self::Output>>;
 }
-// impl<FieldT: FieldTConfig, PB: PBConfig,T: MessageVariableConfig<FieldT>> MessageVariableConfig<FieldT>
-//     for r1cs_pcd_message_variables<FieldT, PB,T>
-// {
-//     type Output=T;
-//     fn get_message(&self) -> RcCell<r1cs_pcd_message<FieldT,Self::Output>> {
-//        self.t.t.get_message()
-//     }
-// }
+
 impl<T: MessageVariableConfig> r1cs_pcd_message_variables<T> {
     pub fn update_all_vars(&mut self) {
-        /* NOTE: this assumes that r1cs_pcd_message_variable has been the
-         * only gadget allocating variables on the protoboard and needs to
-         * be updated, e.g., in multicore variable allocation scenario. */
+        // /* NOTE: this assumes that r1cs_pcd_message_variable has been the
+        //  * only gadget allocating variables on the protoboard and needs to
+        //  * be updated, e.g., in multicore variable allocation scenario. */
 
         for var_idx in self.t.num_vars_at_construction + 1..=self.pb.borrow().num_variables() {
             self.t

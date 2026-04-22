@@ -20,7 +20,7 @@ pub use self::algebra::*;
 pub mod common;
 pub use self::common::utils::*;
 const D: &'static [u64] = &[0];
-use crate::field_utils::bigint::{bigint,BigIntegerT};
+use crate::field_utils::bigint::{BigIntegerT, bigint};
 
 pub trait PpConfig:
     Default

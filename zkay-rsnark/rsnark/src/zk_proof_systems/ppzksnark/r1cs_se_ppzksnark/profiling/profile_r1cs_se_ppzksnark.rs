@@ -55,13 +55,13 @@ fn main<default_r1cs_se_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i3
         }
     }
 
-    enter_block("Generate R1CS example", false);
+    let span = span!(Level::TRACE, "Generate R1CS example").entered();
     let example = generate_r1cs_example_with_field_input::<
         Fr<default_r1cs_se_ppzksnark_pp>,
         pb_variable,
         pb_linear_combination,
     >(num_constraints, input_size);
-    leave_block("Generate R1CS example", false);
+    span.exit();
 
     println!("(enter) Profile R1CS SEppzkSNARK");
     let mut test_serialization = true;

@@ -4,15 +4,18 @@ use crate::algebra::curves::{
     short_weierstrass::SWCurveConfig,
     short_weierstrass::{Affine, Projective},
 };
-use ffec::BigInt;
-use ffec::algebra::Fp;
-use ffec::algebra::fields::Zero;
-use ffec::algebra::{
-    field_utils::BigInt,
-    fields::{
-        field::{AdditiveGroup, Field},
-        fpn_field::PrimeField,
-        prime_base::MontFp,
+
+use ffec::{
+    BigInt,
+    algebra::{
+        Fp,
+        field_utils::BigInt,
+        fields::{
+            Zero,
+            field::{AdditiveGroup, Field},
+            fpn_field::PrimeField,
+            prime_base::MontFp,
+        },
     },
 };
 

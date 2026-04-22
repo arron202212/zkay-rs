@@ -129,10 +129,10 @@ pub fn  test_output()
 {
     let mut g = GroupT::zero();
 
-    /* ate-pairing contained optimizations specific to the original curve that were breaking
-       point addition with extremely small probability, so this code was run for 1000 times
-       in case there was a missing carry. Since no problems were found, this is now reduced
-       to only 10 times for quick testing. */
+    // /* ate-pairing contained optimizations specific to the original curve that were breaking
+    //    point addition with extremely small probability, so this code was run for 1000 times
+    //    in case there was a missing carry. Since no problems were found, this is now reduced
+    //    to only 10 times for quick testing. */
     for i in 0..10
     {
         let mut g_ser = reserialize(g);

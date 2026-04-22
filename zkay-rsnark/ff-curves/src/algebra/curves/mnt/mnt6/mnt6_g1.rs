@@ -231,16 +231,16 @@ impl mnt6_G1 {
         if self.is_zero() {
             return true;
         }
-        /*
-            y^2 = x^3 + ax + b
+        // /*
+        //     y^2 = x^3 + ax + b
 
-            We are using projective, so equation we need to check is actually
+        //     We are using projective, so equation we need to check is actually
 
-            (y/z)^2 = (x/z)^3 + a (x/z) + b
-            z y^2 = x^3  + a z^2 x + b z^3
+        //     (y/z)^2 = (x/z)^3 + a (x/z) + b
+        //     z y^2 = x^3  + a z^2 x + b z^3
 
-            z (y^2 - b z^2) = x ( x^2 + a z^2)
-        */
+        //     z (y^2 - b z^2) = x ( x^2 + a z^2)
+        // */
         let X2 = self.X.squared();
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();

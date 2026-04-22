@@ -5,9 +5,9 @@ use crate::relations::circuit_satisfaction_problems::tbcs::tbcs::{
     tbcs_auxiliary_input, tbcs_circuit, tbcs_primary_input,
 };
 
-/**
- * Below are various typedefs aliases (used for uniformity with other proof systems).
- */
+// /**
+//  * Below are various typedefs aliases (used for uniformity with other proof systems).
+//  */
 
 pub type tbcs_ppzksnark_circuit = tbcs_circuit;
 

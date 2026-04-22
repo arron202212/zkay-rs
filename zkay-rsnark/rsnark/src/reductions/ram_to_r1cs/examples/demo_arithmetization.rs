@@ -1,11 +1,4 @@
-// use common::default_types::ec_pp;
-// use common::profiling;
 
-// use crate::common::default_types::tinyram_ppzksnark_pp;
-// use crate::reductions::ram_to_r1cs::ram_to_r1cs;
-// use crate::relations::ram_computations::rams::tinyram::tinyram_params;
-// use crate::zk_proof_systems::ppzksnark::ram_ppzksnark::ram_ppzksnark;
-// use crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_pp;
 use crate::common::default_types::tinyram_ppzksnark_pp::default_tinyram_ppzksnark_ppConfig;
 use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
 use crate::knowledge_commitment::knowledge_commitment::knowledge_commitment;
@@ -31,6 +24,8 @@ use ff_curves::default_ec_pp;
 use ffec::common::profiling::{enter_block, leave_block, start_profiling};
 use std::io;
 use std::ops::Mul;
+use tracing::{span, Level};
+
 
 fn process_arithm_command_line(
     argc: i32,
@@ -159,13 +154,13 @@ fn main<default_tinyram_ppzksnark_pp: default_tinyram_ppzksnark_ppConfig>(
     let mut f_primary_input = primary_input_fn;
     let mut f_auxiliary_input = auxiliary_input_fn;
 
-    enter_block("Loading primary input", false);
+    let span = span!(Level::TRACE, "Loading primary input").entered();
     let primary_input = (load_tape(&f_primary_input));
-    leave_block("Loading primary input", false);
+    span.exit();
 
-    enter_block("Loading auxiliary input", false);
+    let span = span!(Level::TRACE, "Loading auxiliary input").entered();
     let auxiliary_input = load_tape(&f_auxiliary_input);
-    leave_block("Loading auxiliary input", false);
+    span.exit();
 
     let boot_trace_size_bound = tinyram_input_size_bound + tinyram_program_size_bound;
     let boot_trace = tinyram_boot_trace_from_program_and_input(

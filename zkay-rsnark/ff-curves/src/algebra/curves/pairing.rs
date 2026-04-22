@@ -1,5 +1,4 @@
-use crate::algebra::curves::ScalarMul;
-use crate::algebra::curves::{AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
+use crate::algebra::curves::{AffineRepr, CurveGroup, PrimeGroup, ScalarMul, VariableBaseMSM};
 use ark_serialize::{
     CanonicalDeserialize, CanonicalSerialize, Compress, SerializationError, Valid, Validate,
 };

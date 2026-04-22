@@ -58,5 +58,6 @@ rand_core={workspace = true}
 rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
 ark-bn254={workspace = true}
+tracing={workspace = true}
 [dev-dependencies]
 test-curves = { workspace = true, features = ["bls12_381_curve"] }

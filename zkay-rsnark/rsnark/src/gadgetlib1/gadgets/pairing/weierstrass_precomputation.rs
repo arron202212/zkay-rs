@@ -56,80 +56,69 @@ type FieldT<ppT> = Fr<ppT>;
 type FqeT<ppT> = Fqe<other_curve<ppT>>;
 type FqkT<ppT> = Fqk<other_curve<ppT>>;
 
-/**
- * Not a gadget. It only holds values.
- */
+// /**
+//  * Not a gadget. It only holds values.
+//  */
 #[derive(Clone, Default)]
 pub struct G1_precomputation<ppT: ppTConfig> {
     pub P: RcCell<G1_variables<ppT>>,
     pub PY_twist_squared: RcCell<Fqe_variable<ppT>>,
 }
 
-/**
- * Gadget that verifies correct precomputation of the G1 variable.
- */
+// /**
+//  * Gadget that verifies correct precomputation of the G1 variable.
+//  */
 #[derive(Clone, Default)]
 pub struct precompute_G1_gadget<ppT: ppTConfig> {
-    //gadget<Fr<ppT> >
-
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
+    
     pub precomp: G1_precomputations<ppT>, // must be a reference.
 }
 
-/**
- * Not a gadget. It only holds values.
- */
+// /**
+//  * Not a gadget. It only holds values.
+//  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget_coeffs<ppT: ppTConfig> {
-    // type FieldT=Fr<ppT>;
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
+    
     pub RX: RcCell<Fqe_variable<ppT>>,
     pub RY: RcCell<Fqe_variable<ppT>>,
     pub gamma: RcCell<Fqe_variable<ppT>>,
     pub gamma_X: RcCell<Fqe_variable<ppT>>,
 }
 
-/**
- * Not a gadget. It only holds values.
- */
+// /**
+//  * Not a gadget. It only holds values.
+//  */
 #[derive(Clone, Default)]
 pub struct G2_precomputation<ppT: ppTConfig> {
-    // type FieldT=Fr<ppT>;
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
+ 
     pub Q: RcCell<G2_variables<ppT>>,
 
     pub coeffs: Vec<RcCell<precompute_G2_gadget_coeffss<ppT>>>,
 }
 
-/**
- * Technical note:
- *
- * QX and QY -- X and Y coordinates of Q
- *
- * initialization:
- * coeffs[0].RX = QX
- * coeffs[0].RY = QY
- *
- * G2_precompute_doubling_step relates coeffs[i] and coeffs[i+1] as follows
- *
- * coeffs[i]
- * gamma = (3 * RX^2 + twist_coeff_a) * (2*RY).inverse()
- * gamma_X = gamma * RX
- *
- * coeffs[i+1]
- * RX = prev_gamma^2 - (2*prev_RX)
- * RY = prev_gamma * (prev_RX - RX) - prev_RY
- */
+// /**
+//  * Technical note:
+//  *
+//  * QX and QY -- X and Y coordinates of Q
+//  *
+//  * initialization:
+//  * coeffs[0].RX = QX
+//  * coeffs[0].RY = QY
+//  *
+//  * G2_precompute_doubling_step relates coeffs[i] and coeffs[i+1] as follows
+//  *
+//  * coeffs[i]
+//  * gamma = (3 * RX^2 + twist_coeff_a) * (2*RY).inverse()
+//  * gamma_X = gamma * RX
+//  *
+//  * coeffs[i+1]
+//  * RX = prev_gamma^2 - (2*prev_RX)
+//  * RY = prev_gamma * (prev_RX - RX) - prev_RY
+//  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget_doubling_step<ppT: ppTConfig> {
-    //gadget<Fr<ppT> >
-
-    // type FieldT=Fr<ppT>;
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
+   
     pub cur: precompute_G2_gadget_coeffss<ppT>,
     pub next: precompute_G2_gadget_coeffss<ppT>,
 
@@ -148,30 +137,25 @@ pub struct precompute_G2_gadget_doubling_step<ppT: ppTConfig> {
     pub compute_next_RY: RcCell<Fqe_mul_gadget<ppT>>,
 }
 
-/**
- * Technical note:
- *
- * G2_precompute_addition_step relates coeffs[i] and coeffs[i+1] as follows
- *
- * coeffs[i]
- * gamma = (RY - QY) * (RX - QX).inverse()
- * gamma_X = gamma * QX
- *
- * coeffs[i+1]
- * RX = prev_gamma^2 + (prev_RX + QX)
- * RY = prev_gamma * (prev_RX - RX) - prev_RY
- *
- * (where prev_ in [i+1] refer to things from [i])
- *
- * If invert_Q is set to true: use -QY in place of QY everywhere above.
- */
+// /**
+//  * Technical note:
+//  *
+//  * G2_precompute_addition_step relates coeffs[i] and coeffs[i+1] as follows
+//  *
+//  * coeffs[i]
+//  * gamma = (RY - QY) * (RX - QX).inverse()
+//  * gamma_X = gamma * QX
+//  *
+//  * coeffs[i+1]
+//  * RX = prev_gamma^2 + (prev_RX + QX)
+//  * RY = prev_gamma * (prev_RX - RX) - prev_RY
+//  *
+//  * (where prev_ in [i+1] refer to things from [i])
+//  *
+//  * If invert_Q is set to true: use -QY in place of QY everywhere above.
+//  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget_addition_step<ppT: ppTConfig> {
-    //gadget<Fr<ppT> >
-
-    // type FieldT=Fr<ppT>;
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
     pub invert_Q: bool,
     pub cur: precompute_G2_gadget_coeffss<ppT>,
     pub next: precompute_G2_gadget_coeffss<ppT>,
@@ -190,16 +174,12 @@ pub struct precompute_G2_gadget_addition_step<ppT: ppTConfig> {
     pub compute_next_RY: RcCell<Fqe_mul_gadget<ppT>>,
 }
 
-/**
- * Gadget that verifies correct precomputation of the G2 variable.
- */
+// /**
+//  * Gadget that verifies correct precomputation of the G2 variable.
+//  */
 #[derive(Clone, Default)]
 pub struct precompute_G2_gadget<ppT: ppTConfig> {
-    //gadget<Fr<ppT> >
-
-    // type FieldT=Fr<ppT>;
-    // type FqeT=Fqe<other_curve::<ppT> >;
-    // type FqkT=Fqk<other_curve::<ppT> >;
+   
     pub addition_steps: Vec<RcCell<precompute_G2_gadget_addition_steps<ppT>>>,
     pub doubling_steps: Vec<RcCell<precompute_G2_gadget_doubling_steps<ppT>>>,
 
@@ -209,8 +189,7 @@ pub struct precompute_G2_gadget<ppT: ppTConfig> {
     pub precomp: G2_precomputations<ppT>, // important to have a reference here
 }
 
-// use  <type_traits>
-// use crate::gadgetlib1::gadgets::pairing::mnt_pairing_params;
+
 
 pub type G1_precomputations<ppT> =
     gadget<<ppT as ppTConfig>::FieldT, <ppT as ppTConfig>::PB, G1_precomputation<ppT>>;
@@ -221,11 +200,6 @@ impl<ppT: ppTConfig> G1_precomputation<ppT> {
         P_val: G1<other_curve<ppT>>,
         annotation_prefix: String,
     ) -> G1_precomputations<ppT>
-// where
-    //     <ppT::other_curve_type as ff_curves::PublicParams>::Fr: Mul<
-    //             <ppT as ff_curves::PublicParams>::Fr,
-    //             Output = <ppT::other_curve_type as ff_curves::PublicParams>::Fr,
-    //         >,
     {
         let mut P_val_copy = P_val.clone();
         P_val_copy.to_affine_coordinates();
@@ -334,11 +308,7 @@ impl<ppT: ppTConfig> precompute_G1_gadgets<ppT> {
 pub fn test_G1_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<Fpk_variableT<ppT>>>(
     annotation: &str,
 )
-// where
-// <ppT as ff_curves::PublicParams>::G1:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G1>,
-// <ppT as ff_curves::PublicParams>::G2:
-//     Mul<ppT::FieldT, Output = <ppT as ff_curves::PublicParams>::G2>,
+
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let mut g_val = ppT::FieldT::random_element() * G1::<ppT>::one();
@@ -488,23 +458,23 @@ impl<ppT: ppTConfig> precompute_G2_gadget_coeffs<ppT> {
     }
 }
 
-/*
-QX and QY -- X and Y coordinates of Q
+// /*
+// QX and QY -- X and Y coordinates of Q
 
-initialization:
-coeffs[0].RX = QX
-coeffs[0].RY = QY
+// initialization:
+// coeffs[0].RX = QX
+// coeffs[0].RY = QY
 
-G2_precompute_doubling_step relates coeffs[i] and coeffs[i+1] as follows
+// G2_precompute_doubling_step relates coeffs[i] and coeffs[i+1] as follows
 
-coeffs[i]
-gamma = (3 * RX^2 + twist_coeff_a) * (2*RY).inverse()
-gamma_X = gamma * RX
+// coeffs[i]
+// gamma = (3 * RX^2 + twist_coeff_a) * (2*RY).inverse()
+// gamma_X = gamma * RX
 
-coeffs[i+1]
-RX = prev_gamma^2 - (2*prev_RX)
-RY = prev_gamma * (prev_RX - RX) - prev_RY
-*/
+// coeffs[i+1]
+// RX = prev_gamma^2 - (2*prev_RX)
+// RY = prev_gamma * (prev_RX - RX) - prev_RY
+// */
 pub type precompute_G2_gadget_doubling_steps<ppT> = gadget<
     <ppT as ppTConfig>::FieldT,
     <ppT as ppTConfig>::PB,
@@ -646,21 +616,21 @@ impl<ppT: ppTConfig> precompute_G2_gadget_doubling_steps<ppT> {
         self.t.compute_next_RY.borrow().generate_r1cs_witness();
     }
 }
-/*
-G2_precompute_addition_step relates coeffs[i] and coeffs[i+1] as follows
+// /*
+// G2_precompute_addition_step relates coeffs[i] and coeffs[i+1] as follows
 
-coeffs[i]
-gamma = (RY - QY) * (RX - QX).inverse()
-gamma_X = gamma * QX
+// coeffs[i]
+// gamma = (RY - QY) * (RX - QX).inverse()
+// gamma_X = gamma * QX
 
-coeffs[i+1]
-RX = prev_gamma^2 - (prev_RX + QX)
-RY = prev_gamma * (prev_RX - RX) - prev_RY
+// coeffs[i+1]
+// RX = prev_gamma^2 - (prev_RX + QX)
+// RY = prev_gamma * (prev_RX - RX) - prev_RY
 
-(where prev_ in [i+1] refer to things from [i])
+// (where prev_ in [i+1] refer to things from [i])
 
-If invert_Q is set to true: use -QY in place of QY everywhere above.
-*/
+// If invert_Q is set to true: use -QY in place of QY everywhere above.
+// */
 
 pub type precompute_G2_gadget_addition_steps<ppT> = gadget<
     <ppT as ppTConfig>::FieldT,
@@ -989,13 +959,7 @@ impl<ppT: ppTConfig> precompute_G2_gadgets<ppT> {
 pub fn test_G2_variable_precomp<ppT: ppTConfig + std::cmp::PartialEq<FieldT<ppT>>>(
     annotation: &str,
 )
-// where
-// <ppT as ff_curves::PublicParams>::G2:
-//     Mul<<ppT as ff_curves::PublicParams>::Fr, Output = <ppT as ff_curves::PublicParams>::G2>,
-// <ppT::other_curve_type as ff_curves::PublicParams>::G2: Mul<
-//         <ppT::other_curve_type as ff_curves::PublicParams>::Fr,
-//         Output = <ppT::other_curve_type as ff_curves::PublicParams>::G2,
-//     >,
+
 {
     let mut pb = RcCell::new(protoboard::<ppT::FieldT, ppT::PB>::default());
     let g_val = G2::<other_curve<ppT>>::one() * FieldT::<other_curve<ppT>>::random_element();

@@ -37,70 +37,27 @@ pub trait ConstraintConfig {
 /// An abstract struct for a field agnostic constraint. The derived classes will be field specific.
 #[derive(Default, Clone)]
 pub struct Constraint<T: Default + Clone> {
-    // explicit Constraint(const ::String& name); // casting disallowed by 'explicit'
-    // ::String name() const; ///< @returns name of the constraint as a String
-    // /**
-    //     @param[in] assignment  - An assignment of field elements for each variable.
-    //     @param[in] printOnFail - when set to true, an unsatisfied constraint will print to stderr
-    //                              information explaining why it is not satisfied.
-    //     @returns true if constraint is satisfied by the assignment
-    // **/
-    //     virtual bool isSatisfied(assignment:VariableAssignment,
-    //                              printOnFail:&PrintOptions) 0:=,
-    //     /// @returns the constraint in a human readable String format
-    //     virtual ::String annotation() 0:=,
-    //     virtual 0:VariableSet getUsedVariables() const =,
-    //     virtual Polynomial asPolynomial() 0:=,
-
-    // #   ifdef DEBUG
+    
     pub name_: String,
     pub t: T,
-    // #   endif
+
 }
 
 /// A rank-1 prime characteristic constraint. The constraint is defined by <a,x> * <b,x> = <c,x>
 /// where x is an assignment of field elements to the variables.
 #[derive(Default, Clone)]
 pub struct Rank1Constraint {
-    //Constraint
     pub a_: LinearCombination,
     pub b_: LinearCombination,
-    pub c_: LinearCombination, // <a,x> * <b,x> = <c,x>
-
-                               // Rank1Constraint(a:LinearCombination,
-                               //                 b:LinearCombination,
-                               //                 c:LinearCombination,
-                               //                 const ::String& name);
-
-                               // LinearCombination a() const;
-                               // LinearCombination b() const;
-                               // LinearCombination c() const;
-
-                               // virtual bool isSatisfied(assignment:VariableAssignment,
-                               //                          printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-                               // virtual ::String annotation() const;
-                               // virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
-                               //                                                                   used in the constraint */
-                               // virtual Polynomial asPolynomial() c_:{return a_ * b_ -,}
+    pub c_: LinearCombination, 
 }
 
 #[derive(Default, Clone)]
 pub struct PolynomialConstraint {
-    //Constraint
     pub a_: Polynomial,
     pub b_: Polynomial,
 }
-// impl PolynomialConstraint {
-// PolynomialConstraint(a:Polynomial,
-//                      b:Polynomial,
-//                      const ::String& name);
 
-// bool isSatisfied(assignment:VariableAssignment,
-//                  printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-// ::String annotation() const;
-// virtual const:VariableSet getUsedVariables(), /**< @returns a list of all variables
-//                                                                     used in the constraint */
-// }
 
 pub type ConstraintPtr = RcCell<ConstraintType>;
 #[derive(Default, Clone)]
@@ -109,22 +66,9 @@ pub struct ConstraintSystem {
 }
 pub type PolyPtrSet = BTreeSet<RcCell<Polynomial>>;
 impl ConstraintSystem {
-    // ConstraintSystem()->Self constraintsPtrs_() {};
+   
 
-    /**
-        Checks if all constraints are satisfied by an assignment.
-        @param[in] assignment  - An assignment of field elements for each variable.
-        @param[in] printOnFail - when set to true, an unsatisfied constraint will print to stderr
-                                 information explaining why it is not satisfied.
-        @returns true if constraint is satisfied by the assignment
-    **/
-    // bool isSatisfied(assignment:VariableAssignment,
-    //                  printOnFail:&PrintOptions = PrintOptions::NO_DBG_PRINT) const;
-    // pub fn  addConstraint(c:&Rank1Constraint);
-    // pub fn  addConstraint(c:&PolynomialConstraint);
-    // ::String annotation() const;
-    // VariableSet getUsedVariables() const;
-
+   
     //
     // /// Required for interfacing with BREX. Should be optimized in the future
     pub fn getConstraintPolynomials(&self) -> PolyPtrSet {
@@ -143,21 +87,10 @@ impl ConstraintSystem {
 }
 
 impl<T: Default + Clone> Constraint<T> {
-    // #ifdef DEBUG
     pub fn new(name: String, t: T) -> Self {
         Self { name_: name, t }
     }
-    // #else
-    // pub fn new(name:&String) { //ffec::UNUSED(name); }
-    //
-
-    // pub fn name(&self) -> &String {
-    //     // #   ifdef DEBUG
-    //     &self.name_
-    //     // #   else
-    //     //         return "";
-    //     // #   endif
-    // }
+    
 }
 
 impl Rank1Constraint {
@@ -199,7 +132,7 @@ impl ConstraintConfig for Constraint<Rank1Constraint> {
         if ares.clone() * &bres == cres {
             return true;
         }
-        // #       ifdef DEBUG
+       
         if printOnFail == &PrintOptions::DBG_PRINT_IF_NOT_SATISFIED {
             println!(
                 "Constraint named \"{}\" not satisfied. Constraint is:",

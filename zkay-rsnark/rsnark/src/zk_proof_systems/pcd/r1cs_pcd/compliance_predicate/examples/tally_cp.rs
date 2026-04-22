@@ -55,12 +55,11 @@ pub trait TallyCPHConfig:
     type protoboard_type: ProtoboardConfig<FieldT = <Self as ppTConfig>::FieldT, PB = <Self as ppTConfig>::PB>;
 }
 
-/**
- * Subclasses a R1CS PCD message to the tally compliance predicate.
- */
+// /**
+//  * Subclasses a R1CS PCD message to the tally compliance predicate.
+//  */
 #[derive(Default, Clone)]
 pub struct tally_pcd_message<FieldT: FieldTConfig> {
-    //: public r1cs_pcd_message<FieldT>
     wordsize: usize,
 
     sum: usize,
@@ -75,9 +74,9 @@ pub struct tally_pcd_local_data<FieldT: FieldTConfig> {
     _t: PhantomData<FieldT>,
 }
 
-/**
- * Subclass a R1CS compliance predicate handler to the tally compliance predicate handler.
- */
+// /**
+//  * Subclass a R1CS compliance predicate handler to the tally compliance predicate handler.
+//  */
 type base_handler<CPH> = compliance_predicate_handler<
     CPH,
     RcCell<protoboard<<CPH as ppTConfig>::FieldT, <CPH as ppTConfig>::PB>>,
@@ -85,7 +84,6 @@ type base_handler<CPH> = compliance_predicate_handler<
 
 #[derive(Default, Clone)]
 pub struct tally_cp_handler<CPH: TallyCPHConfig> {
-    // /: public compliance_predicate_handler<FieldT, RcCell<protoboard<FieldT>> >
     incoming_types: pb_variable_array<CPH::FieldT, CPH::PB>,
 
     sum_out_packed: variable<CPH::FieldT, pb_variable>,

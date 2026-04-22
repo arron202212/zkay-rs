@@ -18,87 +18,55 @@ use ffec::common::utils::log2;
 
 use crate::common::data_structures::integer_permutation::integer_permutation;
 
-/**
- * A data structure that stores the topology of a Benes network.
- *
- * For a given column index column_idx and packet index packet_idx,
- * benes_topology[column_idx][packet_idx] specifies the two possible
- * destinations where the packet_idx-th packet in the column_idx-th column
- * could be routed. This information is stored as a pair of indices, where:
- * - the first index denotes the destination when the switch is in "straight" mode, and
- * - the second index denotes the destination when the switch is in "cross" mode.
- *
- * (The topology has a very succinct description and can be easily
- * queried at an arbitrary position, see implementation of
- * generate_benes_topology for details.)
- */
+// /**
+//  * A data structure that stores the topology of a Benes network.
+//  *
+//  * For a given column index column_idx and packet index packet_idx,
+//  * benes_topology[column_idx][packet_idx] specifies the two possible
+//  * destinations where the packet_idx-th packet in the column_idx-th column
+//  * could be routed. This information is stored as a pair of indices, where:
+//  * - the first index denotes the destination when the switch is in "straight" mode, and
+//  * - the second index denotes the destination when the switch is in "cross" mode.
+//  *
+//  * (The topology has a very succinct description and can be easily
+//  * queried at an arbitrary position, see implementation of
+//  * generate_benes_topology for details.)
+//  */
 pub type benes_topology = Vec<Vec<(usize, usize)>>;
 
-/**
- * A routing assigns a bit to each switch in a Benes network.
- *
- * For a d-dimensional Benes network, the switch bits are stored in a
- * vector consisting of 2*d entries, and each entry contains 2^d bits.
- * That is, we have one switch per packet, but switch settings are not
- * independent.
- */
+// /**
+//  * A routing assigns a bit to each switch in a Benes network.
+//  *
+//  * For a d-dimensional Benes network, the switch bits are stored in a
+//  * vector consisting of 2*d entries, and each entry contains 2^d bits.
+//  * That is, we have one switch per packet, but switch settings are not
+//  * independent.
+//  */
 pub type benes_routing = Vec<bit_vector>;
 
-/**
- * Return the number of (switch) columns in a Benes network for a given number of packets.
- *
- * For example:
- * - benes_num_columns(2) = 2,
- * - benes_num_columns(4) = 4,
- * - benes_num_columns(8) = 6,
- * and so on.
- */
-// usize benes_num_columns(num_packets:usize);
 
-// /**
-//  * Return the topology of a Benes network for a given number of packets.
-//  *
-//  * See benes_topology (above) for details.
-//  */
-// benes_topology generate_benes_topology(num_packets:usize);
 
-// /**
-//  * Route the given permutation on a Benes network of suitable size.
-//  */
-// benes_routing get_benes_routing(permutation:&integer_permutation);
-
-// /**
-//  * Check if a routing "implements" the given permutation.
-//  */
-// bool valid_benes_routing(permutation:&integer_permutation, routing:&benes_routing);
-
-//
 
 //  Implementation of interfaces for functionality for routing on a Benes network.
 
-//  See benes_routing_algorithm.hpp .
 
-// use  <cassert>
-
-// use crate::common::routing_algorithms::benes_routing_algorithm;
-
-/**
- * Compute the mask for all the cross edges originating at a
- * particular column.
- *
- * Namely, the packet (column_idx, row_idx) (with column_idx <
- * num_columns) can be routed to two destinations:
- *
- * - (column_idx+1, row_idx), if the switch handling that packet is
- *    set to the "straight" setting, and
- *
- * - (column_idx+1, row_idx XOR benes_cross_edge_mask(dimension,
- *   column_idx)) if the switch handling that packet is set to "cross"
- *   setting.
- *
- * For example, all cross edges in the 0-th column flip the most
- * significant bit of row_idx.
- */
+// /**
+//  * Compute the mask for all the cross edges originating at a
+//  * particular column.
+//  *
+//  * Namely, the packet (column_idx, row_idx) (with column_idx <
+//  * num_columns) can be routed to two destinations:
+//  *
+//  * - (column_idx+1, row_idx), if the switch handling that packet is
+//  *    set to the "straight" setting, and
+//  *
+//  * - (column_idx+1, row_idx XOR benes_cross_edge_mask(dimension,
+//  *   column_idx)) if the switch handling that packet is set to "cross"
+//  *   setting.
+//  *
+//  * For example, all cross edges in the 0-th column flip the most
+//  * significant bit of row_idx.
+//  */
 pub fn benes_cross_edge_mask(dimension: usize, column_idx: usize) -> usize {
     return if column_idx < dimension {
         1usize << (dimension - 1 - column_idx)
@@ -107,21 +75,21 @@ pub fn benes_cross_edge_mask(dimension: usize, column_idx: usize) -> usize {
     };
 }
 
-/**
- * Return the specified destination of packet of the left-hand side of
- * the routing network, based on the subnetwork (recall that each
- * packet has two possible destinations -- one at the top subnetwork
- * and one at the bottom subnetwork).
- *
- * That is for a packet located at column_idx-th column and row_idx-th
- * row, return:
- *
- * - row_idx' of the destination packet (column_idx+1, row_idx') at
- *   the top subnetwork (if use_top = true)
- *
- * - row_idx' of the destination packet (column_idx+1, row_idx') at
- *   the bottom subnetwork (if use_top = false)
- */
+// /**
+//  * Return the specified destination of packet of the left-hand side of
+//  * the routing network, based on the subnetwork (recall that each
+//  * packet has two possible destinations -- one at the top subnetwork
+//  * and one at the bottom subnetwork).
+//  *
+//  * That is for a packet located at column_idx-th column and row_idx-th
+//  * row, return:
+//  *
+//  * - row_idx' of the destination packet (column_idx+1, row_idx') at
+//  *   the top subnetwork (if use_top = true)
+//  *
+//  * - row_idx' of the destination packet (column_idx+1, row_idx') at
+//  *   the bottom subnetwork (if use_top = false)
+//  */
 pub fn benes_lhs_packet_destination(
     dimension: usize,
     column_idx: usize,
@@ -136,21 +104,21 @@ pub fn benes_lhs_packet_destination(
     };
 }
 
-/**
- * Return the specified source of packet of the right-hand side of the
- * routing network, based on the subnetwork (recall that each packet
- * has two possible source packets -- one at the top subnetwork and
- * one at the bottom subnetwork).
- *
- * That is for a packet located at column_idx-th column and row_idx-th
- * row, return:
- *
- * - row_idx' of the destination packet (column_idx-1, row_idx') at
- *   the top subnetwork (if use_top = true)
- *
- * - row_idx' of the destination packet (column_idx-1, row_idx') at
- *   the bottom subnetwork (if use_top = false)
- */
+// /**
+//  * Return the specified source of packet of the right-hand side of the
+//  * routing network, based on the subnetwork (recall that each packet
+//  * has two possible source packets -- one at the top subnetwork and
+//  * one at the bottom subnetwork).
+//  *
+//  * That is for a packet located at column_idx-th column and row_idx-th
+//  * row, return:
+//  *
+//  * - row_idx' of the destination packet (column_idx-1, row_idx') at
+//  *   the top subnetwork (if use_top = true)
+//  *
+//  * - row_idx' of the destination packet (column_idx-1, row_idx') at
+//  *   the bottom subnetwork (if use_top = false)
+//  */
 pub fn benes_rhs_packet_source(
     dimension: usize,
     column_idx: usize,
@@ -160,11 +128,11 @@ pub fn benes_rhs_packet_source(
     return benes_lhs_packet_destination(dimension, column_idx - 1, row_idx, use_top); // by symmetry
 }
 
-/**
- * For a switch located at column_idx-th column and row_idx-th row,
- * return the switch setting that would route its packet using the top
- * subnetwork.
- */
+// /**
+//  * For a switch located at column_idx-th column and row_idx-th row,
+//  * return the switch setting that would route its packet using the top
+//  * subnetwork.
+//  */
 pub fn benes_get_switch_setting_from_subnetwork(
     dimension: usize,
     column_idx: usize,
@@ -174,12 +142,12 @@ pub fn benes_get_switch_setting_from_subnetwork(
     return (row_idx != benes_lhs_packet_destination(dimension, column_idx, row_idx, use_top));
 }
 
-/**
- * A packet column_idx-th column and row_idx-th row of the routing
- * network has two destinations (see comment by
- * benes_cross_edge_mask), this returns row_idx' of the "cross"
- * destination.
- */
+// /**
+//  * A packet column_idx-th column and row_idx-th row of the routing
+//  * network has two destinations (see comment by
+//  * benes_cross_edge_mask), this returns row_idx' of the "cross"
+//  * destination.
+//  */
 pub fn benes_packet_cross_destination(
     dimension: usize,
     column_idx: usize,
@@ -189,23 +157,35 @@ pub fn benes_packet_cross_destination(
     return row_idx ^ mask;
 }
 
-/**
- * A packet column_idx-th column and row_idx-th row of the routing
- * network has two source packets that could give rise to it (see
- * comment by benes_cross_edge_mask), this returns row_idx' of the
- * "cross" source packet.
- */
+// /**
+//  * A packet column_idx-th column and row_idx-th row of the routing
+//  * network has two source packets that could give rise to it (see
+//  * comment by benes_cross_edge_mask), this returns row_idx' of the
+//  * "cross" source packet.
+//  */
 pub fn benes_packet_cross_source(dimension: usize, column_idx: usize, packet_idx: usize) -> usize {
     return benes_packet_cross_destination(dimension, column_idx - 1, packet_idx); // by symmetry
 }
-
+// /**
+//  * Return the number of (switch) columns in a Benes network for a given number of packets.
+//  *
+//  * For example:
+//  * - benes_num_columns(2) = 2,
+//  * - benes_num_columns(4) = 4,
+//  * - benes_num_columns(8) = 6,
+//  * and so on.
+//  */
 pub fn benes_num_columns(num_packets: usize) -> usize {
     let dimension = log2(num_packets);
     assert!(num_packets == 1usize << dimension);
 
     return 2 * dimension;
 }
-
+// /**
+//  * Return the topology of a Benes network for a given number of packets.
+//  *
+//  * See benes_topology (above) for details.
+//  */
 pub fn generate_benes_topology(num_packets: usize) -> benes_topology {
     let num_columns = benes_num_columns(num_packets);
     let dimension = log2(num_packets);
@@ -225,16 +205,16 @@ pub fn generate_benes_topology(num_packets: usize) -> benes_topology {
     return result;
 }
 
-/**
- * Auxiliary function used in get_benes_routing (see below).
- *
- * The network from t_start to t_end is the part of the Benes network
- * that needs to be routed according to the permutation pi.
- *
- * The permutation
- * - pi maps [subnetwork_offset..subnetwork_offset+subnetwork_size-1] to itself, offset by subnetwork_offset, and
- * - piinv is the inverse of pi.
- */
+// /**
+//  * Auxiliary function used in get_benes_routing (see below).
+//  *
+//  * The network from t_start to t_end is the part of the Benes network
+//  * that needs to be routed according to the permutation pi.
+//  *
+//  * The permutation
+//  * - pi maps [subnetwork_offset..subnetwork_offset+subnetwork_size-1] to itself, offset by subnetwork_offset, and
+//  * - piinv is the inverse of pi.
+//  */
 pub fn route_benes_inner(
     dimension: usize,
     permutation: &integer_permutation,
@@ -265,11 +245,11 @@ pub fn route_benes_inner(
         integer_permutation::new2(subnetwork_offset, subnetwork_offset + subnetwork_size - 1);
 
     loop {
-        /**
-         * INVARIANT:
-         * node w from left hand side can always be routed
-         * to the right-hand side using the upper network.
-         */
+        // /**
+        //  * INVARIANT:
+        //  * node w from left hand side can always be routed
+        //  * to the right-hand side using the upper network.
+        //  */
         // route w to its target on RHS, wprime = pi[w], using upper network
         let wprime = permutation.get(w);
 
@@ -376,7 +356,9 @@ pub fn route_benes_inner(
         routing,
     );
 }
-
+// /**
+//  * Route the given permutation on a Benes network of suitable size.
+//  */
 pub fn get_benes_routing(permutation: &integer_permutation) -> benes_routing {
     let num_packets = permutation.size();
     let num_columns = benes_num_columns(num_packets);
@@ -423,7 +405,9 @@ pub fn route_by_benes<T: Default + Clone>(routing: &benes_routing, start: &Vec<T
 
     return res;
 }
-
+// /**
+//  * Check if a routing "implements" the given permutation.
+//  */
 pub fn valid_benes_routing(permutation: &integer_permutation, routing: &benes_routing) -> bool {
     let num_packets = permutation.size();
     let num_columns = benes_num_columns(num_packets);

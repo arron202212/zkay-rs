@@ -13,22 +13,21 @@ use crate::relations::ram_computations::rams::ram_params::{
 use crate::relations::variable::variable;
 use rccell::RcCell;
 
-/**
- * A memory line contains variables for the following:
- * - timestamp
- * - address
- * - contents_before
- * - contents_after
- *
- * Memory lines are used by memory_checker_gadget.
- */
-//
+// /**
+//  * A memory line contains variables for the following:
+//  * - timestamp
+//  * - address
+//  * - contents_before
+//  * - contents_after
+//  *
+//  * Memory lines are used by memory_checker_gadget.
+//  */
+
 
 type FieldT<RamT> = ram_base_field<RamT>;
 
 #[derive(Clone, Default)]
 pub struct memory_line_variable_gadget<RamT: ram_params_type, T: Default + Clone> {
-    //: public ram_gadget_base
     pub timestamp: RcCell<dual_variable_gadgets<FieldT<RamT>, RamT::PB, RamT::DV>>,
     pub address: RcCell<dual_variable_gadgets<FieldT<RamT>, RamT::PB, RamT::DV>>,
     pub contents_before: RcCell<dual_variable_gadgets<FieldT<RamT>, RamT::PB, RamT::DV>>,
@@ -36,17 +35,16 @@ pub struct memory_line_variable_gadget<RamT: ram_params_type, T: Default + Clone
     pub t: T,
 }
 
-/**
- * An execution line inherits from a memory line and, in addition, contains
- * variables for a CPU state and for a flag denoting if the machine has accepted.
- *
- * Execution lines are used by execution_checker_gadget.
- */
-// type FieldT=ram_base_field<RamT> ;
+// /**
+//  * An execution line inherits from a memory line and, in addition, contains
+//  * variables for a CPU state and for a flag denoting if the machine has accepted.
+//  *
+//  * Execution lines are used by execution_checker_gadget.
+//  */
+
 
 #[derive(Clone, Default)]
 pub struct execution_line_variable_gadget<RamT: ram_params_type> {
-    // / : public memory_line_variable_gadget
     pub cpu_state: pb_variable_array<FieldT<RamT>, RamT::PB>,
     pub has_accepted: variable<FieldT<RamT>, pb_variable>,
 }

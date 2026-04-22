@@ -54,13 +54,13 @@ fn main(argc: i32, argv: &[&str]) -> i32 {
         }
     }
 
-    enter_block("Generate R1CS example", false);
+    let span = span!(Level::TRACE, "Generate R1CS example").entered();
     let example = generate_r1cs_example_with_field_input::<
         Fr<default_r1cs_gg_ppzksnark_pp>,
         pb_variable,
         pb_linear_combination,
     >(num_constraints, input_size);
-    leave_block("Generate R1CS example", false);
+    span.exit();
 
     println!("(enter) Profile R1CS GG-ppzkSNARK");
     let mut test_serialization = true;

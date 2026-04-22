@@ -419,22 +419,6 @@ impl<
         Self::new(aA + beta_bB, (a + b) * (A + B) - aA - bB)
     }
 }
-// impl<const N: usize, const N2: usize,const N4: usize, T: Fp4_modelConfig<N, N2,N4>> Mul<bigint<N>>
-//     for Fp4_model<N, N2, N4,T>
-// {
-//     type Output = Self;
-
-//     fn mul(self, rhs: bigint<N>) -> Self::Output {
-//         let mut r = self;
-//         // r *= *rhs.borrow();
-//         r
-//     }
-// }
-//
-// Fp4_model<n,modulus> Fp4_model<n,modulus>::operator^(const u64 pow) const
-// {
-//     return power<Fp4_model<n, modulus> >(*this, pow);
-// }
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> BitXor<u64>
     for Fp4_model<N, N2, N4, T>
 {
@@ -445,12 +429,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         Powers::power::<Fp4_model<N, N2, N4, T>>(&self, rhs)
     }
 }
-//
-//
-// Fp4_model<n, modulus> Fp4_model<n,modulus>::operator^(exponent:&bigint<m>) const
-// {
-//     return power<Fp4_model<n, modulus> >(*this, exponent);
-// }
 
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>>
     BitXor<bigint<N4>> for Fp4_model<N, N2, N4, T>
@@ -462,16 +440,10 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         Powers::power::<Fp4_model<N, N2, N4, T>>(&self, rhs)
     }
 }
-//
-//
-// Fp4_model<n, modulus> Fp4_model<n,modulus>::operator^(exponent:&Fp4_model<m, modulus_p>) const
-// {
-//     return *self^(exponent.as_bigint());
-// }
+
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> PpConfig
     for Fp4_model<N, N2, N4, T>
 {
-    
     type BigIntT = bigint<N>;
 }
 
@@ -493,12 +465,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         self == &Self::zero()
     }
 }
-//
-// Fp4_model<n,modulus> Fp4_model<n,modulus>::operator-() const
-// {
-//     Self::new(-self.c0,
-//                                 -self.c1);
-// }
 
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> Neg
     for Fp4_model<N, N2, N4, T>
@@ -513,18 +479,14 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
 use std::fmt;
 use std::io::{self, Read};
 
-// 对应: std::ostream& operator<<(std::ostream &out, const Fp2_model<n, modulus> &el)
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>> fmt::Display
     for Fp4_model<N, N2, N4, T>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // OUTPUT_SEPARATOR 在 Rust 中通常直接用空格或指定的 separator
         write!(f, "{} {}", self.c0, self.c1)
     }
 }
 
-// 对应: std::istream& operator>>(std::istream &in, Fp2_model<n, modulus> &el)
-// Rust 中通常通过自定义函数或实现特定 Trait 来处理流输入
 impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2, N4>>
     Fp4_model<N, N2, N4, T>
 {
@@ -567,19 +529,6 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         Ok(Self::default())
     }
 }
-
-//
-// std::ostream& operator<<(std::ostream &out, el:&Fp4_model<n, modulus>)
-// {
-//     out << el.c0 << OUTPUT_SEPARATOR << el.c1;
-//     return out;
-// }
-//
-// std::istream& operator>>(std::istream &in, Fp4_model<n, modulus> &el)
-// {
-//     in >> el.c0 >> el.c1;
-//     return in;
-// }
 
 use super::quadratic_extension::{QuadExtConfig, QuadExtField};
 use crate::algebra::fields::{

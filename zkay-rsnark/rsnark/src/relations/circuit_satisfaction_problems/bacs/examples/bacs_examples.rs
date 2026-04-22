@@ -8,9 +8,9 @@ use crate::relations::variable::SubLinearCombinationConfig;
 use crate::relations::variable::SubVariableConfig;
 use crate::relations::variable::{linear_combination, variable};
 use ffec::FieldTConfig;
-/**
- * A BACS example comprises a BACS circuit, BACS primary input, and BACS auxiliary input.
- */
+// /**
+//  * A BACS example comprises a BACS circuit, BACS primary input, and BACS auxiliary input.
+//  */
 #[derive(Default)]
 pub struct bacs_example<
     FieldT: FieldTConfig,
@@ -39,26 +39,6 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
     }
 }
 
-/**
- * Generate a BACS example such that:
- * - the primary input has size primary_input_size;
- * - the auxiliary input has size auxiliary_input_size;
- * - the circuit has num_gates gates;
- * - the circuit has num_outputs (<= num_gates) output gates.
- *
- * This is done by first selecting primary and auxiliary inputs uniformly at random, and then for each gate:
- * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
- * - selecting random linear combinations for left and right wires, consisting of 1, 2, 3 or 4 terms each, with random coefficients,
- * - if the gate is an output gate, then adding a random non-output wire to either left or right linear combination, with appropriate coefficient, so that the linear combination evaluates to 0.
- */
-// bacs_example<FieldT> generate_bacs_example(primary_input_size:usize,
-//                                            auxiliary_input_size:usize,
-//                                            num_gates:usize,
-//                                            num_outputs:usize);
-
-// use crate::relations::circuit_satisfaction_problems/bacs/examples/bacs_examples;
-use ffec::common::utils;
-
 pub fn random_linear_combination<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,
@@ -79,6 +59,18 @@ pub fn random_linear_combination<
     return result;
 }
 
+// /**
+//  * Generate a BACS example such that:
+//  * - the primary input has size primary_input_size;
+//  * - the auxiliary input has size auxiliary_input_size;
+//  * - the circuit has num_gates gates;
+//  * - the circuit has num_outputs (<= num_gates) output gates.
+//  *
+//  * This is done by first selecting primary and auxiliary inputs uniformly at random, and then for each gate:
+//  * - selecting random left and right wires from primary inputs, auxiliary inputs, and outputs of previous gates,
+//  * - selecting random linear combinations for left and right wires, consisting of 1, 2, 3 or 4 terms each, with random coefficients,
+//  * - if the gate is an output gate, then adding a random non-output wire to either left or right linear combination, with appropriate coefficient, so that the linear combination evaluates to 0.
+//  */
 pub fn generate_bacs_example<
     FieldT: FieldTConfig,
     SV: SubVariableConfig,

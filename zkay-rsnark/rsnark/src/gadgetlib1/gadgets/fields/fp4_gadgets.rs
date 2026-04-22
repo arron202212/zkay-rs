@@ -47,9 +47,9 @@ pub fn field_to_pb_lc<FieldT: FieldTConfig>(
 pub fn inverse<FieldT: FieldTConfig>(d: i32) -> FieldT {
     FieldT::from(d).inverse()
 }
-/**
- * Gadget that represents an Fp4 variable.
- */
+// /**
+//  * Gadget that represents an Fp4 variable.
+//  */
 pub trait Fp4TConfig<FieldT: FieldTConfig>:
     FieldTConfig + Default + Clone + std::ops::Mul<Output = Self>
 {
@@ -65,21 +65,17 @@ pub trait Fp4TConfig<FieldT: FieldTConfig>:
 
 #[derive(Clone, Default)]
 pub struct Fp4_variable<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp4T::my_Fp>
-    //     type FieldT=Fp4T::my_Fp;
-    //     type Fp2T=Fp4T::my_Fpe;
+
     pub c0: Fp2_variables<Fp4T::Fp2T, FieldT, PB>,
     pub c1: Fp2_variables<Fp4T::Fp2T, FieldT, PB>,
 }
 
-/**
- * Gadget that creates constraints for Fp4 multiplication (towering formulas).
- */
+// /**
+//  * Gadget that creates constraints for Fp4 multiplication (towering formulas).
+//  */
 #[derive(Clone, Default)]
 pub struct Fp4_tower_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp4T::my_Fp>
-    // type FieldT=Fp4T::my_Fp;
-    // type Fp2T=Fp4T::my_Fpe;
+
     pub A: Fp4_variables<Fp4T, FieldT, PB>,
     pub B: Fp4_variables<Fp4T, FieldT, PB>,
     pub result: Fp4_variables<Fp4T, FieldT, PB>,
@@ -101,14 +97,11 @@ pub struct Fp4_tower_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, 
     pub compute_result_c1: RcCell<Fp2_mul_gadgets<Fp4T::Fp2T, FieldT, PB>>,
 }
 
-/**
- * Gadget that creates constraints for Fp4 multiplication (direct formulas).
- */
+// /**
+//  * Gadget that creates constraints for Fp4 multiplication (direct formulas).
+//  */
 #[derive(Clone, Default)]
 pub struct Fp4_direct_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp4T::my_Fp>
-    //     type FieldT=Fp4T::my_Fp;
-    //     type Fp2T=Fp4T::my_Fpe;
     pub A: Fp4_variables<Fp4T, FieldT, PB>,
     pub B: Fp4_variables<Fp4T, FieldT, PB>,
     pub result: Fp4_variables<Fp4T, FieldT, PB>,
@@ -117,20 +110,17 @@ pub struct Fp4_direct_mul_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig,
     pub v6: variable<FieldT, pb_variable>,
 }
 
-/**
- * Alias default multiplication gadget
- */
-//
+// /**
+//  * Alias default multiplication gadget
+//  */
+
 pub type Fp4_mul_gadget<Fp4T, FieldT, PB> = Fp4_direct_mul_gadget<Fp4T, FieldT, PB>;
 
-/**
- * Gadget that creates constraints for Fp4 squaring.
- */
+// /**
+//  * Gadget that creates constraints for Fp4 squaring.
+//  */
 #[derive(Clone, Default)]
 pub struct Fp4_sqr_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp4T::my_Fp>
-    //     type FieldT=Fp4T::my_Fp;
-    //     type Fp2T=Fp4T::my_Fpe;
     pub A: Fp4_variables<Fp4T, FieldT, PB>,
     pub result: Fp4_variables<Fp4T, FieldT, PB>,
     pub v1: RcCell<Fp2_variables<Fp4T::Fp2T, FieldT, PB>>,
@@ -148,14 +138,11 @@ pub struct Fp4_sqr_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PB
     pub compute_result_c1: RcCell<Fp2_sqr_gadgets<Fp4T::Fp2T, FieldT, PB>>,
 }
 
-/**
- * Gadget that creates constraints for Fp4 cyclotomic squaring
- */
+// /**
+//  * Gadget that creates constraints for Fp4 cyclotomic squaring
+//  */
 #[derive(Clone, Default)]
 pub struct Fp4_cyclotomic_sqr_gadget<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig> {
-    // : public gadget<Fp4T::my_Fp>
-    //     type FieldT=Fp4T::my_Fp;
-    //     type Fp2T=Fp4T::my_Fpe;
     pub A: Fp4_variables<Fp4T, FieldT, PB>,
     pub result: Fp4_variables<Fp4T, FieldT, PB>,
     pub c0_expr_c0: pb_linear_combinations<FieldT>,
@@ -302,23 +289,23 @@ impl<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp4_variables<Fp4T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp4_tower_mul_gadgets<Fp4T, FieldT, PB> {
-        /*
-          Karatsuba multiplication for Fp4 as a quadratic extension of Fp2:
-          v0 = A.t.c0 * B.t.c0
-          v1 = A.t.c1 * B.t.c1
-          self.t.result.t.c0 = v0 + non_residue * v1
-          self.t.result.t.c1 = (A.t.c0 + A.t.c1) * (B.t.c0 + B.t.c1) - v0 - v1
-          where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
+        // /*
+        //   Karatsuba multiplication for Fp4 as a quadratic extension of Fp2:
+        //   v0 = A.t.c0 * B.t.c0
+        //   v1 = A.t.c1 * B.t.c1
+        //   self.t.result.t.c0 = v0 + non_residue * v1
+        //   self.t.result.t.c1 = (A.t.c0 + A.t.c1) * (B.t.c0 + B.t.c1) - v0 - v1
+        //   where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
 
-          Enforced with 3 Fp2_mul_gadget's that ensure that:
-          A.t.c1 * B.t.c1 = v1
-          A.t.c0 * B.t.c0 = v0
-          (A.t.c0+A.t.c1)*(B.t.c0+B.t.c1) = self.t.result.t.c1 + v0 + v1
+        //   Enforced with 3 Fp2_mul_gadget's that ensure that:
+        //   A.t.c1 * B.t.c1 = v1
+        //   A.t.c0 * B.t.c0 = v0
+        //   (A.t.c0+A.t.c1)*(B.t.c0+B.t.c1) = self.t.result.t.c1 + v0 + v1
 
-          Reference:
-          "Multiplication and Squaring on Pairing-Friendly Fields"
-          Devegili, OhEigeartaigh, Scott, Dahab
-        */
+        //   Reference:
+        //   "Multiplication and Squaring on Pairing-Friendly Fields"
+        //   Devegili, OhEigeartaigh, Scott, Dahab
+        // */
         let v1 = RcCell::new(Fp2_variable::<Fp4T::Fp2T, FieldT, PB>::new(
             pb.clone(),
             prefix_format!(annotation_prefix, " v1"),
@@ -475,53 +462,53 @@ impl<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp4_variables<Fp4T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp4_direct_mul_gadgets<Fp4T, FieldT, PB> {
-        /*
-            Tom-Cook-4x for Fp4 (beta is the quartic non-residue):
-                v0 = a0*b0,
-                v1 = (a0+a1+a2+a3)*(b0+b1+b2+b3),
-                v2 = (a0-a1+a2-a3)*(b0-b1+b2-b3),
-                v3 = (a0+2a1+4a2+8a3)*(b0+2b1+4b2+8b3),
-                v4 = (a0-2a1+4a2-8a3)*(b0-2b1+4b2-8b3),
-                v5 = (a0+3a1+9a2+27a3)*(b0+3b1+9b2+27b3),
-                v6 = a3*b3
+        // /*
+        //     Tom-Cook-4x for Fp4 (beta is the quartic non-residue):
+        //         v0 = a0*b0,
+        //         v1 = (a0+a1+a2+a3)*(b0+b1+b2+b3),
+        //         v2 = (a0-a1+a2-a3)*(b0-b1+b2-b3),
+        //         v3 = (a0+2a1+4a2+8a3)*(b0+2b1+4b2+8b3),
+        //         v4 = (a0-2a1+4a2-8a3)*(b0-2b1+4b2-8b3),
+        //         v5 = (a0+3a1+9a2+27a3)*(b0+3b1+9b2+27b3),
+        //         v6 = a3*b3
 
-                self.t.result.t.c0 = v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
-                self.t.result.t.c1 = -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
-                self.t.result.c2 = -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
-                self.t.result.c3 = (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6
+        //         self.t.result.t.c0 = v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
+        //         self.t.result.t.c1 = -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
+        //         self.t.result.c2 = -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
+        //         self.t.result.c3 = (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6
 
-            Enforced with 7 constraints. Doing so requires some care, as we first
-            compute three of the v_i explicitly, and then "inline" self.t.result.t.c0/c1/c2/c3
-            in computations of the remaining four v_i.
+        //     Enforced with 7 constraints. Doing so requires some care, as we first
+        //     compute three of the v_i explicitly, and then "inline" self.t.result.t.c0/c1/c2/c3
+        //     in computations of the remaining four v_i.
 
-            Concretely, we first compute v1, v2 and v6 explicitly, via 3 constraints as above.
-                v1 = (a0+a1+a2+a3)*(b0+b1+b2+b3),
-                v2 = (a0-a1+a2-a3)*(b0-b1+b2-b3),
-                v6 = a3*b3
+        //     Concretely, we first compute v1, v2 and v6 explicitly, via 3 constraints as above.
+        //         v1 = (a0+a1+a2+a3)*(b0+b1+b2+b3),
+        //         v2 = (a0-a1+a2-a3)*(b0-b1+b2-b3),
+        //         v6 = a3*b3
 
-            Then we use the following 4 additional constraints:
-                (1-beta) v0 = c0 + beta c2 - (beta v1)/2 - (beta v2)/ 2 - (-1 + beta) beta v6
-                (1-beta) v3 = -15 c0 - 30 c1 - 3 (4 + beta) c2 - 6 (4 + beta) c3 + (24 - (3 beta)/2) v1 + (-8 + beta/2) v2 + 3 (-16 + beta) (-1 + beta) v6
-                (1-beta) v4 = -15 c0 + 30 c1 - 3 (4 + beta) c2 + 6 (4 + beta) c3 + (-8 + beta/2) v1 + (24 - (3 beta)/2) v2 + 3 (-16 + beta) (-1 + beta) v6
-                (1-beta) v5 = -80 c0 - 240 c1 - 8 (9 + beta) c2 - 24 (9 + beta) c3 - 2 (-81 + beta) v1 + (-81 + beta) v2 + 8 (-81 + beta) (-1 + beta) v6
+        //     Then we use the following 4 additional constraints:
+        //         (1-beta) v0 = c0 + beta c2 - (beta v1)/2 - (beta v2)/ 2 - (-1 + beta) beta v6
+        //         (1-beta) v3 = -15 c0 - 30 c1 - 3 (4 + beta) c2 - 6 (4 + beta) c3 + (24 - (3 beta)/2) v1 + (-8 + beta/2) v2 + 3 (-16 + beta) (-1 + beta) v6
+        //         (1-beta) v4 = -15 c0 + 30 c1 - 3 (4 + beta) c2 + 6 (4 + beta) c3 + (-8 + beta/2) v1 + (24 - (3 beta)/2) v2 + 3 (-16 + beta) (-1 + beta) v6
+        //         (1-beta) v5 = -80 c0 - 240 c1 - 8 (9 + beta) c2 - 24 (9 + beta) c3 - 2 (-81 + beta) v1 + (-81 + beta) v2 + 8 (-81 + beta) (-1 + beta) v6
 
-            The isomorphism between the representation above and towering is:
-                (a0, a1, a2, a3) <-> (a.c0.t.c0, a.c1.t.c0, a.c0.t.c1, a.c1.t.c1)
+        //     The isomorphism between the representation above and towering is:
+        //         (a0, a1, a2, a3) <-> (a.c0.t.c0, a.c1.t.c0, a.c0.t.c1, a.c1.t.c1)
 
-            Reference:
-                "Multiplication and Squaring on Pairing-Friendly Fields"
-                Devegili, OhEigeartaigh, Scott, Dahab
+        //     Reference:
+        //         "Multiplication and Squaring on Pairing-Friendly Fields"
+        //         Devegili, OhEigeartaigh, Scott, Dahab
 
-            NOTE: the expressions above were cherry-picked from the Mathematica result
-            of the following command:
+        //     NOTE: the expressions above were cherry-picked from the Mathematica result
+        //     of the following command:
 
-            (# -> Solve[{c0 == v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
-            c1 == -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
-            c2 == -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
-            c3 == (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6}, #] // FullSimplify) & /@ Subsets[{v0, v1, v2, v3, v4, v5}, {4}]
+        //     (# -> Solve[{c0 == v0+beta((1/4)v0-(1/6)(v1+v2)+(1/24)(v3+v4)-5v6),
+        //     c1 == -(1/3)v0+v1-(1/2)v2-(1/4)v3+(1/20)v4+(1/30)v5-12v6+beta(-(1/12)(v0-v1)+(1/24)(v2-v3)-(1/120)(v4-v5)-3v6),
+        //     c2 == -(5/4)v0+(2/3)(v1+v2)-(1/24)(v3+v4)+4v6+beta v6,
+        //     c3 == (1/12)(5v0-7v1)-(1/24)(v2-7v3+v4+v5)+15v6}, #] // FullSimplify) & /@ Subsets[{v0, v1, v2, v3, v4, v5}, {4}]
 
-            and simplified by multiplying the selected result by (1-beta)
-        */
+        //     and simplified by multiplying the selected result by (1-beta)
+        // */
         let mut v1 = variable::<FieldT, pb_variable>::default();
         let mut v2 = variable::<FieldT, pb_variable>::default();
         let mut v6 = variable::<FieldT, pb_variable>::default();
@@ -719,23 +706,23 @@ impl<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp4_variables<Fp4T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp4_sqr_gadgets<Fp4T, FieldT, PB> {
-        /*
-          Karatsuba squaring for Fp4 as a quadratic extension of Fp2:
-          v0 = A.t.c0^2
-          v1 = A.t.c1^2
-          self.t.result.t.c0 = v0 + non_residue * v1
-          self.t.result.t.c1 = (A.t.c0 + A.t.c1)^2 - v0 - v1
-          where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
+        // /*
+        //   Karatsuba squaring for Fp4 as a quadratic extension of Fp2:
+        //   v0 = A.t.c0^2
+        //   v1 = A.t.c1^2
+        //   self.t.result.t.c0 = v0 + non_residue * v1
+        //   self.t.result.t.c1 = (A.t.c0 + A.t.c1)^2 - v0 - v1
+        //   where "non_residue * elem" := (non_residue * elt.c1, elt.c0)
 
-          Enforced with 3 Fp2_sqr_gadget's that ensure that:
-          A.t.c1^2 = v1
-          A.t.c0^2 = v0
-          (A.t.c0+A.t.c1)^2 = self.t.result.t.c1 + v0 + v1
+        //   Enforced with 3 Fp2_sqr_gadget's that ensure that:
+        //   A.t.c1^2 = v1
+        //   A.t.c0^2 = v0
+        //   (A.t.c0+A.t.c1)^2 = self.t.result.t.c1 + v0 + v1
 
-          Reference:
-          "Multiplication and Squaring on Pairing-Friendly Fields"
-          Devegili, OhEigeartaigh, Scott, Dahab
-        */
+        //   Reference:
+        //   "Multiplication and Squaring on Pairing-Friendly Fields"
+        //   Devegili, OhEigeartaigh, Scott, Dahab
+        // */
         let mut v0_c0 = default_pb_lc::<FieldT>();
         let mut v0_c1 = default_pb_lc::<FieldT>();
         let mut Ac0_plus_Ac1_c0 = default_pb_lc::<FieldT>();
@@ -867,31 +854,31 @@ impl<Fp4T: Fp4TConfig<FieldT>, FieldT: FieldTConfig, PB: PBConfig>
         result: Fp4_variables<Fp4T, FieldT, PB>,
         annotation_prefix: String,
     ) -> Fp4_cyclotomic_sqr_gadgets<Fp4T, FieldT, PB> {
-        /*
-          A = elt.c1 ^ 2
-          B = elt.c1 + elt.c0;
-          C = B ^ 2 - A
-          D = Fp2(A.t.c1 * non_residue, A.t.c0)
-          E = C - D
-          F = D + D + Fp2::one()
-          G = E - Fp2::one()
+        // /*
+        //   A = elt.c1 ^ 2
+        //   B = elt.c1 + elt.c0;
+        //   C = B ^ 2 - A
+        //   D = Fp2(A.t.c1 * non_residue, A.t.c0)
+        //   E = C - D
+        //   F = D + D + Fp2::one()
+        //   G = E - Fp2::one()
 
-          return Fp4(F, G);
+        //   return Fp4(F, G);
 
-          Enforced with 2 Fp2_sqr_gadget's that ensure that:
+        //   Enforced with 2 Fp2_sqr_gadget's that ensure that:
 
-          elt.c1 ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2, (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue)) = A
-          (elt.c1 + elt.c0) ^ 2 = A + self.t.result.t.c1 + Fp2(A.t.c1 * non_residue + 1, A.t.c0)
+        //   elt.c1 ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2, (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue)) = A
+        //   (elt.c1 + elt.c0) ^ 2 = A + self.t.result.t.c1 + Fp2(A.t.c1 * non_residue + 1, A.t.c0)
 
-          (elt.c1 + elt.c0) ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2 + self.t.result.t.c1.t.c0 + (self.t.result.t.c0.t.c0 - 1) / 2 + 1,
-                                      (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue) + self.t.result.t.c1.t.c1 + self.t.result.t.c0.t.c1 / 2)
+        //   (elt.c1 + elt.c0) ^ 2 = Fp2(self.t.result.t.c0.t.c1 / 2 + self.t.result.t.c1.t.c0 + (self.t.result.t.c0.t.c0 - 1) / 2 + 1,
+        //                               (self.t.result.t.c0.t.c0 - 1) / (2 * non_residue) + self.t.result.t.c1.t.c1 + self.t.result.t.c0.t.c1 / 2)
 
-          Corresponding test code:
+        //   Corresponding test code:
 
-            assert!(B.squared() == A + G + my_Fp2(A.t.c1 * non_residue + my_Fp::one(), A.t.c0));
-            assert!(self.c1.squared().c0 == F.c1 * my_Fp(2).inverse());
-            assert!(self.c1.squared().c1 == (F.c0 - my_Fp(1)) * (my_Fp(2) * non_residue).inverse());
-        */
+        //     assert!(B.squared() == A + G + my_Fp2(A.t.c1 * non_residue + my_Fp::one(), A.t.c0));
+        //     assert!(self.c1.squared().c0 == F.c1 * my_Fp(2).inverse());
+        //     assert!(self.c1.squared().c1 == (F.c0 - my_Fp(1)) * (my_Fp(2) * non_residue).inverse());
+        // */
         let mut c0_expr_c0 = default_pb_lc::<FieldT>();
         let mut c0_expr_c1 = default_pb_lc::<FieldT>();
         let mut A_c0_plus_A_c1_c0 = default_pb_lc::<FieldT>();

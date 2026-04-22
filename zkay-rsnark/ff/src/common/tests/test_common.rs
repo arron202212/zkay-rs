@@ -1,9 +1,6 @@
 
- Some tests for the functions in this directory.
+//  Some tests for the functions in this directory.
 
-
-//#include <cstdint>
-//#include <gtest/gtest.h>
 
 use crate::common::utils;
 use crate::algebra::fields::binary::gf32;

@@ -1,18 +1,26 @@
-use crate::common::default_types::r1cs_gg_ppzksnark_pp::default_r1cs_gg_ppzksnark_pp;
-use crate::gadgetlib1::gadgets::pairing::pairing_params::ppTConfig;
-use crate::gadgetlib1::pb_variable::{pb_linear_combination, pb_variable};
-use crate::gadgetlib2::adapters::GLA;
-use crate::gadgetlib2::adapters::GadgetLibAdapter;
-use crate::gadgetlib2::integration::{
-    get_constraint_system_from_gadgetlib2, get_variable_assignment_from_gadgetlib2,
+use crate::{
+    common::default_types::r1cs_gg_ppzksnark_pp::default_r1cs_gg_ppzksnark_pp,
+    gadgetlib1::{
+        gadgets::pairing::pairing_params::ppTConfig,
+        pb_variable::{pb_linear_combination, pb_variable},
+    },
+    gadgetlib2::{
+        adapters::GLA,
+        adapters::GadgetLibAdapter,
+        integration::{
+            get_constraint_system_from_gadgetlib2, get_variable_assignment_from_gadgetlib2,
+        },
+        pp::initPublicParamsFromDefaultPp,
+        protoboard::Protoboard,
+        variable::FieldType,
+    },
+    jsnark_interface::circuit_reader::{CircuitReader, FieldT},
+    relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example,
+    zk_proof_systems::ppzksnark::{
+        r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark::run_r1cs_gg_ppzksnark,
+        r1cs_ppzksnark::examples::run_r1cs_ppzksnark::run_r1cs_ppzksnark,
+    },
 };
-use crate::gadgetlib2::pp::initPublicParamsFromDefaultPp;
-use crate::gadgetlib2::protoboard::Protoboard;
-use crate::gadgetlib2::variable::FieldType;
-use crate::jsnark_interface::circuit_reader::{CircuitReader, FieldT};
-use crate::relations::constraint_satisfaction_problems::r1cs::examples::r1cs_examples::r1cs_example;
-use crate::zk_proof_systems::ppzksnark::r1cs_gg_ppzksnark::examples::run_r1cs_gg_ppzksnark::run_r1cs_gg_ppzksnark;
-use crate::zk_proof_systems::ppzksnark::r1cs_ppzksnark::examples::run_r1cs_ppzksnark::run_r1cs_ppzksnark;
 use ff_curves::default_ec_pp;
 use ffec::common::profiling::start_profiling;
 

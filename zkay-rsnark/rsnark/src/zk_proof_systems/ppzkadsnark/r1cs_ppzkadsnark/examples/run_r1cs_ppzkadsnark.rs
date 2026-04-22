@@ -28,37 +28,31 @@ use ffec::common::serialization::reserialize;
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use std::ops::{Add, Mul};
 
-/**
- * Runs the ppzkADSNARK (generator, prover, and verifier) for a given
- * R1CS example (specified by a constraint system, input, and witness).
- *
- * Optionally, also test the serialization routines for keys and proofs.
- * (This takes additional time.)
- */
-//
-// bool run_r1cs_ppzkadsnark(example:r1cs_example<Fr<snark_pp<ppT>> >,
-//                           test_serialization:bool);
-// use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::run_r1cs_ppzkadsnark;
 
-// use ffec::common::profiling;
 
-// use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::prf::aes_ctr_prf;
-// use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::examples::signature::ed25519_signature;
-// use crate::zk_proof_systems::ppzkadsnark::r1cs_ppzkadsnark::r1cs_ppzkadsnark;
 
-/**
- * The code below provides an example of all stages of running a R1CS ppzkADSNARK.
- *
- * Of course, in a real-life scenario, we would have three distinct entities,
- * mangled into one in the demonstration below. The three entities are as follows.
- * (1) The "generator", which runs the ppzkADSNARK generator on input a given
- *     constraint system CS to create a proving and a verification key for CS.
- * (2) The "prover", which runs the ppzkADSNARK prover on input the proving key,
- *     a primary input for CS, and an auxiliary input for CS.
- * (3) The "verifier", which runs the ppzkADSNARK verifier on input the verification key,
- *     a primary input for CS, and a proof.
- */
-//
+// /**
+//  * The code below provides an example of all stages of running a R1CS ppzkADSNARK.
+//  *
+//  * Of course, in a real-life scenario, we would have three distinct entities,
+//  * mangled into one in the demonstration below. The three entities are as follows.
+//  * (1) The "generator", which runs the ppzkADSNARK generator on input a given
+//  *     constraint system CS to create a proving and a verification key for CS.
+//  * (2) The "prover", which runs the ppzkADSNARK prover on input the proving key,
+//  *     a primary input for CS, and an auxiliary input for CS.
+//  * (3) The "verifier", which runs the ppzkADSNARK verifier on input the verification key,
+//  *     a primary input for CS, and a proof.
+//  */
+
+
+
+// /**
+//  * Runs the ppzkADSNARK (generator, prover, and verifier) for a given
+//  * R1CS example (specified by a constraint system, input, and witness).
+//  *
+//  * Optionally, also test the serialization routines for keys and proofs.
+//  * (This takes additional time.)
+//  */
 pub fn run_r1cs_ppzkadsnark<ppT: ppzkadsnarkConfig>(
     example: r1cs_example<Fr<snark_pp<ppT>>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
@@ -84,103 +78,9 @@ where
                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
             >,
         >,
-    // where
-    //     ED: evaluation_domain<<<ppT as ppzkadsnarkConfig>::snark_pp as PublicParams>::Fr>,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1: Add<
-    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //     >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
-    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //     >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: FieldTConfig,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Mul<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2: Add<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //     >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a FieldT,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //         Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //     >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             knowledge_commitment<
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             >,
-    //             Output = knowledge_commitment<
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             >,
-    //         >,
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             knowledge_commitment<
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             >,
-    //             Output = knowledge_commitment<
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //                 <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             >,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G1,
-    //         >,
-    //     for<'a> <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Mul<
-    //             &'a FieldT,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-    //             <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //             Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::G2,
-    //         >,
-    //     for<'a> &'a <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr: Add<
-    //     <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    //     Output = <<ppT as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
-    // >,
+    
 {
-    enter_block("Call to run_r1cs_ppzkadsnark", false);
+    let span = span!(Level::TRACE, "Call to run_r1cs_ppzkadsnark").entered();
 
     let auth_keys = r1cs_ppzkadsnark_auth_generator::<ppT>();
 
@@ -194,11 +94,11 @@ where
     let mut pvk = r1cs_ppzkadsnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        enter_block("Test serialization of keys", false);
+        let span = span!(Level::TRACE, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_ppzkadsnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_ppzkadsnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_ppzkadsnark_processed_verification_key<ppT>>(&pvk);
-        leave_block("Test serialization of keys", false);
+        span.exit();
     }
 
     println!("R1CS ppzkADSNARK Authenticate");
@@ -234,9 +134,9 @@ where
     println!("after prover");
 
     if test_serialization {
-        enter_block("Test serialization of proof", false);
+        let span = span!(Level::TRACE, "Test serialization of proof").entered();
         proof = reserialize::<r1cs_ppzkadsnark_proof<ppT>>(&proof);
-        leave_block("Test serialization of proof", false);
+        span.exit();
     }
 
     println!("R1CS ppzkADSNARK Symmetric Verifier");
@@ -269,7 +169,7 @@ where
         r1cs_ppzkadsnark_online_verifier2::<ppT>(&pvk, &auth_data, &proof, &auth_keys.pak, &labels);
     assert!(ans == ans2);
 
-    leave_block("Call to run_r1cs_ppzkadsnark", false);
+    span.exit();
 
     ans
 }

@@ -86,18 +86,13 @@ use ffec::{One, Zero};
 use rccell::RcCell;
 use std::ops::Mul;
 
-/**
- * A compliance-step PCD circuit.
- *
- * The circuit is an R1CS that checks compliance (for the given compliance predicate)
- * and validity of previous proofs.
- */
-// pub trait FieldTConfig {
-//     type ppT::FieldT;
-// }
-// impl<ppT> FieldTConfig for mp_compliance_step_pcd_circuit_maker<ppT> {
-//     type ppT::FieldT = Fr<ppT>;
-// }
+// /**
+//  * A compliance-step PCD circuit.
+//  *
+//  * The circuit is an R1CS that checks compliance (for the given compliance predicate)
+//  * and validity of previous proofs.
+//  */
+
 pub struct mp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub compliance_predicate: r1cs_pcd_compliance_predicate<ppT::FieldT, ppT>,
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
@@ -155,15 +150,13 @@ pub struct mp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub verifier: Vec<r1cs_ppzksnark_verifier_gadgets<ppT>>,
 }
 
-/**
- * A translation-step PCD circuit.
- *
- * The circuit is an R1CS that checks validity of previous proofs.
- */
+// /**
+//  * A translation-step PCD circuit.
+//  *
+//  * The circuit is an R1CS that checks validity of previous proofs.
+//  */
 
-// impl<ppT> FieldTConfig for mp_translation_step_pcd_circuit_maker<ppT> {
-//     type ppT::FieldT = Fr<ppT>;
-// }
+
 pub struct mp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
     pub mp_translation_step_pcd_circuit_input: pb_variable_array<ppT::FieldT, ppT::PB>,
@@ -1227,7 +1220,7 @@ pub fn get_mp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     commitment_to_translation_step_r1cs_vks: &set_commitment,
     primary_input: &r1cs_pcd_compliance_predicate_primary_input<Fr<ppT>, ppT::M>,
 ) -> r1cs_primary_input<Fr<ppT>> {
-    leave_block("Call to get_mp_compliance_step_pcd_circuit_input", false);
+    span.exit();
     //type ppT::FieldT = Fr<ppT>;
 
     let outgoing_message_as_va = primary_input
@@ -1244,12 +1237,12 @@ pub fn get_mp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     block.extend(commitment_to_translation_step_r1cs_vks.clone());
     block.extend(msg_bits.clone());
 
-    leave_block("Sample CRH randomness", false);
+    span.exit();
     CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::sample_randomness(block.len());
-    leave_block("Sample CRH randomness", false);
+    span.exit();
 
     let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash_for_field(&block);
-    leave_block("Call to get_mp_compliance_step_pcd_circuit_input", false);
+    span.exit();
 
     digest
 }
@@ -1261,7 +1254,7 @@ pub fn get_mp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         <<<ppT as ppTConfig>::P as pairing_selector>::other_curve_type as ppTConfig>::M,
     >,
 ) -> r1cs_primary_input<Fr<ppT>> {
-    leave_block("Call to get_mp_translation_step_pcd_circuit_input", false);
+    span.exit();
     // type ppT::FieldT = Fr<ppT>;
 
     let mp_compliance_step_pcd_circuit_input =
@@ -1284,7 +1277,7 @@ pub fn get_mp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
         &mp_compliance_step_pcd_circuit_input_bits,
         mp_compliance_step_pcd_circuit_maker::<ppT>::field_capacity(),
     );
-    leave_block("Call to get_mp_translation_step_pcd_circuit_input", false);
+    span.exit();
 
     result
 }

@@ -22,45 +22,44 @@ use crate::relations::variable::variable;
 use ffec::FieldTConfig;
 use rccell::RcCell;
 use std::marker::PhantomData;
-/**
- * The memory masking gadget checks if a specified part of a double
- * word is correctly modified. In TinyRAM CPU checker we use this to
- * implement byte addressing and word addressing for the memory that
- * consists of double words.
- *
- * More precisely, memory masking gadgets takes the following
- * arguments:
- *
- * dw_contents_prev, dw_contents_next -- the contents of the memory
- *
- * double word before and after the access
- *
- * access_is_word -- a boolean indicating if access is word
- *
- * access_is_byte -- a boolean indicating if access is byte
- *
- * subaddress -- an integer specifying which byte (if access_is_byte=1)
- * or word (if access_is_byte=1) this access is operating on
- *
- * subcontents -- contents of the byte, resp., word to be operated on
- *
- * Memory masking gadget enforces that dw_contents_prev is equal to
- * dw_contents_next everywhere, except subaddres-th byte (if
- * access_is_byte = 1), or MSB(subaddress)-th word (if access_is_word =
- * 1). The corresponding byte, resp., word in dw_contents_next is
- * required to equal subcontents.
- *
- * Note that indexing MSB(subaddress)-th word is the same as indexing
- * the word specified by subaddress expressed in bytes and aligned to
- * the word boundary by rounding the subaddress down.
- *
- * Requirements: The caller is required to perform bounds checks on
- * subcontents. The caller is also required to ensure that exactly one
- * of access_is_word and access_is_byte is set to 1.
- */
+// /**
+//  * The memory masking gadget checks if a specified part of a double
+//  * word is correctly modified. In TinyRAM CPU checker we use this to
+//  * implement byte addressing and word addressing for the memory that
+//  * consists of double words.
+//  *
+//  * More precisely, memory masking gadgets takes the following
+//  * arguments:
+//  *
+//  * dw_contents_prev, dw_contents_next -- the contents of the memory
+//  *
+//  * double word before and after the access
+//  *
+//  * access_is_word -- a boolean indicating if access is word
+//  *
+//  * access_is_byte -- a boolean indicating if access is byte
+//  *
+//  * subaddress -- an integer specifying which byte (if access_is_byte=1)
+//  * or word (if access_is_byte=1) this access is operating on
+//  *
+//  * subcontents -- contents of the byte, resp., word to be operated on
+//  *
+//  * Memory masking gadget enforces that dw_contents_prev is equal to
+//  * dw_contents_next everywhere, except subaddres-th byte (if
+//  * access_is_byte = 1), or MSB(subaddress)-th word (if access_is_word =
+//  * 1). The corresponding byte, resp., word in dw_contents_next is
+//  * required to equal subcontents.
+//  *
+//  * Note that indexing MSB(subaddress)-th word is the same as indexing
+//  * the word specified by subaddress expressed in bytes and aligned to
+//  * the word boundary by rounding the subaddress down.
+//  *
+//  * Requirements: The caller is required to perform bounds checks on
+//  * subcontents. The caller is also required to ensure that exactly one
+//  * of access_is_word and access_is_byte is set to 1.
+//  */
 #[derive(Clone, Default)]
 pub struct memory_masking_gadget<FieldT: FieldTConfig> {
-    // : public tinyram_standard_gadget<FieldT>
     shift: linear_combination<FieldT, pb_variable, pb_linear_combination>,
     is_word0: variable<FieldT, pb_variable>,
     is_word1: variable<FieldT, pb_variable>,
@@ -119,13 +118,13 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
         dw_contents_next: doubleword_variable_gadgets<FieldT>,
         annotation_prefix: String,
     ) -> memory_masking_gadgets<FieldT> {
-        /*
-          Indicator variables for access being to word_0, word_1, and
-          byte_0, byte_1, ...
+        // /*
+        //   Indicator variables for access being to word_0, word_1, and
+        //   byte_0, byte_1, ...
 
-          We use little-endian indexing here (least significant
-          bit/byte/word has the smallest address).
-        */
+        //   We use little-endian indexing here (least significant
+        //   bit/byte/word has the smallest address).
+        // */
         let mut is_word0 = variable::<FieldT, pb_variable>::default();
         is_word0.allocate(&pb, format!("{} is_word0", annotation_prefix));
         let mut is_word1 = variable::<FieldT, pb_variable>::default();
@@ -143,12 +142,12 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
             format!("{} is_byte", annotation_prefix),
         );
 
-        /*
-          Get value of the dw_contents_prev for which the specified entity
-          is masked out to be zero. E.g. the value of masked_out_bytes[3]
-          will be the same as the value of dw_contents_prev, when 3rd
-          (0-indexed) byte is set to all zeros.
-        */
+        // /*
+        //   Get value of the dw_contents_prev for which the specified entity
+        //   is masked out to be zero. E.g. the value of masked_out_bytes[3]
+        //   will be the same as the value of dw_contents_prev, when 3rd
+        //   (0-indexed) byte is set to all zeros.
+        // */
         let mut masked_out_word0 =
             linear_combination::<FieldT, pb_variable, pb_linear_combination>::default();
         masked_out_word0.assign(
@@ -195,10 +194,10 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
             );
         }
 
-        /*
-          Define masked_out_dw_contents_prev to be the correct masked out
-          contents for the current access type.
-        */
+        // /*
+        //   Define masked_out_dw_contents_prev to be the correct masked out
+        //   contents for the current access type.
+        // */
 
         let mut masked_out_indicators =
             pb_linear_combination_array::<FieldT, tinyram_protoboard<FieldT>>::default();
@@ -235,9 +234,9 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
             format!("{} get_masked_out_dw_contents_prev", annotation_prefix),
         ));
 
-        /*
-         Define shift so that masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
-        */
+        // /*
+        //  Define shift so that masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
+        // */
         let mut shift_lc = linear_combination::<FieldT, pb_variable, pb_linear_combination>::from(
             is_word0.clone(),
         ) * FieldT::from(1)
@@ -275,8 +274,8 @@ impl<FieldT: FieldTConfig> memory_masking_gadget<FieldT> {
 impl<FieldT: FieldTConfig> SubTinyRamGadgetConfig for memory_masking_gadget<FieldT> {}
 impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gadgets<FieldT> {
     fn generate_r1cs_constraints(&self) {
-        /* get indicator variables for is_subaddress[i] by adding constraints
-        is_subaddress[i] * (subaddress - i) = 0 and \sum_i is_subaddress[i] = 1 */
+        // /* get indicator variables for is_subaddress[i] by adding constraints
+        // is_subaddress[i] * (subaddress - i) = 0 and \sum_i is_subaddress[i] = 1 */
         for i in 0..2 * self.pb.borrow().t.ap.bytes_in_word() {
             self.pb.borrow_mut().add_r1cs_constraint(
                 r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
@@ -342,9 +341,9 @@ impl<FieldT: FieldTConfig> ArithmeticGadgetConfig<FieldT> for memory_masking_gad
             .borrow_mut()
             .generate_r1cs_constraints();
 
-        /*
-          masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
-        */
+        // /*
+        //   masked_out_dw_contents_prev + shift * subcontents = dw_contents_next
+        // */
         self.pb.borrow_mut().add_r1cs_constraint(
             r1cs_constraint::<FieldT, pb_variable, pb_linear_combination>::new(
                 self.t.t.t.shift.clone().into(),

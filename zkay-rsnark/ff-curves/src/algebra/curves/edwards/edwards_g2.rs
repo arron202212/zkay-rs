@@ -253,19 +253,19 @@ impl edwards_G2 {
     }
 
     pub fn is_well_formed(&self) -> bool {
-        /* Note that point at infinity is the only special case we must check as
-        inverted representation does no cover points (0, +-c) and (+-c, 0). */
+        //  Note that point at infinity is the only special case we must check as
+        // inverted representation does no cover points (0, +-c) and (+-c, 0).
         if self.is_zero() {
             return true;
         }
-        /*
-            a x^2 + y^2 = 1 + d x^2 y^2
 
-            We are using inverted, so equation we need to check is actually
+        // a x^2 + y^2 = 1 + d x^2 y^2
 
-            a (z/x)^2 + (z/y)^2 = 1 + d z^4 / (x^2 * y^2)
-            z^2 (a y^2 + x^2 - dz^2) = x^2 y^2
-        */
+        // We are using inverted, so equation we need to check is actually
+
+        // a (z/x)^2 + (z/y)^2 = 1 + d z^4 / (x^2 * y^2)
+        // z^2 (a y^2 + x^2 - dz^2) = x^2 y^2
+
         let X2 = self.X.squared();
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();

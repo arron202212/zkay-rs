@@ -57,10 +57,10 @@ pub fn _basic_radix2_FFT<FieldT: FieldTConfig>(
     _basic_serial_radix2_FFT(a, omega)
 }
 
-/*
-Below we make use of pseudocode from [CLRS 2n Ed, pp. 864].
-Also, note that it's the caller's responsibility to multiply by 1/N.
-*/
+// /*
+// Below we make use of pseudocode from [CLRS 2n Ed, pp. 864].
+// Also, note that it's the caller's responsibility to multiply by 1/N.
+// */
 // FieldT: num_traits::One
 //         + std::ops::MulAssign
 //         + Clone
@@ -250,10 +250,10 @@ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT: FieldTConfig>(
 
     let mut u = vec![FieldT::zero(); m];
 
-    /*
-    If t equals one of the roots of unity in S={omega^{0},...,omega^{m-1}}
-    then output 1 at the right place, and 0 elsewhere
-    */
+    // /*
+    // If t equals one of the roots of unity in S={omega^{0},...,omega^{m-1}}
+    // then output 1 at the right place, and 0 elsewhere
+    // */
     let tt: FieldT = t.clone();
     let tm: FieldT = tt.clone() ^ m;
     if tm == FieldT::one() {
@@ -270,14 +270,14 @@ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT: FieldTConfig>(
         }
     }
 
-    /*
-    Otherwise, if t does not equal any of the roots of unity in S,
-    then compute each L_{i,S}(t) as Z_{S}(t) * v_i / (t-\omega^i)
-    where:
-    - Z_{S}(t) = \prod_{j} (t-\omega^j) = (t^m-1), and
-    - v_{i} = 1 / \prod_{j \neq i} (\omega^i-\omega^j).
-    Below we use the fact that v_{0} = 1/m and v_{i+1} = \omega * v_{i}.
-    */
+    // /*
+    // Otherwise, if t does not equal any of the roots of unity in S,
+    // then compute each L_{i,S}(t) as Z_{S}(t) * v_i / (t-\omega^i)
+    // where:
+    // - Z_{S}(t) = \prod_{j} (t-\omega^j) = (t^m-1), and
+    // - v_{i} = 1 / \prod_{j \neq i} (\omega^i-\omega^j).
+    // Below we use the fact that v_{0} = 1/m and v_{i+1} = \omega * v_{i}.
+    // */
 
     let Z = (tt.clone() ^ m) - FieldT::one();
     // let l = Z * FieldT::from(m).inverse();

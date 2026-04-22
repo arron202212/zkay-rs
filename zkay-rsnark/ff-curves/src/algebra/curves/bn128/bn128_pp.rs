@@ -16,7 +16,7 @@ use crate::{
         },
     },
 };
-use ffec::common::profiling::{enter_block, leave_block};
+use tracing::{Level, span};
 
 #[derive(Default, Clone)]
 pub struct bn128_pp;
@@ -92,9 +92,9 @@ impl PublicParams for bn128_pp {
     }
 
     fn miller_loop(prec_P: &Self::G1_precomp, prec_Q: &Self::G2_precomp) -> Self::Fqk {
-        enter_block("Call to miller_loop<bn128_pp>", false);
+        let span = span!(Level::TRACE, "Call to miller_loop<bn128_pp>").entered();
         let result = bn128_ate_miller_loop(prec_P, prec_Q);
-        leave_block("Call to miller_loop<bn128_pp>", false);
+        span.exit();
         result
     }
 
@@ -104,27 +104,27 @@ impl PublicParams for bn128_pp {
         prec_P2: &Self::G1_precomp,
         prec_Q2: &Self::G2_precomp,
     ) -> Self::Fqk {
-        enter_block("Call to double_miller_loop<bn128_pp>", false);
+        let span = span!(Level::TRACE, "Call to double_miller_loop<bn128_pp>").entered();
         let result = bn128_double_ate_miller_loop(prec_P1, prec_Q1, prec_P2, prec_Q2);
-        leave_block("Call to double_miller_loop<bn128_pp>", false);
+        span.exit();
         result
     }
 
     fn pairing(P: &Self::G1, Q: &Self::G2) -> Self::Fqk {
-        enter_block("Call to pairing<bn128_pp>", false);
+        let span = span!(Level::TRACE, "Call to pairing<bn128_pp>").entered();
         let prec_P = bn128_pp::precompute_G1(P);
         let prec_Q = bn128_pp::precompute_G2(Q);
 
         let result = bn128_pp::miller_loop(&prec_P, &prec_Q);
-        leave_block("Call to pairing<bn128_pp>", false);
+        span.exit();
         result
     }
 
     fn reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT {
-        enter_block("Call to reduced_pairing<bn128_pp>", false);
+        let span = span!(Level::TRACE, "Call to reduced_pairing<bn128_pp>").entered();
         let f = bn128_pp::pairing(P, Q);
         let result = bn128_pp::final_exponentiation(&f);
-        leave_block("Call to reduced_pairing<bn128_pp>", false);
+        span.exit();
         result
     }
     fn affine_reduced_pairing(P: &Self::G1, Q: &Self::G2) -> Self::GT {

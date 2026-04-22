@@ -359,15 +359,14 @@ impl PpConfig for alt_bn128_G2 {
         if self.is_zero() {
             return true;
         }
-        /*
-            y^2 = x^3 + b
+        // y^2 = x^3 + b
 
-            We are using Jacobian coordinates, so equation we need to check is actually
+        // We are using Jacobian coordinates, so equation we need to check is actually
 
-            (y/z^3)^2 = (x/z^2)^3 + b
-            y^2 / z^6 = x^3 / z^6 + b
-            y^2 = x^3 + b z^6
-        */
+        // (y/z^3)^2 = (x/z^2)^3 + b
+        // y^2 / z^6 = x^3 / z^6 + b
+        // y^2 = x^3 + b z^6
+
         let X2 = self.X.squared();
         let Y2 = self.Y.squared();
         let Z2 = self.Z.squared();
@@ -576,30 +575,23 @@ impl Zero for alt_bn128_G2 {
 
 use std::io::{self, Read, Write};
 
-// 假设已经定义了 Fq2 及其相关运算
-// Fq2 通常由 c0 和 c1 两个 Fq 组成
-
 impl alt_bn128_G2 {
-    /// 翻译 C++: operator<<
     pub fn write<W: Write>(&self, mut out: W) -> io::Result<()> {
         let mut copy = self.clone();
         copy.to_affine_coordinates();
 
-        // out << (copy.is_zero() ? 1 : 0) << OUTPUT_SEPARATOR;
         let is_zero_byte = if copy.is_zero() { b'1' } else { b'0' };
         out.write_all(&[is_zero_byte])?;
         out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
         cfg_if! {
                if  #[cfg(feature = "no_pt_compression")]
                 {
-                    // out << copy.X << OUTPUT_SEPARATOR << copy.Y;
                     write!(out, "{}{}{}", copy.X, OUTPUT_SEPARATOR, copy.Y)?;
                 }
         else
 
                 {
-                    //storing LSB of Y (注意：G2 通常取 c0 的 LSB)
-                    // out << copy.X << OUTPUT_SEPARATOR << (copy.Y.c0.as_bigint().data[0] & 1);
+
                     let y_lsb = (copy.Y.c0.as_bigint().0.0[0] & 1) as u8 + b'0';
                     write!(out, "{}", copy.X)?;
                     out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
@@ -609,14 +601,12 @@ impl alt_bn128_G2 {
         Ok(())
     }
 
-    /// 翻译 C++: operator>>
     pub fn read<R: Read + std::io::BufRead>(mut input: R) -> io::Result<Self> {
         let mut is_zero_raw = [0u8; 1];
         let mut tx: alt_bn128_Fq2;
         let ty: alt_bn128_Fq2;
         cfg_if! {  if #[cfg(feature = "no_pt_compression")]
          {
-             // in >> is_zero >> tX >> tY;
              input.read_exact(&mut is_zero_raw)?;
              let is_zero = is_zero_raw[0] - b'0';
              tx = alt_bn128_Fq2::read(&mut input)?;
@@ -629,27 +619,22 @@ impl alt_bn128_G2 {
 
         else
          {
-             // in.read((char*)&is_zero, 1);
              input.read_exact(&mut is_zero_raw)?;
              let is_zero = is_zero_raw[0] - b'0';
              consume_output_separator(&mut input)?;
 
-             // in >> tX;
              tx = alt_bn128_Fq2::read(&mut input)?;
              consume_output_separator(&mut input)?;
 
-             // in.read((char*)&Y_lsb, 1);
              let mut y_lsb_raw = [0u8; 1];
              input.read_exact(&mut y_lsb_raw)?;
              let y_lsb = y_lsb_raw[0] - b'0';
 
              if is_zero == 0 {
-                 // y = +/- sqrt(x^3 + b)
                  let tx2 = tx.squared();
                  let ty2 = tx2 * tx + alt_bn128_twist_coeff_b();
                  let mut ty_sqrt = ty2.sqrt().ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
 
-                 // if ((tY.c0.as_bigint().data[0] & 1) != Y_lsb)
                  if (ty_sqrt.c0.as_bigint().0.0[0] & 1) as u8 != y_lsb {
                      ty_sqrt = -ty_sqrt;
                  }
@@ -659,7 +644,6 @@ impl alt_bn128_G2 {
              }
          }}
 
-        // using projective coordinates (还原为 Jacobian/Projective 坐标)
         Ok(Self {
             X: tx,
             Y: ty,

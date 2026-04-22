@@ -315,15 +315,15 @@ impl bn128_G1 {
         if self.is_zero() {
             return true;
         }
-        /*
-            y^2 = x^3 + b
 
-            We are using Jacobian coordinates, so equation we need to check is actually
+        // y^2 = x^3 + b
 
-            (y/z^3)^2 = (x/z^2)^3 + b
-            y^2 / z^6 = x^3 / z^6 + b
-            y^2 = x^3 + b z^6
-        */
+        // We are using Jacobian coordinates, so equation we need to check is actually
+
+        // (y/z^3)^2 = (x/z^2)^3 + b
+        // y^2 / z^6 = x^3 / z^6 + b
+        // y^2 = x^3 + b z^6
+
         let (mut X2, mut Y2, mut Z2) = (Fp::default(), Fp::default(), Fp::default());
         X2 = self.X.clone().squared();
         Y2 = self.Y.clone().squared();

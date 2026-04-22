@@ -13,13 +13,13 @@ use crate::{
     },
     {CoeffsConfig, affine_ate_G_precomp_typeConfig},
 };
-
 use ffec::{
     PpConfig,
     common::profiling::{enter_block, leave_block},
     field_utils::bigint::{BigIntegerT, bigint},
     scalar_multiplication::wnaf::find_wnaf,
 };
+use tracing::{Level, span};
 
 //affine ate miller loop
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -130,7 +130,7 @@ impl fmt::Display for mnt4_ate_G2_precomp {
 //final exponentiations
 
 pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_final_exponentiation_last_chunk", false);
+    let span = span!(Level::TRACE, "Call to mnt4_final_exponentiation_last_chunk").entered();
     let elt_q = elt.Frobenius_map(1);
     let w1_part = elt_q.cyclotomic_exp(&mnt4_final_exponent_last_chunk_w1);
     let mut w0_part = if mnt4_final_exponent_last_chunk_is_w0_neg {
@@ -139,13 +139,17 @@ pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) 
         elt.cyclotomic_exp(&mnt4_final_exponent_last_chunk_abs_of_w0)
     };
     let result = w1_part * w0_part;
-    leave_block("Call to mnt4_final_exponentiation_last_chunk", false);
+    span.exit();
 
     result
 }
 
 pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_final_exponentiation_first_chunk", false);
+    let span = span!(
+        Level::TRACE,
+        "Call to mnt4_final_exponentiation_first_chunk"
+    )
+    .entered();
 
     //(q^2-1)
 
@@ -154,17 +158,17 @@ pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4)
     //elt_q3_over_elt = elt^(q^2-1)
     let elt_q2_over_elt = elt_q2 * elt_inv;
 
-    leave_block("Call to mnt4_final_exponentiation_first_chunk", false);
+    span.exit();
     elt_q2_over_elt
 }
 
 pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
-    enter_block("Call to mnt4_final_exponentiation", false);
+    let span = span!(Level::TRACE, "Call to mnt4_final_exponentiation").entered();
     let elt_inv = elt.inverse();
     let elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, &elt_inv);
     let elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(&elt_inv, elt);
     let result = mnt4_final_exponentiation_last_chunk(&elt_to_first_chunk, &elt_inv_to_first_chunk);
-    leave_block("Call to mnt4_final_exponentiation", false);
+    span.exit();
 
     result
 }
@@ -172,7 +176,7 @@ pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
 //affine ate miller loop
 
 pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precomputation {
-    enter_block("Call to mnt4_affine_ate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -182,12 +186,12 @@ pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precompu
     result.PY = Pcopy.Y;
     result.PY_twist_squared = mnt4_twist.squared() * Pcopy.Y;
 
-    leave_block("Call to mnt4_affine_ate_precompute_G1", false);
+    span.exit();
     result
 }
 
 pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precomputation {
-    enter_block("Call to mnt4_affine_ate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_precompute_G2").entered();
 
     let mut Qcopy = Q.clone();
     Qcopy.to_affine_coordinates();
@@ -241,22 +245,21 @@ pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precompu
         }
     }
 
-    /* TODO: maybe handle neg
-       if mnt4_ate_is_loop_count_neg
-       {
-       ac:mnt4_ate_add_coeffs,
-       c:mnt4_affine_ate_dbl_coeffs,
-       c.old_RX = RX;
-       c.old_RY = -RY;
-       old_RX_2 = c.old_RY.squared();
-       c.gamma = (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_coeff_a) * (c.old_RY + c.old_RY).inverse();
-       c.gamma_twist = c.gamma * mnt4_twist;
-       c.gamma_X = c.gamma * c.old_RX;
-       result.coeffs.push(c);
-       }
-    */
-
-    leave_block("Call to mnt4_affine_ate_precompute_G2", false);
+    // /* TODO: maybe handle neg
+    //    if mnt4_ate_is_loop_count_neg
+    //    {
+    //    ac:mnt4_ate_add_coeffs,
+    //    c:mnt4_affine_ate_dbl_coeffs,
+    //    c.old_RX = RX;
+    //    c.old_RY = -RY;
+    //    old_RX_2 = c.old_RY.squared();
+    //    c.gamma = (old_RX_2 + old_RX_2 + old_RX_2 + mnt4_coeff_a) * (c.old_RY + c.old_RY).inverse();
+    //    c.gamma_twist = c.gamma * mnt4_twist;
+    //    c.gamma_X = c.gamma * c.old_RX;
+    //    result.coeffs.push(c);
+    //    }
+    // */
+    span.exit();
     result
 }
 
@@ -264,7 +267,7 @@ pub fn mnt4_affine_ate_miller_loop(
     prec_P: &mnt4_affine_ate_G1_precomputation,
     prec_Q: &mnt4_affine_ate_G2_precomputation,
 ) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_affine_ate_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_miller_loop").entered();
 
     let mut f = mnt4_Fq4::one();
 
@@ -280,9 +283,9 @@ pub fn mnt4_affine_ate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        mnt4_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // mnt4_param_p (skipping leading zeros) in MSB to LSB
+        // order */
         let mut c = prec_Q.coeffs[idx].clone();
         idx += 1;
         let g_RR_at_P = mnt4_Fq4::new(
@@ -309,18 +312,17 @@ pub fn mnt4_affine_ate_miller_loop(
         }
     }
 
-    /* TODO: maybe handle neg
-       if mnt4_ate_is_loop_count_neg
-       {
-       // TODO:
-       mnt4_affine_ate_coeffs ac = prec_Q.coeffs[idx];idx+=1;
-       mnt4_Fq4 g_RnegR_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
-       - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
-       f = (f * g_RnegR_at_P).inverse();
-       }
-    */
-
-    leave_block("Call to mnt4_affine_ate_miller_loop", false);
+    // /* TODO: maybe handle neg
+    //    if mnt4_ate_is_loop_count_neg
+    //    {
+    //    // TODO:
+    //    mnt4_affine_ate_coeffs ac = prec_Q.coeffs[idx];idx+=1;
+    //    mnt4_Fq4 g_RnegR_at_P = mnt4_Fq4(prec_P.PY_twist_squared,
+    //    - prec_P.PX * c.gamma_twist + c.gamma_X - c.old_RY);
+    //    f = (f * g_RnegR_at_P).inverse();
+    //    }
+    // */
+    span.exit();
 
     f
 }
@@ -413,7 +415,7 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
-    enter_block("Call to mnt4_ate_precompute_G1", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -424,12 +426,12 @@ pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
     result.PX_twist = mnt4_twist * Pcopy.X;
     result.PY_twist = mnt4_twist * Pcopy.Y;
 
-    leave_block("Call to mnt4_ate_precompute_G1", false);
+    span.exit();
     result
 }
 
 pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
-    enter_block("Call to mnt4_ate_precompute_G2", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_precompute_G2").entered();
 
     let mut Qcopy = (Q.clone());
     Qcopy.to_affine_coordinates();
@@ -488,7 +490,7 @@ pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
         result.add_coeffs.push(ac);
     }
 
-    leave_block("Call to mnt4_ate_precompute_G2", false);
+    span.exit();
     result
 }
 
@@ -496,7 +498,7 @@ pub fn mnt4_ate_miller_loop(
     prec_P: &mnt4_ate_G1_precomp,
     prec_Q: &mnt4_ate_G2_precomp,
 ) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_ate_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_miller_loop").entered();
 
     let L1_coeff = mnt4_Fq2::new(prec_P.PX, mnt4_Fq::zero()) - prec_Q.QX_over_twist;
 
@@ -516,9 +518,9 @@ pub fn mnt4_ate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        mnt4_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // mnt4_param_p (skipping leading zeros) in MSB to LSB
+        // order */
         let dc = prec_Q.dbl_coeffs[dbl_idx].clone();
         dbl_idx += 1;
         let g_RR_at_P = mnt4_Fq4::new(
@@ -547,7 +549,7 @@ pub fn mnt4_ate_miller_loop(
         f = (f * g_RnegR_at_P).inverse();
     }
 
-    leave_block("Call to mnt4_ate_miller_loop", false);
+    span.exit();
 
     f
 }
@@ -558,7 +560,7 @@ pub fn mnt4_ate_double_miller_loop(
     prec_P2: &mnt4_ate_G1_precomp,
     prec_Q2: &mnt4_ate_G2_precomp,
 ) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_ate_double_miller_loop", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_double_miller_loop").entered();
 
     let L1_coeff1 = mnt4_Fq2::new(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
     let L1_coeff2 = mnt4_Fq2::new(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
@@ -579,9 +581,9 @@ pub fn mnt4_ate_double_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        mnt4_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        // /* code below gets executed for all bits (EXCEPT the MSB itself) of
+        // mnt4_param_p (skipping leading zeros) in MSB to LSB
+        // order */
         let mut dc1 = prec_Q1.dbl_coeffs[dbl_idx].clone();
         let mut dc2 = prec_Q2.dbl_coeffs[dbl_idx].clone();
         dbl_idx += 1;
@@ -632,25 +634,25 @@ pub fn mnt4_ate_double_miller_loop(
         f = (f * g_RnegR_at_P1 * g_RnegR_at_P2).inverse();
     }
 
-    leave_block("Call to mnt4_ate_double_miller_loop", false);
+    span.exit();
 
     f
 }
 
 pub fn mnt4_ate_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_Fq4 {
-    enter_block("Call to mnt4_ate_pairing", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_pairing").entered();
     let mut prec_P = mnt4_ate_precompute_G1(P);
     let mut prec_Q = mnt4_ate_precompute_G2(Q);
     let mut result = mnt4_ate_miller_loop(&prec_P, &prec_Q);
-    leave_block("Call to mnt4_ate_pairing", false);
+    span.exit();
     result
 }
 
 pub fn mnt4_ate_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
-    enter_block("Call to mnt4_ate_reduced_pairing", false);
+    let span = span!(Level::TRACE, "Call to mnt4_ate_reduced_pairing").entered();
     let f = mnt4_ate_pairing(P, Q);
     let result = mnt4_final_exponentiation(&f);
-    leave_block("Call to mnt4_ate_reduced_pairing", false);
+    span.exit();
     result
 }
 

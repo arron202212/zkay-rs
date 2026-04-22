@@ -89,15 +89,15 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
         let mut hasher_inputs = vec![];
         let mut hashers = vec![];
         let mut propagators = vec![];
-        /*
-           The tricky part here is ordering. For Merkle tree
-           authentication paths, path[0] corresponds to one layer below
-           the root (and path[tree_depth-1] corresponds to the layer
-           containing the leaf), while address_bits has the reverse order:
-           address_bits[0] is LSB, and corresponds to layer containing the
-           leaf, and address_bits[tree_depth-1] is MSB, and corresponds to
-           the subtree directly under the root.
-        */
+        // /*
+        //    The tricky part here is ordering. For Merkle tree
+        //    authentication paths, path[0] corresponds to one layer below
+        //    the root (and path[tree_depth-1] corresponds to the layer
+        //    containing the leaf), while address_bits has the reverse order:
+        //    address_bits[0] is LSB, and corresponds to layer containing the
+        //    leaf, and address_bits[tree_depth-1] is MSB, and corresponds to
+        //    the subtree directly under the root.
+        // */
         assert!(tree_depth > 0);
         assert!(tree_depth == address_bits.len());
 
@@ -137,11 +137,11 @@ impl<FieldT: FieldTConfig, PB: PBConfig, HashT: HashTConfig>
         }
 
         for i in 0..tree_depth {
-            /*
-              The propagators take a computed hash value (or leaf in the
-              base case) and propagate it one layer up, either in the left
-              or the right slot of authentication_path_variable.
-            */
+            // /*
+            //   The propagators take a computed hash value (or leaf in the
+            //   base case) and propagate it one layer up, either in the left
+            //   or the right slot of authentication_path_variable.
+            // */
             propagators.push(digest_selector_gadget::<FieldT, PB>::new(
                 pb.clone(),
                 digest_size,

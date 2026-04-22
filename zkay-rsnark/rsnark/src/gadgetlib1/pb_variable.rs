@@ -3,8 +3,8 @@ use crate::relations::variable::{
     SubLinearCombinationConfig, SubVariableConfig, linear_combination, linear_term, variable,
 };
 use ffec::FieldTConfig;
-use ffec::common::utils;
 use ffec::common::utils::bit_vector;
+use ffec::field_utils::bigint::BigIntegerT;
 use rccell::RcCell;
 use std::borrow::Borrow;
 use std::marker::PhantomData;

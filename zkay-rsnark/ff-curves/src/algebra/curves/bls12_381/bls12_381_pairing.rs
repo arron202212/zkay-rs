@@ -27,17 +27,17 @@ type bls12_381_G2_precomp = bls12_381_ate_G2_precomp;
 pub fn bls12_381_final_exponentiation_first_chunk(elt: &bls12_381_Fq12) -> bls12_381_Fq12 {
     enter_block("Call to bls12_381_final_exponentiation_first_chunk",false);
 
-    /*
-      Computes result = elt^((q^6-1)*(q^2+1)).
-      Follows, e.g., Beuchat et al page 9, by computing result as follows:
-         elt^((q^6-1)*(q^2+1)) = (conj(elt) * elt^(-1))^(q^2+1)
-      More precisely:
-      A = conj(elt)
-      B = elt.inverse()
-      C = A * B
-      D = C.Frobenius_map(2)
-      result = D * C
-    */
+    
+    //   Computes result = elt^((q^6-1)*(q^2+1)).
+    //   Follows, e.g., Beuchat et al page 9, by computing result as follows:
+    //      elt^((q^6-1)*(q^2+1)) = (conj(elt) * elt^(-1))^(q^2+1)
+    //   More precisely:
+    //   A = conj(elt)
+    //   B = elt.inverse()
+    //   C = A * B
+    //   D = C.Frobenius_map(2)
+    //   result = D * C
+
 
     let A = bls12_381_Fq12(elt.c0, -elt.c1);
     let B = elt.inverse();
@@ -97,9 +97,9 @@ pub fn bls12_381_final_exponentiation_last_chunk(elt: &bls12_381_Fq12) -> bls12_
 
 pub fn bls12_381_final_exponentiation(elt: &bls12_381_Fq12) -> bls12_381_GT {
     enter_block("Call to bls12_381_final_exponentiation",false);
-    /* OLD naive version:
-        bls12_381_GT result = elt^bls12_381_final_exponent;
-    */
+    //  OLD naive version:
+    //     bls12_381_GT result = elt^bls12_381_final_exponent;
+
     let mut A = bls12_381_final_exponentiation_first_chunk(elt);
     let mut result = bls12_381_final_exponentiation_last_chunk(A);
 
@@ -243,9 +243,9 @@ pub fn bls12_381_ate_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        bls12_381_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        //  code below gets executed for all bits (EXCEPT the MSB itself) of
+        // bls12_381_param_p (skipping leading zeros) in MSB to LSB
+        // order 
 
         c = prec_Q.coeffs[idx];
         idx += 1;
@@ -289,9 +289,9 @@ pub fn bls12_381_ate_double_miller_loop(
             continue;
         }
 
-        /* code below gets executed for all bits (EXCEPT the MSB itself) of
-        bls12_381_param_p (skipping leading zeros) in MSB to LSB
-        order */
+        //  code below gets executed for all bits (EXCEPT the MSB itself) of
+        // bls12_381_param_p (skipping leading zeros) in MSB to LSB
+        // order 
 
         let mut c1 = prec_Q1.coeffs[idx];
         let mut c2 = prec_Q2.coeffs[idx];
