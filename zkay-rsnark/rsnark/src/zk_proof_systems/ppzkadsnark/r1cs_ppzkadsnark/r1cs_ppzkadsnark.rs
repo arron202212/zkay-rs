@@ -561,7 +561,8 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     cs: &r1cs_ppzkadsnark_constraint_system<PP>,
     prms: &r1cs_ppzkadsnark_pub_auth_prms<PP>,
 ) -> r1cs_ppzkadsnark_keypair<PP> {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_generator").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_generator");
+    let _=span0.enter();
 
     //make the B_query "lighter" if possible
     let mut cs_copy = cs.clone();
@@ -588,7 +589,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
         qap_inst.num_inputs()
     );
 
-    let span = span!(Level::TRACE, "Compute query densities").entered();
+    let spand = span!(Level::TRACE, "Compute query densities").entered();
     let mut non_zero_At = 0;
     let mut non_zero_Bt = 0;
     let mut non_zero_Ct = 0;
@@ -609,7 +610,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
             non_zero_Ht += 1;
         }
     }
-    span.exit();
+    spand.exit();
 
     let mut At = (qap_inst.At.clone()); // qap_inst.At is now in unspecified state, but we do not use it later
     let mut Bt = (qap_inst.Bt.clone()); // qap_inst.Bt is now in unspecified state, but we do not use it later
@@ -660,26 +661,26 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
 
     let chunks: usize = 1;
 
-    let span = span!(Level::TRACE, "Generating G1 multiexp table").entered();
+    let spang1 = span!(Level::TRACE, "Generating G1 multiexp table").entered();
     let g1_table = get_window_table(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
         G1::<snark_pp<PP>>::one(),
     );
-    span.exit();
+    spang1.exit();
 
-    let span = span!(Level::TRACE, "Generating G2 multiexp table").entered();
+    let spang2 = span!(Level::TRACE, "Generating G2 multiexp table").entered();
     let g2_table = get_window_table(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g2_window,
         G2::<snark_pp<PP>>::one(),
     );
-    span.exit();
+    spang2.exit();
 
-    let span = span!(Level::TRACE, "Generate R1CS proving key").entered();
+    let spanpk = span!(Level::TRACE, "Generate R1CS proving key").entered();
 
-    let span = span!(Level::TRACE, "Generate knowledge commitments").entered();
-    let span = span!(Level::TRACE, "Compute the A-query").entered();
+    let spang = span!(Level::TRACE, "Generate knowledge commitments").entered();
+    let spana = span!(Level::TRACE, "Compute the A-query").entered();
     let A_query = kc_batch_exp::<
         G1<snark_pp<PP>>,
         G1<snark_pp<PP>>,
@@ -695,9 +696,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
         &At,
         chunks,
     );
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Compute the B-query").entered();
+    let spanb = span!(Level::TRACE, "Compute the B-query").entered();
     let B_query = kc_batch_exp::<
         G2<snark_pp<PP>>,
         G1<snark_pp<PP>>,
@@ -713,9 +714,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
         &Bt,
         chunks,
     );
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Compute the C-query").entered();
+    let spanc = span!(Level::TRACE, "Compute the C-query").entered();
     let C_query = kc_batch_exp::<
         G1<snark_pp<PP>>,
         G1<snark_pp<PP>>,
@@ -731,9 +732,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
         &Ct,
         chunks,
     );
-    span.exit();
+    spanc.exit();
 
-    let span = span!(Level::TRACE, "Compute the H-query").entered();
+    let spanh = span!(Level::TRACE, "Compute the H-query").entered();
     let H_query = batch_exp::<G1<snark_pp<PP>>, Fr<snark_pp<PP>>>(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
@@ -743,9 +744,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     // #ifdef USE_MIXED_ADDITION
     // batch_to_special<G1<snark_pp<PP>> >(H_query);
 
-    span.exit();
+    spanh.exit();
 
-    let span = span!(Level::TRACE, "Compute the K-query").entered();
+    let spank = span!(Level::TRACE, "Compute the K-query").entered();
     let K_query = batch_exp::<G1<snark_pp<PP>>, Fr<snark_pp<PP>>>(
         Fr::<snark_pp<PP>>::size_in_bits(),
         g1_window,
@@ -755,13 +756,13 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     // #ifdef USE_MIXED_ADDITION
     // batch_to_special<G1<snark_pp<PP>> >(K_query);
 
-    span.exit();
+    spank.exit();
 
-    span.exit();
+    spang.exit();
 
-    span.exit();
+    spanpk.exit();
 
-    let span = span!(Level::TRACE, "Generate R1CS verification key").entered();
+    let spanvk = span!(Level::TRACE, "Generate R1CS verification key").entered();
     let mut alphaA_g2 = G2::<snark_pp<PP>>::one() * alphaA.clone();
     let mut alphaB_g1 = G1::<snark_pp<PP>>::one() * alphaB.clone();
     let mut alphaC_g2 = G2::<snark_pp<PP>>::one() * alphaC.clone();
@@ -770,9 +771,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     let mut gamma_beta_g2 = G2::<snark_pp<PP>>::one() * (gamma.clone() * beta.clone());
     let mut rC_Z_g2 = G2::<snark_pp<PP>>::one() * (rC.clone() * qap_inst.Zt.clone());
 
-    let span = span!(Level::TRACE, "Generate extra authentication elements").entered();
+    let spana = span!(Level::TRACE, "Generate extra authentication elements").entered();
     let rA_i_Z_g1 = prms.I1.clone() * (rA.clone() * qap_inst.Zt.clone());
-    span.exit();
+    spana.exit();
 
     let spank = span!(
         Level::TRACE,
@@ -786,9 +787,9 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     }
     spank.exit();
 
-    span.exit();
+    spanvk.exit();
 
-    span.exit();
+  
 
     let mut vk = r1cs_ppzkadsnark_verification_key::<PP>::new(
         alphaA_g2,

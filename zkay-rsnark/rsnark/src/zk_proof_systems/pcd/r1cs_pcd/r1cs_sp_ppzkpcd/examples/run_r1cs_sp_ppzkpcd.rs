@@ -91,8 +91,8 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to run_r1cs_sp_ppzkpcd_tally_example").entered();
-
+    let span0 = span!(Level::TRACE, "Call to run_r1cs_sp_ppzkpcd_tally_example");
+    let _=span0.enter();
     let mut all_accept = true;
 
     let span = span!(Level::TRACE, "Generate all messages").entered();
@@ -113,13 +113,13 @@ where
     let mut tree_messages =
         vec![r1cs_pcd_message::<FieldT<PCD_ppT>, PCD_ppT::M>::default(); tree_size];
 
-    let span = span!(Level::TRACE, "Generate compliance predicate").entered();
+    let spang = span!(Level::TRACE, "Generate compliance predicate").entered();
     let types = 1;
     let mut tally =
         tally_cp_handler::<PCD_ppT>::new(types, arity, wordsize, false, BTreeSet::new());
     tally.generate_r1cs_constraints();
     let mut tally_cp = tally.get_compliance_predicate();
-    span.exit();
+    spang.exit();
 
     println!("R1CS ppzkPCD Generator");
     let mut keypair = r1cs_sp_ppzkpcd_generator::<PCD_ppT>(&tally_cp);
@@ -227,7 +227,7 @@ where
         nodes_in_layer /= arity;
     }
 
-    span.exit();
+   
 
     all_accept
 }

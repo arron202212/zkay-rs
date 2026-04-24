@@ -340,7 +340,8 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> 
 pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicates: &Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
 ) -> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
-    let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_generator").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_generator");
+    let _=span0.enter();
 
     let mut keypair = r1cs_mp_ppzkpcd_keypair::<PCD_ppT>::default();
     let translation_input_size =
@@ -354,7 +355,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         CRH_with_bit_out_gadgets<FieldT_A<PCD_ppT>, PCD_ppT::PB>,
     >::new(compliance_predicates.len(), vk_size_in_bits.clone());
 
-    let span = span!(Level::TRACE, "Perform type checks").entered();
+    let spanp = span!(Level::TRACE, "Perform type checks").entered();
     let mut type_counts = BTreeMap::new();
 
     for cp in compliance_predicates {
@@ -370,7 +371,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             assert!(cp.accepted_input_types.is_empty());
         }
     }
-    span.exit();
+    spanp.exit();
 
     for i in 0..compliance_predicates.len() {
         let s = prefix_format!(
@@ -395,34 +396,34 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         let mut mp_compliance_step_pcd_circuit_cs = mp_compliance_step_pcd_circuit.get_circuit();
         span.exit();
 
-        let span = span!(
+        let spang = span!(
             Level::TRACE,
             "Generate key pair for compliance step PCD circuit"
         )
         .entered();
         let mut mp_compliance_step_keypair =
             r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&mp_compliance_step_pcd_circuit_cs);
-        span.exit();
+        spang.exit();
 
-        let span = span!(Level::TRACE, "Construct translation step PCD circuit").entered();
+        let spanc = span!(Level::TRACE, "Construct translation step PCD circuit").entered();
         let mut mp_translation_step_pcd_circuit =
             mp_translation_step_pcd_circuit_maker::<B_pp<PCD_ppT>>::new(
                 mp_compliance_step_keypair.vk.clone(),
             );
         mp_translation_step_pcd_circuit.generate_r1cs_constraints();
         let mp_translation_step_pcd_circuit_cs = mp_translation_step_pcd_circuit.get_circuit();
-        span.exit();
+        spanc.exit();
 
-        let span = span!(
+        let spant = span!(
             Level::TRACE,
             "Generate key pair for translation step PCD circuit"
         )
         .entered();
         let mut mp_translation_step_keypair =
             r1cs_ppzksnark_generator::<B_pp<PCD_ppT>>(&mp_translation_step_pcd_circuit_cs);
-        span.exit();
+        spant.exit();
 
-        let span = span!(
+        let spana = span!(
             Level::TRACE,
             "Augment set of translation step verification keys"
         )
@@ -432,9 +433,9 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
                 &mp_translation_step_keypair.vk,
             );
         all_translation_vks.add(&vk_bits);
-        span.exit();
+        spana.exit();
 
-        let span = span!(Level::TRACE, "Update r1cs_mp_ppzkpcd keypair").entered();
+        let spanu = span!(Level::TRACE, "Update r1cs_mp_ppzkpcd keypair").entered();
         keypair
             .pk
             .compliance_predicates
@@ -475,7 +476,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             .vk
             .translation_step_r1cs_vks
             .push(mp_translation_step_keypair.vk.clone());
-        span.exit();
+        spanu.exit();
     }
     let spanc = span!(
         Level::TRACE,
@@ -502,7 +503,6 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
 
     print_indent();
     println!("in generator");
-    span.exit();
 
     keypair
 }

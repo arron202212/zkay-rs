@@ -220,26 +220,26 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     // assert!(Fr::< PCD_ppT::curve_A_pp>::modulo == Fq::< PCD_ppT::curve_B_pp>::modulo);
     // assert!(Fq::< PCD_ppT::curve_A_pp>::modulo == Fr::< PCD_ppT::curve_B_pp>::modulo);
 
-    let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_generator").entered();
-
+    let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_generator");
+    let _=span0.enter();
     assert!(compliance_predicate.is_well_formed());
 
-    let span = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
+    let spancc = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
     let mut compliance_step_pcd_circuit =
         sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_constraints();
     let compliance_step_pcd_circuit_cs = compliance_step_pcd_circuit.get_circuit();
     compliance_step_pcd_circuit_cs.report_linear_constraint_statistics();
-    span.exit();
+    spancc.exit();
 
-    let span = span!(
+    let spanc = span!(
         Level::TRACE,
         "Generate key pair for compliance step PCD circuit"
     )
     .entered();
     let mut compliance_step_keypair =
         r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&compliance_step_pcd_circuit_cs);
-    span.exit();
+    spanc.exit();
 
     let span = span!(Level::TRACE, "Construct translation step PCD circuit").entered();
     let mut translation_step_pcd_circuit =
@@ -251,18 +251,18 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     translation_step_pcd_circuit_cs.report_linear_constraint_statistics();
     span.exit();
 
-    let span = span!(
+    let spang = span!(
         Level::TRACE,
         "Generate key pair for translation step PCD circuit"
     )
     .entered();
     let translation_step_keypair =
         r1cs_ppzksnark_generator::<B_pp<PCD_ppT>>(&translation_step_pcd_circuit_cs);
-    span.exit();
+    spang.exit();
 
     print_indent();
     println!("in generator");
-    span.exit();
+   
 
     r1cs_sp_ppzkpcd_keypair::<PCD_ppT>::new(
         r1cs_sp_ppzkpcd_proving_key::<PCD_ppT>::new(
@@ -338,8 +338,8 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_prover").entered();
-
+    let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_prover");
+    let _=span0.enter();
     let translation_step_r1cs_vk_bits =
         r1cs_ppzksnark_verification_key_variable::<PCD_ppT::curve_A_pp>::get_verification_key_bits(
             &pk.translation_step_r1cs_vk,
@@ -348,7 +348,7 @@ where
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
 
-    let span = span!(Level::TRACE, "Prove compliance step").entered();
+    let spanp = span!(Level::TRACE, "Prove compliance step").entered();
     let mut compliance_step_pcd_circuit =
         sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(pk.compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_witness(
@@ -366,9 +366,9 @@ where
         &compliance_step_primary_input,
         &compliance_step_auxiliary_input,
     );
-    span.exit();
+    spanp.exit();
 
-    // #ifdef DEBUG
+   
     let compliance_step_input = get_sp_compliance_step_pcd_circuit_input::<PCD_ppT::curve_A_pp>(
         &translation_step_r1cs_vk_bits,
         primary_input,
@@ -380,7 +380,7 @@ where
     );
     assert!(compliance_step_ok);
 
-    let span = span!(Level::TRACE, "Prove translation step").entered();
+    let spans = span!(Level::TRACE, "Prove translation step").entered();
     let translation_step_pcd_circuit =
         sp_translation_step_pcd_circuit_maker::<PCD_ppT::curve_B_pp>::new(
             pk.compliance_step_r1cs_vk.clone(),
@@ -398,9 +398,9 @@ where
         &translation_step_primary_input,
         &translation_step_auxiliary_input,
     );
-    span.exit();
+    spans.exit();
 
-    // #ifdef DEBUG
+    
     let translation_step_ok = r1cs_ppzksnark_verifier_strong_IC::<PCD_ppT::curve_B_pp>(
         &pk.translation_step_r1cs_vk,
         &translation_step_primary_input,
@@ -410,7 +410,7 @@ where
 
     print_indent();
     println!("in prover");
-    span.exit();
+  
 
     translation_step_proof
 }

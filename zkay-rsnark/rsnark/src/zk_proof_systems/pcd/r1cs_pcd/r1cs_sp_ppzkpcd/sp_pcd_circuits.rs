@@ -891,12 +891,11 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     sp_translation_step_vk_bits: &bit_vector,
     primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::FieldT, ppT::M>,
 ) -> r1cs_primary_input<ppT::FieldT> {
-    let span = span!(
+    let span0 = span!(
         Level::TRACE,
         "Call to get_sp_compliance_step_pcd_circuit_input"
-    )
-    .entered();
-    // type FieldT<ppT>=ppT::FieldT;
+    );
+    let _=span0.enter();
 
     let outgoing_message_as_va = primary_input
         .outgoing_message
@@ -917,7 +916,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     span.exit();
 
     let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash_for_field(&block);
-    span.exit();
+  
 
     digest
 }

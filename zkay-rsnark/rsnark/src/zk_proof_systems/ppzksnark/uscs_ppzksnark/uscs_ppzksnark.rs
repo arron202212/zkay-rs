@@ -476,14 +476,14 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     auxiliary_input: &uscs_ppzksnark_auxiliary_input<ppT>,
 ) -> uscs_ppzksnark_proof<ppT> {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_prover").entered();
-
+    let span0 = span!(Level::TRACE, "Call to uscs_ppzksnark_prover");
+    let _=span0.enter();
     let d = Fr::<ppT>::random_element();
 
-    let span = span!(Level::TRACE, "Compute the polynomial H").entered();
+    let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
     let ssp_wit =
         uscs_to_ssp_witness_map(&pk.constraint_system, primary_input, auxiliary_input, &d);
-    span.exit();
+    spanh.exit();
 
     //sanity checks
     assert!(
@@ -516,7 +516,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 
     let span = span!(Level::TRACE, "Compute the proof").entered();
 
-    let span = span!(Level::TRACE, "Compute V_g1, the 1st component of the proof").entered();
+    let spanv = span!(Level::TRACE, "Compute V_g1, the 1st component of the proof").entered();
     V_g1 = V_g1
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -527,9 +527,9 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
             &ssp_wit.coefficients_for_Vs[ssp_wit.num_inputs()..ssp_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spanv.exit();
 
-    let span = span!(
+    let spanv2 = span!(
         Level::TRACE,
         "Compute alpha_V_g1, the 2nd component of the proof"
     )
@@ -544,29 +544,29 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
             &ssp_wit.coefficients_for_Vs[ssp_wit.num_inputs()..ssp_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spanv2.exit();
 
-    let span = span!(Level::TRACE, "Compute H_g1, the 3rd component of the proof").entered();
+    let spanh3 = span!(Level::TRACE, "Compute H_g1, the 3rd component of the proof").entered();
     H_g1 = H_g1
         + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.H_g1_query[..ssp_wit.degree() + 1],
             &ssp_wit.coefficients_for_H[..ssp_wit.degree() + 1],
             chunks,
         );
-    span.exit();
+    spanh3.exit();
 
-    let span = span!(Level::TRACE, "Compute V_g2, the 4th component of the proof").entered();
+    let spanv4 = span!(Level::TRACE, "Compute V_g2, the 4th component of the proof").entered();
     V_g2 = V_g2
         + multi_exp::<G2<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.V_g2_query[1..ssp_wit.num_variables() + 1],
             &ssp_wit.coefficients_for_Vs[..ssp_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spanv4.exit();
 
     span.exit();
 
-    span.exit();
+   
 
     let proof = uscs_ppzksnark_proof::<ppT>::new(V_g1, alpha_V_g1, H_g1, V_g2);
 
