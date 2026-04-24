@@ -147,30 +147,30 @@ impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
         self.clone()
     }
     fn random_element() -> Self {
-        // 1. 定义随机元素 r
+        
         let mut r_data = [0u64; N];
         let mut rng = rand::thread_rng();
         loop {
-            // 2. 随机填充所有位 (randomize)
+            
             rng.fill(&mut r_data[..]);
 
-            // 3. 清除模数最高位以上的无效位
-            // 找到模数最高有效位（MSB）以上的 0 的个数
+            
+            
             let unused_bits = T::modulus[N - 1].leading_zeros();
             if unused_bits > 0 {
-                // 创建掩码，例如 unused_bits 为 3，则掩码为 000111...1
+                
                 let mask = u64::MAX >> unused_bits;
                 r_data[N - 1] &= mask;
             }
 
-            // 4. 拒绝采样 (mpn_cmp)
-            // 如果生成的数仍然大于等于模数，则重新循环
+            
+            
             if r_data < T::modulus.0.0 {
                 break;
             }
         }
 
-        // 5. 返回结果
+        
         Fp_model::new(bigint::<N>(BigInt::<N>(r_data)))
     }
 
@@ -306,7 +306,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
                     3 => unsafe { mul_reduce_n3(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
                     4 => unsafe { mul_reduce_n4(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
                     5 => unsafe { mul_reduce_n5(&self.mont_repr.0.0,&other.0.0, &T::modulus.0.0,T::inv) },
-                    _ => {return }//self.sub_assign_portable(other, modulus), // 回退到普通实现
+                    _ => {return }
                 };
                 self.mont_repr.0.0.copy_from_slice(&data[N..N*2]);
             }else{
@@ -335,19 +335,19 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         if is_unsigned || x >= 0 {
             _self.mont_repr.0.0[0] = x as u64;
         } else {
-            // 假设 this.mont_repr.data 是 [u64; N]
-            // modulus.data 是 [u64; N]
-            // x 是一个标量 (u64)
+            
+            
+            
 
-            let sub_val = (-(x as i64)) as u64; // 对应 (mp_limb_t)-x
+            let sub_val = (-(x as i64)) as u64; 
             let mut borrow = 0u8;
 
-            // 模拟 mpn_sub_1 的逻辑：从数组第一个元素减去标量，并传播借位
+            
             let (res, b) = _self.mont_repr.0.0[0].overflowing_sub(sub_val);
             _self.mont_repr.0.0[0] = res;
             borrow = b as u8;
 
-            // 如果 N > 1，需要传播借位（mpn_sub_1 会自动处理数组后续部分）
+            
             for i in 1..N {
                 if borrow == 0 {
                     break;
@@ -357,7 +357,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
                 borrow = b as u8;
             }
 
-            // 对应 #ifndef NDEBUG assert(borrow == 0)
+            
             debug_assert_eq!(borrow, 0, "Borrow must be zero in prime field subtraction");
         }
 
@@ -408,37 +408,37 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     }
 
     pub fn invert(&mut self) -> Self {
-        // 1. 断言非零
+        
         debug_assert!(!self.is_zero());
 
-        // 2. 准备变量 (Rust 中通常使用 Vec 或固定长度数组)
+        
         let mut v = num_bigint::BigInt::from(T::modulus);
         let mut u = num_bigint::BigInt::from(self.mont_repr);
 
-        // 3. 计算 GCD (对应 mpn_gcdext)
-        // Rust 的 BigInt 库通常返回 (gcd, s, t)
+        
+        
         let ExtendedGcd::<num_bigint::BigInt> {
             gcd: g,
             x: s,
             y: _t,
         } = u.extended_gcd(&v);
 
-        // 4. 验证逆元存在 (gn == 1 && g == 1)
+        
         debug_assert!(g.is_one(), "Inverse does not exist");
 
-        // 5. 处理符号和模还原 (对应 if (sn < 0) 和 mpn_sub_n)
+        
         let mut res = if s.is_negative() {
-            // 如果 s 是负数，加上模数: res = modulus - |s|
+            
             let mut tmp = num_bigint::BigInt::from(T::modulus);
             tmp.clone().sub(s.abs()); //sub_noborrow
             tmp
         } else {
-            // 如果 s 超过模数，进行取模 (对应 mpn_tdiv_qr)
+            
             s % num_bigint::BigInt::from(T::modulus)
         };
         let mut res: bigint<N> = BigUint::try_from(res).unwrap().try_into().unwrap();
-        // 6. Montgomery 修正 (对应 mul_reduce(Rcubed))
-        // 注意：在 Montgomery 空间求逆后，结果需要乘以 R^3 (或 R^2 再 reduce)
+        
+        
         res.mul_assign(&T::Rcubed);
 
         self.mont_repr = res;
@@ -459,17 +459,17 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
             GMP_NUMB_BITS == 64,
             "Only 64-bit architectures are currently supported"
         );
-        // 1. 对应 static_assert：确保当前平台的指针/字长是 64 位
-        // Rust 中通常在编译期或运行期检查目标架构
+        
+        
         // #[cfg(not(target_pointer_width = "64"))]
         // compile_error!("Only 64-bit architectures are currently supported");
 
-        // 2. 获取大整数表示 (对应 bigint_repr())
-        // 假设返回的是 [u64; N] 或类似的结构
+        
+        
         let repr = self.bigint_repr();
 
-        // 3. 转换为 Vec<u64> (对应 std::vector<uint64_t>)
-        // 在 Rust 中，将数组或切片转换为向量非常直接且高效
+        
+        
         let words: Vec<u64> = repr.as_ref().to_vec();
 
         words
@@ -496,59 +496,59 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 
         // // return self.mont_repr < modulus;
         // false
-        // 1. 架构断言 (static_assert)
+        
         #[cfg(not(target_pointer_width = "64"))]
         compile_error!("Only 64-bit architectures are currently supported");
 
-        // 2. 计算起始位与偏移量
-        // FieldT::ceil_size_in_bits() 对应 T::MODULUS_BIT_SIZE
+        
+        
         let ceil_size_in_bits = Self::ceil_size_in_bits() as i64;
         let start_bit = (words.len() as i64 * 64) - ceil_size_in_bits;
 
-        // 3. 检查向量长度是否足够 (assert)
+        
         assert!(start_bit >= 0, "The vector is not big enough");
 
         let start_word = (start_bit / 64) as usize;
         let bit_offset = (start_bit % 64) as u32;
 
-        // 4. 数据拷贝 (std::copy)
-        // 将 words 中从 start_word 开始的部分拷贝到内部存储
-        // 假设内部存储为 [u64; N]
+        
+        
+        
         let mut data = [0u64; N];
         let copy_len = words.len() - start_word;
         data[..copy_len].copy_from_slice(&words[start_word..]);
 
-        // 5. 清除左侧高位比特 (Zero out the left-most bits)
-        // 逻辑是：先左移再逻辑右移，清除掉最高位的 bit_offset 个比特
+        
+        
         if bit_offset > 0 {
             data[N - 1] = (data[N - 1] << bit_offset) >> bit_offset;
         }
 
-        // 6. 转换为 Montgomery 表示 (#ifndef MONTGOMERY_OUTPUT)
-        // 如果输入的不是 Montgomery 表示，需要乘以 R^2 进行转换
-        // 假设 cfg!(feature = "montgomery_output") 对应 MONTGOMERY_OUTPUT
+        
+        
+        
         let mut result = Fp_model::<N, T>::new(bigint::<N>(BigInt::<N>(data)));
         // if !cfg!(feature = "montgomery_output") {
-        //     result.mul_assign(&T::Rsquared); // 相当于乘 R 再取模，进入 Montgomery 域
+        //     result.mul_assign(&T::Rsquared); 
         // }
 
-        // 7. 返回范围检查结果 (return this->mont_repr < modulus)
-        self.mont_repr < T::modulus // 内部逻辑通常是 self.mont_repr < T::modulus
+        
+        self.mont_repr < T::modulus 
     }
 
     pub fn bigint_repr(&self) -> bigint<N> {
-        // 1. 根据 feature 决定返回值
-        // 在 Rust 中，#[cfg(feature = "montgomery_output")] 对应 #ifdef MONTGOMERY_OUTPUT
+        
+        
         cfg_if! {
         if  #[cfg(feature = "montgomery_output")]
          {
-             // 如果定义了 montgomery_output，直接返回内部存储格式
+             
              return self.mont_repr;
          }
          else
 
          {
-             // 否则，返回转换为标准表示的大整数（即进行 Montgomery 约减）
+             
              return self.as_bigint();
          }
           }
@@ -561,24 +561,24 @@ use rand::distributions::{Distribution, Standard};
 impl<const N: usize, T: Fp_modelConfig<N>> Distribution<Fp_model<N, T>> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Fp_model<N, T> {
         let mut r_data = [0u64; N];
-        let modulus = &T::modulus.0.0; // 假设存储为 [u64; N]
+        let modulus = &T::modulus.0.0; 
 
         loop {
-            // 1. 填充随机位 (对应 r.mont_repr.randomize())
+            
             for limb in r_data.iter_mut() {
                 *limb = rng.next_u64();
             }
 
-            // 2. 清除高位无效比特 (对应 C++ 中的 while(test_bit) 逻辑)
-            // 找到模数最高有效位上方的 0 的数量
+            
+            
             let unused_bits = modulus[N - 1].leading_zeros();
             if unused_bits > 0 {
                 let mask = u64::MAX >> unused_bits;
                 r_data[N - 1] &= mask;
             }
 
-            // 3. 拒绝采样 (对应 while(mpn_cmp >= 0))
-            // Rust 的数组原生支持按大整数逻辑比较 (Lexicographical order)
+            
+            
             if &r_data < modulus {
                 break;
             }
@@ -589,10 +589,10 @@ impl<const N: usize, T: Fp_modelConfig<N>> Distribution<Fp_model<N, T>> for Stan
 }
 // let mut rng = rand::thread_rng();
 
-// // 方式 A：显式采样
+
 // let r: Fp384 = rng.sample(Standard);
 
-// // 方式 B：使用 gen (编译器会自动推导类型)
+
 // let r: Fp384 = rng.gen();
 
 impl<const N: usize, T: Fp_modelConfig<N>> PartialEq for Fp_model<N, T> {
@@ -612,7 +612,7 @@ impl<const N: usize, T: Fp_modelConfig<N>, O: Borrow<Self>> AddAssign<O> for Fp_
                     3 => unsafe { add_assign_n3(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
                     4 => unsafe { add_assign_n4(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
                     5 => unsafe { add_assign_n5(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0) },
-                    _ => {return }//self.sub_assign_portable(other, modulus), // 回退到普通实现
+                    _ => {return }
                 };
             }else{
                add_assign_portable(&mut self.mont_repr.0.0,&other.borrow().mont_repr.0.0, &T::modulus.0.0);
@@ -786,20 +786,20 @@ impl<const N: usize, T: Fp_modelConfig<N>> BitXor<bigint<N>> for Fp_model<N, T> 
         r
     }
 }
-/// 模擬 mpn_sub_n：計算 a - b，並將結果存入 res
-/// 返回最終的借位 (borrow)
+
+
 #[inline]
 pub fn sub_n(res: &mut [u64], a: &[u64], b: &[u64]) -> u64 {
     let mut borrow = 0u64;
 
-    // 遍歷所有 limb 進行減法
+    
     for i in 0..a.len() {
         // t = a[i] - b[i] - borrow
         let (v1, b1) = a[i].overflowing_sub(b[i]);
         let (v2, b2) = v1.overflowing_sub(borrow);
 
         res[i] = v2;
-        borrow = (b1 | b2) as u64; // 只要任何一步產生借位，borrow 就為 1
+        borrow = (b1 | b2) as u64; 
     }
 
     borrow
@@ -809,12 +809,12 @@ macro_rules! sub_n {
         let mut borrow = 0u64;
         let mut i = 0;
 
-        // 使用 loop 配合 const N，編譯器會自動進行循環展開 (Unrolling)
+        
         while i < $n {
             let (v1, b1) = $a[i].overflowing_sub($b[i]);
             let (v2, b2) = v1.overflowing_sub(borrow);
             $res[i] = v2;
-            // 只要兩次減法中任何一次產生借位，borrow 即為 1
+            
             borrow = (b1 | b2) as u64;
             i += 1;
         }
@@ -825,18 +825,18 @@ impl<const N: usize, T: Fp_modelConfig<N>> Neg for Fp_model<N, T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        // 1. 檢查是否為零
+        
         if self.is_zero() {
             return self;
         }
         let mut res_data = [0u64; N];
-        let a = T::modulus; // 假設 modulus 存儲在 BigInt(pub [u64; N])
+        let a = T::modulus; 
         let b = self.mont_repr;
 
-        // 調用宏
+        
         sub_n!(res_data, a, b, N);
 
-        // 3. 返回新元素
+        
         Self::const_new(BigInt::<N>(res_data))
     }
 }
@@ -862,21 +862,21 @@ impl<const N: usize, T: Fp_modelConfig<N>> fmt::Display for Fp_model<N, T> {
         write!(f, "{}", self.bigint_repr(),)
     }
 }
-// use std::io::{self, Read};
+
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    // 模擬輸入流讀取邏輯
+    
     pub fn read<R: Read>(mut reader: R) -> io::Result<Self> {
-        // 1. 讀取原始數據（假設 mont_repr 有從流讀取的方法）
+        
         let mut mont_repr = bigint::read(&mut reader)?;
 
-        // 2. 構建初步模型
+        
         let mut p = Self::new(mont_repr);
 
-        // 3. 處理 Montgomery 轉換 (#ifndef MONTGOMERY_OUTPUT)
+        
         // #[cfg(not(feature = "montgomery_output"))]
         // {
-        //     // 如果輸入的是普通數值，乘 R^2 並 reduce 進入 Montgomery 域
+        
         //     p.mul_assign(&T::Rsquared);
         // }
 
@@ -886,26 +886,26 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 use std::io::{self, Read, Write};
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    /// 从电路输入文件中读取一个域元素
+    
     pub fn read_from_circuit<R: Read>(mut reader: R) -> io::Result<Self> {
-        // 1. 直接读取原始 BigInt 字节 (对应 in >> p.mont_repr)
+        
         let mut repr = [0u64; N];
         for limb in repr.iter_mut() {
             let mut buf = [0u8; 8];
             reader.read_exact(&mut buf)?;
-            *limb = u64::from_le_bytes(buf); // 假设电路文件是小端序
+            *limb = u64::from_le_bytes(buf); 
         }
 
         let mut p = Self::const_new(BigInt::<N>(repr));
 
-        // 2. 根据编译配置处理 Montgomery 转换
-        // 如果电路文件存的是“人读数值”，必须转进 Montgomery 域才能计算
+        
+        
         // #[cfg(not(feature = "montgomery_output"))]
         // {
         //     p.mul_assign(T::Rsquared);
         // }
 
-        // 3. 验证读取到的数据是否在合法域范围内
+        
         // if p.is_valid() {
         Ok(p)
         // } else {
@@ -918,16 +918,16 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    /// 将域元素写入输出文件，供电路验证或结果检查
+    
     pub fn write_to_circuit<W: Write>(&self, mut writer: W) -> io::Result<()> {
-        // 1. 获取要输出的数据 (对应 p.bigint_repr())
+        
         let repr = if cfg!(feature = "montgomery_output") {
             self.mont_repr
         } else {
-            self.as_bigint() // 移除 Montgomery 因子 R
+            self.as_bigint() 
         };
 
-        // 2. 写入字节流
+        
         for limb in repr.0.0.iter() {
             writer.write_all(&limb.to_le_bytes())?;
         }

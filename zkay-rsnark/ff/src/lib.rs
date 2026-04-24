@@ -33,12 +33,12 @@ pub trait PpConfig:
     + Zero
     + std::ops::Add<Output = Self>
     + std::ops::Sub<Output = Self>
-    // + std::ops::Mul<Self::TT, Output = Self>
+    
     + std::ops::Mul<Output = Self>
     + std::ops::Mul<Self, Output = Self>
 {
-    // type TT: AsRef<[u64]>;
-    // type GType;
+    
+    
     type BigIntT:BigIntegerT;
     const num_limbs: usize = 4;
     const coeff_a: i64 = 1;

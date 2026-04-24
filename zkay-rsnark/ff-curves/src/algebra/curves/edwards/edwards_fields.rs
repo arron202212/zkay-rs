@@ -165,7 +165,7 @@ pub fn init_edwards_fields() {}
 
 //     const INVERSE: u64 = 0xdde553277fffffff;
 
-//     const RSQUARED: BigInt<3> = BigInt::new([//对应 Rsquared]);
+//     const RSQUARED: BigInt<3> = BigInt::new([]);
 // }
 
 // pub struct FqConfig;

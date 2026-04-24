@@ -518,24 +518,24 @@ impl FpmConfig for alt_bn128_G1 {
 
 use std::io::{self, Read, Write};
 
-// 模拟 C++ 的输出流操作符 <<
+
 pub fn write_alt_bn128_g1<W: Write>(mut out: W, g: &alt_bn128_G1) -> io::Result<()> {
     let mut copy = g.clone();
     copy.to_affine_coordinates();
 
-    // 输出是否为零点的标志 (1 为零点, 0 为非零)
+    
     let is_zero = if copy.is_zero() { b'1' } else { b'0' };
     out.write_all(&[is_zero])?;
     out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
     cfg_if! {
        if #[cfg(feature = "no_pt_compression")]
         {
-            // 非压缩模式：输出 X 和 Y
+            
             write!(out, "{}{}{}", copy.X, OUTPUT_SEPARATOR, copy.Y)?;
         }
        else
         {
-            // 压缩模式：输出 X 和 Y 的最低有效位 (LSB)
+            
             let y_lsb = (copy.Y.as_bigint().0.0[0] & 1) as u8 + b'0';
             write!(out, "{}", copy.X)?;
             out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
@@ -545,7 +545,7 @@ pub fn write_alt_bn128_g1<W: Write>(mut out: W, g: &alt_bn128_G1) -> io::Result<
     Ok(())
 }
 
-// 模拟 C++ 的输入流操作符 >>
+
 pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
     let mut is_zero_buf = [0u8; 1];
     input.read_exact(&mut is_zero_buf)?;
@@ -581,7 +581,7 @@ pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
                 let ty2 = tx2 * tx + alt_bn128_coeff_b;
                 let mut ty = ty2.sqrt().ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
 
-                // 检查 LSB 是否匹配，不匹配则取相反数
+                
                 if (ty.as_bigint().0.0[0] & 1) as u8 != y_lsb {
                     ty = -ty;
                 }
@@ -592,7 +592,7 @@ pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
         }}
 }
 
-// 向量序列化
+
 pub fn write_vector_g1<W: Write>(mut out: W, v: &[alt_bn128_G1]) -> io::Result<()> {
     writeln!(out, "{}", v.len())?;
     for g in v {
@@ -602,10 +602,10 @@ pub fn write_vector_g1<W: Write>(mut out: W, v: &[alt_bn128_G1]) -> io::Result<(
     Ok(())
 }
 
-// 向量反序列化
+
 pub fn read_vector_g1<R: Read>(mut input: R) -> io::Result<Vec<alt_bn128_G1>> {
     let mut s_str = String::new();
-    // 简化处理：读取一行作为 size
+    
     let s: usize = read_line_as_usize(&mut input)?;
     let mut v = Vec::with_capacity(s);
     for _ in 0..s {

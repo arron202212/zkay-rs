@@ -324,8 +324,8 @@ rand = { version = "0.8", features = ["small_rng"] }
 # toml = "0.8"
 # tower = "0.4"
 # tower-http = "0.5"
-# tracing = "0.1"
-# tracing-subscriber = "0.3"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 # url = "2"
 # vergen = { version = "8", default-features = false }
 # yansi = { version = "1.0", features = ["detect-tty", "detect-env"] }
@@ -355,7 +355,7 @@ subtle = "2.5"
 # num-traits = "0.2"
 # ark-ff = "0.4" # 替换为你使用的具体的域实现
 ark-bn254 = "0.5" # 示例使用 BN254 曲线的 Fr
-tracing="0.1"
+
 
 [workspace.dependencies.uuid]
 version = "1.23.1"

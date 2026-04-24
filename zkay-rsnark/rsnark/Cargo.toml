@@ -49,6 +49,8 @@ rip_shuffle={workspace = true}
 bytebuffer={workspace=true}
 clap = { workspace = true }
 tracing={workspace = true}
+tracing-subscriber = {workspace = true}
+
 # [[example]]
 # name="pp"
 # path="src/main.rs"

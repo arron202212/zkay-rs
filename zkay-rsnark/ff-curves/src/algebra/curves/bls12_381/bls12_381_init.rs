@@ -5,14 +5,14 @@ pub fn init_bls12_381_params() {
 use ark_bls12_381::{Config, Fq, Fq2, G1Projective, G2Projective};
 use ark_ff::{Field, field_new};
 
-// --- BLS12-381 曲線配置 ---
+
 pub struct Bls12_381Config;
 
 impl Config for Bls12_381Config {
-    // 曲線方程 y^2 = x^3 + 4
+    
     const COEFF_B: Fq = field_new!(Fq, "4");
 
-    // G1 產生元 (G1_one)
+    
     const G1_GENERATOR: G1Projective = G1Projective::new(
         field_new!(
             Fq,
@@ -25,19 +25,19 @@ impl Config for Bls12_381Config {
         Fq::ONE,
     );
 
-    // G2 扭曲係數 (Twist Coeff B = COEFF_B * (1 + i))
+    
     const G2_COEFF_B: Fq2 = Fq2::new(field_new!(Fq, "4"), field_new!(Fq, "4"));
 }
 
-// --- 預計算與優化參數 ---
 
-// G1 餘因子 (Cofactor h)
+
+
 pub const G1_COFACTOR: [u64; 1] = [76329603384216526031706109802092473003];
 
-// G1 w-NAF 窗口表
+
 pub const G1_WNAF_WINDOW_TABLE: [usize; 4] = [11, 24, 60, 127];
 
-// G2 產生元 (G2_one)
+
 pub const G2_GENERATOR: G2Projective = G2Projective::new(
     Fq2::new(
         field_new!(

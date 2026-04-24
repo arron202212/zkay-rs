@@ -138,7 +138,7 @@ impl SeedableRng for Sha512Rng {
         Self { 
             state: seed,
             buffer: [0u8; 64],
-            buffer_ptr: 64, // 初始設為已耗盡，強制第一次調用時生成數據
+            buffer_ptr: 64, 
         }
     }
 }
@@ -159,18 +159,18 @@ impl RngCore for Sha512Rng {
     fn fill_bytes(&mut self, dest: &mut [u8]) {
         let mut filled = 0;
         while filled < dest.len() {
-            // 如果 buffer 已用完，生成新的雜湊塊
+            
             if self.buffer_ptr >= 64 {
                 let mut hasher = Sha512::new();
                 hasher.update(&self.state);
                 let result = hasher.finalize();
                 
                 self.buffer.copy_from_slice(&result);
-                self.state.copy_from_slice(&result); // 更新內部狀態以確保不可預測性
+                self.state.copy_from_slice(&result); 
                 self.buffer_ptr = 0;
             }
 
-            // 確定本次要拷貝的長度
+            
             let remaining_in_buffer = 64 - self.buffer_ptr;
             let to_copy = std::cmp::min(remaining_in_buffer, dest.len() - filled);
             

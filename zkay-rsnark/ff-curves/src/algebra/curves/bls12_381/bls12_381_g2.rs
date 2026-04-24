@@ -278,7 +278,7 @@ impl bls12_381_G2 {
 use std::io::{self, Read, Write};
 use std::ops::{Add, Mul, Neg, Sub};
 
-// G2 使用的是扩展域 Fq2
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct G2Projective {
     pub x: Fq2,
@@ -287,13 +287,13 @@ pub struct G2Projective {
 }
 
 impl G2Projective {
-    pub fn zero() -> Self { //...
+    pub fn zero() -> Self { 
     }
     pub fn is_zero(&self) -> bool {
         self.z.is_zero()
     }
 
-    // 将 Jacobian 转换为仿射坐标 (x, y)
+    
     pub fn to_affine(&self) -> (Fq2, Fq2, bool) {
         if self.is_zero() {
             return (Fq2::zero(), Fq2::zero(), true);
@@ -305,13 +305,13 @@ impl G2Projective {
     }
 
     pub fn dbl(&self) -> Self {
-        // Jacobian 坐标下的倍点算法
-        // ...
+        
+        
         todo!()
     }
 }
 
-// 1. 标量乘法 (lhs: Scalar * rhs: G2)
+
 impl<'a> Mul<&'a G2Projective> for &'a BigInt {
     type Output = G2Projective;
     fn mul(self, rhs: &'a G2Projective) -> G2Projective {
@@ -319,7 +319,7 @@ impl<'a> Mul<&'a G2Projective> for &'a BigInt {
     }
 }
 
-// 2. 相等性比较 (Jacobian 交叉乘法)
+
 impl PartialEq for G2Projective {
     fn eq(&self, other: &Self) -> bool {
         if self.is_zero() {
@@ -341,7 +341,7 @@ impl PartialEq for G2Projective {
     }
 }
 
-// 3. 点加 (Jacobian Addition)
+
 impl<'a> Add<&'a G2Projective> for &'a G2Projective {
     type Output = G2Projective;
     fn add(self, other: &'a G2Projective) -> G2Projective {
@@ -387,7 +387,7 @@ impl<'a> Add<&'a G2Projective> for &'a G2Projective {
     }
 }
 
-// 4. 取负与减法
+
 impl Neg for G2Projective {
     type Output = Self;
     fn neg(self) -> Self {
@@ -406,17 +406,17 @@ impl<'a> Sub<&'a G2Projective> for &'a G2Projective {
     }
 }
 
-// 5. 序列化 (带有 Fq2 压缩逻辑)
+
 impl G2Projective {
     pub fn serialize<W: Write>(&self, mut writer: W, compress: bool) -> io::Result<()> {
         let (x, y, is_zero) = self.to_affine();
         writer.write_all(if is_zero { b"1" } else { b"0" })?;
 
-        // 对应代码: out << copy.X << (copy.Y.c0.as_bigint() & 1)
-        writer.write_all(&x.to_bytes())?; // 写入 Fq2 的 X 坐标
+        
+        writer.write_all(&x.to_bytes())?; 
 
         if compress {
-            // 在 G2 压缩中，通常根据 y 的 c0 分量的 LSB 来判断
+            
             let y_c0_lsb = if y.c0.to_bigint().is_odd() {
                 b"1"
             } else {
@@ -438,20 +438,20 @@ impl G2Projective {
             return Ok(Self::zero());
         }
 
-        let t_x = Fq2::read(&mut reader)?; // 读取 X (Fq2)
+        let t_x = Fq2::read(&mut reader)?; 
 
         let mut lsb_buf = [0u8; 1];
         reader.read_exact(&mut lsb_buf)?;
         let y_lsb = lsb_buf[0] - b'0';
 
-        // 对应代码: y = sqrt(x^3 + twist_b)
+        
         let t_x2 = t_x.square();
         let t_y2 = t_x2 * &t_x + &TWIST_COEFF_B;
         let mut t_y = t_y2
             .sqrt()
             .ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
 
-        // 检查 c0 的 LSB
+        
         if (t_y.c0.to_bigint().is_odd() as u8) != y_lsb {
             t_y = -t_y;
         }

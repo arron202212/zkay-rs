@@ -494,7 +494,7 @@ impl<const N: usize, const N2: usize, const N4: usize, T: Fp4_modelConfig<N, N2,
         let mut line = String::new();
         reader.read_line(&mut line)?;
         let parts: Vec<&str> = line.split_whitespace().collect();
-        // 解析 c0 和 c1
+        
         let c0 = parts[0]
             .parse()
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "c0 parse error"))?;

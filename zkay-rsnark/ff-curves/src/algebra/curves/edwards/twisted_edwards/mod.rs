@@ -183,5 +183,3 @@ pub trait MontCurveConfig: CurveConfig {
     /// equivalent to this curve.
     type TECurveConfig: TECurveConfig<BaseField = Self::BaseField>;
 }
-
-//////////////////////////////////////////////////////////////////////////////

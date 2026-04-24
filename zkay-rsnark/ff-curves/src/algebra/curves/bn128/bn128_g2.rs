@@ -511,11 +511,11 @@ impl Zero for bn128_G2 {
 //     }
 
 //     pub fn dbl(&self) -> Self {
-//         //倍点实现
+
 //         todo!()
 //     }
 //     pub fn add_nodeck(&self, other: &Self) -> Self {
-//         //点加实现
+
 //         todo!()
 //     }
 // }

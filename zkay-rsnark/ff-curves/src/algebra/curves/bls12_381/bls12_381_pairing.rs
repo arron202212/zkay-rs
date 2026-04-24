@@ -374,8 +374,8 @@ pub fn bls12_381_reduced_pairing(P: &bls12_381_G1, Q: &bls12_381_G2) -> bls12_38
 
 use std::io::{self, Read, Write};
 
-// --- G1 预计算数据 ---
-// 通常存储仿射坐标形式的 P，用于 Miller Loop 中的直线计算
+
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct G1Precomp {
     pub px: Fq,
@@ -385,21 +385,21 @@ pub struct G1Precomp {
 impl G1Precomp {
     pub fn serialize<W: Write>(&self, mut writer: W) -> io::Result<()> {
         writer.write_all(&self.px.to_bytes())?;
-        writer.write_all(b" ")?; // 对应 OUTPUT_SEPARATOR
+        writer.write_all(b" ")?; 
         writer.write_all(&self.py.to_bytes())?;
         Ok(())
     }
 
     pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
         let px = Fq::read(&mut reader)?;
-        // 这里应有逻辑跳过分隔符
+        
         let py = Fq::read(&mut reader)?;
         Ok(Self { px, py })
     }
 }
 
-// --- Ate 配对中的直线系数 ---
-// ell_0, ell_vw, ell_vv 分别对应直线方程中的系数
+
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AteEllCoeffs {
     pub ell_0: Fq2,
@@ -418,8 +418,8 @@ impl AteEllCoeffs {
     }
 }
 
-// --- G2 预计算数据 ---
-// 包含 G2 点的坐标以及在 Miller Loop 中倍点/点加产生的系数列表
+
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct G2Precomp {
     pub qx: Fq2,
@@ -429,33 +429,33 @@ pub struct G2Precomp {
 
 impl G2Precomp {
     pub fn serialize<W: Write>(&self, mut writer: W) -> io::Result<()> {
-        // 1. 写入 Q 坐标
+        
         writer.write_all(&self.qx.to_bytes())?;
         writer.write_all(b" ")?;
         writer.write_all(&self.qy.to_bytes())?;
         writer.write_all(b"\n")?;
 
-        // 2. 写入系数列表长度
+        
         writer.write_all(self.coeffs.len().to_string().as_bytes())?;
         writer.write_all(b"\n")?;
 
-        // 3. 逐个写入系数
+        
         for coeff in &self.coeffs {
             coeff.serialize(&mut writer)?;
-            writer.write_all(b"\n")?; // 对应 OUTPUT_NEWLINE
+            writer.write_all(b"\n")?; 
         }
         Ok(())
     }
 
     pub fn deserialize<R: Read>(mut reader: R) -> io::Result<Self> {
-        // 读取 QX, QY
+        
         let qx = Fq2::read(&mut reader)?;
         let qy = Fq2::read(&mut reader)?;
 
-        // 读取 Vec 长度
+        
         let mut len_buf = String::new();
-        // 简化的读取长度逻辑...
-        let s: usize = 68; // 示例长度，BLS12-381 通常固定
+        
+        let s: usize = 68; 
 
         let mut coeffs = Vec::with_capacity(s);
         for _ in 0..s {

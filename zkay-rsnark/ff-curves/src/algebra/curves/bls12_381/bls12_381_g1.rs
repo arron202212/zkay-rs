@@ -103,7 +103,7 @@ impl bls12_381_G1 {
     }
 
     pub fn mixed_add(other: &bls12_381_G1) -> bls12_381_G1 {
-        // #ifdef DEBUG
+        
         assert!(other.is_special());
 
         // handle special cases having to do with O
@@ -258,8 +258,8 @@ impl bls12_381_G1 {
 use std::io::{self, Read, Write};
 use std::ops::{Add, Mul, Neg, Sub};
 
-// 假设已经定义了底层的 Fq (Base Field) 和 BigInt
-// 这里映射代码中的 bls12_381_G1 结构
+
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct G1Projective {
     pub x: Fq,
@@ -268,18 +268,18 @@ pub struct G1Projective {
 }
 
 impl G1Projective {
-    pub fn zero() -> Self { //...
+    pub fn zero() -> Self { 
     }
     pub fn is_zero(&self) -> bool {
         self.z.is_zero()
     }
 
     pub fn dbl(&self) -> Self {
-        // 实现倍点逻辑
-        // ...
+        
+        
     }
 
-    // 对应代码中的 to_affine_coordinates 逻辑
+    
     pub fn to_affine(&self) -> (Fq, Fq, bool) {
         if self.is_zero() {
             return (Fq::zero(), Fq::zero(), true);
@@ -291,16 +291,16 @@ impl G1Projective {
     }
 }
 
-// 1. 标量乘法 (lhs: &BigInt * rhs: &G1)
+
 impl<'a> Mul<&'a G1Projective> for &'a BigInt {
     type Output = G1Projective;
     fn mul(self, rhs: &'a G1Projective) -> G1Projective {
-        // 调用底层的标量乘法实现 (如二进制展开法)
+        
         rhs.scalar_mul(self)
     }
 }
 
-// 2. 相等性判断 (Jacobian 比较)
+
 impl PartialEq for G1Projective {
     fn eq(&self, other: &Self) -> bool {
         if self.is_zero() {
@@ -326,7 +326,7 @@ impl PartialEq for G1Projective {
     }
 }
 
-// 3. 点加 (Jacobian Addition)
+
 impl<'a> Add<&'a G1Projective> for &'a G1Projective {
     type Output = G1Projective;
     fn add(self, other: &'a G1Projective) -> G1Projective {
@@ -372,7 +372,7 @@ impl<'a> Add<&'a G1Projective> for &'a G1Projective {
     }
 }
 
-// 4. 取负与减法
+
 impl Neg for G1Projective {
     type Output = Self;
     fn neg(self) -> Self {
@@ -391,14 +391,14 @@ impl<'a> Sub<&'a G1Projective> for &'a G1Projective {
     }
 }
 
-// 5. 序列化 (带有压缩逻辑)
+
 impl G1Projective {
     pub fn serialize<W: Write>(&self, mut writer: W, compress: bool) -> io::Result<()> {
         let (x, y, is_zero) = self.to_affine();
         writer.write_all(if is_zero { b"1" } else { b"0" })?;
 
         if compress {
-            // 写入 X 和 Y 的最低有效位
+            
             writer.write_all(&x.to_bytes())?;
             let y_lsb = if y.to_bigint().is_odd() { b"1" } else { b"0" };
             writer.write_all(y_lsb)?;
@@ -418,9 +418,9 @@ impl G1Projective {
             return Ok(Self::zero());
         }
 
-        // 解析 X 和根据 LSB 恢复 Y 的逻辑...
-        // let x = Fq::read(&mut reader)?;
-        // ... sqrt 恢复 ...
+        
+        
+        
 
         Ok(Self {
             x: todo!(),

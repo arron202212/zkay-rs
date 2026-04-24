@@ -86,27 +86,27 @@ pub fn bn128_final_exponentiation(elt: &bn128_Fq12) -> bn128_GT {
     span.exit();
     return eltcopy;
 }
-// 假设使用 arkworks 类似的库架构
+
 use ark_bn254::{Bn254, Fq12};
 use ark_ec::pairing::Pairing;
 
-/// 对应 bn128_final_exponentiation(const bn128_Fq12 &elt)
-pub fn bn128_final_exponentiationa(elt: &Fq12) -> Fq12 {
-    // enter_block 对应 Rust 中的 tracing 或 log 宏进行性能监控
-    // log::debug!("开始调用 bn128_final_exponentiation");
 
-    // 对应 bn128_GT eltcopy = elt; (Rust 中通过 clone 或直接传入引用处理)
-    // 并在内部执行 .final_exponentiation()
-    // 在 arkworks 中，Bn254::final_exponentiation 返回的是 PairingOutput
+pub fn bn128_final_exponentiationa(elt: &Fq12) -> Fq12 {
+    
+    
+
+    
+    
+    
     let result = Bn254::final_exponentiation(ark_ec::pairing::MillerLoopOutput(*elt))
         .expect("最终幂次计算失败")
-        .0; // 获取内部的 Fq12 元素
+        .0; 
 
-    // leave_block("Call to bn128_final_exponentiation");
+    
     result
 }
 
-// use std::io::{self, Read, Write};
+
 
 // #[derive(Clone, Debug, PartialEq, Eq)]
 // pub struct Bn128AteG1Precomp {
