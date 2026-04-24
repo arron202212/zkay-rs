@@ -1120,7 +1120,6 @@ impl<FieldT: FieldTConfig> ALU_shr_shl_gadget<FieldT> {
 // have limited presence of such code than to have code duplication in
 // testing functions, which basically do the same thing: brute force
 // the range of inputs which different success predicates */
-
 type initializer_fn<T, FieldT: FieldTConfig> = fn(
     &RcCell<protoboard<FieldT, tinyram_protoboard<FieldT>>>, // pb
     &pb_variable_array<FieldT, tinyram_protoboard<FieldT>>,  // opcode_indicators

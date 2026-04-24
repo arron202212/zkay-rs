@@ -562,7 +562,7 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
     prms: &r1cs_ppzkadsnark_pub_auth_prms<PP>,
 ) -> r1cs_ppzkadsnark_keypair<PP> {
     let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_generator");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     //make the B_query "lighter" if possible
     let mut cs_copy = cs.clone();
@@ -789,8 +789,6 @@ pub fn r1cs_ppzkadsnark_generator<PP: ppzkadsnarkConfig>(
 
     spanvk.exit();
 
-  
-
     let mut vk = r1cs_ppzkadsnark_verification_key::<PP>::new(
         alphaA_g2,
         alphaB_g1,
@@ -847,7 +845,8 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_prover").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_prover");
+    let _ = span0.enter();
 
     debug_assert!(
         pk.constraint_system
@@ -859,7 +858,7 @@ where
     let mut d3 = Fr::<snark_pp<PP>>::random_element();
     let mut dauth = Fr::<snark_pp<PP>>::random_element();
 
-    let span = span!(Level::TRACE, "Compute the polynomial H").entered();
+    let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
     let mut qap_wit = r1cs_to_qap_witness_map::<
         <<PP as ppzkadsnarkConfig>::snark_pp as ff_curves::PublicParams>::Fr,
         pb_variable,
@@ -872,7 +871,7 @@ where
         &d2,
         &d3,
     );
-    span.exit();
+    spanh.exit();
 
     let mut t = Fr::<snark_pp<PP>>::random_element();
     let mut qap_inst: qap_instance_evaluation<_> =
@@ -905,9 +904,9 @@ where
 
     let chunks = 1;
 
-    let span = span!(Level::TRACE, "Compute the proof").entered();
+    let spanp = span!(Level::TRACE, "Compute the proof").entered();
 
-    let span = span!(Level::TRACE, "Compute answer to A-query").entered();
+    let spana = span!(Level::TRACE, "Compute answer to A-query").entered();
     g_A = g_A
         + kc_multi_exp_with_mixed_addition::<
             G1<snark_pp<PP>>,
@@ -921,9 +920,9 @@ where
             &qap_wit.coefficients_for_ABCs[qap_wit.num_inputs()..qap_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Compute answer to Ain-query").entered();
+    let spanai = span!(Level::TRACE, "Compute answer to Ain-query").entered();
     g_Ain = g_Ain
         + kc_multi_exp_with_mixed_addition::<
             G1<snark_pp<PP>>,
@@ -937,10 +936,9 @@ where
             &qap_wit.coefficients_for_ABCs[..qap_wit.num_inputs()],
             chunks,
         );
-    //std :: cout << "The input proof term: " << g_Ain << "\n";
-    span.exit();
+    spanai.exit();
 
-    let span = span!(Level::TRACE, "Compute answer to B-query").entered();
+    let spanb = span!(Level::TRACE, "Compute answer to B-query").entered();
     g_B = g_B
         + kc_multi_exp_with_mixed_addition::<
             G2<snark_pp<PP>>,
@@ -954,9 +952,9 @@ where
             &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Compute answer to C-query").entered();
+    let spanc = span!(Level::TRACE, "Compute answer to C-query").entered();
     g_C = g_C
         + kc_multi_exp_with_mixed_addition::<
             G1<snark_pp<PP>>,
@@ -970,9 +968,9 @@ where
             &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spanc.exit();
 
-    let span = span!(Level::TRACE, "Compute answer to H-query").entered();
+    let spanh = span!(Level::TRACE, "Compute answer to H-query").entered();
     g_H = g_H
         + multi_exp::<
             G1<snark_pp<PP>>,
@@ -983,9 +981,9 @@ where
             &qap_wit.coefficients_for_H[..qap_wit.degree() + 1],
             chunks,
         );
-    span.exit();
+    spanh.exit();
 
-    let span = span!(Level::TRACE, "Compute answer to K-query").entered();
+    let spank = span!(Level::TRACE, "Compute answer to K-query").entered();
     g_K = g_K
         + multi_exp_with_mixed_addition::<
             G1<snark_pp<PP>>,
@@ -996,9 +994,9 @@ where
             &qap_wit.coefficients_for_ABCs[..qap_wit.num_variables()],
             chunks,
         );
-    span.exit();
+    spank.exit();
 
-    let span = span!(Level::TRACE, "Compute extra auth terms").entered();
+    let spanc = span!(Level::TRACE, "Compute extra auth terms").entered();
     let mut mus = Vec::with_capacity(qap_wit.num_inputs());
     let mut Ains = Vec::with_capacity(qap_wit.num_inputs());
 
@@ -1019,11 +1017,9 @@ where
         );
 
     // To Do: Decide whether to include relevant parts of auth_data in proof
-    span.exit();
+    spanc.exit();
 
-    span.exit();
-
-    span.exit();
+    spanp.exit();
 
     let mut proof = r1cs_ppzkadsnark_proof::<PP>::new(g_A, g_B, g_C, g_H, g_K, g_Ain, muA);
     proof.print_size();
@@ -1050,7 +1046,8 @@ where
 pub fn r1cs_ppzkadsnark_verifier_process_vk<PP: ppzkadsnarkConfig>(
     vk: &r1cs_ppzkadsnark_verification_key<PP>,
 ) -> r1cs_ppzkadsnark_processed_verification_key<PP> {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_verifier_process_vk").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_verifier_process_vk");
+    let _ = span0.enter();
 
     let mut pvk = r1cs_ppzkadsnark_processed_verification_key::<PP>::default();
     pvk.pp_G2_one_precomp = snark_pp::<PP>::precompute_G2(&G2::<snark_pp<PP>>::one());
@@ -1076,8 +1073,6 @@ pub fn r1cs_ppzkadsnark_verifier_process_vk<PP: ppzkadsnarkConfig>(
 
     span.exit();
 
-    span.exit();
-
     pvk
 }
 
@@ -1093,7 +1088,8 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
     labels: &Vec<labelT>,
 ) -> bool {
     let mut result = true;
-    let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_online_verifier").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_online_verifier");
+    let _ = span0.enter();
 
     let span = span!(Level::TRACE, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
@@ -1105,17 +1101,17 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Checking auth-specific elements").entered();
+    let spana = span!(Level::TRACE, "Checking auth-specific elements").entered();
 
-    let span = span!(Level::TRACE, "Checking A1").entered();
+    let spana1 = span!(Level::TRACE, "Checking A1").entered();
 
-    let span = span!(Level::TRACE, "Compute PRFs").entered();
+    let spanp = span!(Level::TRACE, "Compute PRFs").entered();
     let mut lambdas = Vec::with_capacity(labels.len());
 
     for i in 0..labels.len() {
         lambdas.push(PP::Prf::prfCompute(&sak.S, &labels[i]));
     }
-    span.exit();
+    spanp.exit();
     let mut prodA = sak.i.clone() * proof.g_Aau.g.clone();
     prodA = prodA
         + multi_exp::<
@@ -1134,9 +1130,9 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         result_auth = false;
     }
 
-    span.exit();
+    spana1.exit();
 
-    let span = span!(Level::TRACE, "Checking A2").entered();
+    let spana2 = span!(Level::TRACE, "Checking A2").entered();
     let mut proof_g_Aau_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_Aau.g);
     let mut proof_g_Aau_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_Aau.h);
     let mut kc_Aau_1 =
@@ -1150,14 +1146,14 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result_auth = false;
     }
-    span.exit();
+    spana2.exit();
 
-    span.exit();
+    spana.exit();
 
     result &= result_auth;
 
-    let span = span!(Level::TRACE, "Online pairing computations").entered();
-    let span = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
+    let spano = span!(Level::TRACE, "Online pairing computations").entered();
+    let spana = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
     let mut proof_g_A_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_A.g);
     let mut proof_g_A_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_A.h);
     let mut kc_A_1 = snark_pp::<PP>::miller_loop(&proof_g_A_g_precomp, &pvk.vk_alphaA_g2_precomp);
@@ -1170,9 +1166,9 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
+    let spanb = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
     let mut proof_g_B_g_precomp = snark_pp::<PP>::precompute_G2(&proof.g_B.g);
     let mut proof_g_B_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_B.h);
     let mut kc_B_1 = snark_pp::<PP>::miller_loop(&pvk.vk_alphaB_g1_precomp, &proof_g_B_g_precomp);
@@ -1185,9 +1181,9 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
+    let spanc = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
     let mut proof_g_C_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_C.g);
     let mut proof_g_C_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_C.h);
     let mut kc_C_1 = snark_pp::<PP>::miller_loop(&proof_g_C_g_precomp, &pvk.vk_alphaC_g2_precomp);
@@ -1200,11 +1196,11 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanc.exit();
 
     let mut Aacc = pvk.A0.clone() + proof.g_Aau.g.clone() + proof.g_A.g.clone();
 
-    let span = span!(Level::TRACE, "Check QAP divisibility").entered();
+    let spanq = span!(Level::TRACE, "Check QAP divisibility").entered();
     let mut proof_g_Aacc_precomp = snark_pp::<PP>::precompute_G1(&Aacc);
     let mut proof_g_H_precomp = snark_pp::<PP>::precompute_G1(&proof.g_H);
     let mut QAP_1 = snark_pp::<PP>::miller_loop(&proof_g_Aacc_precomp, &proof_g_B_g_precomp);
@@ -1222,9 +1218,9 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanq.exit();
 
-    let span = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let spans = span!(Level::TRACE, "Check same coefficients were used").entered();
     let mut proof_g_K_precomp = snark_pp::<PP>::precompute_G1(&proof.g_K);
     let mut proof_g_Aacc_C_precomp =
         snark_pp::<PP>::precompute_G1(&(Aacc.clone() + proof.g_C.g.clone()));
@@ -1243,9 +1239,8 @@ pub fn r1cs_ppzkadsnark_online_verifier<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
-    span.exit();
-    span.exit();
+    spans.exit();
+    spano.exit();
 
     result
 }
@@ -1266,11 +1261,9 @@ pub fn r1cs_ppzkadsnark_verifier<PP: ppzkadsnarkConfig>(
     result
 }
 
-// public
-// /**
 //  * A verifier algorithm for the R1CS ppzkADSNARK that
 //  * accepts a processed verification key.
-//  */
+
 pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
     pvk: &r1cs_ppzkadsnark_processed_verification_key<PP>,
     auth_data: &Vec<r1cs_ppzkadsnark_auth_data<PP>>,
@@ -1279,9 +1272,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
     labels: &Vec<labelT>,
 ) -> bool {
     let mut result = true;
-    let span = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_online_verifier").entered();
-
-    let span = span!(Level::TRACE, "Check if the proof is well-formed").entered();
+    let span0 = span!(Level::TRACE, "Call to r1cs_ppzkadsnark_online_verifier");
+    let _ = span0.enter();
+    let spanw = span!(Level::TRACE, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -1289,14 +1282,14 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanw.exit();
 
-    let span = span!(Level::TRACE, "Checking auth-specific elements").entered();
+    let spana = span!(Level::TRACE, "Checking auth-specific elements").entered();
     assert!(labels.len() == auth_data.len());
 
-    let span = span!(Level::TRACE, "Checking A1").entered();
+    let spana1 = span!(Level::TRACE, "Checking A1").entered();
 
-    let span = span!(Level::TRACE, "Checking signatures").entered();
+    let spanc = span!(Level::TRACE, "Checking signatures").entered();
     let mut Lambdas = Vec::with_capacity(labels.len());
     let mut sigs = Vec::with_capacity(labels.len());
 
@@ -1312,9 +1305,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
     }
 
-    span.exit();
+    spanc.exit();
 
-    let span = span!(Level::TRACE, "Checking pairings").entered();
+    let spanp = span!(Level::TRACE, "Checking pairings").entered();
     // To Do: Decide whether to move pak and lambda preprocessing to offline
     let mut g_Lambdas_precomp = Vec::with_capacity(auth_data.len());
     for i in 0..auth_data.len() {
@@ -1322,7 +1315,7 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
     }
     let mut g_minusi_precomp = snark_pp::<PP>::precompute_G2(&pak.minusI2);
 
-    let span = span!(Level::TRACE, "Computation").entered();
+    let spanc = span!(Level::TRACE, "Computation").entered();
     let mut accum = Fqk::<snark_pp<PP>>::default();
     if auth_data.len() % 2 == 1 {
         accum = snark_pp::<PP>::miller_loop(&pvk.proof_g_vki_precomp[0], &g_Lambdas_precomp[0]);
@@ -1354,8 +1347,8 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result_auth = false;
     }
-    span.exit();
-    span.exit();
+    spanc.exit();
+    spanp.exit();
 
     if !result_auth {
         if !inhibit_profiling_info {
@@ -1364,9 +1357,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
     }
 
-    span.exit();
+    spana1.exit();
 
-    let span = span!(Level::TRACE, "Checking A2").entered();
+    let spana2 = span!(Level::TRACE, "Checking A2").entered();
     let mut proof_g_Aau_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_Aau.g);
     let mut proof_g_Aau_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_Aau.h);
     let mut kc_Aau_1 =
@@ -1380,14 +1373,14 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result_auth = false;
     }
-    span.exit();
+    spana2.exit();
 
-    span.exit();
+    spana.exit();
 
     result &= result_auth;
 
-    let span = span!(Level::TRACE, "Online pairing computations").entered();
-    let span = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
+    let spano = span!(Level::TRACE, "Online pairing computations").entered();
+    let spana = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
     let mut proof_g_A_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_A.g);
     let mut proof_g_A_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_A.h);
     let mut kc_A_1 = snark_pp::<PP>::miller_loop(&proof_g_A_g_precomp, &pvk.vk_alphaA_g2_precomp);
@@ -1400,9 +1393,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spana.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
+    let spanb = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
     let mut proof_g_B_g_precomp = snark_pp::<PP>::precompute_G2(&proof.g_B.g);
     let mut proof_g_B_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_B.h);
     let mut kc_B_1 = snark_pp::<PP>::miller_loop(&pvk.vk_alphaB_g1_precomp, &proof_g_B_g_precomp);
@@ -1415,9 +1408,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanb.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
+    let spanc = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
     let mut proof_g_C_g_precomp = snark_pp::<PP>::precompute_G1(&proof.g_C.g);
     let mut proof_g_C_h_precomp = snark_pp::<PP>::precompute_G1(&proof.g_C.h);
     let mut kc_C_1 = snark_pp::<PP>::miller_loop(&proof_g_C_g_precomp, &pvk.vk_alphaC_g2_precomp);
@@ -1430,11 +1423,11 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanc.exit();
 
     let mut Aacc = pvk.A0.clone() + proof.g_Aau.g.clone() + proof.g_A.g.clone();
 
-    let span = span!(Level::TRACE, "Check QAP divisibility").entered();
+    let spanq = span!(Level::TRACE, "Check QAP divisibility").entered();
     let mut proof_g_Aacc_precomp = snark_pp::<PP>::precompute_G1(&Aacc);
     let mut proof_g_H_precomp = snark_pp::<PP>::precompute_G1(&proof.g_H);
     let mut QAP_1 = snark_pp::<PP>::miller_loop(&proof_g_Aacc_precomp, &proof_g_B_g_precomp);
@@ -1452,9 +1445,9 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
+    spanq.exit();
 
-    let span = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let spanc = span!(Level::TRACE, "Check same coefficients were used").entered();
     let mut proof_g_K_precomp = snark_pp::<PP>::precompute_G1(&proof.g_K);
     let mut proof_g_Aacc_C_precomp =
         snark_pp::<PP>::precompute_G1(&(Aacc.clone() + proof.g_C.g.clone()));
@@ -1473,9 +1466,8 @@ pub fn r1cs_ppzkadsnark_online_verifier2<PP: ppzkadsnarkConfig>(
         }
         result = false;
     }
-    span.exit();
-    span.exit();
-    span.exit();
+    spanc.exit();
+    spano.exit();
 
     result
 }

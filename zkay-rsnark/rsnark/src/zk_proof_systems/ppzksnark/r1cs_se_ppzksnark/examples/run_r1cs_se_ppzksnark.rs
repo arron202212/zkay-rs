@@ -32,7 +32,6 @@ use tracing::{Level, span};
 //  * (3) The "verifier", which runs the SEppzkSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-
 // /**
 //  * Runs the SEppzkSNARK (generator, prover, and verifier) for a given
 //  * R1CS example (specified by a constraint system, input, and witness).

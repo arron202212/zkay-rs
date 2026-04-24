@@ -20,7 +20,7 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
     // */
     assert!(num_inputs + 1 <= qap_degree);
     let span0 = span!(Level::TRACE, "Call to test_qap");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let num_constraints = qap_degree - num_inputs - 1;
 
@@ -91,8 +91,6 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
     let spanq2 = span!(Level::TRACE, "Check satisfiability of QAP instance 2").entered();
     assert!(qap_inst_2.is_satisfied(&qap_wit));
     spanq2.exit();
-
-   
 }
 
 fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {

@@ -65,7 +65,7 @@ pub fn r1cs_to_qap_instance_map<
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> qap_instance<FieldT> {
     let span0 = span!(Level::TRACE, "Call to r1cs_to_qap_instance_map");
-    let _=span0.enter();
+    let _ = span0.enter();
     let domain =
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
 
@@ -111,8 +111,6 @@ pub fn r1cs_to_qap_instance_map<
     }
     span.exit();
 
-   
-
     qap_instance::<FieldT>::new(
         domain.clone(),
         cs.num_variables(),
@@ -150,7 +148,7 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
         Level::TRACE,
         "Call to r1cs_to_qap_instance_map_with_evaluation"
     );
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let domain =
         get_evaluation_domain::<FieldT>(cs.num_constraints() + cs.num_inputs() + 1).unwrap();
@@ -201,8 +199,6 @@ pub fn r1cs_to_qap_instance_map_with_evaluation<
         ti *= t.clone();
     }
     span.exit();
-
-  
 
     qap_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -260,7 +256,7 @@ pub fn r1cs_to_qap_witness_map<
     d3: &FieldT,
 ) -> qap_witness<FieldT> {
     let span0 = span!(Level::TRACE, "Call to r1cs_to_qap_witness_map");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -380,9 +376,7 @@ pub fn r1cs_to_qap_witness_map<
     }
     spansh.exit();
 
-
-
-     qap_witness::<FieldT>::new(
+    qap_witness::<FieldT>::new(
         cs.num_variables(),
         domain.borrow().m(),
         cs.num_inputs(),

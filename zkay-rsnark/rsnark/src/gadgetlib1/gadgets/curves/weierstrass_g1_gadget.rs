@@ -26,7 +26,6 @@ use std::marker::PhantomData;
 // /**
 //  * Gadget that represents a G1 variable.
 //  */
-
 type FieldT<ppT> = Fr<ppT>;
 #[derive(Clone, Default)]
 pub struct G1_variable<ppT: ppTConfig> {

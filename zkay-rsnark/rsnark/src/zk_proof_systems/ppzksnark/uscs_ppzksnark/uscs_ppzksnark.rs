@@ -303,7 +303,8 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
 pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     cs: &uscs_ppzksnark_constraint_system<ppT>,
 ) -> uscs_ppzksnark_keypair<ppT> {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_generator").entered();
+    let span0 = span!(Level::TRACE, "Call to uscs_ppzksnark_generator");
+    let _ = span0.enter();
 
     //draw random element at which the SSP is evaluated
 
@@ -367,17 +368,17 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     print_indent();
     print!("* G2 window: {}\n", g2_window);
 
-    let span = span!(Level::TRACE, "Generating G1 multiexp table").entered();
+    let spang1 = span!(Level::TRACE, "Generating G1 multiexp table").entered();
     let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
-    span.exit();
+    spang1.exit();
 
-    let span = span!(Level::TRACE, "Generating G2 multiexp table").entered();
+    let spang2 = span!(Level::TRACE, "Generating G2 multiexp table").entered();
     let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, G2::<ppT>::one());
-    span.exit();
+    spang2.exit();
 
-    let span = span!(Level::TRACE, "Generate proof components").entered();
+    let spanp = span!(Level::TRACE, "Generate proof components").entered();
 
-    let span = span!(Level::TRACE, "Compute the query for V_g1").entered();
+    let spanv1 = span!(Level::TRACE, "Compute the query for V_g1").entered();
     let mut V_g1_query = batch_exp(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -387,9 +388,9 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut V_g1_query);
 
-    span.exit();
+    spanv1.exit();
 
-    let span = span!(Level::TRACE, "Compute the query for alpha_V_g1").entered();
+    let spanav = span!(Level::TRACE, "Compute the query for alpha_V_g1").entered();
     let mut alpha_V_g1_query = batch_exp_with_coeff(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -400,34 +401,34 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut alpha_V_g1_query);
 
-    span.exit();
+    spanav.exit();
 
-    let span = span!(Level::TRACE, "Compute the query for H_g1").entered();
+    let spanh1 = span!(Level::TRACE, "Compute the query for H_g1").entered();
     let mut H_g1_query = batch_exp(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut H_g1_query);
 
-    span.exit();
+    spanh1.exit();
 
-    let span = span!(Level::TRACE, "Compute the query for V_g2").entered();
+    let spanv2 = span!(Level::TRACE, "Compute the query for V_g2").entered();
     let mut V_g2_query = batch_exp(Fr::<ppT>::size_in_bits(), g2_window, &g2_table, &Vt_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G2<ppT>>(&mut V_g2_query);
 
-    span.exit();
+    spanv2.exit();
+
+    spanp.exit();
 
     span.exit();
 
-    span.exit();
-
-    let span = span!(Level::TRACE, "Generate USCS verification key").entered();
+    let spanvk = span!(Level::TRACE, "Generate USCS verification key").entered();
 
     let tilde = Fr::<ppT>::random_element();
     let tilde_g2 = tilde.clone() * G2::<ppT>::one();
     let alpha_tilde_g2 = (alpha * tilde) * G2::<ppT>::one();
     let Z_g2 = ssp_inst.Zt * G2::<ppT>::one();
 
-    let span = span!(Level::TRACE, "Encode IC query for USCS verification key").entered();
+    let spanic = span!(Level::TRACE, "Encode IC query for USCS verification key").entered();
     let encoded_IC_base = Xt_table[0].clone() * G1::<ppT>::one();
     let encoded_IC_values = batch_exp(
         Fr::<ppT>::size_in_bits(),
@@ -435,11 +436,9 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
         &g1_table,
         &Xt_table[1..].to_vec(),
     );
-    span.exit();
+    spanic.exit();
 
-    span.exit();
-
-    span.exit();
+    spanvk.exit();
 
     let encoded_IC_query =
         accumulation_vector::<G1<ppT>>::new_with_vec(encoded_IC_base, encoded_IC_values);
@@ -477,7 +476,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     auxiliary_input: &uscs_ppzksnark_auxiliary_input<ppT>,
 ) -> uscs_ppzksnark_proof<ppT> {
     let span0 = span!(Level::TRACE, "Call to uscs_ppzksnark_prover");
-    let _=span0.enter();
+    let _ = span0.enter();
     let d = Fr::<ppT>::random_element();
 
     let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
@@ -566,8 +565,6 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 
     span.exit();
 
-   
-
     let proof = uscs_ppzksnark_proof::<ppT>::new(V_g1, alpha_V_g1, H_g1, V_g2);
 
     proof.print_size();
@@ -609,7 +606,7 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
         Level::TRACE,
         "Call to uscs_ppzksnark_online_verifier_weak_IC"
     );
-    let _=span0.enter();
+    let _ = span0.enter();
 
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
@@ -682,8 +679,6 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     spansc.exit();
 
     spano.exit();
-
-  
 
     result
 }

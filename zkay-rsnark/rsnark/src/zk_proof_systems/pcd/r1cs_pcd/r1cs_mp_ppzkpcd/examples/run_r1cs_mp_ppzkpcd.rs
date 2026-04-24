@@ -37,7 +37,6 @@ use tracing::{Level, span};
 //  *
 //  * Optionally, also test the case of compliance predicates with different types.
 //  */
-
 type FieldT<PCD_ppT> = Fr<<PCD_ppT as PcdPptConfig>::curve_A_pp>;
 
 pub fn run_r1cs_mp_ppzkpcd_tally_example<
@@ -99,7 +98,7 @@ where
         >,
 {
     let span0 = span!(Level::TRACE, "Call to run_r1cs_mp_ppzkpcd_tally_example");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let mut all_accept = true;
 
@@ -303,8 +302,6 @@ where
         }
         nodes_in_layer /= max_arity;
     }
-
-   
 
     all_accept
 }

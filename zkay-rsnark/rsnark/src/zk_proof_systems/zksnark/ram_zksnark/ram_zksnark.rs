@@ -163,7 +163,7 @@ where
     <<RamPpt as RamConfig>::PCD_pp as PcdPptConfig>::curve_A_pp: CPHConfig,
 {
     let span0 = span!(Level::TRACE, "Call to ram_zksnark_generator");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let spang = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(ap.clone());
@@ -174,8 +174,6 @@ where
     let span = span!(Level::TRACE, "Generate PCD key pair").entered();
     let mut kp = r1cs_sp_ppzkpcd_generator::<pcdT<RamPpt>>(&ram_compliance_predicate);
     span.exit();
-
-   
 
     let pk = ram_zksnark_proving_key::<RamPpt>::new(ap.clone(), kp.pk);
     let vk = ram_zksnark_verification_key::<RamPpt>::new(ap.clone(), kp.vk);
@@ -239,7 +237,7 @@ where
     assert!(log2(time_bound) <= RamT::<RamPpt>::timestamp_length);
 
     let span0 = span!(Level::TRACE, "Call to ram_zksnark_prover");
-    let _=span0.enter();
+    let _ = span0.enter();
     let spang = span!(Level::TRACE, "Generate compliance predicate for RAM").entered();
     let mut cp_handler = ram_compliance_predicate_handler::<RamT<RamPpt>>::new(pk.ap.clone());
     spang.exit();
@@ -347,8 +345,6 @@ where
         &vec![cur_proof],
     );
     spanf.exit();
-
-    
 
     cur_proof.into()
 }

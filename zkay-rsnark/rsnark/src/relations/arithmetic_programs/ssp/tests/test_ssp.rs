@@ -21,7 +21,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     binary_input: bool,
 ) {
     let span0 = span!(Level::TRACE, "Call to test_ssp");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     print_indent();
     print!("* Number of constraints: {}\n", num_constraints);
@@ -62,7 +62,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     let ssp_inst_1 = uscs_to_ssp_instance_map(&example.constraint_system);
     spans1.exit();
 
-    let spans2= span!(Level::TRACE, "Compute SSP instance 2").entered();
+    let spans2 = span!(Level::TRACE, "Compute SSP instance 2").entered();
     let ssp_inst_2 = uscs_to_ssp_instance_map_with_evaluation(&example.constraint_system, &t);
     spans2.exit();
 
@@ -82,8 +82,6 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     let span = span!(Level::TRACE, "Check satisfiability of SSP instance 2").entered();
     assert!(ssp_inst_2.is_satisfied(&ssp_wit));
     span.exit();
-
-    
 }
 
 fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {

@@ -30,7 +30,6 @@ use tracing::{Level, span};
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for C, and a proof.
 //  */
-
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
 //  * TBCS example (specified by a circuit, primary input, and auxiliary input).

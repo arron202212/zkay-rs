@@ -221,7 +221,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     // assert!(Fq::< PCD_ppT::curve_A_pp>::modulo == Fr::< PCD_ppT::curve_B_pp>::modulo);
 
     let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_generator");
-    let _=span0.enter();
+    let _ = span0.enter();
     assert!(compliance_predicate.is_well_formed());
 
     let spancc = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
@@ -262,7 +262,6 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
 
     print_indent();
     println!("in generator");
-   
 
     r1cs_sp_ppzkpcd_keypair::<PCD_ppT>::new(
         r1cs_sp_ppzkpcd_proving_key::<PCD_ppT>::new(
@@ -339,7 +338,7 @@ where
         >,
 {
     let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_prover");
-    let _=span0.enter();
+    let _ = span0.enter();
     let translation_step_r1cs_vk_bits =
         r1cs_ppzksnark_verification_key_variable::<PCD_ppT::curve_A_pp>::get_verification_key_bits(
             &pk.translation_step_r1cs_vk,
@@ -368,7 +367,6 @@ where
     );
     spanp.exit();
 
-   
     let compliance_step_input = get_sp_compliance_step_pcd_circuit_input::<PCD_ppT::curve_A_pp>(
         &translation_step_r1cs_vk_bits,
         primary_input,
@@ -400,7 +398,6 @@ where
     );
     spans.exit();
 
-    
     let translation_step_ok = r1cs_ppzksnark_verifier_strong_IC::<PCD_ppT::curve_B_pp>(
         &pk.translation_step_r1cs_vk,
         &translation_step_primary_input,
@@ -410,7 +407,6 @@ where
 
     print_indent();
     println!("in prover");
-  
 
     translation_step_proof
 }

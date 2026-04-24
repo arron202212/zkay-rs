@@ -121,7 +121,6 @@ pub struct mnt_miller_loop_gadget<ppT: ppTConfig> {
 // /**
 //  * Gadget for verifying a double Miller loop (where the second is inverted).
 //  */
-
 #[derive(Clone, Default)]
 pub struct mnt_e_over_e_miller_loop_gadget<ppT: ppTConfig> {
     g_RR_at_P1s: Vec<RcCell<Fqk_variable<ppT>>>,

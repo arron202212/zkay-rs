@@ -32,7 +32,6 @@ use tracing::{Level, span};
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a primary input for CS, and a proof.
 //  */
-
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
 //  * USCS example (specified by a constraint system, input, and witness).

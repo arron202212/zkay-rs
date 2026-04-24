@@ -30,7 +30,6 @@ use tracing::{Level, span};
 //  * (3) The "verifier", which runs the ppzkSNARK verifier on input the verification key,
 //  *     a boot trace, and a proof.
 //  */
-
 // /**
 //  * Runs the ppzkSNARK (generator, prover, and verifier) for a given
 //  * RAM example (specified by an architecture, boot trace, auxiliary input, and time bound).

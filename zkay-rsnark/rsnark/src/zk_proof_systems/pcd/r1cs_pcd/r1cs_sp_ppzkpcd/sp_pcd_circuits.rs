@@ -895,7 +895,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
         Level::TRACE,
         "Call to get_sp_compliance_step_pcd_circuit_input"
     );
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let outgoing_message_as_va = primary_input
         .outgoing_message
@@ -916,7 +916,6 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     span.exit();
 
     let digest = CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::get_hash_for_field(&block);
-  
 
     digest
 }

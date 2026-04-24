@@ -47,7 +47,6 @@ use tracing::{Level, span};
 //  * and
 //  *   each V_i is expressed in the Lagrange basis.
 //  */
-
 // /**
 //  * Instance map for the USCS-to-SSP reduction.
 //  */
@@ -59,7 +58,7 @@ pub fn uscs_to_ssp_instance_map<
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
 ) -> ssp_instance<FieldT> {
     let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
@@ -76,8 +75,6 @@ pub fn uscs_to_ssp_instance_map<
         *V_in_Lagrange_basis[0].entry(i).or_insert(FieldT::zero()) += FieldT::one();
     }
     span.exit();
-
-   
 
     ssp_instance::<FieldT>::new(
         domain.clone(),
@@ -100,7 +97,6 @@ pub fn uscs_to_ssp_instance_map<
 //  *   m = number of variables of the SSP
 //  *   n = degree of the SSP
 //  */
-
 // /**
 //  * Instance map for the USCS-to-SSP reduction followed by evaluation of the resulting SSP instance.
 //  */
@@ -115,9 +111,8 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     let span0 = span!(
         Level::TRACE,
         "Call to uscs_to_ssp_instance_map_with_evaluation"
-    )
-   ;
-    let _=span0.enter();
+    );
+    let _ = span0.enter();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
@@ -143,8 +138,6 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
         ti *= t.clone();
     }
     span.exit();
-
-   
 
     ssp_instance_evaluation::<FieldT>::new(
         domain.clone(),
@@ -185,7 +178,6 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 //  * The code below is not as simple as the above high-level description due to
 //  * some reshuffling to save space.
 //  */
-
 // /**
 //  * Witness map for the USCS-to-SSP reduction.
 //  *
@@ -202,7 +194,7 @@ pub fn uscs_to_ssp_witness_map<
     d: &FieldT,
 ) -> ssp_witness<FieldT> {
     let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_witness_map");
-    let _=span0.enter();
+    let _ = span0.enter();
     //sanity check
 
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -244,7 +236,7 @@ pub fn uscs_to_ssp_witness_map<
         .add_poly_Z(&d.squared(), &mut coefficients_for_H);
     spanzp.exit();
 
-    let spanvt= span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
+    let spanvt = span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
@@ -273,15 +265,12 @@ pub fn uscs_to_ssp_witness_map<
 
     let spanhp = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
 
-
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();
     }
     spanhp.exit();
 
-  
-
-     ssp_witness::<FieldT>::new(
+    ssp_witness::<FieldT>::new(
         cs.num_variables(),
         domain.borrow().m(),
         cs.num_inputs(),

@@ -336,7 +336,6 @@ pub trait ppTConfig:
 //  * ec_ppT to "MNT4" and "MNT6".
 //  *
 //  */
-
 // /**
 //  * Below are various template aliases (used for convenience).
 //  */

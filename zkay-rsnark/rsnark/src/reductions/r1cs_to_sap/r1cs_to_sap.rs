@@ -89,7 +89,7 @@ pub fn r1cs_to_sap_instance_map<
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> sap_instance<FieldT> {
     let span0 = span!(Level::TRACE, "Call to r1cs_to_sap_instance_map");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let domain = r1cs_to_sap_get_domain(cs);
 
@@ -206,8 +206,6 @@ pub fn r1cs_to_sap_instance_map<
 
     span.exit();
 
-   
-
     sap_instance::<FieldT>::new(
         domain.clone(),
         sap_num_variables,
@@ -233,9 +231,8 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     let span0 = span!(
         Level::TRACE,
         "Call to r1cs_to_sap_instance_map_with_evaluation"
-    )
-    ;
-    let _=span0.enter();
+    );
+    let _ = span0.enter();
 
     let domain: RcCell<EvaluationDomainType<FieldT>> = r1cs_to_sap_get_domain(cs);
 
@@ -303,8 +300,6 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     }
     span.exit();
 
-   
-
     sap_instance_evaluation::<FieldT>::new(
         domain.clone(),
         sap_num_variables,
@@ -359,7 +354,7 @@ pub fn r1cs_to_sap_witness_map<
     d2: &FieldT,
 ) -> sap_witness<FieldT> {
     let span0 = span!(Level::TRACE, "Call to r1cs_to_sap_witness_map");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     // sanity check
     assert!(cs.is_satisfied(primary_input, auxiliary_input));
@@ -519,9 +514,7 @@ pub fn r1cs_to_sap_witness_map<
     }
     spanhp.exit();
 
-   
-
-     sap_witness::<FieldT>::new(
+    sap_witness::<FieldT>::new(
         sap_num_variables,
         domain.borrow().m(),
         cs.num_inputs(),

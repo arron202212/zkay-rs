@@ -137,7 +137,6 @@ pub type bacs_ppzksnark_proof<ppT> = r1cs_ppzksnark_proof<ppT>;
 //     weak input consistency requires that |primary_input| <= C.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length C.num_inputs).
 // */
-
 type FieldT<ppT> = Fr<ppT>;
 // /**
 //  * A generator algorithm for the BACS ppzkSNARK.

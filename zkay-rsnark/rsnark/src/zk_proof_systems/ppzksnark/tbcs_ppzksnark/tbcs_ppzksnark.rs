@@ -127,7 +127,6 @@ pub type tbcs_ppzksnark_proof<ppT> = uscs_ppzksnark_proof<ppT>;
 //     weak input consistency requires that |primary_input| <= C.num_inputs (and
 //     the primary input is implicitly padded with zeros up to length C.num_inputs).
 // */
-
 // /**
 //  * A generator algorithm for the TBCS ppzkSNARK.
 //  *

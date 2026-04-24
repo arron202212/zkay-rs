@@ -20,7 +20,7 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
     //     (sap_degree - 1) / 2 - num_inputs.
     // */
     let span0 = span!(Level::TRACE, "Call to test_sap");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let num_constraints = (sap_degree - 1) / 2 - num_inputs;
     assert!(num_constraints >= 1);
@@ -95,8 +95,6 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
     let span = span!(Level::TRACE, "Check satisfiability of SAP instance 2").entered();
     assert!(sap_inst_2.is_satisfied(&sap_wit));
     span.exit();
-
-   
 }
 
 fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {

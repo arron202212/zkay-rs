@@ -92,7 +92,7 @@ where
         >,
 {
     let span0 = span!(Level::TRACE, "Call to run_r1cs_sp_ppzkpcd_tally_example");
-    let _=span0.enter();
+    let _ = span0.enter();
     let mut all_accept = true;
 
     let span = span!(Level::TRACE, "Generate all messages").entered();
@@ -226,8 +226,6 @@ where
         }
         nodes_in_layer /= arity;
     }
-
-   
 
     all_accept
 }

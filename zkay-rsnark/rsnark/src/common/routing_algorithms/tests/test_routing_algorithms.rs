@@ -48,7 +48,7 @@ pub fn main() -> i32 {
     start_profiling();
 
     let span0 = span!(Level::TRACE, "Test routing algorithms");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let span1 = span!(Level::TRACE, "Test Benes network routing algorithm").entered();
     let bn_size = 8;
@@ -66,6 +66,5 @@ pub fn main() -> i32 {
     }
     span.exit();
 
-    
     0
 }

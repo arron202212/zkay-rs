@@ -341,7 +341,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicates: &Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
 ) -> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
     let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_generator");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let mut keypair = r1cs_mp_ppzkpcd_keypair::<PCD_ppT>::default();
     let translation_input_size =
@@ -556,10 +556,8 @@ where
             >,
         >,
 {
-  
-
     let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_prover");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     // #ifdef DEBUG
     print!("Compliance predicate name: {}\n", compliance_predicate_name);
@@ -685,7 +683,6 @@ where
 
     span.exit();
 
-   
     let translation_step_ok = r1cs_ppzksnark_verifier_strong_IC::<B_pp<PCD_ppT>>(
         &pk.translation_step_r1cs_vks[compliance_predicate_idx],
         &translation_step_primary_input,
@@ -695,7 +692,6 @@ where
 
     print_indent();
     println!("in prover");
-  
 
     let mut result = r1cs_mp_ppzkpcd_proof::<PCD_ppT>::default();
     result.compliance_predicate_idx = compliance_predicate_idx;
@@ -708,10 +704,8 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-   
-
     let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_online_verifier");
-    let _=span0.enter();
+    let _ = span0.enter();
 
     let r1cs_input = get_mp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
         &pvk.commitment_to_translation_step_r1cs_vks,
@@ -725,20 +719,18 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
 
     print_indent();
     println!("in online verifier");
-    
+
     result
 }
 
 pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
 ) -> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
-  
-
     let span = span!(
         Level::TRACE,
         "Call to r1cs_mp_ppzkpcd_processed_verification_key"
     );
-    let _=span.enter();
+    let _ = span.enter();
 
     let mut result = r1cs_mp_ppzkpcd_processed_verification_key::<PCD_ppT>::default();
     result.commitment_to_translation_step_r1cs_vks =
@@ -757,7 +749,6 @@ pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
             .translation_step_r1cs_pvks
             .push(translation_step_r1cs_pvk);
     }
-    
 
     result
 }

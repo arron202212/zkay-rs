@@ -990,7 +990,6 @@ impl LooseMUX_Gadget {
 //     In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
 //     generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
 // */
-
 // /*
 //     Constraint breakdown:
 
@@ -1086,7 +1085,6 @@ impl GadgetConfig for Gadget<R1P_CompressionPacking_Gadget> {
 //     In UNPACK mode generateWitness() will take the packed representation and unpack it to bits while
 //     generateConstraints will in addition enforce that unpacked bits are indeed Boolean.
 // */
-
 // /*
 //     Constraint breakdown:
 

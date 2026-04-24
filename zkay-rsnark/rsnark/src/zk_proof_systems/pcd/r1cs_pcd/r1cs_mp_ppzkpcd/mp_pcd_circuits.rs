@@ -155,7 +155,6 @@ pub struct mp_compliance_step_pcd_circuit_maker<ppT: ppTConfig> {
 //  *
 //  * The circuit is an R1CS that checks validity of previous proofs.
 //  */
-
 pub struct mp_translation_step_pcd_circuit_maker<ppT: ppTConfig> {
     pub pb: RcCell<protoboard<ppT::FieldT, ppT::PB>>,
     pub mp_translation_step_pcd_circuit_input: pb_variable_array<ppT::FieldT, ppT::PB>,
