@@ -19,7 +19,7 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
     //   So we generate an instance of R1CS where the number of constraints is
     //     (sap_degree - 1) / 2 - num_inputs.
     // */
-    let span0 = span!(Level::TRACE, "Call to test_sap");
+    let span0 = span!(Level::INFO, "Call to test_sap");
     let _ = span0.enter();
 
     let num_constraints = (sap_degree - 1) / 2 - num_inputs;
@@ -42,7 +42,7 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
         if binary_input { "binary" } else { "field" }
     );
 
-    let spang = span!(Level::TRACE, "Generate constraint system and assignment").entered();
+    let spang = span!(Level::INFO, "Generate constraint system and assignment").entered();
     let example = if binary_input {
         generate_r1cs_example_with_binary_input::<FieldT, pb_variable, pb_linear_combination>(
             num_constraints,
@@ -56,7 +56,7 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
     };
     spang.exit();
 
-    let spanc = span!(Level::TRACE, "Check satisfiability of constraint system").entered();
+    let spanc = span!(Level::INFO, "Check satisfiability of constraint system").entered();
     assert!(
         example
             .constraint_system
@@ -70,15 +70,15 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
         FieldT::random_element(),
     );
 
-    let spans1 = span!(Level::TRACE, "Compute SAP instance 1").entered();
+    let spans1 = span!(Level::INFO, "Compute SAP instance 1").entered();
     let sap_inst_1 = r1cs_to_sap_instance_map(&example.constraint_system);
     spans1.exit();
 
-    let spans2 = span!(Level::TRACE, "Compute SAP instance 2").entered();
+    let spans2 = span!(Level::INFO, "Compute SAP instance 2").entered();
     let sap_inst_2 = r1cs_to_sap_instance_map_with_evaluation(&example.constraint_system, &t);
     spans2.exit();
 
-    let spans = span!(Level::TRACE, "Compute SAP witness").entered();
+    let spans = span!(Level::INFO, "Compute SAP witness").entered();
     let sap_wit = r1cs_to_sap_witness_map(
         &example.constraint_system,
         &example.primary_input,
@@ -88,11 +88,11 @@ pub fn test_sap<FieldT: FieldTConfig>(sap_degree: usize, num_inputs: usize, bina
     );
     spans.exit();
 
-    let spans1 = span!(Level::TRACE, "Check satisfiability of SAP instance 1").entered();
+    let spans1 = span!(Level::INFO, "Check satisfiability of SAP instance 1").entered();
     assert!(sap_inst_1.is_satisfied(&sap_wit));
     spans1.exit();
 
-    let span = span!(Level::TRACE, "Check satisfiability of SAP instance 2").entered();
+    let span = span!(Level::INFO, "Check satisfiability of SAP instance 2").entered();
     assert!(sap_inst_2.is_satisfied(&sap_wit));
     span.exit();
 }
@@ -112,7 +112,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
     let step_domain_size_special = (1usize << 10) + (1usize << 8) - 1usize;
     let extended_domain_size_special = (1usize << (mnt6_Fr::s + 1)) - 1usize;
 
-    let spanb = span!(Level::TRACE, "Test SAP with binary input").entered();
+    let spanb = span!(Level::INFO, "Test SAP with binary input").entered();
 
     test_sap::<Fr<mnt6_pp>>(basic_domain_size_special, num_inputs, true);
     test_sap::<Fr<mnt6_pp>>(step_domain_size_special, num_inputs, true);
@@ -120,7 +120,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
 
     spanb.exit();
 
-    let span = span!(Level::TRACE, "Test SAP with field input").entered();
+    let span = span!(Level::INFO, "Test SAP with field input").entered();
 
     test_sap::<Fr<mnt6_pp>>(basic_domain_size_special, num_inputs, false);
     test_sap::<Fr<mnt6_pp>>(step_domain_size_special, num_inputs, false);

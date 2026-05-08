@@ -52,7 +52,7 @@ fn main<default_r1cs_se_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i3
         }
     }
 
-    let span = span!(Level::TRACE, "Generate R1CS example").entered();
+    let span = span!(Level::INFO, "Generate R1CS example").entered();
     let example = generate_r1cs_example_with_field_input::<
         Fr<default_r1cs_se_ppzksnark_pp>,
         pb_variable,

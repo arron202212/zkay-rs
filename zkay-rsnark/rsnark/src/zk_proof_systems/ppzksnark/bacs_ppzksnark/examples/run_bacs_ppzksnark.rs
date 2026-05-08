@@ -62,7 +62,7 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to run_bacs_ppzksnark").entered();
+    let span = span!(Level::INFO, "Call to run_bacs_ppzksnark").entered();
 
     println!("BACS ppzkSNARK Generator");
     let mut keypair = bacs_ppzksnark_generator::<ppT>(&example.circuit);
@@ -74,7 +74,7 @@ where
     let mut pvk = bacs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<bacs_ppzksnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<bacs_ppzksnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<bacs_ppzksnark_processed_verification_key<ppT>>(&pvk);
@@ -92,7 +92,7 @@ where
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<bacs_ppzksnark_proof<ppT>>(&proof);
         span.exit();
     }

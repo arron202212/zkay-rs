@@ -344,7 +344,7 @@ impl<ppT: PublicParams> r1cs_ppzksnark_proof<ppT> {
 pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     cs: &r1cs_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_ppzksnark_keypair<ppT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_ppzksnark_generator");
+    let span0 = span!(Level::INFO, "Call to r1cs_ppzksnark_generator");
     let _ = span0.enter();
 
     //make the B_query "lighter" if possible
@@ -371,7 +371,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
         qap_inst.num_inputs()
     );
 
-    let spand = span!(Level::TRACE, "Compute query densities").entered();
+    let spand = span!(Level::INFO, "Compute query densities").entered();
     let (mut non_zero_At, mut non_zero_Bt, mut non_zero_Ct, mut non_zero_Ht) = (0, 0, 0, 0);
     for i in 0..qap_inst.num_variables() + 1 {
         if !qap_inst.At[i].is_zero() {
@@ -455,18 +455,18 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     let chunks = 1;
     //
 
-    let spang1 = span!(Level::TRACE, "Generating G1 multiexp table").entered();
+    let spang1 = span!(Level::INFO, "Generating G1 multiexp table").entered();
     let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
     spang1.exit();
 
-    let spang2 = span!(Level::TRACE, "Generating G2 multiexp table").entered();
+    let spang2 = span!(Level::INFO, "Generating G2 multiexp table").entered();
     let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, G2::<ppT>::one());
     spang2.exit();
 
-    let span = span!(Level::TRACE, "Generate R1CS proving key").entered();
+    let span = span!(Level::INFO, "Generate R1CS proving key").entered();
 
-    let spang = span!(Level::TRACE, "Generate knowledge commitments").entered();
-    let spana = span!(Level::TRACE, "Compute the A-query").entered();
+    let spang = span!(Level::INFO, "Generate knowledge commitments").entered();
+    let spana = span!(Level::INFO, "Compute the A-query").entered();
     let A_query = kc_batch_exp::<G1<ppT>, G1<ppT>, Fr<ppT>>(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -480,7 +480,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     );
     spana.exit();
 
-    let spanb = span!(Level::TRACE, "Compute the B-query").entered();
+    let spanb = span!(Level::INFO, "Compute the B-query").entered();
     let B_query = kc_batch_exp::<G2<ppT>, G1<ppT>, Fr<ppT>>(
         Fr::<ppT>::size_in_bits(),
         g2_window,
@@ -494,7 +494,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     );
     spanb.exit();
 
-    let spanc = span!(Level::TRACE, "Compute the C-query").entered();
+    let spanc = span!(Level::INFO, "Compute the C-query").entered();
     let C_query = kc_batch_exp::<G1<ppT>, G1<ppT>, Fr<ppT>>(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -508,7 +508,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     );
     spanc.exit();
 
-    let spanh = span!(Level::TRACE, "Compute the H-query").entered();
+    let spanh = span!(Level::INFO, "Compute the H-query").entered();
     let H_query =
         batch_exp::<G1<ppT>, Fr<ppT>>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht);
     // // #ifdef USE_MIXED_ADDITION
@@ -516,7 +516,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     //
     spanh.exit();
 
-    let spank = span!(Level::TRACE, "Compute the K-query").entered();
+    let spank = span!(Level::INFO, "Compute the K-query").entered();
     let K_query =
         batch_exp::<G1<ppT>, Fr<ppT>>(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Kt);
     // // #ifdef USE_MIXED_ADDITION
@@ -528,7 +528,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
 
     span.exit();
 
-    let spanvk = span!(Level::TRACE, "Generate R1CS verification key").entered();
+    let spanvk = span!(Level::INFO, "Generate R1CS verification key").entered();
     let alphaA_g2 = G2::<ppT>::one() * alphaA.clone();
     let alphaB_g1 = G1::<ppT>::one() * alphaB.clone();
     let alphaC_g2 = G2::<ppT>::one() * alphaC.clone();
@@ -537,7 +537,7 @@ pub fn r1cs_ppzksnark_generator<ppT: PublicParams>(
     let gamma_beta_g2 = G2::<ppT>::one() * (gamma.clone() * beta.clone());
     let rC_Z_g2 = G2::<ppT>::one() * (rC.clone() * qap_inst.Zt.clone());
 
-    let spanic = span!(Level::TRACE, "Encode IC query for R1CS verification key").entered();
+    let spanic = span!(Level::INFO, "Encode IC query for R1CS verification key").entered();
     let encoded_IC_base = G1::<ppT>::one() * (rA.clone() * IC_coefficients[0].clone());
     let mut multiplied_IC_coefficients = Fr_vector::<ppT>::default();
     multiplied_IC_coefficients.reserve(qap_inst.num_inputs());
@@ -612,7 +612,7 @@ where
             >,
         >,
 {
-    let span0 = span!(Level::TRACE, "Call to r1cs_ppzksnark_prover");
+    let span0 = span!(Level::INFO, "Call to r1cs_ppzksnark_prover");
     let _ = span0.enter();
 
     //     debug_assert!(pk.constraint_system.is_satisfied(primary_input, auxiliary_input));
@@ -623,7 +623,7 @@ where
         Fr::<ppT>::random_element(),
     );
 
-    let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
+    let spanh = span!(Level::INFO, "Compute the polynomial H").entered();
     let qap_wit = r1cs_to_qap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
@@ -667,9 +667,9 @@ where
 
     let chunks = 1;
 
-    let span = span!(Level::TRACE, "Compute the proof").entered();
+    let span = span!(Level::INFO, "Compute the proof").entered();
 
-    let spana = span!(Level::TRACE, "Compute answer to A-query").entered();
+    let spana = span!(Level::INFO, "Compute answer to A-query").entered();
     g_A = g_A
         + kc_multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -685,7 +685,7 @@ where
         );
     spana.exit();
 
-    let spanb = span!(Level::TRACE, "Compute answer to B-query").entered();
+    let spanb = span!(Level::INFO, "Compute answer to B-query").entered();
     g_B = g_B
         + kc_multi_exp_with_mixed_addition::<
             G2<ppT>,
@@ -701,7 +701,7 @@ where
         );
     spanb.exit();
 
-    let spanc = span!(Level::TRACE, "Compute answer to C-query").entered();
+    let spanc = span!(Level::INFO, "Compute answer to C-query").entered();
     g_C = g_C
         + kc_multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -717,7 +717,7 @@ where
         );
     spanc.exit();
 
-    let spanh = span!(Level::TRACE, "Compute answer to H-query").entered();
+    let spanh = span!(Level::INFO, "Compute answer to H-query").entered();
     g_H = g_H
         + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.H_query[..qap_wit.degree() + 1],
@@ -726,7 +726,7 @@ where
         );
     spanh.exit();
 
-    let spank = span!(Level::TRACE, "Compute answer to K-query").entered();
+    let spank = span!(Level::INFO, "Compute answer to K-query").entered();
     g_K = g_K
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -770,7 +770,7 @@ pub fn r1cs_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_verifier_weak_IC").entered();
+    let span = span!(Level::INFO, "Call to r1cs_ppzksnark_verifier_weak_IC").entered();
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = r1cs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
     span.exit();
@@ -787,7 +787,7 @@ pub fn r1cs_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
     primary_input: &r1cs_ppzksnark_primary_input<ppT>,
     proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_verifier_strong_IC").entered();
+    let span = span!(Level::INFO, "Call to r1cs_ppzksnark_verifier_strong_IC").entered();
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = r1cs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
     span.exit();
@@ -800,7 +800,7 @@ pub fn r1cs_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
 pub fn r1cs_ppzksnark_verifier_process_vk<ppT: PublicParams>(
     vk: &r1cs_ppzksnark_verification_key<ppT>,
 ) -> r1cs_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to r1cs_ppzksnark_verifier_process_vk").entered();
+    let span = span!(Level::INFO, "Call to r1cs_ppzksnark_verifier_process_vk").entered();
 
     let mut pvk = r1cs_ppzksnark_processed_verification_key::<ppT>::default();
     pvk.pp_G2_one_precomp = ppT::precompute_G2(&G2::<ppT>::one());
@@ -829,14 +829,14 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_ppzksnark_online_verifier_weak_IC"
     );
     let _ = span0.enter();
 
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    let spana = span!(Level::TRACE, "Compute input-dependent part of A").entered();
+    let spana = span!(Level::INFO, "Compute input-dependent part of A").entered();
     let accumulated_IC = pvk
         .encoded_IC_query
         .accumulate_chunk::<ppT::Fr>(primary_input, 0);
@@ -845,7 +845,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
 
     let mut result = true;
 
-    let spanw = span!(Level::TRACE, "Check if the proof is well-formed").entered();
+    let spanw = span!(Level::INFO, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -855,8 +855,8 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spanw.exit();
 
-    let span = span!(Level::TRACE, "Online pairing computations").entered();
-    let spana = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
+    let span = span!(Level::INFO, "Online pairing computations").entered();
+    let spana = span!(Level::INFO, "Check knowledge commitment for A is valid").entered();
     let proof_g_A_g_precomp = ppT::precompute_G1(&proof.g_A.g);
     let proof_g_A_h_precomp = ppT::precompute_G1(&proof.g_A.h);
     let kc_A_1 = ppT::miller_loop(&proof_g_A_g_precomp, &pvk.vk_alphaA_g2_precomp);
@@ -871,7 +871,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spana.exit();
 
-    let spanb = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
+    let spanb = span!(Level::INFO, "Check knowledge commitment for B is valid").entered();
     let proof_g_B_g_precomp = ppT::precompute_G2(&proof.g_B.g);
     let proof_g_B_h_precomp = ppT::precompute_G1(&proof.g_B.h);
     let kc_B_1 = ppT::miller_loop(&pvk.vk_alphaB_g1_precomp, &proof_g_B_g_precomp);
@@ -886,7 +886,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spanb.exit();
 
-    let spanc = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
+    let spanc = span!(Level::INFO, "Check knowledge commitment for C is valid").entered();
     let proof_g_C_g_precomp = ppT::precompute_G1(&proof.g_C.g);
     let proof_g_C_h_precomp = ppT::precompute_G1(&proof.g_C.h);
     let kc_C_1 = ppT::miller_loop(&proof_g_C_g_precomp, &pvk.vk_alphaC_g2_precomp);
@@ -901,7 +901,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spanc.exit();
 
-    let spanq = span!(Level::TRACE, "Check QAP divisibility").entered();
+    let spanq = span!(Level::INFO, "Check QAP divisibility").entered();
     // check that g^((A+acc)*B)=g^(H*\Prod(t-\sigma)+C)
     // equivalently, via pairings, that e(g^(A+acc), g^B) = e(g^H, g^Z) + e(g^C, g^1)
     let proof_g_A_g_acc_precomp = ppT::precompute_G1(&(proof.g_A.g.clone() + acc.clone()));
@@ -923,7 +923,7 @@ pub fn r1cs_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spanq.exit();
 
-    let spanc = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let spanc = span!(Level::INFO, "Check same coefficients were used").entered();
     let proof_g_K_precomp = ppT::precompute_G1(&proof.g_K);
     let proof_g_A_g_acc_C_precomp =
         ppT::precompute_G1(&((proof.g_A.g.clone() + acc.clone()) + proof.g_C.g.clone()));
@@ -960,7 +960,7 @@ pub fn r1cs_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
 ) -> bool {
     let mut result = true;
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_ppzksnark_online_verifier_strong_IC"
     )
     .entered();
@@ -995,7 +995,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     proof: &r1cs_ppzksnark_proof<ppT>,
 ) -> bool {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_ppzksnark_affine_verifier_weak_IC"
     );
     let _ = span0.enter();
@@ -1010,7 +1010,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     let pvk_vk_gamma_beta_g1_precomp = ppT::affine_ate_precompute_G1(&vk.gamma_beta_g1);
     let pvk_vk_gamma_beta_g2_precomp = ppT::affine_ate_precompute_G2(&vk.gamma_beta_g2);
 
-    let span = span!(Level::TRACE, "Compute input-dependent part of A").entered();
+    let span = span!(Level::INFO, "Compute input-dependent part of A").entered();
     let accumulated_IC = vk
         .encoded_IC_query
         .accumulate_chunk::<ppT::Fr>(primary_input, 0);
@@ -1019,7 +1019,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     span.exit();
 
     let mut result = true;
-    let span = span!(Level::TRACE, "Check knowledge commitment for A is valid").entered();
+    let span = span!(Level::INFO, "Check knowledge commitment for A is valid").entered();
     let proof_g_A_g_precomp = ppT::affine_ate_precompute_G1(&proof.g_A.g);
     let proof_g_A_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_A.h);
     let kc_A_miller = ppT::affine_ate_e_over_e_miller_loop(
@@ -1037,7 +1037,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for B is valid").entered();
+    let span = span!(Level::INFO, "Check knowledge commitment for B is valid").entered();
     let proof_g_B_g_precomp = ppT::affine_ate_precompute_G2(&proof.g_B.g);
     let proof_g_B_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_B.h);
     let kc_B_miller = ppT::affine_ate_e_over_e_miller_loop(
@@ -1054,7 +1054,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Check knowledge commitment for C is valid").entered();
+    let span = span!(Level::INFO, "Check knowledge commitment for C is valid").entered();
     let proof_g_C_g_precomp = ppT::affine_ate_precompute_G1(&proof.g_C.g);
     let proof_g_C_h_precomp = ppT::affine_ate_precompute_G1(&proof.g_C.h);
     let kc_C_miller = ppT::affine_ate_e_over_e_miller_loop(
@@ -1071,7 +1071,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Check QAP divisibility").entered();
+    let span = span!(Level::INFO, "Check QAP divisibility").entered();
     let proof_g_A_g_acc_precomp =
         ppT::affine_ate_precompute_G1(&(proof.g_A.g.clone() + acc.clone()));
     let proof_g_H_precomp = ppT::affine_ate_precompute_G1(&proof.g_H);
@@ -1091,7 +1091,7 @@ pub fn r1cs_ppzksnark_affine_verifier_weak_IC<ppT: PublicParams>(
     }
     span.exit();
 
-    let span = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let span = span!(Level::INFO, "Check same coefficients were used").entered();
     let proof_g_K_precomp = ppT::affine_ate_precompute_G1(&proof.g_K);
     let proof_g_A_g_acc_C_precomp =
         ppT::affine_ate_precompute_G1(&((proof.g_A.g.clone() + acc.clone()) + proof.g_C.g.clone()));

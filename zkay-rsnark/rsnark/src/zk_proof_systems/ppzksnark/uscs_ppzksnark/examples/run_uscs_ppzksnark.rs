@@ -43,7 +43,7 @@ pub fn run_uscs_ppzksnark<ppT: ppTConfig>(
     example: &uscs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to run_uscs_ppzksnark").entered();
+    let span = span!(Level::INFO, "Call to run_uscs_ppzksnark").entered();
 
     println!("USCS ppzkSNARK Generator");
     let mut keypair = uscs_ppzksnark_generator::<ppT>(&example.constraint_system);
@@ -55,7 +55,7 @@ pub fn run_uscs_ppzksnark<ppT: ppTConfig>(
     let mut pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<uscs_ppzksnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<uscs_ppzksnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<uscs_ppzksnark_processed_verification_key<ppT>>(&pvk);
@@ -73,7 +73,7 @@ pub fn run_uscs_ppzksnark<ppT: ppTConfig>(
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<uscs_ppzksnark_proof<ppT>>(&proof);
         span.exit();
     }

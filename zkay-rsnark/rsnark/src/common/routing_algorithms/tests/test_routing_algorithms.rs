@@ -47,17 +47,17 @@ pub fn test_as_waksman(N: usize) {
 pub fn main() -> i32 {
     start_profiling();
 
-    let span0 = span!(Level::TRACE, "Test routing algorithms");
+    let span0 = span!(Level::INFO, "Test routing algorithms");
     let _ = span0.enter();
 
-    let span1 = span!(Level::TRACE, "Test Benes network routing algorithm").entered();
+    let span1 = span!(Level::INFO, "Test Benes network routing algorithm").entered();
     let bn_size = 8;
     print_indent();
     print!("* for all permutations on {} elements\n", bn_size);
     test_benes(bn_size);
     span1.exit();
 
-    let span = span!(Level::TRACE, "Test AS-Waksman network routing algorithm").entered();
+    let span = span!(Level::INFO, "Test AS-Waksman network routing algorithm").entered();
     let asw_max_size = 9;
     for i in 2..=asw_max_size {
         print_indent();

@@ -1,15 +1,12 @@
-// #![feature(asm_const)] 
+// #![feature(asm_const)]
 use std::arch::asm;
 pub fn mul_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
     let mut res = [0u64; 6];
     unsafe {
-        
-        
         comba_3_by_3_mul(&mut res, a, b);
-        
+
         reduce_6_limb_product(&mut res, modulus, inv);
 
-        
         let mut final_res = [res[3], res[4], res[5]];
         montgomery_finalize_3_limbs(&mut final_res, modulus);
 
@@ -90,7 +87,7 @@ pub unsafe fn comba_3_by_3_mul(res: &mut [u64; 6], a: &[u64; 3], b: &[u64; 3]) {
         "adc {c1}, rdx",
         "mov [ {res} + 40 ], {c1}",
 
-        
+
         c0 = out(reg) c0,
         c1 = out(reg) c1,
         c2 = out(reg) c2,
@@ -112,7 +109,7 @@ pub unsafe fn reduce_6_limb_product(res: &mut [u64; 6], modulus: &[u64; 3], inv:
     let mut tmp3: u64;
 
     std::arch::asm!(
-        
+
         "mov rax, [ {res} + 0 ]",
         "mul {modprime}",
         "mov {k}, rax",
@@ -141,7 +138,7 @@ pub unsafe fn reduce_6_limb_product(res: &mut [u64; 6], modulus: &[u64; 3], inv:
         "adc qword ptr [ {res} + 32 ], 0",
         "adc qword ptr [ {res} + 40 ], 0",
 
-        
+
         "mov rax, [ {res} + 8 ]",
         "mul {modprime}",
         "mov {k}, rax",
@@ -169,7 +166,7 @@ pub unsafe fn reduce_6_limb_product(res: &mut [u64; 6], modulus: &[u64; 3], inv:
         "adc [ {res} + 32 ], {tmp1}",
         "adc qword ptr [ {res} + 40 ], 0",
 
-        
+
         "mov rax, [ {res} + 16 ]",
         "mul {modprime}",
         "mov {k}, rax",
@@ -196,7 +193,7 @@ pub unsafe fn reduce_6_limb_product(res: &mut [u64; 6], modulus: &[u64; 3], inv:
         "add [ {res} + 32 ], {tmp3}",
         "adc [ {res} + 40 ], {tmp1}",
 
-        
+
         k = out(reg) k,
         tmp1 = out(reg) tmp1,
         tmp2 = out(reg) tmp2,
@@ -212,18 +209,15 @@ pub unsafe fn reduce_6_limb_product(res: &mut [u64; 6], modulus: &[u64; 3], inv:
 #[cfg(target_arch = "x86_64")]
 #[inline(always)]
 unsafe fn montgomery_finalize_3_limbs(res_hi: &mut [u64; 3], modulus: &[u64; 3]) {
-    
-    
-
     let r_ptr = res_hi.as_mut_ptr();
     let m_ptr = modulus.as_ptr();
 
     core::arch::asm!(
-        
+
         "mov {tmp}, [{m_ptr} + 16]",
         "cmp [{r_ptr} + 16], {tmp}",
-        "jb 3f", 
-        "ja 2f", 
+        "jb 3f",
+        "ja 2f",
 
         "mov {tmp}, [{m_ptr} + 8]",
         "cmp [{r_ptr} + 8], {tmp}",
@@ -234,8 +228,8 @@ unsafe fn montgomery_finalize_3_limbs(res_hi: &mut [u64; 3], modulus: &[u64; 3])
         "cmp [{r_ptr}], {tmp}",
         "jb 3f",
 
-        
-        "2:", 
+
+        "2:",
         "mov {tmp}, [{m_ptr}]",
         "sub [{r_ptr}], {tmp}",
 
@@ -245,11 +239,11 @@ unsafe fn montgomery_finalize_3_limbs(res_hi: &mut [u64; 3], modulus: &[u64; 3])
         "mov {tmp}, [{m_ptr} + 16]",
         "sbb [{r_ptr} + 16], {tmp}",
 
-        "3:", 
+        "3:",
         m_ptr = in(reg) m_ptr,
         r_ptr = in(reg) r_ptr,
-        tmp = out(reg) _,     
-        
+        tmp = out(reg) _,
+
     );
 }
 
@@ -261,7 +255,7 @@ unsafe fn comba_3_by_3_mull(a: *const u64, b: *const u64, res: *mut u64) {
         "mov rax, [{a}]",
         "mul qword ptr [{b}]",
         "mov [{res}], rax",
-        "mov r8, rdx",       
+        "mov r8, rdx",
 
         // Column 1: A[0]*B[1] + A[1]*B[0]
         "mov rax, [{a}]",
@@ -318,7 +312,7 @@ unsafe fn comba_3_by_3_mull(a: *const u64, b: *const u64, res: *mut u64) {
         "adc r12, rdx",
         "adc r13, 0",
         "mov [{res} + 32], r11",
-        "mov [{res} + 40], r12", 
+        "mov [{res} + 40], r12",
 
         a = in(reg) a,
         b = in(reg) b,
@@ -342,9 +336,9 @@ unsafe fn comba_3_by_3_mull(a: *const u64, b: *const u64, res: *mut u64) {
 
 //             // res[i..i+3] += k * modulus
 //             "mul qword ptr [{m}]",
-//             "add rax, [{res} + {offset}]", 
+//             "add rax, [{res} + {offset}]",
 //             "mov r9, rdx",
-//             "adc r9, 0", 
+//             "adc r9, 0",
 
 //             "mov rax, r8",
 //             "mul qword ptr [{m} + 8]",
@@ -361,7 +355,7 @@ unsafe fn comba_3_by_3_mull(a: *const u64, b: *const u64, res: *mut u64) {
 //             "adc rdx, 0",
 //             "add rax, [{res} + {offset} + 16]",
 //             "mov [{res} + {offset} + 16], rax",
-//             "add [{res} + {offset} + 24], rdx", 
+//             "add [{res} + {offset} + 24], rdx",
 
 //             res = in(reg) res,
 //             m = in(reg) modulus,
@@ -393,9 +387,9 @@ pub unsafe fn comba_3_by_3_sqr(res: &mut [u64; 6], a: &[u64; 3]) {
         "mul qword ptr [ {A} + 8 ]",
         "add {c0}, rax",
         "adc {c1}, rdx",
-        "add {c0}, rax", 
+        "add {c0}, rax",
         "mov [ {res} + 8 ], {c0}",
-        "adc {c1}, rdx", 
+        "adc {c1}, rdx",
         "adc {c2}, 0",
 
         // --- Round 2: 2 * (a0 * a2) + a1 * a1 (register renaming c1, c2, c0) ---
@@ -405,12 +399,12 @@ pub unsafe fn comba_3_by_3_sqr(res: &mut [u64; 6], a: &[u64; 3]) {
         "add {c1}, rax",
         "adc {c2}, rdx",
         "adc {c0}, 0",
-        "add {c1}, rax", 
-        "adc {c2}, rdx", 
+        "add {c1}, rax",
+        "adc {c2}, rdx",
         "adc {c0}, 0",
 
         "mov rax, [ {A} + 8 ]",
-        "mul rax",       
+        "mul rax",
         "add {c1}, rax",
         "mov [ {res} + 16 ], {c1}",
         "adc {c2}, rdx",
@@ -423,7 +417,7 @@ pub unsafe fn comba_3_by_3_sqr(res: &mut [u64; 6], a: &[u64; 3]) {
         "add {c2}, rax",
         "adc {c0}, rdx",
         "adc {c1}, 0",
-        "add {c2}, rax", 
+        "add {c2}, rax",
         "mov [ {res} + 24 ], {c2}",
         "adc {c0}, rdx",
         "adc {c1}, 0",
@@ -436,7 +430,7 @@ pub unsafe fn comba_3_by_3_sqr(res: &mut [u64; 6], a: &[u64; 3]) {
         "adc {c1}, rdx",
         "mov [ {res} + 40 ], {c1}",
 
-        
+
         c0 = out(reg) c0,
         c1 = out(reg) c1,
         c2 = out(reg) c2,
@@ -450,21 +444,19 @@ pub unsafe fn comba_3_by_3_sqr(res: &mut [u64; 6], a: &[u64; 3]) {
 
 #[cfg(all(target_arch = "x86_64", feature = "asm"))]
 pub fn squared_nn3(a: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
-    let mut res = [0u64; 6]; 
+    let mut res = [0u64; 6];
 
     unsafe {
-        
-        
         core::arch::asm!(
-            
-            
-            
 
-            
-            
-            
 
-            
+
+
+
+
+
+
+
             "mov {rax}, [{m} + 16]",
             "cmp [{res_high} + 16], {rax}",
             "jb 2f",
@@ -486,7 +478,7 @@ pub fn squared_nn3(a: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
             "sbb [{res_high} + 16], {rax}",
 
             "2:", // done
-            res_high = in(reg) &mut res[3], 
+            res_high = in(reg) &mut res[3],
             m = in(reg) modulus.as_ptr(),
             inv = in(reg) inv,
             rax = out(reg) _,
@@ -508,7 +500,7 @@ pub fn squared_n3(a: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
         comba_3_by_3_sqr(&mut res, a);
 
         // --- 2. MONTGOMERY REDUCE ---
-        
+
         reduce_6_limb_product(&mut res, modulus, inv);
 
         // --- 3. FINAL SUBTRACTION  ---
@@ -538,7 +530,6 @@ pub fn squared_n3(a: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
     output
 }
 
-
 #[repr(C)]
 pub struct Fp256 {
     pub data: [u64; 4],
@@ -559,11 +550,9 @@ impl Fp256 {
 
         #[cfg(not(all(target_arch = "x86_64", feature = "asm")))]
         {
-            
             let mut carry = 0u64;
             let mut res = [0u64; 4];
 
-            
             for i in 0..4 {
                 let (sum, c) = self.data[i].overflowing_add(other.data[i]);
                 let (sum2, c2) = sum.overflowing_add(carry);
@@ -571,7 +560,6 @@ impl Fp256 {
                 carry = (c as u64) + (c2 as u64);
             }
 
-            
             if carry > 0 || res >= Self::MODULUS {
                 let mut borrow = 0u64;
                 for i in 0..4 {
@@ -590,7 +578,7 @@ macro_rules! sub_256 {
     ($a:expr, $b:expr, $modulus:expr) => {
         unsafe {
             core::arch::asm!(
-                
+
                 "mov {rax}, [{b}]",
                 "sub [{a}], {rax}",
                 "mov {rax}, [{b} + 8]",
@@ -600,10 +588,10 @@ macro_rules! sub_256 {
                 "mov {rax}, [{b} + 24]",
                 "sbb [{a} + 24], {rax}",
 
-                
+
                 "jnc 2f",
 
-                
+
                 "mov {rax}, [{m}]",
                 "add [{a}], {rax}",
                 "mov {rax}, [{m} + 8]",
@@ -613,7 +601,7 @@ macro_rules! sub_256 {
                 "mov {rax}, [{m} + 24]",
                 "adc [{a} + 24], {rax}",
 
-                "2:", 
+                "2:",
                 a = in(reg) $a,
                 b = in(reg) $b,
                 m = in(reg) $modulus,
@@ -636,7 +624,6 @@ impl Fp256 {
 
         #[cfg(not(all(target_arch = "x86_64", feature = "asm")))]
         {
-            
             let mut borrow = 0u64;
             let mut res = [0u64; 4];
 
@@ -664,7 +651,7 @@ impl Fp256 {
 
 #[cfg(target_arch = "x86_64")]
 pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv: u64) -> [u64; 4] {
-    let mut tmp = [0u64; 5]; 
+    let mut tmp = [0u64; 5];
     let mut t0: u64;
     let mut t1: u64;
     let mut cy: u64;
@@ -718,7 +705,7 @@ pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv:
         "xorq {T0}, {T0}", "movq 24({A}), %rax", "mulq 24({B})", "addq {T1}, %rax", "movq %rax, 16({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 24({M}), %rax", "mulq {u}", "addq %rax, 16({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 32({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 24({tmp})", "movq {cy}, 32({tmp})",
 
-        
+
         "movq 24({M}), %rax", "cmpq %rax, 24({tmp})", "jb 2f", "ja 1f",
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
         "movq 8({M}), %rax",  "cmpq %rax, 8({tmp})",  "jb 2f", "ja 1f",
@@ -749,7 +736,7 @@ pub unsafe fn mul_reduce_n4(a: &[u64; 4], b: &[u64; 4], modulus: &[u64; 4], inv:
 
 #[cfg(target_arch = "x86_64")]
 pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv: u64) -> [u64; 5] {
-    let mut tmp = [0u64; 6]; 
+    let mut tmp = [0u64; 6];
     let mut t0: u64;
     let mut t1: u64;
     let mut cy: u64;
@@ -800,7 +787,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
         "xorq {T0}, {T0}", "movq 32({A}), %rax", "mulq 32({B})", "addq {T1}, %rax", "movq %rax, 24({tmp})", "adcq $0, %rdx", "movq %rdx, {T1}", "movq 32({M}), %rax", "mulq {u}", "addq %rax, 24({tmp})", "adcq {cy}, %rdx", "adcq $0, {T0}", "xorq {cy}, {cy}", "addq %rdx, {T1}", "adcq {T0}, {cy}", "addq 40({tmp}), {T1}", "adcq $0, {cy}",
         "movq {T1}, 32({tmp})", "movq {cy}, 40({tmp})",
 
-        
+
         "movq 32({M}), %rax", "cmpq %rax, 32({tmp})", "jb 2f", "ja 1f",
         "movq 24({M}), %rax", "cmpq %rax, 24({tmp})", "jb 2f", "ja 1f",
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
@@ -826,7 +813,7 @@ pub unsafe fn mul_reduce_n5(a: &[u64; 5], b: &[u64; 5], modulus: &[u64; 5], inv:
 
 #[cfg(target_arch = "x86_64")]
 pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv: u64) -> [u64; 3] {
-    let mut tmp = [0u64; 6]; 
+    let mut tmp = [0u64; 6];
     let mut t0: u64;
     let mut t1: u64;
     let mut cy: u64;
@@ -878,7 +865,7 @@ pub unsafe fn mull_reduce_n3(a: &[u64; 3], b: &[u64; 3], modulus: &[u64; 3], inv
 
         "movq {T1}, 16({tmp})", "movq {cy}, 24({tmp})",
 
-        
+
         "movq 16({M}), %rax", "cmpq %rax, 16({tmp})", "jb 2f", "ja 1f",
         "movq 8({M}), %rax",  "cmpq %rax, 8({tmp})",  "jb 2f", "ja 1f",
         "movq 0({M}), %rax",  "cmpq %rax, 0({tmp})",  "jb 2f", "ja 1f",
@@ -902,10 +889,8 @@ pub trait MontgomeryConfig: Sized {
     const N: usize;
     type Array: AsRef<[u64]> + AsMut<[u64]> + Default + Copy;
 
-    
     fn mul_reduce(this: &mut Self::Array, other: &Self::Array, modulus: &Self::Array, inv: u64);
 }
-
 
 pub struct N3;
 pub struct N4;
@@ -951,7 +936,6 @@ impl<C: MontgomeryConfig> Fp<C> {
         Self { data }
     }
 
-    
     pub fn mul_assign(&mut self, other: &Self, modulus: &C::Array, inv: u64) {
         unsafe {
             C::mul_reduce(&mut self.data, &other.data, modulus, inv);
@@ -959,11 +943,10 @@ impl<C: MontgomeryConfig> Fp<C> {
     }
 }
 fn main() {
-    
     let mut a = Fp::<N4>::new([1, 0, 0, 0]);
     let b = Fp::<N4>::new([2, 0, 0, 0]);
     let m = [0xFFFFFFFFFFFFFFFFu64; 4];
-    let inv = 123456789u64; 
+    let inv = 123456789u64;
 
     a.mul_assign(&b, &m, inv);
 
@@ -982,8 +965,8 @@ pub unsafe fn add_assign_asm<const N: usize>(a: *mut u64, b: *const u64, modulus
                 "mov rax, [{b} + 16]",
                 "adc [{a} + 16], rax",
 
-                
-                "jc 2f",          
+
+                "jc 2f",
                 "mov rax, [{m} + 16]",
                 "cmp [{a} + 16], rax",
                 "jb 3f", "ja 2f",
@@ -1086,8 +1069,8 @@ pub unsafe fn add_assign_n3(a: &mut [u64; 3], b: &[u64; 3], modulus: &[u64; 3]) 
         "mov rax, [{b} + 16]",
         "adc [{a} + 16], rax",
 
-        
-        "jc 2f",          
+
+        "jc 2f",
         "mov rax, [{m} + 16]",
         "cmp [{a} + 16], rax",
         "jb 3f", "ja 2f",
@@ -1179,7 +1162,6 @@ pub unsafe fn add_assign_n5(a: &mut [u64; 4], b: &[u64; 4], modulus: &[u64; 4]) 
     );
 }
 
-
 #[cfg(target_arch = "x86_64")]
 pub unsafe fn sub_assign_asm<const N: usize>(a: *mut u64, b: *const u64, modulus: *const u64) {
     match N {
@@ -1193,10 +1175,10 @@ pub unsafe fn sub_assign_asm<const N: usize>(a: *mut u64, b: *const u64, modulus
                 "mov rax, [{b} + 16]",
                 "sbb [{a} + 16], rax",
 
-                
+
                 "jnc 2f",
 
-                
+
                 "mov rax, [{m}]",
                 "add [{a}], rax",
                 "mov rax, [{m} + 8]",
@@ -1204,7 +1186,7 @@ pub unsafe fn sub_assign_asm<const N: usize>(a: *mut u64, b: *const u64, modulus
                 "mov rax, [{m} + 16]",
                 "adc [{a} + 16], rax",
 
-                "2:", 
+                "2:",
                 a = in(reg) a,
                 b = in(reg) b,
                 m = in(reg) modulus,
@@ -1261,10 +1243,10 @@ pub unsafe fn sub_assign_n3(a: &mut [u64; 3], b: &[u64; 3], modulus: &[u64; 3]) 
         "mov rax, [{b} + 16]",
         "sbb [{a} + 16], rax",
 
-        
+
         "jnc 2f",
 
-        
+
         "mov rax, [{m}]",
         "add [{a}], rax",
         "mov rax, [{m} + 8]",
@@ -1272,7 +1254,7 @@ pub unsafe fn sub_assign_n3(a: &mut [u64; 3], b: &[u64; 3], modulus: &[u64; 3]) 
         "mov rax, [{m} + 16]",
         "adc [{a} + 16], rax",
 
-        "2:", 
+        "2:",
         a = in(reg) a.as_mut_ptr(),
         b = in(reg) b.as_ptr(),
         m = in(reg) modulus.as_ptr(),
@@ -1319,15 +1301,12 @@ pub unsafe fn sub_assign_n5(a: &mut [u64; 5], b: &[u64; 5], modulus: &[u64; 5]) 
     );
 }
 
-
 pub fn mul_reduce_portable<const N: usize>(
     a: &[u64; N],
     b: &[u64; N],
     modulus: &[u64; N],
     inv: u64,
 ) -> [u64; N] {
-    
-    
     let mut res = vec![0u64; N * 2];
     for i in 0..N {
         let mut carry = 0u64;
@@ -1339,19 +1318,16 @@ pub fn mul_reduce_portable<const N: usize>(
         res[i + N] = carry;
     }
 
-    
     for i in 0..N {
         let k = res[i].wrapping_mul(inv);
         let mut carry = 0u64;
 
-        
         for j in 0..N {
             let prod = (k as u128) * (modulus[j] as u128) + (res[i + j] as u128) + (carry as u128);
             res[i + j] = prod as u64;
             carry = (prod >> 64) as u64;
         }
 
-        
         let mut pos = i + N;
         let mut c_in = carry;
         while c_in > 0 && pos < 2 * N {
@@ -1362,7 +1338,6 @@ pub fn mul_reduce_portable<const N: usize>(
         }
     }
 
-    
     let mut res_hi = [0u64; N];
     res_hi.copy_from_slice(&res[N..2 * N]);
 
@@ -1377,7 +1352,7 @@ pub fn mul_reduce_portable<const N: usize>(
         }
         if i == 0 {
             exceeds = true;
-        } 
+        }
     }
 
     if exceeds {
@@ -1394,19 +1369,14 @@ pub fn mul_reduce_portable<const N: usize>(
 }
 
 pub fn add_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modulus: &[u64; N]) {
-    
     let mut carry = 0u64;
     for i in 0..N {
-        
         let (sum1, c1) = a[i].overflowing_add(b[i]);
         let (sum2, c2) = sum1.overflowing_add(carry);
         a[i] = sum2;
         carry = (c1 as u64) + (c2 as u64);
     }
 
-    
-    
-    
     let mut should_subtract = carry > 0;
     if !should_subtract {
         for i in (0..N).rev() {
@@ -1418,13 +1388,11 @@ pub fn add_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modul
                 break;
             }
             if i == 0 {
-                
                 should_subtract = true;
             }
         }
     }
 
-    
     if should_subtract {
         let mut borrow = 0u64;
         for i in 0..N {
@@ -1433,12 +1401,9 @@ pub fn add_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modul
             a[i] = sub2;
             borrow = (b1 as u64) + (b2 as u64);
         }
-        
-        
     }
 }
 pub fn sub_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modulus: &[u64; N]) {
-    
     let mut borrow = 0u64;
     for i in 0..N {
         let (sub1, b1) = a[i].overflowing_sub(b[i]);
@@ -1447,8 +1412,6 @@ pub fn sub_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modul
         borrow = (b1 as u64) + (b2 as u64);
     }
 
-    
-    
     if borrow > 0 {
         let mut carry = 0u64;
         for i in 0..N {
@@ -1457,6 +1420,5 @@ pub fn sub_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modul
             a[i] = sum2;
             carry = (c1 as u64) + (c2 as u64);
         }
-        
     }
 }

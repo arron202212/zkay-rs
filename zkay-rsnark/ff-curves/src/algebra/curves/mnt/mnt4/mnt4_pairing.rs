@@ -130,7 +130,7 @@ impl fmt::Display for mnt4_ate_G2_precomp {
 //final exponentiations
 
 pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
-    let span = span!(Level::TRACE, "Call to mnt4_final_exponentiation_last_chunk").entered();
+    let span = span!(Level::INFO, "Call to mnt4_final_exponentiation_last_chunk").entered();
     let elt_q = elt.Frobenius_map(1);
     let w1_part = elt_q.cyclotomic_exp(&mnt4_final_exponent_last_chunk_w1);
     let mut w0_part = if mnt4_final_exponent_last_chunk_is_w0_neg {
@@ -145,11 +145,7 @@ pub fn mnt4_final_exponentiation_last_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) 
 }
 
 pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4) -> mnt4_Fq4 {
-    let span = span!(
-        Level::TRACE,
-        "Call to mnt4_final_exponentiation_first_chunk"
-    )
-    .entered();
+    let span = span!(Level::INFO, "Call to mnt4_final_exponentiation_first_chunk").entered();
 
     //(q^2-1)
 
@@ -163,7 +159,7 @@ pub fn mnt4_final_exponentiation_first_chunk(elt: &mnt4_Fq4, elt_inv: &mnt4_Fq4)
 }
 
 pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
-    let span = span!(Level::TRACE, "Call to mnt4_final_exponentiation").entered();
+    let span = span!(Level::INFO, "Call to mnt4_final_exponentiation").entered();
     let elt_inv = elt.inverse();
     let elt_to_first_chunk = mnt4_final_exponentiation_first_chunk(elt, &elt_inv);
     let elt_inv_to_first_chunk = mnt4_final_exponentiation_first_chunk(&elt_inv, elt);
@@ -176,7 +172,7 @@ pub fn mnt4_final_exponentiation(elt: &mnt4_Fq4) -> mnt4_GT {
 //affine ate miller loop
 
 pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precomputation {
-    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to mnt4_affine_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -191,7 +187,7 @@ pub fn mnt4_affine_ate_precompute_G1(P: &mnt4_G1) -> mnt4_affine_ate_G1_precompu
 }
 
 pub fn mnt4_affine_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_affine_ate_G2_precomputation {
-    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to mnt4_affine_ate_precompute_G2").entered();
 
     let mut Qcopy = Q.clone();
     Qcopy.to_affine_coordinates();
@@ -267,7 +263,7 @@ pub fn mnt4_affine_ate_miller_loop(
     prec_P: &mnt4_affine_ate_G1_precomputation,
     prec_Q: &mnt4_affine_ate_G2_precomputation,
 ) -> mnt4_Fq4 {
-    let span = span!(Level::TRACE, "Call to mnt4_affine_ate_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to mnt4_affine_ate_miller_loop").entered();
 
     let mut f = mnt4_Fq4::one();
 
@@ -415,7 +411,7 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -431,7 +427,7 @@ pub fn mnt4_ate_precompute_G1(P: &mnt4_G1) -> mnt4_ate_G1_precomp {
 }
 
 pub fn mnt4_ate_precompute_G2(Q: &mnt4_G2) -> mnt4_ate_G2_precomp {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_precompute_G2").entered();
 
     let mut Qcopy = (Q.clone());
     Qcopy.to_affine_coordinates();
@@ -498,7 +494,7 @@ pub fn mnt4_ate_miller_loop(
     prec_P: &mnt4_ate_G1_precomp,
     prec_Q: &mnt4_ate_G2_precomp,
 ) -> mnt4_Fq4 {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_miller_loop").entered();
 
     let L1_coeff = mnt4_Fq2::new(prec_P.PX, mnt4_Fq::zero()) - prec_Q.QX_over_twist;
 
@@ -560,7 +556,7 @@ pub fn mnt4_ate_double_miller_loop(
     prec_P2: &mnt4_ate_G1_precomp,
     prec_Q2: &mnt4_ate_G2_precomp,
 ) -> mnt4_Fq4 {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_double_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_double_miller_loop").entered();
 
     let L1_coeff1 = mnt4_Fq2::new(prec_P1.PX, mnt4_Fq::zero()) - prec_Q1.QX_over_twist;
     let L1_coeff2 = mnt4_Fq2::new(prec_P2.PX, mnt4_Fq::zero()) - prec_Q2.QX_over_twist;
@@ -640,7 +636,7 @@ pub fn mnt4_ate_double_miller_loop(
 }
 
 pub fn mnt4_ate_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_Fq4 {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_pairing").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_pairing").entered();
     let mut prec_P = mnt4_ate_precompute_G1(P);
     let mut prec_Q = mnt4_ate_precompute_G2(Q);
     let mut result = mnt4_ate_miller_loop(&prec_P, &prec_Q);
@@ -649,7 +645,7 @@ pub fn mnt4_ate_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_Fq4 {
 }
 
 pub fn mnt4_ate_reduced_pairing(P: &mnt4_G1, Q: &mnt4_G2) -> mnt4_GT {
-    let span = span!(Level::TRACE, "Call to mnt4_ate_reduced_pairing").entered();
+    let span = span!(Level::INFO, "Call to mnt4_ate_reduced_pairing").entered();
     let f = mnt4_ate_pairing(P, Q);
     let result = mnt4_final_exponentiation(&f);
     span.exit();

@@ -278,7 +278,6 @@ pub fn _basic_radix2_evaluate_all_lagrange_polynomials<FieldT: FieldTConfig>(
     // - v_{i} = 1 / \prod_{j \neq i} (\omega^i-\omega^j).
     // Below we use the fact that v_{0} = 1/m and v_{i+1} = \omega * v_{i}.
     // */
-
     let Z = (tt.clone() ^ m) - FieldT::one();
     // let l = Z * FieldT::from(m).inverse();
     let mut r = FieldT::one();

@@ -57,11 +57,6 @@ enum ProvingScheme {
     GM17,
 }
 use std::io::{BufWriter, Write};
-// External interface
-// extern "C" {
-// int generate_keys(input_directory:&str, output_directory:&str, proving_scheme:i32);
-// int generate_proof(keys_dir:&str, input_dir:&str, output_filename:&str, proving_scheme:i32, check_verification:i32);
-// }
 
 type ppT = default_ec_pp;
 type G1 = <ppT as ff_curves::PublicParams>::G1;
@@ -231,11 +226,11 @@ fn keygen<KeyPairT: KeyPairTConfig, F>(
     let keypair = generate(cs);
 
     // Dump proving key to binary file
-    let span = span!(Level::TRACE, "WritingProverKey").entered();
+    let span = span!(Level::INFO, "WritingProverKey").entered();
     writeToFile(prover_key_filename, keypair.pk());
 
     // Dump verification key in text format
-    let span = span!(Level::TRACE, "SerializeVk").entered();
+    let span = span!(Level::INFO, "SerializeVk").entered();
     let mut vk_out = std::fs::read_to_string(verification_key_filename).unwrap();
     serialize_vk::<KeyPairT>(&mut vk_out, &keypair);
     span.exit();
@@ -271,7 +266,7 @@ where
     let mut proof;
     {
         // Read proving key
-        let span = span!(Level::TRACE, "ReadingProverKey").entered();
+        let span = span!(Level::INFO, "ReadingProverKey").entered();
         let pk = loadFromFile::<ProvingKeyT>(prover_key_filename);
         span.exit();
 
@@ -280,7 +275,7 @@ where
     }
 
     // Dump proof in text format
-    let span = span!(Level::TRACE, "SerializeProof").entered();
+    let span = span!(Level::INFO, "SerializeProof").entered();
     let mut p = proof_filename.to_string();
     ProofSerializer::serialize_proof(&mut p, &proof);
     span.exit();
@@ -289,7 +284,7 @@ where
         // Check if verification works
         let vk = loadFromFile::<VerificationKeyT>(verification_key_filename);
 
-        let span = span!(Level::TRACE, "Verifying proof").entered();
+        let span = span!(Level::INFO, "Verifying proof").entered();
         let ans = verify(vk, public_inputs.clone(), proof);
         println!("\n");
         println!(
@@ -320,10 +315,10 @@ fn generate_keys(input_directory: &str, output_directory: &str, proving_scheme: 
     let mut cs;
     {
         let pb = Protoboard::create(FieldType::R1P, None);
-        let span = span!(Level::TRACE, "CircuitReading").entered();
+        let span = span!(Level::INFO, "CircuitReading").entered();
         let reader = CircuitReader::new(&arith_filename, &dummy_input_filename, pb.clone());
         span.exit();
-        let span = span!(Level::TRACE, "Extract constraint system").entered();
+        let span = span!(Level::INFO, "Extract constraint system").entered();
         cs = get_constraint_system_from_gadgetlib2(&pb.as_ref().unwrap().borrow());
         cs.primary_input_size = (reader.getNumInputs() + reader.getNumOutputs()) as usize;
         cs.auxiliary_input_size = <GLA as GadgetLibAdapter>::getNextFreeIndex() - cs.num_inputs();
@@ -332,7 +327,7 @@ fn generate_keys(input_directory: &str, output_directory: &str, proving_scheme: 
 
     match ps {
         ProvingScheme::PGHR13 => {
-            println!("PGHR13 Generator"); //r1cs_ppzksnark_generator<ppT>
+            println!("PGHR13 Generator");
             keygen::<r1cs_ppzksnark_keypair<ppT>, _>(
                 &cs,
                 &prover_key_filename,
@@ -392,7 +387,7 @@ fn generate_proof(
         let mut cs;
         {
             // Read the circuit, evaluate, and translate constraints
-            let span = span!(Level::TRACE, "CircuitReading").entered();
+            let span = span!(Level::INFO, "CircuitReading").entered();
             let mut full_assignment;
             {
                 let mut pb = Protoboard::create(FieldType::R1P, None);

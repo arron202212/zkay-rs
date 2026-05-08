@@ -57,12 +57,12 @@ pub fn uscs_to_ssp_instance_map<
 >(
     cs: &uscs_constraint_system<FieldT, SV, SLC>,
 ) -> ssp_instance<FieldT> {
-    let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_instance_map");
+    let span0 = span!(Level::INFO, "Call to uscs_to_ssp_instance_map");
     let _ = span0.enter();
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
-    let span = span!(Level::TRACE, "Compute polynomials V in Lagrange basis").entered();
+    let span = span!(Level::INFO, "Compute polynomials V in Lagrange basis").entered();
     let mut V_in_Lagrange_basis = vec![BTreeMap::new(); cs.num_variables() + 1];
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
@@ -109,7 +109,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
     t: &FieldT,
 ) -> ssp_instance_evaluation<FieldT> {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to uscs_to_ssp_instance_map_with_evaluation"
     );
     let _ = span0.enter();
@@ -121,7 +121,7 @@ pub fn uscs_to_ssp_instance_map_with_evaluation<
 
     let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
-    let span = span!(Level::TRACE, "Compute evaluations of V and H at t").entered();
+    let span = span!(Level::INFO, "Compute evaluations of V and H at t").entered();
     let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     for i in 0..cs.num_constraints() {
         for j in 0..cs.constraints[i].terms.len() {
@@ -193,7 +193,7 @@ pub fn uscs_to_ssp_witness_map<
     auxiliary_input: &uscs_auxiliary_input<FieldT>,
     d: &FieldT,
 ) -> ssp_witness<FieldT> {
-    let span0 = span!(Level::TRACE, "Call to uscs_to_ssp_witness_map");
+    let span0 = span!(Level::INFO, "Call to uscs_to_ssp_witness_map");
     let _ = span0.enter();
     //sanity check
 
@@ -207,7 +207,7 @@ pub fn uscs_to_ssp_witness_map<
 
     let domain = get_evaluation_domain::<FieldT>(cs.num_constraints()).unwrap();
 
-    let spanvs = span!(Level::TRACE, "Compute evaluation of polynomial V on set S").entered();
+    let spanvs = span!(Level::INFO, "Compute evaluation of polynomial V on set S").entered();
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
     assert!(domain.borrow().m() >= cs.num_constraints());
     for i in 0..cs.num_constraints() {
@@ -218,11 +218,11 @@ pub fn uscs_to_ssp_witness_map<
     }
     spanvs.exit();
 
-    let spanv = span!(Level::TRACE, "Compute coefficients of polynomial V").entered();
+    let spanv = span!(Level::INFO, "Compute coefficients of polynomial V").entered();
     domain.borrow_mut().iFFT(&mut aA);
     spanv.exit();
 
-    let spanzp = span!(Level::TRACE, "Compute ZK-patch").entered();
+    let spanzp = span!(Level::INFO, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -236,13 +236,13 @@ pub fn uscs_to_ssp_witness_map<
         .add_poly_Z(&d.squared(), &mut coefficients_for_H);
     spanzp.exit();
 
-    let spanvt = span!(Level::TRACE, "Compute evaluation of polynomial V on set T").entered();
+    let spanvt = span!(Level::INFO, "Compute evaluation of polynomial V on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
     spanvt.exit();
 
-    let spanht = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
+    let spanht = span!(Level::INFO, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
     // #ifdef MULTICORE
     //#pragma omp parallel for
@@ -251,19 +251,19 @@ pub fn uscs_to_ssp_witness_map<
         H_tmp[i] = aA[i].squared() - FieldT::one();
     }
 
-    let spanzt = span!(Level::TRACE, "Divide by Z on set T").entered();
+    let spanzt = span!(Level::INFO, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
     spanzt.exit();
 
     spanht.exit();
 
-    let spanh = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
+    let spanh = span!(Level::INFO, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
     spanh.exit();
 
-    let spanhp = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
+    let spanhp = span!(Level::INFO, "Compute sum of H and ZK-patch").entered();
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();

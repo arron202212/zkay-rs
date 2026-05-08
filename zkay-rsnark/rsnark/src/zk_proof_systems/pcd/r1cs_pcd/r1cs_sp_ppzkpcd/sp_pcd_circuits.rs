@@ -892,7 +892,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     primary_input: &r1cs_pcd_compliance_predicate_primary_input<ppT::FieldT, ppT::M>,
 ) -> r1cs_primary_input<ppT::FieldT> {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to get_sp_compliance_step_pcd_circuit_input"
     );
     let _ = span0.enter();
@@ -911,7 +911,7 @@ pub fn get_sp_compliance_step_pcd_circuit_input<ppT: ppTConfig>(
     block.extend(sp_translation_step_vk_bits);
     block.extend(msg_bits);
 
-    let span = span!(Level::TRACE, "Sample CRH randomness").entered();
+    let span = span!(Level::INFO, "Sample CRH randomness").entered();
     CRH_with_field_out_gadget::<ppT::FieldT, ppT::PB>::sample_randomness(block.len());
     span.exit();
 
@@ -930,7 +930,7 @@ pub fn get_sp_translation_step_pcd_circuit_input<ppT: ppTConfig>(
     >,
 ) -> r1cs_primary_input<Fr<ppT>> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to get_sp_translation_step_pcd_circuit_input"
     )
     .entered();

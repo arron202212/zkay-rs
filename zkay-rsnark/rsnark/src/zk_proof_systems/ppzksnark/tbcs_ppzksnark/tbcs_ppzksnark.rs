@@ -136,7 +136,7 @@ type FieldT<ppT> = Fr<ppT>;
 pub fn tbcs_ppzksnark_generator<ppT: ppTConfig>(
     circuit: &tbcs_ppzksnark_circuit,
 ) -> tbcs_ppzksnark_keypair<ppT> {
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_generator").entered();
+    let span = span!(Level::INFO, "Call to tbcs_ppzksnark_generator").entered();
     let uscs_cs =
         tbcs_to_uscs_instance_map::<FieldT<ppT>, pb_variable, pb_linear_combination>(circuit);
     let uscs_keypair = uscs_ppzksnark_generator::<ppT>(&uscs_cs);
@@ -162,7 +162,7 @@ pub fn tbcs_ppzksnark_prover<ppT: ppTConfig>(
 ) -> tbcs_ppzksnark_proof<ppT> {
     // type FieldT=Fr<ppT>;
 
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_prover").entered();
+    let span = span!(Level::INFO, "Call to tbcs_ppzksnark_prover").entered();
     let uscs_va =
         tbcs_to_uscs_witness_map::<FieldT<ppT>>(&pk.circuit, primary_input, auxiliary_input);
     let uscs_pi = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
@@ -178,7 +178,7 @@ pub fn tbcs_ppzksnark_prover<ppT: ppTConfig>(
 pub fn tbcs_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &tbcs_ppzksnark_verification_key<ppT>,
 ) -> tbcs_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_verifier_process_vk").entered();
+    let span = span!(Level::INFO, "Call to tbcs_ppzksnark_verifier_process_vk").entered();
     let pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(vk);
     span.exit();
 
@@ -195,7 +195,7 @@ pub fn tbcs_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     proof: &tbcs_ppzksnark_proof<ppT>,
 ) -> bool {
     // type FieldT=Fr<ppT>;
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_verifier_weak_IC").entered();
+    let span = span!(Level::INFO, "Call to tbcs_ppzksnark_verifier_weak_IC").entered();
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
     let pvk = tbcs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let bit = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &uscs_input, proof);
@@ -214,7 +214,7 @@ pub fn tbcs_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     proof: &tbcs_ppzksnark_proof<ppT>,
 ) -> bool {
     // type FieldT=Fr<ppT>;
-    let span = span!(Level::TRACE, "Call to tbcs_ppzksnark_verifier_strong_IC").entered();
+    let span = span!(Level::INFO, "Call to tbcs_ppzksnark_verifier_strong_IC").entered();
     let pvk = tbcs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let uscs_input = convert_bit_vector_to_field_element_vector::<FieldT<ppT>>(primary_input);
     let bit = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &uscs_input, proof);
@@ -234,7 +234,7 @@ pub fn tbcs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
 ) -> bool {
     // type FieldT=Fr<ppT>;
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to tbcs_ppzksnark_online_verifier_weak_IC"
     )
     .entered();
@@ -256,7 +256,7 @@ pub fn tbcs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
 ) -> bool {
     // type FieldT=Fr<ppT>;
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to tbcs_ppzksnark_online_verifier_strong_IC"
     )
     .entered();

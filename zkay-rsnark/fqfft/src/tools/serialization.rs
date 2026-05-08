@@ -39,7 +39,6 @@
 //  * The binary serialization of algebraic objects is currently *not*
 //  * portable between machines of different word sizes.
 //  */
-
 cfg_if::cfg_if! {
  if #[cfg(feature="BINARY_OUTPUT")]
 {const OUTPUT_NEWLINE:&str= "";

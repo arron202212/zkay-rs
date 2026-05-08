@@ -36,7 +36,7 @@ impl fmt::Display for bn128_ate_G2_precomp {
 }
 
 pub fn bn128_ate_precompute_G1(P: &bn128_G1) -> bn128_ate_G1_precomp {
-    let span = span!(Level::TRACE, "Call to bn128_ate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to bn128_ate_precompute_G1").entered();
 
     let mut result = bn128_ate_G1_precomp::default();
     let mut P_coord = [Fp::default(); 3];
@@ -48,7 +48,7 @@ pub fn bn128_ate_precompute_G1(P: &bn128_G1) -> bn128_ate_G1_precomp {
 }
 
 pub fn bn128_ate_precompute_G2(Q: &bn128_G2) -> bn128_ate_G2_precomp {
-    let span = span!(Level::TRACE, "Call to bn128_ate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to bn128_ate_precompute_G2").entered();
 
     let mut result = bn128_ate_G2_precomp::default();
     let mut Q_coord = [Fp2::default(); 3];
@@ -80,7 +80,7 @@ pub fn bn128_double_ate_miller_loop(
 }
 
 pub fn bn128_final_exponentiation(elt: &bn128_Fq12) -> bn128_GT {
-    let span = span!(Level::TRACE, "Call to bn128_final_exponentiation").entered();
+    let span = span!(Level::INFO, "Call to bn128_final_exponentiation").entered();
     let mut eltcopy: bn128_GT = elt.clone().into();
     eltcopy.elem.final_exp();
     span.exit();
@@ -90,23 +90,13 @@ pub fn bn128_final_exponentiation(elt: &bn128_Fq12) -> bn128_GT {
 use ark_bn254::{Bn254, Fq12};
 use ark_ec::pairing::Pairing;
 
-
 pub fn bn128_final_exponentiationa(elt: &Fq12) -> Fq12 {
-    
-    
-
-    
-    
-    
     let result = Bn254::final_exponentiation(ark_ec::pairing::MillerLoopOutput(*elt))
         .expect("最终幂次计算失败")
-        .0; 
+        .0;
 
-    
     result
 }
-
-
 
 // #[derive(Clone, Debug, PartialEq, Eq)]
 // pub struct Bn128AteG1Precomp {

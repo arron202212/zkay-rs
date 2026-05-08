@@ -220,11 +220,11 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     // assert!(Fr::< PCD_ppT::curve_A_pp>::modulo == Fq::< PCD_ppT::curve_B_pp>::modulo);
     // assert!(Fq::< PCD_ppT::curve_A_pp>::modulo == Fr::< PCD_ppT::curve_B_pp>::modulo);
 
-    let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_generator");
+    let span0 = span!(Level::INFO, "Call to r1cs_sp_ppzkpcd_generator");
     let _ = span0.enter();
     assert!(compliance_predicate.is_well_formed());
 
-    let spancc = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
+    let spancc = span!(Level::INFO, "Construct compliance step PCD circuit").entered();
     let mut compliance_step_pcd_circuit =
         sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_constraints();
@@ -233,7 +233,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     spancc.exit();
 
     let spanc = span!(
-        Level::TRACE,
+        Level::INFO,
         "Generate key pair for compliance step PCD circuit"
     )
     .entered();
@@ -241,7 +241,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&compliance_step_pcd_circuit_cs);
     spanc.exit();
 
-    let span = span!(Level::TRACE, "Construct translation step PCD circuit").entered();
+    let span = span!(Level::INFO, "Construct translation step PCD circuit").entered();
     let mut translation_step_pcd_circuit =
         sp_translation_step_pcd_circuit_maker::<B_pp<PCD_ppT>>::new(
             compliance_step_keypair.vk.clone(),
@@ -252,7 +252,7 @@ pub fn r1cs_sp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     span.exit();
 
     let spang = span!(
-        Level::TRACE,
+        Level::INFO,
         "Generate key pair for translation step PCD circuit"
     )
     .entered();
@@ -337,7 +337,7 @@ where
             >,
         >,
 {
-    let span0 = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_prover");
+    let span0 = span!(Level::INFO, "Call to r1cs_sp_ppzkpcd_prover");
     let _ = span0.enter();
     let translation_step_r1cs_vk_bits =
         r1cs_ppzksnark_verification_key_variable::<PCD_ppT::curve_A_pp>::get_verification_key_bits(
@@ -347,7 +347,7 @@ where
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
 
-    let spanp = span!(Level::TRACE, "Prove compliance step").entered();
+    let spanp = span!(Level::INFO, "Prove compliance step").entered();
     let mut compliance_step_pcd_circuit =
         sp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(pk.compliance_predicate.clone());
     compliance_step_pcd_circuit.generate_r1cs_witness(
@@ -378,7 +378,7 @@ where
     );
     assert!(compliance_step_ok);
 
-    let spans = span!(Level::TRACE, "Prove translation step").entered();
+    let spans = span!(Level::INFO, "Prove translation step").entered();
     let translation_step_pcd_circuit =
         sp_translation_step_pcd_circuit_maker::<PCD_ppT::curve_B_pp>::new(
             pk.compliance_step_r1cs_vk.clone(),
@@ -417,7 +417,7 @@ pub fn r1cs_sp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_sp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_online_verifier").entered();
+    let span = span!(Level::INFO, "Call to r1cs_sp_ppzkpcd_online_verifier").entered();
     let r1cs_input = get_sp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
         &pvk.translation_step_r1cs_vk_bits,
         primary_input,
@@ -438,7 +438,7 @@ pub fn r1cs_sp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_sp_ppzkpcd_verification_key<PCD_ppT>,
 ) -> r1cs_sp_ppzkpcd_processed_verification_key<PCD_ppT> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_sp_ppzkpcd_processed_verification_key"
     )
     .entered();
@@ -473,7 +473,7 @@ pub fn r1cs_sp_ppzkpcd_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_sp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_sp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_sp_ppzkpcd_verifier").entered();
+    let span = span!(Level::INFO, "Call to r1cs_sp_ppzkpcd_verifier").entered();
     let pvk = r1cs_sp_ppzkpcd_process_vk::<PCD_ppT>(&vk);
     let result = r1cs_sp_ppzkpcd_online_verifier::<PCD_ppT>(&pvk, primary_input, proof);
     print_indent();

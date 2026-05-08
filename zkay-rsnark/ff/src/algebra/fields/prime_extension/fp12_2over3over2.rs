@@ -763,6 +763,7 @@ impl<
     T: Fp12_modelConfig<N, N2, N6, N12>,
 > PpConfig for Fp12_2over3over2_model<N, N2, N6, N12, T>
 {
+    const num_limbs: usize = N;
     type BigIntT = bigint<N>;
 }
 

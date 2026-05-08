@@ -62,41 +62,41 @@ pub trait Fp_modelConfig<const N: usize>:
     const Rsquared: bigint<N> = bigint::<N>::one(); // R^2, where R = W^k, where k = ??
     const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
     fn from_bigint(r: bigint<N>) -> Option<Self> {
+        panic!("unimplemented");
         None //P::from_bigint(r)
     }
 }
 
 #[derive(Educe)]
-#[educe(Default, Clone, Debug, Hash, Copy, PartialOrd, Ord, Eq)] // PartialEq,
+#[educe(Default, Clone, Debug, Hash, Copy, PartialOrd, Ord, Eq)]
 pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
     pub t: PhantomData<T>,
 }
 
-impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> {
-    // const num_limbs: usize = T::num_limbs;
-    const modulus: bigint<N> = bigint::<N>::one();
-    const num_bits: usize = 1;
-    const euler: bigint<N> = bigint::<N>::one(); // (modulus-1)/2
-    const s: usize = 1; // modulus = 2^s * t + 1
-    const t: bigint<N> = bigint::<N>::one(); // with t odd
-    const t_minus_1_over_2: bigint<N> = bigint::<N>::one(); // (t-1)/2
-    const nqr: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // a quadratic nonresidue
-    const nqr_to_t: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // nqr^t
-    const multiplicative_generator: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // generator of Fp^*
-    const root_of_unity: Fp_model<N, Self> = Fp_model::<N, Self>::const_default(); // generator^((modulus-1)/2^s)
-    const inv: u64 = 1; // modulus^(-1) mod W, where W = 2^(word size)
-    const Rsquared: bigint<N> = bigint::<N>::one(); // R^2, where R = W^k, where k = ??
-    const Rcubed: bigint<N> = bigint::<N>::one(); // R^3
-}
-
-// impl<const N: usize, T: Fp_modelConfig<N>> Borrow<Self> for Fp_model<N, T> {
-//     fn borrow(&self)->Self{
-//         *self
-//     }
+// impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> {
+//     const modulus: bigint<N> = T::modulus;
+//     const num_bits: usize =T::num_bits;
+//     const euler: bigint<N> = T::euler;
+//     const s: usize = T::s;
+//     const t: bigint<N> = T::t;
+//     const t_minus_1_over_2: bigint<N> = T::t_minus_1_over_2;
+//     const nqr: Fp_model<N, T> =T::nqr;
+//     const nqr_to_t: Fp_model<N, T> = T::nqr_to_t;
+//     const multiplicative_generator: Fp_model<N, T> = T::multiplicative_generator;
+//     const root_of_unity: Fp_model<N, T> = T::root_of_unity;
+//     const inv: u64 = T::inv;
+//     const Rsquared: bigint<N> = T::Rsquared;
+//     const Rcubed: bigint<N> = T::Rcubed;
 // }
 
 impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {
+    fn test_bit(&self, i: usize) -> bool {
+        self.mont_repr.test_bit(i)
+    }
+    fn ss() -> usize {
+        T::s
+    }
     fn as_ulong(&self) -> usize {
         self.as_bigint().as_ulong() as usize
     }
@@ -147,30 +147,27 @@ impl<const N: usize, T: Fp_modelConfig<N>> PpConfig for Fp_model<N, T> {
         self.clone()
     }
     fn random_element() -> Self {
-        
         let mut r_data = [0u64; N];
         let mut rng = rand::thread_rng();
         loop {
-            
             rng.fill(&mut r_data[..]);
 
-            
-            
             let unused_bits = T::modulus[N - 1].leading_zeros();
             if unused_bits > 0 {
-                
-                let mask = u64::MAX >> unused_bits;
-                r_data[N - 1] &= mask;
+                println!("====unused_bits====={unused_bits}");
+                if unused_bits < 64 {
+                    let mask = u64::MAX >> unused_bits;
+                    r_data[N - 1] &= mask;
+                } else {
+                    r_data[N - 1] = 0;
+                }
             }
 
-            
-            
             if r_data < T::modulus.0.0 {
                 break;
             }
         }
 
-        
         Fp_model::new(bigint::<N>(BigInt::<N>(r_data)))
     }
 
@@ -335,19 +332,13 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
         if is_unsigned || x >= 0 {
             _self.mont_repr.0.0[0] = x as u64;
         } else {
-            
-            
-            
-
-            let sub_val = (-(x as i64)) as u64; 
+            let sub_val = (-(x as i64)) as u64;
             let mut borrow = 0u8;
 
-            
             let (res, b) = _self.mont_repr.0.0[0].overflowing_sub(sub_val);
             _self.mont_repr.0.0[0] = res;
             borrow = b as u8;
 
-            
             for i in 1..N {
                 if borrow == 0 {
                     break;
@@ -357,7 +348,6 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
                 borrow = b as u8;
             }
 
-            
             debug_assert_eq!(borrow, 0, "Borrow must be zero in prime field subtraction");
         }
 
@@ -408,37 +398,28 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
     }
 
     pub fn invert(&mut self) -> Self {
-        
         debug_assert!(!self.is_zero());
 
-        
         let mut v = num_bigint::BigInt::from(T::modulus);
         let mut u = num_bigint::BigInt::from(self.mont_repr);
 
-        
-        
         let ExtendedGcd::<num_bigint::BigInt> {
             gcd: g,
             x: s,
             y: _t,
         } = u.extended_gcd(&v);
 
-        
         debug_assert!(g.is_one(), "Inverse does not exist");
 
-        
         let mut res = if s.is_negative() {
-            
             let mut tmp = num_bigint::BigInt::from(T::modulus);
             tmp.clone().sub(s.abs()); //sub_noborrow
             tmp
         } else {
-            
             s % num_bigint::BigInt::from(T::modulus)
         };
         let mut res: bigint<N> = BigUint::try_from(res).unwrap().try_into().unwrap();
-        
-        
+
         res.mul_assign(&T::Rcubed);
 
         self.mont_repr = res;
@@ -459,17 +440,12 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
             GMP_NUMB_BITS == 64,
             "Only 64-bit architectures are currently supported"
         );
-        
-        
+
         // #[cfg(not(target_pointer_width = "64"))]
         // compile_error!("Only 64-bit architectures are currently supported");
 
-        
-        
         let repr = self.bigint_repr();
 
-        
-        
         let words: Vec<u64> = repr.as_ref().to_vec();
 
         words
@@ -496,59 +472,45 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 
         // // return self.mont_repr < modulus;
         // false
-        
+
         #[cfg(not(target_pointer_width = "64"))]
         compile_error!("Only 64-bit architectures are currently supported");
 
-        
-        
         let ceil_size_in_bits = Self::ceil_size_in_bits() as i64;
         let start_bit = (words.len() as i64 * 64) - ceil_size_in_bits;
 
-        
         assert!(start_bit >= 0, "The vector is not big enough");
 
         let start_word = (start_bit / 64) as usize;
         let bit_offset = (start_bit % 64) as u32;
 
-        
-        
-        
         let mut data = [0u64; N];
         let copy_len = words.len() - start_word;
         data[..copy_len].copy_from_slice(&words[start_word..]);
 
-        
-        
         if bit_offset > 0 {
             data[N - 1] = (data[N - 1] << bit_offset) >> bit_offset;
         }
 
-        
-        
-        
         let mut result = Fp_model::<N, T>::new(bigint::<N>(BigInt::<N>(data)));
         // if !cfg!(feature = "montgomery_output") {
-        //     result.mul_assign(&T::Rsquared); 
+        //     result.mul_assign(&T::Rsquared);
         // }
 
-        
-        self.mont_repr < T::modulus 
+        self.mont_repr < T::modulus
     }
 
     pub fn bigint_repr(&self) -> bigint<N> {
-        
-        
         cfg_if! {
         if  #[cfg(feature = "montgomery_output")]
          {
-             
+
              return self.mont_repr;
          }
          else
 
          {
-             
+
              return self.as_bigint();
          }
           }
@@ -561,24 +523,24 @@ use rand::distributions::{Distribution, Standard};
 impl<const N: usize, T: Fp_modelConfig<N>> Distribution<Fp_model<N, T>> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Fp_model<N, T> {
         let mut r_data = [0u64; N];
-        let modulus = &T::modulus.0.0; 
+        let modulus = &T::modulus.0.0;
 
         loop {
-            
             for limb in r_data.iter_mut() {
                 *limb = rng.next_u64();
             }
 
-            
-            
             let unused_bits = modulus[N - 1].leading_zeros();
             if unused_bits > 0 {
-                let mask = u64::MAX >> unused_bits;
-                r_data[N - 1] &= mask;
+                println!("===5==unused_bits========{unused_bits}============");
+                if unused_bits < 64 {
+                    let mask = u64::MAX >> unused_bits;
+                    r_data[N - 1] &= mask;
+                } else {
+                    r_data[N - 1] = 0;
+                }
             }
 
-            
-            
             if &r_data < modulus {
                 break;
             }
@@ -589,9 +551,7 @@ impl<const N: usize, T: Fp_modelConfig<N>> Distribution<Fp_model<N, T>> for Stan
 }
 // let mut rng = rand::thread_rng();
 
-
 // let r: Fp384 = rng.sample(Standard);
-
 
 // let r: Fp384 = rng.gen();
 
@@ -787,19 +747,17 @@ impl<const N: usize, T: Fp_modelConfig<N>> BitXor<bigint<N>> for Fp_model<N, T> 
     }
 }
 
-
 #[inline]
 pub fn sub_n(res: &mut [u64], a: &[u64], b: &[u64]) -> u64 {
     let mut borrow = 0u64;
 
-    
     for i in 0..a.len() {
         // t = a[i] - b[i] - borrow
         let (v1, b1) = a[i].overflowing_sub(b[i]);
         let (v2, b2) = v1.overflowing_sub(borrow);
 
         res[i] = v2;
-        borrow = (b1 | b2) as u64; 
+        borrow = (b1 | b2) as u64;
     }
 
     borrow
@@ -809,12 +767,11 @@ macro_rules! sub_n {
         let mut borrow = 0u64;
         let mut i = 0;
 
-        
         while i < $n {
             let (v1, b1) = $a[i].overflowing_sub($b[i]);
             let (v2, b2) = v1.overflowing_sub(borrow);
             $res[i] = v2;
-            
+
             borrow = (b1 | b2) as u64;
             i += 1;
         }
@@ -825,18 +782,15 @@ impl<const N: usize, T: Fp_modelConfig<N>> Neg for Fp_model<N, T> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
-        
         if self.is_zero() {
             return self;
         }
         let mut res_data = [0u64; N];
-        let a = T::modulus; 
+        let a = T::modulus;
         let b = self.mont_repr;
 
-        
         sub_n!(res_data, a, b, N);
 
-        
         Self::const_new(BigInt::<N>(res_data))
     }
 }
@@ -863,20 +817,15 @@ impl<const N: usize, T: Fp_modelConfig<N>> fmt::Display for Fp_model<N, T> {
     }
 }
 
-
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    
     pub fn read<R: Read>(mut reader: R) -> io::Result<Self> {
-        
         let mut mont_repr = bigint::read(&mut reader)?;
 
-        
         let mut p = Self::new(mont_repr);
 
-        
         // #[cfg(not(feature = "montgomery_output"))]
         // {
-        
+
         //     p.mul_assign(&T::Rsquared);
         // }
 
@@ -886,26 +835,21 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 use std::io::{self, Read, Write};
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    
     pub fn read_from_circuit<R: Read>(mut reader: R) -> io::Result<Self> {
-        
         let mut repr = [0u64; N];
         for limb in repr.iter_mut() {
             let mut buf = [0u8; 8];
             reader.read_exact(&mut buf)?;
-            *limb = u64::from_le_bytes(buf); 
+            *limb = u64::from_le_bytes(buf);
         }
 
         let mut p = Self::const_new(BigInt::<N>(repr));
 
-        
-        
         // #[cfg(not(feature = "montgomery_output"))]
         // {
         //     p.mul_assign(T::Rsquared);
         // }
 
-        
         // if p.is_valid() {
         Ok(p)
         // } else {
@@ -918,16 +862,13 @@ impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
 }
 
 impl<const N: usize, T: Fp_modelConfig<N>> Fp_model<N, T> {
-    
     pub fn write_to_circuit<W: Write>(&self, mut writer: W) -> io::Result<()> {
-        
         let repr = if cfg!(feature = "montgomery_output") {
             self.mont_repr
         } else {
-            self.as_bigint() 
+            self.as_bigint()
         };
 
-        
         for limb in repr.0.0.iter() {
             writer.write_all(&limb.to_le_bytes())?;
         }

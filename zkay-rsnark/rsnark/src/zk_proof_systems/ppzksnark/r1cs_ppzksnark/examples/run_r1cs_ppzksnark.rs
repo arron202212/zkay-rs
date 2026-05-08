@@ -98,7 +98,7 @@ where
     knowledge_commitment<G1<ppT>, G1<ppT>>:
         Mul<Fr<ppT>, Output = knowledge_commitment<G1<ppT>, G1<ppT>>>,
 {
-    let span = span!(Level::TRACE, "Call to run_r1cs_ppzksnark").entered();
+    let span = span!(Level::INFO, "Call to run_r1cs_ppzksnark").entered();
 
     println!("R1CS ppzkSNARK Generator");
     let mut keypair = r1cs_ppzksnark_generator::<ppT>(&example.constraint_system);
@@ -110,7 +110,7 @@ where
     let mut pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_ppzksnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_ppzksnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_ppzksnark_processed_verification_key<ppT>>(&pvk);
@@ -128,7 +128,7 @@ where
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<r1cs_ppzksnark_proof<ppT>>(&proof);
         span.exit();
     }

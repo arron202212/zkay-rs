@@ -42,7 +42,7 @@ fn main<default_uscs_ppzksnark_pp: ppTConfig>(argc: i32, argv: &[&str]) -> i32 {
     let num_constraints = argv[1].parse::<usize>().unwrap();
     let input_size = argv[2].parse::<usize>().unwrap();
 
-    let span = span!(Level::TRACE, "Generate USCS example").entered();
+    let span = span!(Level::INFO, "Generate USCS example").entered();
     let example = generate_uscs_example_with_field_input::<
         Fr<default_uscs_ppzksnark_pp>,
         pb_variable,

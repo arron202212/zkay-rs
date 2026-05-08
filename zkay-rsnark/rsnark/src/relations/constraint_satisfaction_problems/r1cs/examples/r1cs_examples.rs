@@ -69,7 +69,7 @@ pub fn generate_r1cs_example_with_field_input<
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to generate_r1cs_example_with_field_input"
     )
     .entered();
@@ -163,7 +163,7 @@ pub fn generate_r1cs_example_with_binary_input<
     num_inputs: usize,
 ) -> r1cs_example<FieldT, SV, SLC> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to generate_r1cs_example_with_binary_input"
     )
     .entered();

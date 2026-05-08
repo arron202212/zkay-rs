@@ -43,7 +43,7 @@ pub fn bacs_to_r1cs_instance_map<
 >(
     circuit: &bacs_circuit<FieldT, SV, SLC>,
 ) -> r1cs_constraint_system<FieldT, SV, SLC> {
-    let span = span!(Level::TRACE, "Call to bacs_to_r1cs_instance_map").entered();
+    let span = span!(Level::INFO, "Call to bacs_to_r1cs_instance_map").entered();
     assert!(circuit.is_valid());
     let mut result = r1cs_constraint_system::<FieldT, SV, SLC>::default();
 
@@ -101,7 +101,7 @@ pub fn bacs_to_r1cs_witness_map<
     primary_input: &bacs_primary_input<FieldT>,
     auxiliary_input: &bacs_auxiliary_input<FieldT>,
 ) -> r1cs_variable_assignment<FieldT> {
-    let span = span!(Level::TRACE, "Call to bacs_to_r1cs_witness_map").entered();
+    let span = span!(Level::INFO, "Call to bacs_to_r1cs_witness_map").entered();
     let result = circuit.get_all_wires(primary_input, auxiliary_input);
     span.exit();
 

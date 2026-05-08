@@ -303,7 +303,7 @@ impl<ppT: ppTConfig> uscs_ppzksnark_proof<ppT> {
 pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     cs: &uscs_ppzksnark_constraint_system<ppT>,
 ) -> uscs_ppzksnark_keypair<ppT> {
-    let span0 = span!(Level::TRACE, "Call to uscs_ppzksnark_generator");
+    let span0 = span!(Level::INFO, "Call to uscs_ppzksnark_generator");
     let _ = span0.enter();
 
     //draw random element at which the SSP is evaluated
@@ -355,7 +355,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     let alpha = Fr::<ppT>::random_element();
 
-    let span = span!(Level::TRACE, "Generate USCS proving key").entered();
+    let span = span!(Level::INFO, "Generate USCS proving key").entered();
 
     let g1_exp_count = Vt_table.len() + Vt_table_minus_Xt_table.len() + Ht_table.len();
     let g2_exp_count = Vt_table_minus_Xt_table.len();
@@ -368,17 +368,17 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
     print_indent();
     print!("* G2 window: {}\n", g2_window);
 
-    let spang1 = span!(Level::TRACE, "Generating G1 multiexp table").entered();
+    let spang1 = span!(Level::INFO, "Generating G1 multiexp table").entered();
     let g1_table = get_window_table(Fr::<ppT>::size_in_bits(), g1_window, G1::<ppT>::one());
     spang1.exit();
 
-    let spang2 = span!(Level::TRACE, "Generating G2 multiexp table").entered();
+    let spang2 = span!(Level::INFO, "Generating G2 multiexp table").entered();
     let g2_table = get_window_table(Fr::<ppT>::size_in_bits(), g2_window, G2::<ppT>::one());
     spang2.exit();
 
-    let spanp = span!(Level::TRACE, "Generate proof components").entered();
+    let spanp = span!(Level::INFO, "Generate proof components").entered();
 
-    let spanv1 = span!(Level::TRACE, "Compute the query for V_g1").entered();
+    let spanv1 = span!(Level::INFO, "Compute the query for V_g1").entered();
     let mut V_g1_query = batch_exp(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -390,7 +390,7 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     spanv1.exit();
 
-    let spanav = span!(Level::TRACE, "Compute the query for alpha_V_g1").entered();
+    let spanav = span!(Level::INFO, "Compute the query for alpha_V_g1").entered();
     let mut alpha_V_g1_query = batch_exp_with_coeff(
         Fr::<ppT>::size_in_bits(),
         g1_window,
@@ -403,14 +403,14 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     spanav.exit();
 
-    let spanh1 = span!(Level::TRACE, "Compute the query for H_g1").entered();
+    let spanh1 = span!(Level::INFO, "Compute the query for H_g1").entered();
     let mut H_g1_query = batch_exp(Fr::<ppT>::size_in_bits(), g1_window, &g1_table, &Ht_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G1<ppT>>(&mut H_g1_query);
 
     spanh1.exit();
 
-    let spanv2 = span!(Level::TRACE, "Compute the query for V_g2").entered();
+    let spanv2 = span!(Level::INFO, "Compute the query for V_g2").entered();
     let mut V_g2_query = batch_exp(Fr::<ppT>::size_in_bits(), g2_window, &g2_table, &Vt_table);
     // #ifdef USE_MIXED_ADDITION
     batch_to_special::<G2<ppT>>(&mut V_g2_query);
@@ -421,14 +421,14 @@ pub fn uscs_ppzksnark_generator<ppT: ppTConfig>(
 
     span.exit();
 
-    let spanvk = span!(Level::TRACE, "Generate USCS verification key").entered();
+    let spanvk = span!(Level::INFO, "Generate USCS verification key").entered();
 
     let tilde = Fr::<ppT>::random_element();
     let tilde_g2 = tilde.clone() * G2::<ppT>::one();
     let alpha_tilde_g2 = (alpha * tilde) * G2::<ppT>::one();
     let Z_g2 = ssp_inst.Zt * G2::<ppT>::one();
 
-    let spanic = span!(Level::TRACE, "Encode IC query for USCS verification key").entered();
+    let spanic = span!(Level::INFO, "Encode IC query for USCS verification key").entered();
     let encoded_IC_base = Xt_table[0].clone() * G1::<ppT>::one();
     let encoded_IC_values = batch_exp(
         Fr::<ppT>::size_in_bits(),
@@ -475,11 +475,11 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     auxiliary_input: &uscs_ppzksnark_auxiliary_input<ppT>,
 ) -> uscs_ppzksnark_proof<ppT> {
-    let span0 = span!(Level::TRACE, "Call to uscs_ppzksnark_prover");
+    let span0 = span!(Level::INFO, "Call to uscs_ppzksnark_prover");
     let _ = span0.enter();
     let d = Fr::<ppT>::random_element();
 
-    let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
+    let spanh = span!(Level::INFO, "Compute the polynomial H").entered();
     let ssp_wit =
         uscs_to_ssp_witness_map(&pk.constraint_system, primary_input, auxiliary_input, &d);
     spanh.exit();
@@ -513,9 +513,9 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 
     // MAYBE LATER: do queries 1,2,4 at once for slightly better speed
 
-    let span = span!(Level::TRACE, "Compute the proof").entered();
+    let span = span!(Level::INFO, "Compute the proof").entered();
 
-    let spanv = span!(Level::TRACE, "Compute V_g1, the 1st component of the proof").entered();
+    let spanv = span!(Level::INFO, "Compute V_g1, the 1st component of the proof").entered();
     V_g1 = V_g1
         + multi_exp_with_mixed_addition::<
             G1<ppT>,
@@ -529,7 +529,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
     spanv.exit();
 
     let spanv2 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Compute alpha_V_g1, the 2nd component of the proof"
     )
     .entered();
@@ -545,7 +545,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
         );
     spanv2.exit();
 
-    let spanh3 = span!(Level::TRACE, "Compute H_g1, the 3rd component of the proof").entered();
+    let spanh3 = span!(Level::INFO, "Compute H_g1, the 3rd component of the proof").entered();
     H_g1 = H_g1
         + multi_exp::<G1<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.H_g1_query[..ssp_wit.degree() + 1],
@@ -554,7 +554,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
         );
     spanh3.exit();
 
-    let spanv4 = span!(Level::TRACE, "Compute V_g2, the 4th component of the proof").entered();
+    let spanv4 = span!(Level::INFO, "Compute V_g2, the 4th component of the proof").entered();
     V_g2 = V_g2
         + multi_exp::<G2<ppT>, Fr<ppT>, { multi_exp_method::multi_exp_method_BDLO12 }>(
             &pk.V_g2_query[1..ssp_wit.num_variables() + 1],
@@ -575,7 +575,7 @@ pub fn uscs_ppzksnark_prover<ppT: ppTConfig>(
 pub fn uscs_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &uscs_ppzksnark_verification_key<ppT>,
 ) -> uscs_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_process_vk").entered();
+    let span = span!(Level::INFO, "Call to uscs_ppzksnark_verifier_process_vk").entered();
 
     let mut pvk = uscs_ppzksnark_processed_verification_key::<ppT>::default();
 
@@ -603,14 +603,14 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to uscs_ppzksnark_online_verifier_weak_IC"
     );
     let _ = span0.enter();
 
     assert!(pvk.encoded_IC_query.domain_size() >= primary_input.len());
 
-    let spanv = span!(Level::TRACE, "Compute input-dependent part of V").entered();
+    let spanv = span!(Level::INFO, "Compute input-dependent part of V").entered();
     let accumulated_IC = pvk
         .encoded_IC_query
         .accumulate_chunk::<Fr<ppT>>(primary_input, 0);
@@ -620,7 +620,7 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
 
     let mut result = true;
 
-    let spanc = span!(Level::TRACE, "Check if the proof is well-formed").entered();
+    let spanc = span!(Level::INFO, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -630,9 +630,9 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     }
     spanc.exit();
 
-    let spano = span!(Level::TRACE, "Online pairing computations").entered();
+    let spano = span!(Level::INFO, "Online pairing computations").entered();
 
-    let spanvv = span!(Level::TRACE, "Check knowledge commitment for V is valid").entered();
+    let spanvv = span!(Level::INFO, "Check knowledge commitment for V is valid").entered();
     let proof_V_g1_with_acc_precomp = ppT::precompute_G1(&(proof.V_g1.clone() + acc.clone()));
     let proof_V_g2_precomp = ppT::precompute_G2(&proof.V_g2);
     let V_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &pvk.pp_G2_one_precomp);
@@ -647,7 +647,7 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     }
     spanvv.exit();
 
-    let spans = span!(Level::TRACE, "Check SSP divisibility").entered(); // i.e., check that V^2=H*Z+1
+    let spans = span!(Level::INFO, "Check SSP divisibility").entered(); // i.e., check that V^2=H*Z+1
     let proof_H_g1_precomp = ppT::precompute_G1(&proof.H_g1);
     let SSP_1 = ppT::miller_loop(&proof_V_g1_with_acc_precomp, &proof_V_g2_precomp);
     let SSP_2 = ppT::miller_loop(&proof_H_g1_precomp, &pvk.vk_Z_g2_precomp);
@@ -663,7 +663,7 @@ pub fn uscs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     }
     spans.exit();
 
-    let spansc = span!(Level::TRACE, "Check same coefficients were used").entered();
+    let spansc = span!(Level::INFO, "Check same coefficients were used").entered();
     let proof_V_g1_precomp = ppT::precompute_G1(&proof.V_g1);
     let proof_alpha_V_g1_precomp = ppT::precompute_G1(&proof.alpha_V_g1);
     let alpha_V_1 = ppT::miller_loop(&proof_V_g1_precomp, &pvk.vk_alpha_tilde_g2_precomp);
@@ -690,7 +690,7 @@ pub fn uscs_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_weak_IC").entered();
+    let span = span!(Level::INFO, "Call to uscs_ppzksnark_verifier_weak_IC").entered();
     let pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = uscs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, primary_input, proof);
     span.exit();
@@ -706,7 +706,7 @@ pub fn uscs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
 ) -> bool {
     let mut result = true;
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to uscs_ppzksnark_online_verifier_strong_IC"
     )
     .entered();
@@ -734,7 +734,7 @@ pub fn uscs_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     primary_input: &uscs_ppzksnark_primary_input<ppT>,
     proof: &uscs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to uscs_ppzksnark_verifier_strong_IC").entered();
+    let span = span!(Level::INFO, "Call to uscs_ppzksnark_verifier_strong_IC").entered();
     let pvk = uscs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let result = uscs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, primary_input, proof);
     span.exit();

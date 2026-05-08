@@ -63,7 +63,7 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to run_ram_ppzksnark").entered();
+    let span = span!(Level::INFO, "Call to run_ram_ppzksnark").entered();
 
     print!("This run uses an example with the following parameters:\n");
     example.ap.print();
@@ -88,7 +88,7 @@ where
     println!("after generator");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<ram_ppzksnark_proving_key<ram_ppzksnark_ppT>>(&keypair.pk);
         keypair.vk = reserialize::<ram_ppzksnark_verification_key<ram_ppzksnark_ppT>>(&keypair.vk);
         span.exit();
@@ -105,7 +105,7 @@ where
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<ram_ppzksnark_proof<ram_ppzksnark_ppT>>(&proof);
         span.exit();
     }

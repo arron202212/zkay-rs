@@ -43,7 +43,7 @@ pub fn simulate_random_memory_contents<FieldT: HashTConfig>(
         program_size + (input_size + 1) / 2,
     );
 
-    let span = span!(Level::TRACE, "Initialize random delegated memory").entered();
+    let span = span!(Level::INFO, "Initialize random delegated memory").entered();
     let dm_random = delegated_ra_memory::<FieldT>::new3(num_addresses, value_size, init_random);
     span.exit();
 }
@@ -62,7 +62,7 @@ pub fn profile_ram_zksnark_verifier<ppT: default_tinyram_ppzksnark_ppConfig>(
     let mut pi = ram_zksnark_proof::<ppT>::default();
     let vk = ram_zksnark_verification_key::<ppT>::dummy_verification_key(&ap);
 
-    let span = span!(Level::TRACE, "Verify fake proof").entered();
+    let span = span!(Level::INFO, "Verify fake proof").entered();
     ram_zksnark_verifier::<ppT>(&vk, &example.boot_trace, time_bound, &pi);
     span.exit();
 }

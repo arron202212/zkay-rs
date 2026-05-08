@@ -97,12 +97,12 @@ where
             >,
         >,
 {
-    let span0 = span!(Level::TRACE, "Call to run_r1cs_mp_ppzkpcd_tally_example");
+    let span0 = span!(Level::INFO, "Call to run_r1cs_mp_ppzkpcd_tally_example");
     let _ = span0.enter();
 
     let mut all_accept = true;
 
-    let spang = span!(Level::TRACE, "Generate all messages").entered();
+    let spang = span!(Level::INFO, "Generate all messages").entered();
     let mut tree_size = 0;
     let mut nodes_in_layer = 1;
     for layer in 0..=depth {
@@ -144,7 +144,7 @@ where
     let mut tree_messages =
         vec![r1cs_pcd_message::<FieldT<PCD_ppT>, PCD_ppT::M>::default(); tree_size];
 
-    let spanc = span!(Level::TRACE, "Generate compliance predicates").entered();
+    let spanc = span!(Level::INFO, "Generate compliance predicates").entered();
     let (mut tally_1_accepted_types, mut tally_2_accepted_types) =
         (BTreeSet::new(), BTreeSet::new());
     if test_same_type_optimization {
@@ -184,7 +184,7 @@ where
     let mut pvk = r1cs_mp_ppzkpcd_process_vk::<PCD_ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_mp_ppzkpcd_proving_key<PCD_ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_mp_ppzkpcd_verification_key<PCD_ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT>>(&pvk);
@@ -254,7 +254,7 @@ where
             );
 
             if test_serialization {
-                let span = span!(Level::TRACE, "Test serialization of proof").entered();
+                let span = span!(Level::INFO, "Test serialization of proof").entered();
                 proof = reserialize::<r1cs_mp_ppzkpcd_proof<PCD_ppT>>(&proof);
                 span.exit();
             }

@@ -148,7 +148,7 @@ pub fn bacs_ppzksnark_generator<ppT: ppTConfig>(
 ) -> bacs_ppzksnark_keypair<ppT> {
     // type FieldT=Fr<ppT>;
 
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_generator").entered();
+    let span = span!(Level::INFO, "Call to bacs_ppzksnark_generator").entered();
     let r1cs_cs =
         bacs_to_r1cs_instance_map::<FieldT<ppT>, pb_variable, pb_linear_combination>(circuit);
     let r1cs_keypair = r1cs_ppzksnark_generator::<ppT>(&r1cs_cs);
@@ -196,7 +196,7 @@ where
 {
     // type FieldT=Fr<ppT>;
 
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_prover").entered();
+    let span = span!(Level::INFO, "Call to bacs_ppzksnark_prover").entered();
     let r1cs_va = bacs_to_r1cs_witness_map::<FieldT<ppT>, pb_variable, pb_linear_combination>(
         &pk.circuit,
         primary_input,
@@ -214,7 +214,7 @@ where
 pub fn bacs_ppzksnark_verifier_process_vk<ppT: ppTConfig>(
     vk: &bacs_ppzksnark_verification_key<ppT>,
 ) -> bacs_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_verifier_process_vk").entered();
+    let span = span!(Level::INFO, "Call to bacs_ppzksnark_verifier_process_vk").entered();
     let pvk = r1cs_ppzksnark_verifier_process_vk::<ppT>(vk);
     span.exit();
 
@@ -230,7 +230,7 @@ pub fn bacs_ppzksnark_verifier_weak_IC<ppT: ppTConfig>(
     primary_input: &bacs_ppzksnark_primary_input<ppT>,
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_verifier_weak_IC").entered();
+    let span = span!(Level::INFO, "Call to bacs_ppzksnark_verifier_weak_IC").entered();
     let pvk = bacs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let bit = r1cs_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, primary_input, proof);
     span.exit();
@@ -247,7 +247,7 @@ pub fn bacs_ppzksnark_verifier_strong_IC<ppT: ppTConfig>(
     primary_input: &bacs_ppzksnark_primary_input<ppT>,
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to bacs_ppzksnark_verifier_strong_IC").entered();
+    let span = span!(Level::INFO, "Call to bacs_ppzksnark_verifier_strong_IC").entered();
     let pvk = bacs_ppzksnark_verifier_process_vk::<ppT>(vk);
     let bit = r1cs_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, primary_input, proof);
     span.exit();
@@ -265,7 +265,7 @@ pub fn bacs_ppzksnark_online_verifier_weak_IC<ppT: ppTConfig>(
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to bacs_ppzksnark_online_verifier_weak_IC"
     )
     .entered();
@@ -286,7 +286,7 @@ pub fn bacs_ppzksnark_online_verifier_strong_IC<ppT: ppTConfig>(
     proof: &bacs_ppzksnark_proof<ppT>,
 ) -> bool {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to bacs_ppzksnark_online_verifier_strong_IC"
     )
     .entered();

@@ -43,6 +43,17 @@ pub type alt_bn128_Fq12 = Fp12_2over3over2_model<
 >;
 pub type alt_bn128_GT = alt_bn128_Fq12;
 
+type bigint_r = bigint<alt_bn128_r_limbs>;
+type bigint_q = bigint<alt_bn128_q_limbs>;
+
+pub const alt_bn128_modulus_r: bigint_r = bigint::<alt_bn128_r_limbs>(BigInt!(
+    "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+));
+
+pub const alt_bn128_modulus_q: bigint<alt_bn128_q_limbs> = bigint::<alt_bn128_q_limbs>(BigInt!(
+    "21888242871839275222246405745257275088696311157297823662689037894645226208583"
+));
+
 #[macro_export]
 macro_rules! new_fq2 {
     ($c0:expr ,$c1:expr  ) => {{
@@ -154,6 +165,7 @@ impl Zero for Backend {
 }
 
 impl PpConfig for Backend {
+    const num_limbs: usize = 254;
     type BigIntT = bigint<1>;
 }
 // impl Fp_modelConfig<alt_bn128_r_limbs> for Backend {
@@ -186,6 +198,7 @@ impl PpConfig for Backend {
 // }
 
 impl Fp_modelConfig<alt_bn128_q_limbs> for Backend {
+    const modulus: bigint<alt_bn128_q_limbs> = alt_bn128_modulus_q;
     const Rsquared: bigint<alt_bn128_q_limbs> = bigint::<alt_bn128_q_limbs>(BigInt!(
         "3096616502983703923843567936837374451735540968419076528771170197431451843209"
     ));
@@ -409,16 +422,5 @@ impl
         ),
     ];
 }
-
-type bigint_r = bigint<alt_bn128_r_limbs>;
-type bigint_q = bigint<alt_bn128_q_limbs>;
-
-pub const alt_bn128_modulus_r: bigint_r = bigint::<alt_bn128_r_limbs>(BigInt!(
-    "21888242871839275222246405745257275088548364400416034343698204186575808495617"
-));
-
-pub const alt_bn128_modulus_q: bigint<alt_bn128_q_limbs> = bigint::<alt_bn128_q_limbs>(BigInt!(
-    "21888242871839275222246405745257275088696311157297823662689037894645226208583"
-));
 
 pub fn init_alt_bn128_fields() {}

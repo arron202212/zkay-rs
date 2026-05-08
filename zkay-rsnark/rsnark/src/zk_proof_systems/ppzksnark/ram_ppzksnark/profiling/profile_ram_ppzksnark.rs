@@ -64,7 +64,7 @@ fn main<default_ram_ppzksnark_pp:RamPptConfig>(argc: i32, argv: &[&str]) -> i32 
 
     let ap = ram_ppzksnark_architecture_params::<default_ram_ppzksnark_pp>::fromss(w, k);
 
-    let span = span!(Level::TRACE, "Generate RAM example").entered();
+    let span = span!(Level::INFO, "Generate RAM example").entered();
     let boot_trace_size_bound = program_size + input_size;
     let mut satisfiable = true;
     let example = gen_ram_example_complex::<machine_ppT<default_ram_ppzksnark_pp>>(

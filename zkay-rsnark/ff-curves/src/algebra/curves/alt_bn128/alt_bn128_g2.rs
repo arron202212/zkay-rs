@@ -215,21 +215,12 @@ impl FpmConfig for alt_bn128_G2 {
     type Fr = alt_bn128_Fq;
 }
 
-// impl One for alt_bn128_G2 {
-// fn one() -> Self { Self::G1_zero() }
-// }
-// impl BigInteger for alt_bn128_G2 {}
 impl From<BigUint> for alt_bn128_G2 {
     fn from(_: BigUint) -> Self {
         Default::default()
     }
 }
 
-// impl AsRef<[u64]> for bigint<1> {
-//     fn as_ref(&self) -> &[u64] {
-//         &self.0
-//     }
-// }
 impl PpConfig for alt_bn128_G2 {
     type BigIntT = bigint<1>;
 
@@ -240,10 +231,10 @@ impl PpConfig for alt_bn128_G2 {
         Self::G2_one() * (alt_bn128_Fr::random_element().as_bigint())
     }
     fn wnaf_window_table() -> Vec<usize> {
-        vec![]
+        <alt_bn128_G2 as alt_bn128_G2Config>::wnaf_window_table.to_vec()
     }
     fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
-        vec![]
+        <alt_bn128_G2 as alt_bn128_G2Config>::fixed_base_exp_window_table.to_vec()
     }
     fn batch_to_special_all_non_zeros(vec: &mut Vec<alt_bn128_G2>) {
         let mut Z_vec = Vec::with_capacity(vec.len());

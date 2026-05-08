@@ -5,7 +5,6 @@
 //  * Input: Polynomial A, Polynomial B.
 //  * Output: Polynomial G, Polynomial U, Polynomial V, such that G = (A * U) + (B * V).
 //  */
-
 use crate::evaluation_domain::domains::basic_radix2_domain_aux;
 use crate::polynomial_arithmetic::basic_operations;
 use crate::polynomial_arithmetic::basic_operations::{

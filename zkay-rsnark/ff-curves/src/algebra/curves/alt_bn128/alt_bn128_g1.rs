@@ -57,6 +57,7 @@ impl From<BigUint> for alt_bn128_G1 {
 }
 
 impl PpConfig for alt_bn128_G1 {
+    const num_limbs: usize = 254;
     type BigIntT = bigint<1>;
     fn size_in_bits() -> usize {
         base_field::ceil_size_in_bits() + 1
@@ -65,9 +66,6 @@ impl PpConfig for alt_bn128_G1 {
     //     self.as_bigint()
     // }
     fn dbl(&self) -> Self {
-        // #ifdef PROFILE_OP_COUNTS
-        // self.dbl_cnt+=1;
-
         // handle point at infinity
         if self.is_zero() {
             return self.clone();
@@ -518,24 +516,22 @@ impl FpmConfig for alt_bn128_G1 {
 
 use std::io::{self, Read, Write};
 
-
 pub fn write_alt_bn128_g1<W: Write>(mut out: W, g: &alt_bn128_G1) -> io::Result<()> {
     let mut copy = g.clone();
     copy.to_affine_coordinates();
 
-    
     let is_zero = if copy.is_zero() { b'1' } else { b'0' };
     out.write_all(&[is_zero])?;
     out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
     cfg_if! {
        if #[cfg(feature = "no_pt_compression")]
         {
-            
+
             write!(out, "{}{}{}", copy.X, OUTPUT_SEPARATOR, copy.Y)?;
         }
        else
         {
-            
+
             let y_lsb = (copy.Y.as_bigint().0.0[0] & 1) as u8 + b'0';
             write!(out, "{}", copy.X)?;
             out.write_all(OUTPUT_SEPARATOR.as_bytes())?;
@@ -544,7 +540,6 @@ pub fn write_alt_bn128_g1<W: Write>(mut out: W, g: &alt_bn128_G1) -> io::Result<
     }
     Ok(())
 }
-
 
 pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
     let mut is_zero_buf = [0u8; 1];
@@ -581,7 +576,7 @@ pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
                 let ty2 = tx2 * tx + alt_bn128_coeff_b;
                 let mut ty = ty2.sqrt().ok_or(io::Error::new(io::ErrorKind::InvalidData, "No sqrt"))?;
 
-                
+
                 if (ty.as_bigint().0.0[0] & 1) as u8 != y_lsb {
                     ty = -ty;
                 }
@@ -592,7 +587,6 @@ pub fn read_alt_bn128_g1<R: Read>(mut input: R) -> io::Result<alt_bn128_G1> {
         }}
 }
 
-
 pub fn write_vector_g1<W: Write>(mut out: W, v: &[alt_bn128_G1]) -> io::Result<()> {
     writeln!(out, "{}", v.len())?;
     for g in v {
@@ -602,10 +596,9 @@ pub fn write_vector_g1<W: Write>(mut out: W, v: &[alt_bn128_G1]) -> io::Result<(
     Ok(())
 }
 
-
 pub fn read_vector_g1<R: Read>(mut input: R) -> io::Result<Vec<alt_bn128_G1>> {
     let mut s_str = String::new();
-    
+
     let s: usize = read_line_as_usize(&mut input)?;
     let mut v = Vec::with_capacity(s);
     for _ in 0..s {

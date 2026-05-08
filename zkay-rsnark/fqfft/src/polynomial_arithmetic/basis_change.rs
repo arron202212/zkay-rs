@@ -63,7 +63,6 @@ pub fn compute_subproduct_tree<FieldT: FieldTConfig>(m: usize, T: &mut Vec<Vec<V
     //  * T_{i, j} = product_{l = [2^i * j] to [2^i * (j+1) - 1]} (x - x_l)
     //  * Note: n = 2^m.
     //  */
-
     //Precompute the first row.
     T[0] = vec![vec![]; 1usize << m];
     for j in 0..m {

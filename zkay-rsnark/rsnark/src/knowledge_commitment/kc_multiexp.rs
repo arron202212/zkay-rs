@@ -46,7 +46,7 @@ pub fn kc_multi_exp_with_mixed_addition<
     scalar: &[FieldT],
     chunks: usize,
 ) -> knowledge_commitment<T, T2> {
-    let span = span!(Level::TRACE, "Process scalar vector").entered();
+    let span = span!(Level::INFO, "Process scalar vector").entered();
     let index_it = vec.indices.partition_point(|&i| i < min_idx);
     let offset = index_it;
     let value_it = &vec.values[offset];

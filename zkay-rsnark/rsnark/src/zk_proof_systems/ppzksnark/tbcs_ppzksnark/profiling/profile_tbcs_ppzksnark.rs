@@ -66,7 +66,7 @@ where
     let auxiliary_input_size = 0;
     let num_outputs = num_gates / 2;
 
-    let span = span!(Level::TRACE, "Generate TBCS example").entered();
+    let span = span!(Level::INFO, "Generate TBCS example").entered();
     let example = generate_tbcs_example(
         primary_input_size,
         auxiliary_input_size,

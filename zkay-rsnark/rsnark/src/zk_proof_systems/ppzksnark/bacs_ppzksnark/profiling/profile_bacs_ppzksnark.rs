@@ -70,7 +70,7 @@ where
     let auxiliary_input_size = 0;
     let num_outputs = num_gates / 2;
 
-    let span = span!(Level::TRACE, "Generate BACS example").entered();
+    let span = span!(Level::INFO, "Generate BACS example").entered();
     let example =
         generate_bacs_example::<Fr<default_bacs_ppzksnark_pp>, pb_variable, pb_linear_combination>(
             primary_input_size,

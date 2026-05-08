@@ -74,7 +74,7 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to run_r1cs_ppzkadsnark").entered();
+    let span = span!(Level::INFO, "Call to run_r1cs_ppzkadsnark").entered();
 
     let auth_keys = r1cs_ppzkadsnark_auth_generator::<ppT>();
 
@@ -88,7 +88,7 @@ where
     let mut pvk = r1cs_ppzkadsnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_ppzkadsnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_ppzkadsnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_ppzkadsnark_processed_verification_key<ppT>>(&pvk);
@@ -128,7 +128,7 @@ where
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<r1cs_ppzkadsnark_proof<ppT>>(&proof);
         span.exit();
     }

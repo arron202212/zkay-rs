@@ -43,7 +43,7 @@ pub fn run_r1cs_se_ppzksnark<ppT: ppTConfig>(
     example: &r1cs_example<Fr<ppT>, pb_variable, pb_linear_combination>,
     test_serialization: bool,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to run_r1cs_se_ppzksnark").entered();
+    let span = span!(Level::INFO, "Call to run_r1cs_se_ppzksnark").entered();
 
     println!("R1CS SEppzkSNARK Generator");
     let mut keypair = r1cs_se_ppzksnark_generator::<ppT>(&example.constraint_system);
@@ -55,7 +55,7 @@ pub fn run_r1cs_se_ppzksnark<ppT: ppTConfig>(
     let mut pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&keypair.vk);
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of keys").entered();
+        let span = span!(Level::INFO, "Test serialization of keys").entered();
         keypair.pk = reserialize::<r1cs_se_ppzksnark_proving_key<ppT>>(&keypair.pk);
         keypair.vk = reserialize::<r1cs_se_ppzksnark_verification_key<ppT>>(&keypair.vk);
         pvk = reserialize::<r1cs_se_ppzksnark_processed_verification_key<ppT>>(&pvk);
@@ -73,7 +73,7 @@ pub fn run_r1cs_se_ppzksnark<ppT: ppTConfig>(
     println!("after prover");
 
     if test_serialization {
-        let span = span!(Level::TRACE, "Test serialization of proof").entered();
+        let span = span!(Level::INFO, "Test serialization of proof").entered();
         proof = reserialize::<r1cs_se_ppzksnark_proof<ppT>>(&proof);
         span.exit();
     }

@@ -154,11 +154,11 @@ fn main<default_tinyram_ppzksnark_pp:default_tinyram_ppzksnark_ppConfig+RamPptCo
     let mut f_primary_input = primary_input_fn;
     let mut f_auxiliary_input = auxiliary_input_fn;
 
-    let span = span!(Level::TRACE, "Loading primary input").entered();
+    let span = span!(Level::INFO, "Loading primary input").entered();
     let primary_input = load_tape(&f_primary_input);
     span.exit();
 
-    let span = span!(Level::TRACE, "Loading auxiliary input").entered();
+    let span = span!(Level::INFO, "Loading auxiliary input").entered();
     let auxiliary_input = load_tape(&f_auxiliary_input);
     span.exit();
 

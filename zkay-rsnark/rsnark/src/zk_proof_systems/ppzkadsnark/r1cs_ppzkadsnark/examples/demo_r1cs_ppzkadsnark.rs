@@ -64,7 +64,7 @@ where
         }
     }
 
-    let span = span!(Level::TRACE, "Generate R1CS example").entered();
+    let span = span!(Level::INFO, "Generate R1CS example").entered();
     let example = generate_r1cs_example_with_field_input::<
         Fr<snark_pp<ppT>>,
         pb_variable,

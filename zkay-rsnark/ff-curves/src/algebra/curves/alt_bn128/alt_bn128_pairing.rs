@@ -88,7 +88,7 @@ impl fmt::Display for alt_bn128_ate_G2_precomp {
 
 pub fn alt_bn128_final_exponentiation_first_chunk(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to alt_bn128_final_exponentiation_first_chunk"
     )
     .entered();
@@ -115,7 +115,7 @@ pub fn alt_bn128_final_exponentiation_first_chunk(elt: &alt_bn128_Fq12) -> alt_b
 }
 
 pub fn alt_bn128_exp_by_neg_z(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
-    let span = span!(Level::TRACE, "Call to alt_bn128_exp_by_neg_z").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_exp_by_neg_z").entered();
 
     let mut result = elt.cyclotomic_exp(&alt_bn128_final_exponent_z);
     if !alt_bn128_final_exponent_is_z_neg {
@@ -129,7 +129,7 @@ pub fn alt_bn128_exp_by_neg_z(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
 
 pub fn alt_bn128_final_exponentiation_last_chunk(elt: &alt_bn128_Fq12) -> alt_bn128_Fq12 {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to alt_bn128_final_exponentiation_last_chunk"
     )
     .entered();
@@ -202,7 +202,7 @@ pub fn alt_bn128_final_exponentiation_last_chunk(elt: &alt_bn128_Fq12) -> alt_bn
 }
 
 pub fn alt_bn128_final_exponentiation(elt: &alt_bn128_Fq12) -> alt_bn128_GT {
-    let span = span!(Level::TRACE, "Call to alt_bn128_final_exponentiation").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_final_exponentiation").entered();
     let A = alt_bn128_final_exponentiation_first_chunk(elt);
     let result = alt_bn128_final_exponentiation_last_chunk(&A);
 
@@ -264,7 +264,7 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_precompute_G1").entered();
 
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
@@ -278,7 +278,7 @@ pub fn alt_bn128_ate_precompute_G1(P: &alt_bn128_G1) -> alt_bn128_ate_G1_precomp
 }
 
 pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_precompute_G2").entered();
 
     let mut Qcopy = Q.clone();
     Qcopy.to_affine_coordinates();
@@ -318,9 +318,10 @@ pub fn alt_bn128_ate_precompute_G2(Q: &alt_bn128_G2) -> alt_bn128_ate_G2_precomp
     let mut Q1 = Qcopy.mul_by_q();
     assert!(
         Q1.Z == alt_bn128_Fq2::one(),
-        "==Qcopy.Z,Q1.Z==={:?},{:?}",
+        "==Qcopy.Z,Q1.Z==={:?}===q1z=={:?}==one=={:?}",
         Qcopy.Z,
-        Q1.Z
+        Q1.Z,
+        alt_bn128_Fq2::one()
     );
     let mut Q2 = Q1.mul_by_q();
     assert!(Q2.Z == alt_bn128_Fq2::one());
@@ -344,7 +345,7 @@ pub fn alt_bn128_ate_miller_loop(
     prec_P: &alt_bn128_ate_G1_precomp,
     prec_Q: &alt_bn128_ate_G2_precomp,
 ) -> alt_bn128_Fq12 {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_miller_loop").entered();
 
     let mut f = alt_bn128_Fq12::one();
 
@@ -399,7 +400,7 @@ pub fn alt_bn128_ate_double_miller_loop(
     prec_P2: &alt_bn128_ate_G1_precomp,
     prec_Q2: &alt_bn128_ate_G2_precomp,
 ) -> alt_bn128_Fq12 {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_double_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_double_miller_loop").entered();
 
     let mut f = alt_bn128_Fq12::one();
 
@@ -491,7 +492,7 @@ pub fn alt_bn128_ate_double_miller_loop(
 }
 
 pub fn alt_bn128_ate_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_Fq12 {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_pairing").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_pairing").entered();
     let mut prec_P = alt_bn128_ate_precompute_G1(P);
     let mut prec_Q = alt_bn128_ate_precompute_G2(Q);
     let mut result = alt_bn128_ate_miller_loop(&prec_P, &prec_Q);
@@ -500,7 +501,7 @@ pub fn alt_bn128_ate_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_Fq
 }
 
 pub fn alt_bn128_ate_reduced_pairing(P: &alt_bn128_G1, Q: &alt_bn128_G2) -> alt_bn128_GT {
-    let span = span!(Level::TRACE, "Call to alt_bn128_ate_reduced_pairing").entered();
+    let span = span!(Level::INFO, "Call to alt_bn128_ate_reduced_pairing").entered();
     let f = alt_bn128_ate_pairing(P, Q);
     let result = alt_bn128_final_exponentiation(&f);
     span.exit();

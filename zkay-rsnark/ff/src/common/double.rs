@@ -15,7 +15,8 @@ pub struct Double {
 }
 impl FieldTConfig for Double {}
 impl PpConfig for Double {
-    type BigIntT = bigint<1>;
+    const num_limbs: usize = 64;
+    type BigIntT = bigint<64>;
 }
 impl Eq for Double {}
 impl AsMut<[u64]> for Double {

@@ -70,7 +70,7 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
     }
 
     pub fn instance_map(&self) {
-        let span = span!(Level::TRACE, "Call to instance_map of ram_to_r1cs").entered();
+        let span = span!(Level::INFO, "Call to instance_map of ram_to_r1cs").entered();
         self.universal_gadget.borrow().generate_r1cs_constraints();
         span.exit();
     }
@@ -86,7 +86,7 @@ impl<RamT: ram_params_type> ram_to_r1cs<RamT> {
         boot_trace: &ram_boot_trace,
         auxiliary_input: &ram_input_tape,
     ) -> r1cs_primary_input<ram_base_field<RamT>> {
-        let span = span!(Level::TRACE, "Call to witness_map of ram_to_r1cs").entered();
+        let span = span!(Level::INFO, "Call to witness_map of ram_to_r1cs").entered();
         self.universal_gadget
             .borrow()
             .generate_r1cs_witness(boot_trace, auxiliary_input);

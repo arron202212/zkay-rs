@@ -88,7 +88,7 @@ pub fn r1cs_to_sap_instance_map<
 >(
     cs: &r1cs_constraint_system<FieldT, SV, SLC>,
 ) -> sap_instance<FieldT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_to_sap_instance_map");
+    let span0 = span!(Level::INFO, "Call to r1cs_to_sap_instance_map");
     let _ = span0.enter();
 
     let domain = r1cs_to_sap_get_domain(cs);
@@ -100,7 +100,7 @@ pub fn r1cs_to_sap_instance_map<
     let mut C_in_Lagrange_basis =
         Vec::<BTreeMap<usize, FieldT>>::with_capacity(sap_num_variables + 1);
 
-    let span = span!(Level::TRACE, "Compute polynomials A, C in Lagrange basis").entered();
+    let span = span!(Level::INFO, "Compute polynomials A, C in Lagrange basis").entered();
     // /**
     //  * process R1CS constraints, converting a constraint of the form
     //  *   \sum a_i x_i * \sum b_i x_i = \sum c_i x_i
@@ -229,7 +229,7 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
     t: &FieldT,
 ) -> sap_instance_evaluation<FieldT> {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_to_sap_instance_map_with_evaluation"
     );
     let _ = span0.enter();
@@ -246,7 +246,7 @@ pub fn r1cs_to_sap_instance_map_with_evaluation<
 
     let Zt = domain.borrow_mut().compute_vanishing_polynomial(t);
 
-    let span = span!(Level::TRACE, "Compute evaluations of A, C, H at t").entered();
+    let span = span!(Level::INFO, "Compute evaluations of A, C, H at t").entered();
     let u = domain.borrow_mut().evaluate_all_lagrange_polynomials(t);
     // /**
     //  * add and process all constraints as in r1cs_to_sap_instance_map
@@ -353,7 +353,7 @@ pub fn r1cs_to_sap_witness_map<
     d1: &FieldT,
     d2: &FieldT,
 ) -> sap_witness<FieldT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_to_sap_witness_map");
+    let span0 = span!(Level::INFO, "Call to r1cs_to_sap_witness_map");
     let _ = span0.enter();
 
     // sanity check
@@ -400,7 +400,7 @@ pub fn r1cs_to_sap_witness_map<
         full_variable_assignment.push(extra_var);
     }
 
-    let spanas = span!(Level::TRACE, "Compute evaluation of polynomial A on set S").entered();
+    let spanas = span!(Level::INFO, "Compute evaluation of polynomial A on set S").entered();
     let mut aA = vec![FieldT::zero(); domain.borrow().m()];
 
     // account for all constraints, as in r1cs_to_sap_instance_map
@@ -426,11 +426,11 @@ pub fn r1cs_to_sap_witness_map<
 
     spanas.exit();
 
-    let spana = span!(Level::TRACE, "Compute coefficients of polynomial A").entered();
+    let spana = span!(Level::INFO, "Compute coefficients of polynomial A").entered();
     domain.borrow_mut().iFFT(&mut aA);
     spana.exit();
 
-    let spanzp = span!(Level::TRACE, "Compute ZK-patch").entered();
+    let spanzp = span!(Level::INFO, "Compute ZK-patch").entered();
     let mut coefficients_for_H = vec![FieldT::zero(); domain.borrow().m() + 1];
 
     // add coefficients of the polynomial (2*d1*A - d2) + d1*d1*Z
@@ -443,20 +443,20 @@ pub fn r1cs_to_sap_witness_map<
         .add_poly_Z(&(d1.clone() * d1.clone()), &mut coefficients_for_H);
     spanzp.exit();
 
-    let spanat = span!(Level::TRACE, "Compute evaluation of polynomial A on set T").entered();
+    let spanat = span!(Level::INFO, "Compute evaluation of polynomial A on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aA, &FieldT::multiplicative_generator());
     spanat.exit();
 
-    let spanht = span!(Level::TRACE, "Compute evaluation of polynomial H on set T").entered();
+    let spanht = span!(Level::INFO, "Compute evaluation of polynomial H on set T").entered();
     let mut H_tmp = aA.clone(); // can overwrite aA because it is not used later
 
     for i in 0..domain.borrow().m() {
         H_tmp[i] = aA[i].clone() * aA[i].clone();
     }
 
-    let spancs = span!(Level::TRACE, "Compute evaluation of polynomial C on set S").entered();
+    let spancs = span!(Level::INFO, "Compute evaluation of polynomial C on set S").entered();
     let mut aC = vec![FieldT::zero(); domain.borrow().m()];
     // again, accounting for all constraints
     let extra_var_offset = cs.num_variables() + 1;
@@ -481,11 +481,11 @@ pub fn r1cs_to_sap_witness_map<
 
     spancs.exit();
 
-    let spanc = span!(Level::TRACE, "Compute coefficients of polynomial C").entered();
+    let spanc = span!(Level::INFO, "Compute coefficients of polynomial C").entered();
     domain.borrow_mut().iFFT(&mut aC);
     spanc.exit();
 
-    let spanct = span!(Level::TRACE, "Compute evaluation of polynomial C on set T").entered();
+    let spanct = span!(Level::INFO, "Compute evaluation of polynomial C on set T").entered();
     domain
         .borrow_mut()
         .cosetFFT(&mut aC, &FieldT::multiplicative_generator());
@@ -495,19 +495,19 @@ pub fn r1cs_to_sap_witness_map<
         H_tmp[i] = (H_tmp[i].clone() - aC[i].clone());
     }
 
-    let spanzt = span!(Level::TRACE, "Divide by Z on set T").entered();
+    let spanzt = span!(Level::INFO, "Divide by Z on set T").entered();
     domain.borrow().divide_by_Z_on_coset(&mut H_tmp);
     spanzt.exit();
 
     spanht.exit();
 
-    let spanh = span!(Level::TRACE, "Compute coefficients of polynomial H").entered();
+    let spanh = span!(Level::INFO, "Compute coefficients of polynomial H").entered();
     domain
         .borrow_mut()
         .icosetFFT(&mut H_tmp, &FieldT::multiplicative_generator());
     spanh.exit();
 
-    let spanhp = span!(Level::TRACE, "Compute sum of H and ZK-patch").entered();
+    let spanhp = span!(Level::INFO, "Compute sum of H and ZK-patch").entered();
 
     for i in 0..domain.borrow().m() {
         coefficients_for_H[i] += H_tmp[i].clone();

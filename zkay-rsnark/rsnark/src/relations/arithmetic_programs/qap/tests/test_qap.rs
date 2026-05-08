@@ -19,7 +19,7 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
     //   So we need that qap_degree >= num_inputs + 1.
     // */
     assert!(num_inputs + 1 <= qap_degree);
-    let span0 = span!(Level::TRACE, "Call to test_qap");
+    let span0 = span!(Level::INFO, "Call to test_qap");
     let _ = span0.enter();
 
     let num_constraints = qap_degree - num_inputs - 1;
@@ -36,7 +36,7 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
         if binary_input { "binary" } else { "field" }
     );
 
-    let spang = span!(Level::TRACE, "Generate constraint system and assignment").entered();
+    let spang = span!(Level::INFO, "Generate constraint system and assignment").entered();
     let example = if binary_input {
         generate_r1cs_example_with_binary_input::<FieldT, pb_variable, pb_linear_combination>(
             num_constraints,
@@ -50,7 +50,7 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
     };
     spang.exit();
 
-    let spanc = span!(Level::TRACE, "Check satisfiability of constraint system").entered();
+    let spanc = span!(Level::INFO, "Check satisfiability of constraint system").entered();
     assert!(
         example
             .constraint_system
@@ -65,15 +65,15 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
         FieldT::random_element(),
     );
 
-    let spanq = span!(Level::TRACE, "Compute QAP instance 1").entered();
+    let spanq = span!(Level::INFO, "Compute QAP instance 1").entered();
     let qap_inst_1 = r1cs_to_qap_instance_map(&example.constraint_system);
     spanq.exit();
 
-    let spanq2 = span!(Level::TRACE, "Compute QAP instance 2").entered();
+    let spanq2 = span!(Level::INFO, "Compute QAP instance 2").entered();
     let qap_inst_2 = r1cs_to_qap_instance_map_with_evaluation(&example.constraint_system, &t);
     spanq2.exit();
 
-    let spancq = span!(Level::TRACE, "Compute QAP witness").entered();
+    let spancq = span!(Level::INFO, "Compute QAP witness").entered();
     let qap_wit = r1cs_to_qap_witness_map(
         &example.constraint_system,
         &example.primary_input,
@@ -84,11 +84,11 @@ pub fn test_qap<FieldT: FieldTConfig>(qap_degree: usize, num_inputs: usize, bina
     );
     spancq.exit();
 
-    let spanq1 = span!(Level::TRACE, "Check satisfiability of QAP instance 1").entered();
+    let spanq1 = span!(Level::INFO, "Check satisfiability of QAP instance 1").entered();
     assert!(qap_inst_1.is_satisfied(&qap_wit));
     spanq1.exit();
 
-    let spanq2 = span!(Level::TRACE, "Check satisfiability of QAP instance 2").entered();
+    let spanq2 = span!(Level::INFO, "Check satisfiability of QAP instance 2").entered();
     assert!(qap_inst_2.is_satisfied(&qap_wit));
     spanq2.exit();
 }
@@ -105,7 +105,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
     let extended_domain_size = 1usize << (mnt6_Fr::s + 1);
     let extended_domain_size_special = extended_domain_size - 1;
 
-    let spanb = span!(Level::TRACE, "Test QAP with binary input").entered();
+    let spanb = span!(Level::INFO, "Test QAP with binary input").entered();
 
     test_qap::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, true);
     test_qap::<Fr<mnt6_pp>>(step_domain_size, num_inputs, true);
@@ -114,7 +114,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
 
     spanb.exit();
 
-    let span = span!(Level::TRACE, "Test QAP with field input").entered();
+    let span = span!(Level::INFO, "Test QAP with field input").entered();
 
     test_qap::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, false);
     test_qap::<Fr<mnt6_pp>>(step_domain_size, num_inputs, false);

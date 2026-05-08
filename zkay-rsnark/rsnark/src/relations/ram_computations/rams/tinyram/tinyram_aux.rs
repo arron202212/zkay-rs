@@ -602,7 +602,7 @@ pub fn load_preprocessed_program(
 
     let mut program = tinyram_program::default();
 
-    let span = span!(Level::TRACE, "Loading program").entered();
+    let span = span!(Level::INFO, "Loading program").entered();
     let (mut instr, mut line) = (String::new(), String::new());
     let mut it = preprocessed.split_ascii_whitespace();
     while let Some(instr) = it.next() {
@@ -659,7 +659,7 @@ pub fn tinyram_boot_trace_from_program_and_input(
 }
 
 pub fn load_tape(tape: &String) -> tinyram_input_tape {
-    let span = span!(Level::TRACE, "Loading tape").entered();
+    let span = span!(Level::INFO, "Loading tape").entered();
     let mut result = tinyram_input_tape::new();
 
     print_indent();

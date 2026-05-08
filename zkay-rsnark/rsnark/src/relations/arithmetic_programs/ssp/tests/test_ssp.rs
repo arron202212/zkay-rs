@@ -20,7 +20,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     num_inputs: usize,
     binary_input: bool,
 ) {
-    let span0 = span!(Level::TRACE, "Call to test_ssp");
+    let span0 = span!(Level::INFO, "Call to test_ssp");
     let _ = span0.enter();
 
     print_indent();
@@ -33,7 +33,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
         if binary_input { "binary" } else { "field" }
     );
 
-    let spang = span!(Level::TRACE, "Generate constraint system and assignment").entered();
+    let spang = span!(Level::INFO, "Generate constraint system and assignment").entered();
     let example = if binary_input {
         generate_uscs_example_with_binary_input::<FieldT, pb_variable, pb_linear_combination>(
             num_constraints,
@@ -47,7 +47,7 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     };
     spang.exit();
 
-    let spanc = span!(Level::TRACE, "Check satisfiability of constraint system").entered();
+    let spanc = span!(Level::INFO, "Check satisfiability of constraint system").entered();
     assert!(
         example
             .constraint_system
@@ -58,15 +58,15 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     let t = FieldT::random_element();
     let d = FieldT::random_element();
 
-    let spans1 = span!(Level::TRACE, "Compute SSP instance 1").entered();
+    let spans1 = span!(Level::INFO, "Compute SSP instance 1").entered();
     let ssp_inst_1 = uscs_to_ssp_instance_map(&example.constraint_system);
     spans1.exit();
 
-    let spans2 = span!(Level::TRACE, "Compute SSP instance 2").entered();
+    let spans2 = span!(Level::INFO, "Compute SSP instance 2").entered();
     let ssp_inst_2 = uscs_to_ssp_instance_map_with_evaluation(&example.constraint_system, &t);
     spans2.exit();
 
-    let spans = span!(Level::TRACE, "Compute SSP witness").entered();
+    let spans = span!(Level::INFO, "Compute SSP witness").entered();
     let ssp_wit = uscs_to_ssp_witness_map(
         &example.constraint_system,
         &example.primary_input,
@@ -75,11 +75,11 @@ pub fn test_ssp<FieldT: FieldTConfig>(
     );
     spans.exit();
 
-    let spans1 = span!(Level::TRACE, "Check satisfiability of SSP instance 1").entered();
+    let spans1 = span!(Level::INFO, "Check satisfiability of SSP instance 1").entered();
     assert!(ssp_inst_1.is_satisfied(&ssp_wit));
     spans1.exit();
 
-    let span = span!(Level::TRACE, "Check satisfiability of SSP instance 2").entered();
+    let span = span!(Level::INFO, "Check satisfiability of SSP instance 2").entered();
     assert!(ssp_inst_2.is_satisfied(&ssp_wit));
     span.exit();
 }
@@ -96,7 +96,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
     let extended_domain_size = 1usize << (mnt6_Fr::s + 1);
     let extended_domain_size_special = extended_domain_size - 1;
 
-    let spanb = span!(Level::TRACE, "Test SSP for binary inputs").entered();
+    let spanb = span!(Level::INFO, "Test SSP for binary inputs").entered();
 
     test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, true);
     test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, true);
@@ -105,7 +105,7 @@ fn main<mnt6_pp: ppTConfig, mnt6_Fr: ppTConfig>() -> i32 {
 
     spanb.exit();
 
-    let span = span!(Level::TRACE, "Test SSP for field inputs").entered();
+    let span = span!(Level::INFO, "Test SSP for field inputs").entered();
 
     test_ssp::<Fr<mnt6_pp>>(basic_domain_size, num_inputs, false);
     test_ssp::<Fr<mnt6_pp>>(step_domain_size, num_inputs, false);

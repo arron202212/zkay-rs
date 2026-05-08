@@ -139,7 +139,7 @@ impl CircuitReader {
     }
 
     pub fn parse_and_eval(&mut self, gates: &[Gate], inputsFilepath: &str) {
-        let span = span!(Level::TRACE, "Parsing and Evaluating the circuit").entered();
+        let span = span!(Level::INFO, "Parsing and Evaluating the circuit").entered();
 
         let Gate::Total(ret) = gates[0] else {
             panic!("total failed")
@@ -483,18 +483,19 @@ impl CircuitReader {
                     .val(&self.variables[z as usize].borrow()) =
                     R1P_Elem::froms(FieldT::zero()).into();
             } else {
-                *self
-                    .pb
-                    .as_ref()
-                    .unwrap()
-                    .borrow_mut()
-                    .val(&self.variables[z as usize].borrow()) = self
+                let v = self
                     .pb
                     .as_ref()
                     .unwrap()
                     .borrow()
                     .val_lc(&l.borrow())
                     .inverses(&self.pb.as_ref().unwrap().borrow().fieldType_);
+                *self
+                    .pb
+                    .as_ref()
+                    .unwrap()
+                    .borrow_mut()
+                    .val(&self.variables[z as usize].borrow()) = v;
             }
         }
 

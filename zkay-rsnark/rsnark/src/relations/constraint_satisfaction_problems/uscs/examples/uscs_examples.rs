@@ -57,7 +57,7 @@ pub fn generate_uscs_example_with_field_input<
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to generate_uscs_example_with_field_input"
     )
     .entered();
@@ -138,7 +138,7 @@ pub fn generate_uscs_example_with_binary_input<
     num_inputs: usize,
 ) -> uscs_example<FieldT, SV, SLC> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to generate_uscs_example_with_binary_input"
     )
     .entered();

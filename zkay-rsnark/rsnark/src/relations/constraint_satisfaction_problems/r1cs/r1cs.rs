@@ -256,12 +256,12 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
 
     pub fn swap_AB_if_beneficial(&mut self) {
         let span0 = span!(
-            Level::TRACE,
+            Level::INFO,
             "Call to r1cs_constraint_system::swap_AB_if_beneficial"
         );
         let _ = span0.enter();
 
-        let span = span!(Level::TRACE, "Estimate densities").entered();
+        let span = span!(Level::INFO, "Estimate densities").entered();
         let mut touched_by_A = vec![false; self.num_variables() + 1];
         let mut touched_by_B = vec![false; self.num_variables() + 1];
 
@@ -291,7 +291,7 @@ impl<FieldT: FieldTConfig, SV: SubVariableConfig, SLC: SubLinearCombinationConfi
         span.exit();
 
         if non_zero_B_count > non_zero_A_count {
-            let span = span!(Level::TRACE, "Perform the swap").entered();
+            let span = span!(Level::INFO, "Perform the swap").entered();
             for i in 0..self.constraints.len() {
                 (self.constraints[i].b, self.constraints[i].a) =
                     (self.constraints[i].a.clone(), self.constraints[i].b.clone());

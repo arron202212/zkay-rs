@@ -17,17 +17,6 @@ use ffec::{FieldTConfig, One, PpConfig, Zero};
 use fqfft::evaluation_domain::evaluation_domain::evaluation_domain;
 use rccell::RcCell;
 use std::ops::{Add, Mul, Sub};
-// pub const coeff_a: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_a;
-// pub const coeff_b: i64 = 0; //ffec::G1::<other_curve<ppT>>::coeff_b;
-// pub type G1<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
-// pub type G2<ppT> = ppT; //ffec::G1<other_curve<ppT>>;
-// pub type Fqe_variable<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_variableT;
-// pub type Fqe_sqr_gadget<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_sqr_gadgetT;
-// pub type Fqe_mul_gadget<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_mul_gadgetT;
-// pub type Fqk_variable<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_variableT;
-// pub type Fqk_sqr_gadget<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_sqr_gadgetT;
-// pub type Fqk_special_mul_gadget<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_mul_gadgetT;
-// pub type Fqe_mul_by_lc_gadget<ppT, FieldT, PB> = <ppT as ppTConfig>::Fpk_mul_gadgetT;
 
 pub trait VariableTConfig:
     Default

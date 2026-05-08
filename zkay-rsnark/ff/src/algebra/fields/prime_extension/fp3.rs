@@ -402,6 +402,7 @@ impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> Neg for Fp3_mod
 }
 
 impl<const N: usize, const N3: usize, T: Fp3_modelConfig<N, N3>> PpConfig for Fp3_model<N, N3, T> {
+    const num_limbs: usize = N;
     type BigIntT = bigint<N>;
 }
 

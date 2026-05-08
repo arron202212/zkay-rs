@@ -61,7 +61,6 @@ impl<FieldT: FieldTConfig> Default for EvaluationDomainType<FieldT> {
 // /**
 //  * An evaluation domain.
 //  */
-
 #[enum_dispatch]
 pub trait EvaluationDomainConfig<FieldT> {
     fn m(&self) -> usize {

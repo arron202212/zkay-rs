@@ -997,7 +997,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handler<RamT> {
         time_bound: usize,
     ) -> RcCell<r1cs_pcd_message<FieldT<RamT>, ram_pcd_message<RamT>>> {
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Call to ram_compliance_predicate_handler::get_final_case_msg"
         );
         let _ = span.enter();
@@ -1587,7 +1587,7 @@ impl<RamT: ram_params_type> ram_compliance_predicate_handlers<RamT> {
         primary_input: &ram_boot_trace,
     ) -> RcCell<r1cs_pcd_message<FieldT<RamT>, ram_pcd_message<RamT>>> {
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Call to ram_compliance_predicate_handler::get_base_case_message"
         );
         let _ = span.enter();

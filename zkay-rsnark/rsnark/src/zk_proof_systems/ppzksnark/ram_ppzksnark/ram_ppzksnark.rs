@@ -155,7 +155,7 @@ impl<ram_ppzksnark_ppT: RamPptConfig> ram_ppzksnark_verification_key<ram_ppzksna
         primary_input: &ram_ppzksnark_primary_input,
     ) -> ram_ppzksnark_verification_key<ram_ppzksnark_ppT> {
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Call to ram_ppzksnark_verification_key::bind_primary_input"
         );
         let _ = span.enter();
@@ -209,7 +209,7 @@ pub fn ram_ppzksnark_generator<ram_ppzksnark_ppT: RamPptConfig>(
     primary_input_size_bound: usize,
     time_bound: usize,
 ) -> ram_ppzksnark_keypair<ram_ppzksnark_ppT> {
-    let span = span!(Level::TRACE, "Call to ram_ppzksnark_generator").entered();
+    let span = span!(Level::INFO, "Call to ram_ppzksnark_generator").entered();
     let mut universal_r1cs = ram_to_r1cs::<ram_ppT<ram_ppzksnark_ppT>>::new(
         ap.clone(),
         primary_input_size_bound,
@@ -275,7 +275,7 @@ where
             >,
         >,
 {
-    let span = span!(Level::TRACE, "Call to ram_ppzksnark_prover").entered();
+    let span = span!(Level::INFO, "Call to ram_ppzksnark_prover").entered();
     let mut universal_r1cs = ram_to_r1cs::<ram_ppT<ram_ppzksnark_ppT>>::new(
         pk.ap.clone(),
         pk.primary_input_size_bound,
@@ -313,7 +313,7 @@ pub fn ram_ppzksnark_verifier<ram_ppzksnark_ppT: RamPptConfig>(
     primary_input: &ram_ppzksnark_primary_input,
     proof: &ram_ppzksnark_proof<ram_ppzksnark_ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to ram_ppzksnark_verifier").entered();
+    let span = span!(Level::INFO, "Call to ram_ppzksnark_verifier").entered();
     let input_specific_vk = vk.bind_primary_input(primary_input);
     let ans = r1cs_ppzksnark_verifier_weak_IC::<snark_ppT<ram_ppzksnark_ppT>>(
         &input_specific_vk.r1cs_vk,

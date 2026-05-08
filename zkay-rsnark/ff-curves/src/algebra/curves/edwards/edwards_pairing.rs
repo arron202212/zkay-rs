@@ -87,7 +87,7 @@ pub fn edwards_final_exponentiation_last_chunk(
     elt_inv: &edwards_Fq6,
 ) -> edwards_Fq6 {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to edwards_final_exponentiation_last_chunk"
     )
     .entered();
@@ -109,7 +109,7 @@ pub fn edwards_final_exponentiation_first_chunk(
     elt_inv: &edwards_Fq6,
 ) -> edwards_Fq6 {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to edwards_final_exponentiation_first_chunk"
     )
     .entered();
@@ -129,7 +129,7 @@ pub fn edwards_final_exponentiation_first_chunk(
 }
 
 pub fn edwards_final_exponentiation(elt: &edwards_Fq6) -> edwards_GT {
-    let span = span!(Level::TRACE, "Call to edwards_final_exponentiation").entered();
+    let span = span!(Level::INFO, "Call to edwards_final_exponentiation").entered();
     let elt_inv = elt.inverse();
     let elt_to_first_chunk = edwards_final_exponentiation_first_chunk(elt, &elt_inv);
     let elt_inv_to_first_chunk = edwards_final_exponentiation_first_chunk(&elt_inv, elt);
@@ -141,7 +141,7 @@ pub fn edwards_final_exponentiation(elt: &edwards_Fq6) -> edwards_GT {
 }
 
 pub fn edwards_tate_precompute_G2(Q: &edwards_G2) -> edwards_tate_G2_precomp {
-    let span = span!(Level::TRACE, "Call to edwards_tate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to edwards_tate_precompute_G2").entered();
     let mut Qcopy: edwards_G2 = Q.clone();
     Qcopy.to_affine_coordinates();
     let mut result = edwards_tate_G2_precomp::default();
@@ -279,7 +279,7 @@ pub fn mixed_addition_step_for_miller_loop(
 }
 
 pub fn edwards_tate_precompute_G1(P: &edwards_G1) -> edwards_tate_G1_precomp {
-    let span = span!(Level::TRACE, "Call to edwards_tate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to edwards_tate_precompute_G1").entered();
     let mut result = edwards_tate_G1_precomp::default();
 
     let mut Pcopy = P.clone();
@@ -323,7 +323,7 @@ pub fn edwards_tate_miller_loop(
     prec_P: &edwards_tate_G1_precomp,
     prec_Q: &edwards_tate_G2_precomp,
 ) -> edwards_Fq6 {
-    let span = span!(Level::TRACE, "Call to edwards_tate_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to edwards_tate_miller_loop").entered();
 
     let mut f = edwards_Fq6::one();
 
@@ -366,7 +366,7 @@ pub fn edwards_tate_miller_loop(
 }
 
 pub fn edwards_tate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
-    let span = span!(Level::TRACE, "Call to edwards_tate_pairing").entered();
+    let span = span!(Level::INFO, "Call to edwards_tate_pairing").entered();
     let prec_P = edwards_tate_precompute_G1(P);
     let prec_Q = edwards_tate_precompute_G2(Q);
     let result = edwards_tate_miller_loop(&prec_P, &prec_Q);
@@ -375,7 +375,7 @@ pub fn edwards_tate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
 }
 
 pub fn edwards_tate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_GT {
-    let span = span!(Level::TRACE, "Call to edwards_tate_reduced_pairing").entered();
+    let span = span!(Level::INFO, "Call to edwards_tate_reduced_pairing").entered();
     let f = edwards_tate_pairing(P, Q);
     let result = edwards_final_exponentiation(&f);
     span.exit();
@@ -519,7 +519,7 @@ pub fn mixed_addition_step_for_flipped_miller_loop(
 }
 
 pub fn edwards_ate_precompute_G1(P: &edwards_G1) -> edwards_ate_G1_precomp {
-    let span = span!(Level::TRACE, "Call to edwards_ate_precompute_G1").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_precompute_G1").entered();
     let mut Pcopy = P.clone();
     Pcopy.to_affine_coordinates();
     let mut result = edwards_ate_G1_precomp::default();
@@ -531,7 +531,7 @@ pub fn edwards_ate_precompute_G1(P: &edwards_G1) -> edwards_ate_G1_precomp {
 }
 
 pub fn edwards_ate_precompute_G2(Q: &edwards_G2) -> edwards_ate_G2_precomp {
-    let span = span!(Level::TRACE, "Call to edwards_ate_precompute_G2").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_precompute_G2").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
     let mut result = edwards_ate_G2_precomp::default();
 
@@ -572,7 +572,7 @@ pub fn edwards_ate_miller_loop(
     prec_P: &edwards_ate_G1_precomp,
     prec_Q: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
-    let span = span!(Level::TRACE, "Call to edwards_ate_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_miller_loop").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
     let mut f = edwards_Fq6::one();
@@ -619,7 +619,7 @@ pub fn edwards_ate_double_miller_loop(
     prec_P2: &edwards_ate_G1_precomp,
     prec_Q2: &edwards_ate_G2_precomp,
 ) -> edwards_Fq6 {
-    let span = span!(Level::TRACE, "Call to edwards_ate_double_miller_loop").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_double_miller_loop").entered();
     let loop_count: bigint<{ edwards_Fr::num_limbs }> = edwards_ate_loop_count;
 
     let mut f = edwards_Fq6::one();
@@ -673,7 +673,7 @@ pub fn edwards_ate_double_miller_loop(
 }
 
 pub fn edwards_ate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
-    let span = span!(Level::TRACE, "Call to edwards_ate_pairing").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_pairing").entered();
     let prec_P = edwards_ate_precompute_G1(P);
     let prec_Q = edwards_ate_precompute_G2(Q);
     let result = edwards_ate_miller_loop(&prec_P, &prec_Q);
@@ -682,7 +682,7 @@ pub fn edwards_ate_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_Fq6 {
 }
 
 pub fn edwards_ate_reduced_pairing(P: &edwards_G1, Q: &edwards_G2) -> edwards_GT {
-    let span = span!(Level::TRACE, "Call to edwards_ate_reduced_pairing").entered();
+    let span = span!(Level::INFO, "Call to edwards_ate_reduced_pairing").entered();
     let f = edwards_ate_pairing(P, Q);
     let result = edwards_final_exponentiation(&f);
     span.exit();

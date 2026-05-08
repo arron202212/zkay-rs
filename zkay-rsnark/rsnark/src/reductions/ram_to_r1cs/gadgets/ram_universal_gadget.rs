@@ -133,7 +133,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         let timestamp_size = log2(num_memory_lines);
 
         //allocate all lines on the execution side of the routing network
-        let span = span!(Level::TRACE, "Allocate initial state line").entered();
+        let span = span!(Level::INFO, "Allocate initial state line").entered();
         let mut unrouted_memory_lines = vec![];
         let mut execution_lines = Vec::with_capacity(1 + time_bound);
         execution_lines.push(execution_line_variable_gadget::<RamT>::new(
@@ -145,7 +145,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         unrouted_memory_lines.push(execution_lines[0].clone());
         span.exit();
 
-        let span = span!(Level::TRACE, "Allocate boot lines").entered();
+        let span = span!(Level::INFO, "Allocate boot lines").entered();
         let mut boot_lines = Vec::with_capacity(boot_trace_size_bound);
         for i in 0..boot_trace_size_bound {
             boot_lines.push(memory_line_variable_gadget::<
@@ -163,7 +163,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         span.exit();
 
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Allocate instruction fetch and execution lines"
         )
         .entered();
@@ -202,7 +202,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         span.exit();
 
         //deal with packing of the input
-        let span = span!(Level::TRACE, "Pack input").entered();
+        let span = span!(Level::INFO, "Pack input").entered();
         let line_size_bits = pb
             .borrow()
             .ap::<ram_architecture_params<RamT>>()
@@ -253,7 +253,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         span.exit();
 
         //deal with routing
-        let span = span!(Level::TRACE, "Allocate routed memory lines").entered();
+        let span = span!(Level::INFO, "Allocate routed memory lines").entered();
         let mut routed_memory_lines = vec![];
         for i in 0..num_memory_lines {
             routed_memory_lines.push(memory_line_variable_gadget::<
@@ -270,7 +270,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         span.exit();
 
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Collect inputs/outputs for the routing network"
         )
         .entered();
@@ -283,7 +283,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         span.exit();
 
-        let span = span!(Level::TRACE, "Allocate routing network").entered();
+        let span = span!(Level::INFO, "Allocate routing network").entered();
         let routing_network =
             RcCell::new(as_waksman_routing_gadget::<FieldT<RamT>, RamT::PB>::new(
                 pb.borrow().clone().into_p(),
@@ -295,7 +295,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         span.exit();
 
         //deal with all checkers
-        let span = span!(Level::TRACE, "Allocate execution checkers").entered();
+        let span = span!(Level::INFO, "Allocate execution checkers").entered();
         let mut execution_checkers = Vec::with_capacity(time_bound);
         for i in 0..time_bound {
             execution_checkers.push(ram_cpu_checker::<RamT>::new(
@@ -338,7 +338,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
         }
         span.exit();
 
-        let span = span!(Level::TRACE, "Allocate all memory checkers").entered();
+        let span = span!(Level::INFO, "Allocate all memory checkers").entered();
         let mut memory_checkers = Vec::with_capacity(num_memory_lines);
         for i in 0..num_memory_lines {
             memory_checkers.push(memory_checker_gadget::<RamT>::new(
@@ -379,7 +379,7 @@ impl<RamT: ram_params_type> ram_universal_gadget<RamT> {
 impl<RamT: ram_params_type> ram_universal_gadgets<RamT> {
     pub fn generate_r1cs_constraints(&self) {
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "Call to generate_r1cs_constraints of ram_universal_gadget"
         );
         let _ = span.enter();

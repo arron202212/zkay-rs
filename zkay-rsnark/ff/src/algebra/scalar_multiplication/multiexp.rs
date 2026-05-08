@@ -322,7 +322,7 @@ impl MultiExpInnerConfig for MultiExpInner<{ multi_exp_method::multi_exp_method_
             for i in 0..length {
                 let mut id = 0;
                 for j in 0..c {
-                    if bn_exponents[i].get_bit(k * c + j) {
+                    if bn_exponents[i].test_bit(k * c + j) {
                         id |= 1 << j;
                     }
                 }
@@ -426,7 +426,7 @@ pub fn multi_exp_with_mixed_addition<
     scalar: &[FieldT],
     chunks: usize,
 ) -> T {
-    let span = span!(Level::TRACE, "Process scalar vector").entered();
+    let span = span!(Level::INFO, "Process scalar vector").entered();
 
     let zero = FieldT::zero();
     let one = FieldT::one();
@@ -575,7 +575,7 @@ pub fn windowed_exp<T: PpConfig, FieldT: FieldTConfig>(
     for outer in 0..outerc {
         let mut inner = 0;
         for i in 0..window {
-            if pow_val.get_bit(outer * window + i) {
+            if pow_val.test_bit(outer * window + i) {
                 inner |= 1u32 << i;
             }
         }
@@ -641,7 +641,7 @@ pub fn batch_exp_with_coeff<T: PpConfig, FieldT: FieldTConfig>(
 }
 
 pub fn batch_to_special<T: PpConfig>(vec: &mut Vec<T>) {
-    let span = span!(Level::TRACE, "Batch-convert elements to special form").entered();
+    let span = span!(Level::INFO, "Batch-convert elements to special form").entered();
 
     let mut non_zero_vec = vec![];
     for i in 0..vec.len() {

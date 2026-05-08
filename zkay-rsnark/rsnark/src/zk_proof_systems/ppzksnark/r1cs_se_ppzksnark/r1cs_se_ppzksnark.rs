@@ -332,7 +332,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     auxiliary_input: &r1cs_se_ppzksnark_auxiliary_input<ppT>,
 ) -> r1cs_se_ppzksnark_proof<ppT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_prover");
+    let span0 = span!(Level::INFO, "Call to r1cs_se_ppzksnark_prover");
     let _ = span0.enter();
 
     // // #ifdef DEBUG
@@ -341,7 +341,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 
     let (d1, d2) = (ppT::Fr::random_element(), ppT::Fr::random_element());
 
-    let spanh = span!(Level::TRACE, "Compute the polynomial H").entered();
+    let spanh = span!(Level::INFO, "Compute the polynomial H").entered();
     let sap_wit = r1cs_to_sap_witness_map::<Fr<ppT>, pb_variable, pb_linear_combination>(
         &pk.constraint_system,
         &primary_input,
@@ -370,9 +370,9 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 
     let r = ppT::Fr::random_element();
 
-    let span = span!(Level::TRACE, "Compute the proof").entered();
+    let span = span!(Level::INFO, "Compute the proof").entered();
 
-    let spana = span!(Level::TRACE, "Compute answer to A-query").entered();
+    let spana = span!(Level::INFO, "Compute answer to A-query").entered();
     // /**
     //  * compute A = G^{gamma * (\sum_{i=0}^m input_i * A_i(t) + r * Z(t))}
     //  *           = \prod_{i=0}^m (G^{gamma * A_i(t)})^{input_i)
@@ -390,7 +390,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
 
     spana.exit();
 
-    let spanb = span!(Level::TRACE, "Compute answer to B-query").entered();
+    let spanb = span!(Level::INFO, "Compute answer to B-query").entered();
     // /**
     //  * compute B exactly as A, except with H as the base
     //  */
@@ -404,7 +404,7 @@ pub fn r1cs_se_ppzksnark_prover<ppT: PublicParams>(
             chunks);
     spanb.exit();
 
-    let spanc = span!(Level::TRACE, "Compute answer to C-query").entered();
+    let spanc = span!(Level::INFO, "Compute answer to C-query").entered();
     // /**
     //  * compute C = G^{f(input) +
     //  *                r^2 * gamma^2 * Z(t)^2 +
@@ -469,7 +469,7 @@ pub fn r1cs_se_ppzksnark_verifier_weak_IC<ppT: PublicParams>(
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_weak_IC").entered();
+    let span = span!(Level::INFO, "Call to r1cs_se_ppzksnark_verifier_weak_IC").entered();
     let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
     let result = r1cs_se_ppzksnark_online_verifier_weak_IC::<ppT>(&pvk, &primary_input, &proof);
     span.exit();
@@ -486,7 +486,7 @@ pub fn r1cs_se_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
     primary_input: &r1cs_se_ppzksnark_primary_input<ppT>,
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_verifier_strong_IC").entered();
+    let span = span!(Level::INFO, "Call to r1cs_se_ppzksnark_verifier_strong_IC").entered();
     let pvk = r1cs_se_ppzksnark_verifier_process_vk::<ppT>(&vk);
     let result = r1cs_se_ppzksnark_online_verifier_strong_IC::<ppT>(&pvk, &primary_input, &proof);
     span.exit();
@@ -499,11 +499,7 @@ pub fn r1cs_se_ppzksnark_verifier_strong_IC<ppT: PublicParams>(
 pub fn r1cs_se_ppzksnark_verifier_process_vk<ppT: PublicParams>(
     vk: &r1cs_se_ppzksnark_verification_key<ppT>,
 ) -> r1cs_se_ppzksnark_processed_verification_key<ppT> {
-    let span = span!(
-        Level::TRACE,
-        "Call to r1cs_se_ppzksnark_verifier_process_vk"
-    )
-    .entered();
+    let span = span!(Level::INFO, "Call to r1cs_se_ppzksnark_verifier_process_vk").entered();
 
     let G_alpha_pc = ppT::precompute_G1(&vk.G_alpha);
     let H_beta_pc = ppT::precompute_G2(&vk.H_beta);
@@ -534,14 +530,14 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
     let span0 = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_se_ppzksnark_online_verifier_weak_IC"
     );
     let _ = span0.enter();
 
     let mut result = true;
 
-    let spanw = span!(Level::TRACE, "Check if the proof is well-formed").entered();
+    let spanw = span!(Level::INFO, "Check if the proof is well-formed").entered();
     if !proof.is_well_formed() {
         if !inhibit_profiling_info {
             print_indent();
@@ -551,12 +547,12 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spanw.exit();
 
-    let span = span!(Level::TRACE, "Pairing computations").entered();
+    let span = span!(Level::INFO, "Pairing computations").entered();
 
     let chunks = 1;
     //
 
-    let spant = span!(Level::TRACE, "Check first test").entered();
+    let spant = span!(Level::INFO, "Check first test").entered();
     // /**
     //  * e(A*G^{alpha}, B*H^{beta}) = e(G^{alpha}, H^{beta}) * e(G^{psi}, H^{gamma})
     //  *                              * e(C, H)
@@ -588,7 +584,7 @@ fn r1cs_se_ppzksnark_online_verifier_weak_IC<ppT: PublicParams>(
     }
     spant.exit();
 
-    let span2 = span!(Level::TRACE, "Check second test").entered();
+    let span2 = span!(Level::INFO, "Check second test").entered();
     // /**
     //  * e(A, H^{gamma}) = e(G^{gamma}, B)
     //  */
@@ -620,7 +616,7 @@ pub fn r1cs_se_ppzksnark_online_verifier_strong_IC<ppT: PublicParams>(
     proof: &r1cs_se_ppzksnark_proof<ppT>,
 ) -> bool {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_se_ppzksnark_online_verifier_strong_IC"
     )
     .entered();
@@ -814,7 +810,7 @@ impl<ppT: PublicParams> r1cs_se_ppzksnark_verification_key<ppT> {
 pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     cs: &r1cs_se_ppzksnark_constraint_system<ppT>,
 ) -> r1cs_se_ppzksnark_keypair<ppT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_se_ppzksnark_generator");
+    let span0 = span!(Level::INFO, "Call to r1cs_se_ppzksnark_generator");
     let _ = span0.enter();
 
     // /**
@@ -848,7 +844,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         sap_inst.num_inputs()
     );
 
-    let spand = span!(Level::TRACE, "Compute query densities").entered();
+    let spand = span!(Level::INFO, "Compute query densities").entered();
     let mut non_zero_At = 0;
     for i in 0..=sap_inst.num_variables() {
         if !sap_inst.At[i].is_zero() {
@@ -872,7 +868,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         ppT::G2::random_element(),
     );
 
-    let spang = span!(Level::TRACE, "Generating G multiexp table").entered();
+    let spang = span!(Level::INFO, "Generating G multiexp table").entered();
     let G_exp_count = sap_inst.num_inputs() + 1 // verifier_query
                          + non_zero_At // A_query
                          + sap_inst.degree() + 1 // G_gamma2_Z_t
@@ -887,7 +883,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     let G_table = get_window_table(ppT::Fr::size_in_bits(), G_window, G.clone());
     spang.exit();
 
-    let spanh = span!(Level::TRACE, "Generating H_gamma multiexp table").entered();
+    let spanh = span!(Level::INFO, "Generating H_gamma multiexp table").entered();
     let mut H_gamma = H.clone() * gamma.clone();
     let mut H_gamma_exp_count = non_zero_At; // B_query
     let mut H_gamma_window = get_exp_window_size::<ppT::G2>(H_gamma_exp_count);
@@ -897,7 +893,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
         get_window_table(ppT::Fr::size_in_bits(), H_gamma_window, H_gamma.clone());
     spanh.exit();
 
-    let spanvk = span!(Level::TRACE, "Generate R1CS verification key").entered();
+    let spanvk = span!(Level::INFO, "Generate R1CS verification key").entered();
     let mut G_alpha = G.clone() * alpha.clone();
     let mut H_beta = H.clone() * beta.clone();
 
@@ -913,9 +909,9 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
 
     spanvk.exit();
 
-    let spanpk = span!(Level::TRACE, "Generate R1CS proving key").entered();
+    let spanpk = span!(Level::INFO, "Generate R1CS proving key").entered();
 
-    let spana = span!(Level::TRACE, "Compute the A-query").entered();
+    let spana = span!(Level::INFO, "Compute the A-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     for i in 0..At.len() {
         tmp_exponents.push(gamma.clone() * At[i].clone());
@@ -929,7 +925,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     //
     spana.exit();
 
-    let spanb = span!(Level::TRACE, "Compute the B-query").entered();
+    let spanb = span!(Level::INFO, "Compute the B-query").entered();
     let B_query =
         batch_exp::<G2<ppT>, Fr<ppT>>(ppT::Fr::size_in_bits(), H_gamma_window, &H_gamma_table, &At);
     // // #ifdef USE_MIXED_ADDITION
@@ -937,7 +933,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     //
     spanb.exit();
 
-    let spang = span!(Level::TRACE, "Compute the G_gamma-query").entered();
+    let spang = span!(Level::INFO, "Compute the G_gamma-query").entered();
     let G_gamma = G.clone() * gamma.clone();
     let G_gamma_Z = G_gamma.clone() * sap_inst.Zt.clone();
     let H_gamma_Z = H_gamma.clone() * sap_inst.Zt.clone();
@@ -960,7 +956,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     //
     spang.exit();
 
-    let spancq = span!(Level::TRACE, "Compute the C_1-query").entered();
+    let spancq = span!(Level::INFO, "Compute the C_1-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() - sap_inst.num_inputs());
     for i in sap_inst.num_inputs() + 1..=sap_inst.num_variables() {
         tmp_exponents.push(
@@ -976,7 +972,7 @@ pub fn r1cs_se_ppzksnark_generator<ppT: PublicParams>(
     //
     spancq.exit();
 
-    let spancq = span!(Level::TRACE, "Compute the C_2-query").entered();
+    let spancq = span!(Level::INFO, "Compute the C_2-query").entered();
     tmp_exponents.reserve(sap_inst.num_variables() + 1);
     let mut double_gamma2_Z = gamma.clone() * gamma.clone() * sap_inst.Zt.clone();
     double_gamma2_Z = double_gamma2_Z.clone() + double_gamma2_Z.clone();

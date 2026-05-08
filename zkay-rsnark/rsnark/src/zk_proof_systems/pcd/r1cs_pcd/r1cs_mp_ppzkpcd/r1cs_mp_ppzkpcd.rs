@@ -340,7 +340,7 @@ impl<PCD_ppT: PcdPptConfig> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> 
 pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
     compliance_predicates: &Vec<r1cs_mp_ppzkpcd_compliance_predicate<PCD_ppT>>,
 ) -> r1cs_mp_ppzkpcd_keypair<PCD_ppT> {
-    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_generator");
+    let span0 = span!(Level::INFO, "Call to r1cs_mp_ppzkpcd_generator");
     let _ = span0.enter();
 
     let mut keypair = r1cs_mp_ppzkpcd_keypair::<PCD_ppT>::default();
@@ -355,7 +355,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         CRH_with_bit_out_gadgets<FieldT_A<PCD_ppT>, PCD_ppT::PB>,
     >::new(compliance_predicates.len(), vk_size_in_bits.clone());
 
-    let spanp = span!(Level::TRACE, "Perform type checks").entered();
+    let spanp = span!(Level::INFO, "Perform type checks").entered();
     let mut type_counts = BTreeMap::new();
 
     for cp in compliance_predicates {
@@ -381,12 +381,12 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             compliance_predicates[i].name,
             compliance_predicates[i].types,
         );
-        let span0 = span!(Level::TRACE, "{s}");
+        let span0 = span!(Level::INFO, "{s}");
         let _ = span0.enter();
 
         assert!(compliance_predicates[i].is_well_formed());
 
-        let span = span!(Level::TRACE, "Construct compliance step PCD circuit").entered();
+        let span = span!(Level::INFO, "Construct compliance step PCD circuit").entered();
         let mut mp_compliance_step_pcd_circuit =
             mp_compliance_step_pcd_circuit_maker::<A_pp<PCD_ppT>>::new(
                 compliance_predicates[i].clone(),
@@ -397,7 +397,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         span.exit();
 
         let spang = span!(
-            Level::TRACE,
+            Level::INFO,
             "Generate key pair for compliance step PCD circuit"
         )
         .entered();
@@ -405,7 +405,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
             r1cs_ppzksnark_generator::<A_pp<PCD_ppT>>(&mp_compliance_step_pcd_circuit_cs);
         spang.exit();
 
-        let spanc = span!(Level::TRACE, "Construct translation step PCD circuit").entered();
+        let spanc = span!(Level::INFO, "Construct translation step PCD circuit").entered();
         let mut mp_translation_step_pcd_circuit =
             mp_translation_step_pcd_circuit_maker::<B_pp<PCD_ppT>>::new(
                 mp_compliance_step_keypair.vk.clone(),
@@ -415,7 +415,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         spanc.exit();
 
         let spant = span!(
-            Level::TRACE,
+            Level::INFO,
             "Generate key pair for translation step PCD circuit"
         )
         .entered();
@@ -424,7 +424,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         spant.exit();
 
         let spana = span!(
-            Level::TRACE,
+            Level::INFO,
             "Augment set of translation step verification keys"
         )
         .entered();
@@ -435,7 +435,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         all_translation_vks.add(&vk_bits);
         spana.exit();
 
-        let spanu = span!(Level::TRACE, "Update r1cs_mp_ppzkpcd keypair").entered();
+        let spanu = span!(Level::INFO, "Update r1cs_mp_ppzkpcd keypair").entered();
         keypair
             .pk
             .compliance_predicates
@@ -479,7 +479,7 @@ pub fn r1cs_mp_ppzkpcd_generator<PCD_ppT: PcdPptConfig>(
         spanu.exit();
     }
     let spanc = span!(
-        Level::TRACE,
+        Level::INFO,
         "Compute set commitment and corresponding membership proofs"
     )
     .entered();
@@ -556,7 +556,7 @@ where
             >,
         >,
 {
-    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_prover");
+    let span0 = span!(Level::INFO, "Call to r1cs_mp_ppzkpcd_prover");
     let _ = span0.enter();
 
     // #ifdef DEBUG
@@ -572,7 +572,7 @@ where
     print!("Outgoing message:\n");
     primary_input.outgoing_message.borrow().print();
 
-    let spanp = span!(Level::TRACE, "Prove compliance step").entered();
+    let spanp = span!(Level::INFO, "Prove compliance step").entered();
     assert!(compliance_predicate_idx < pk.compliance_predicates.len());
     assert!(prev_proofs.len() <= pk.compliance_predicates[compliance_predicate_idx].max_arity);
 
@@ -661,7 +661,7 @@ where
     );
     assert!(compliance_step_ok);
 
-    let span = span!(Level::TRACE, "Prove translation step").entered();
+    let span = span!(Level::INFO, "Prove translation step").entered();
     let mut mp_translation_step_pcd_circuit =
         mp_translation_step_pcd_circuit_maker::<B_pp<PCD_ppT>>::new(
             pk.compliance_step_r1cs_vks[compliance_predicate_idx].clone(),
@@ -704,7 +704,7 @@ pub fn r1cs_mp_ppzkpcd_online_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-    let span0 = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_online_verifier");
+    let span0 = span!(Level::INFO, "Call to r1cs_mp_ppzkpcd_online_verifier");
     let _ = span0.enter();
 
     let r1cs_input = get_mp_translation_step_pcd_circuit_input::<B_pp<PCD_ppT>>(
@@ -727,7 +727,7 @@ pub fn r1cs_mp_ppzkpcd_process_vk<PCD_ppT: PcdPptConfig>(
     vk: &r1cs_mp_ppzkpcd_verification_key<PCD_ppT>,
 ) -> r1cs_mp_ppzkpcd_processed_verification_key<PCD_ppT> {
     let span = span!(
-        Level::TRACE,
+        Level::INFO,
         "Call to r1cs_mp_ppzkpcd_processed_verification_key"
     );
     let _ = span.enter();
@@ -758,7 +758,7 @@ pub fn r1cs_mp_ppzkpcd_verifier<PCD_ppT: PcdPptConfig>(
     primary_input: &r1cs_mp_ppzkpcd_primary_input<PCD_ppT>,
     proof: &r1cs_mp_ppzkpcd_proof<PCD_ppT>,
 ) -> bool {
-    let span = span!(Level::TRACE, "Call to r1cs_mp_ppzkpcd_verifier").entered();
+    let span = span!(Level::INFO, "Call to r1cs_mp_ppzkpcd_verifier").entered();
     let pvk = r1cs_mp_ppzkpcd_process_vk(vk);
     let result = r1cs_mp_ppzkpcd_online_verifier(&pvk, primary_input, proof);
 

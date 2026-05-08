@@ -38,7 +38,7 @@ pub fn gen_ram_example_simple<RamT: ram_params_type>(
     time_bound: usize,
     satisfiable: bool,
 ) -> ram_example<RamT> {
-    let span = span!(Level::TRACE, "Call to gen_ram_example_simple").entered();
+    let span = span!(Level::INFO, "Call to gen_ram_example_simple").entered();
 
     let program_size = boot_trace_size_bound / 2;
     let input_size = boot_trace_size_bound - program_size;
@@ -103,7 +103,7 @@ pub fn gen_ram_example_complex<RamT: ram_params_type>(
     time_bound: usize,
     satisfiable: bool,
 ) -> ram_example<RamT> {
-    let span = span!(Level::TRACE, "Call to gen_ram_example_complex").entered();
+    let span = span!(Level::INFO, "Call to gen_ram_example_complex").entered();
 
     let program_size = boot_trace_size_bound / 2;
     let input_size = boot_trace_size_bound - program_size;

@@ -33,54 +33,70 @@ pub trait PpConfig:
     + Zero
     + std::ops::Add<Output = Self>
     + std::ops::Sub<Output = Self>
-    
     + std::ops::Mul<Output = Self>
     + std::ops::Mul<Self, Output = Self>
 {
-    
-    
-    type BigIntT:BigIntegerT;
-    const num_limbs: usize = 4;
+    type BigIntT: BigIntegerT;
+    const num_limbs: usize = 254;
     const coeff_a: i64 = 1;
     const coeff_b: i64 = 1;
 
-    fn as_bigint(&self) -> Self::BigIntT{
+    fn as_bigint(&self) -> Self::BigIntT {
+        panic!("unimplemented");
         Self::BigIntT::default()
     }
     fn dbl(&self) -> Self {
+        panic!("unimplemented");
         self.clone()
     }
     fn random_element() -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn wnaf_window_table() -> Vec<usize> {
+        panic!("unimplemented");
         vec![]
     }
     fn fixed_base_exp_window_table() -> std::vec::Vec<usize> {
+        panic!("unimplemented");
         vec![]
     }
-    fn batch_to_special_all_non_zeros(_: &mut std::vec::Vec<Self>) {}
-    fn to_special(&mut self) {}
+    fn batch_to_special_all_non_zeros(_: &mut std::vec::Vec<Self>) {
+        panic!("unimplemented");
+    }
+    fn to_special(&mut self) {
+        panic!("unimplemented");
+    }
     fn mixed_add(&self, other: &Self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn unitary_inverse(&self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn is_special(&self) -> bool {
+        panic!("unimplemented");
         false
     }
-    fn print(&self) {}
+    fn print(&self) {
+        panic!("unimplemented");
+    }
     fn size_in_bits() -> usize {
+        panic!("unimplemented");
         0
     }
     fn is_well_formed(&self) -> bool {
+        panic!("unimplemented");
         false
     }
     fn num_bits() -> usize {
+        panic!("unimplemented");
         1
     }
-    fn to_affine_coordinates(&mut self) {}
+    fn to_affine_coordinates(&mut self) {
+        panic!("unimplemented");
+    }
 }
 
 pub trait FieldTConfig:
@@ -104,48 +120,63 @@ pub trait FieldTConfig:
     + AsMut<[u64]>
 {
     fn as_ref_u64(&self) -> Vec<u64> {
+        panic!("unimplemented");
         vec![]
     }
-    fn get_bit(&self, i: usize) -> bool {
+    fn test_bit(&self, i: usize) -> bool {
+        panic!("unimplemented");
         false
     }
     fn to_field<FieldTT: Default>(&self) -> FieldTT {
+        panic!("unimplemented");
         FieldTT::default()
     }
     fn squared(&self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn inverse(&self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn multiplicative_generator() -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn from_int(i: u64, signed: bool) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn capacity() -> usize {
+        panic!("unimplemented");
         0
     }
     fn as_ulong(&self) -> usize {
+        panic!("unimplemented");
         0
     }
     fn X(&self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn Y(&self) -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn is_double() -> bool {
+        // panic!("unimplemented");
         false
     }
     fn ss() -> usize {
+        panic!("unimplemented");
         28
     }
     fn arithmetic_generator() -> Self {
+        panic!("unimplemented");
         Default::default()
     }
     fn geometric_generator() -> Self {
+        panic!("unimplemented");
         Default::default()
     }
 }
