@@ -20,6 +20,7 @@ ark-ec={workspace = true}
 ark-std={workspace = true}
 # poly={workspace = true}
 # test-curves={workspace = true}
+ark-test-curves ={workspace = true}
 ark-r1cs-std ={workspace = true}
 digest={workspace = true}
 arrayvec={workspace = true}

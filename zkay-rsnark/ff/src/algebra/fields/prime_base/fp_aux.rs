@@ -1422,3 +1422,71 @@ pub fn sub_assign_portable<const N: usize>(a: &mut [u64; N], b: &[u64; N], modul
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // 辅助函数：将简单的 u64 转换为 [u64; 1] 数组，方便测试 n=1 的情况
+    fn to_array<const N: usize>(val: u64) -> [u64; N] {
+        let mut res = [0u64; N];
+        res[0] = val;
+        res
+    }
+
+    #[test]
+    fn test_mul_reduce_basic_n1() {
+        // 设定一个简单的场景 (n=1):
+        // modulus = 7
+        // inv = 7^{-1} mod 2^64 的负倒数。
+        // 7 * 10540996125440501113 = 1 (mod 2^64)
+        // 所以 inv = 10540996125440501113
+        let modulus = [7u64];
+        let inv = 10540996125440501113u64;
+
+        // 测试输入 (蒙哥马利域下的值)
+        // 假设 a = 3, b = 2
+        let a = [3u64];
+        let b = [2u64];
+
+        // 计算结果应该是 (3 * 2 * R^-1) mod 7
+        // 其中 R = 2^64。 2^64 mod 7 = 4, 它的逆 (R^-1 mod 7) 是 2。
+        // 预期结果 = (6 * 2) mod 7 = 12 mod 7 = 5
+        let result = mul_reduce_portable::<1>(&a, &b, &modulus, inv);
+
+        assert_eq!(result[0], 5, "Montgomery reduction (n=1) failed");
+    }
+
+    #[test]
+    fn test_mul_reduce_large_n2() {
+        // n=2 (128位运算) 的示例
+        // 这是一个常用的 128位 素数: 2^128 - 159 (并不一定是素数，仅作示例)
+        let modulus = [18446744073709551457u64, 18446744073709551615u64];
+        let inv = 1017362141517452071u64; // 预先计算好的 -modulus[0]^-1 mod 2^64
+
+        let a = [123456789u64, 0u64];
+        let b = [987654321u64, 0u64];
+
+        let result = mul_reduce_portable::<2>(&a, &b, &modulus, inv);
+
+        // 验证结果不应超过模数
+        for i in (0..2).rev() {
+            if result[i] < modulus[i] {
+                break;
+            }
+            if result[i] > modulus[i] {
+                panic!("Result exceeds modulus");
+            }
+        }
+    }
+
+    #[test]
+    fn test_zero_input() {
+        let modulus = [17u64];
+        let inv = 10851025925711500959u64; // -17^-1 mod 2^64
+        let a = [0u64];
+        let b = [10u64];
+
+        let result = mul_reduce_portable::<1>(&a, &b, &modulus, inv);
+        assert_eq!(result[0], 0);
+    }
+}

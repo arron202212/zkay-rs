@@ -686,9 +686,10 @@ where
 #[cfg(test)]
 mod cube_ext_tests {
     use super::*;
-    use crate::algebra::fields::field::Field;
+    use crate::algebra::fields::field::Field as OtherField;
     use ark_std::test_rng;
     use ark_test_curves::{
+        Field,
         bls12_381::{Fq, Fq2, Fq6},
         mnt6_753::Fq3,
     };

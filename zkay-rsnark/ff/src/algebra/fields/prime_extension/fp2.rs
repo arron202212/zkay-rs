@@ -372,7 +372,7 @@ impl<const N: usize, const N2: usize, T: Fp2_modelConfig<N, N2>> Zero for Fp2_mo
         Self::zero()
     }
     fn is_zero(&self) -> bool {
-        self == &Self::zero
+        self == &Self::zero()
     }
 }
 

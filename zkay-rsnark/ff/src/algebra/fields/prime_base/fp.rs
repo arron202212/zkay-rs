@@ -31,7 +31,6 @@ use std::{
     ops::{Add, AddAssign, BitXor, BitXorAssign, Mul, MulAssign, Neg, Sub, SubAssign},
     str::FromStr,
 };
-//  use crate::algebra::field_utils::bigint::bigint;
 
 //  * Arithmetic in the finite field F[p], for prime p of fixed length.
 //  *
@@ -73,22 +72,6 @@ pub struct Fp_model<const N: usize, T: Fp_modelConfig<N>> {
     pub mont_repr: bigint<N>,
     pub t: PhantomData<T>,
 }
-
-// impl<const N: usize, T: Fp_modelConfig<N>> Fp_modelConfig<N> for Fp_model<N, T> {
-//     const modulus: bigint<N> = T::modulus;
-//     const num_bits: usize =T::num_bits;
-//     const euler: bigint<N> = T::euler;
-//     const s: usize = T::s;
-//     const t: bigint<N> = T::t;
-//     const t_minus_1_over_2: bigint<N> = T::t_minus_1_over_2;
-//     const nqr: Fp_model<N, T> =T::nqr;
-//     const nqr_to_t: Fp_model<N, T> = T::nqr_to_t;
-//     const multiplicative_generator: Fp_model<N, T> = T::multiplicative_generator;
-//     const root_of_unity: Fp_model<N, T> = T::root_of_unity;
-//     const inv: u64 = T::inv;
-//     const Rsquared: bigint<N> = T::Rsquared;
-//     const Rcubed: bigint<N> = T::Rcubed;
-// }
 
 impl<const N: usize, T: Fp_modelConfig<N>> FieldTConfig for Fp_model<N, T> {
     fn test_bit(&self, i: usize) -> bool {

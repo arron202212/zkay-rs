@@ -2,20 +2,20 @@
 // and power.
 
 use crate::algebra::{
-    curves::edwards::edwards_fields,
+    // curves::edwards::edwards_fields,
     field_utils::{algorithms, bigint, field_utils},
-    fields::binary::gf64,
+    // fields::binary::gf64,
 };
 
-pub fn power_naive<FieldT>(base: &FieldT, exponent: usize) -> FieldT {
-    let mut result = FieldT::one();
+// pub fn power_naive<FieldT: num_traits::One>(base: &FieldT, exponent: usize) -> FieldT {
+//     let mut result = FieldT::one();
 
-    for i in 1..=exponent {
-        result *= base.clone();
-    }
+//     for i in 1..=exponent {
+//         result *= base.clone();
+//     }
 
-    return result;
-}
+//     return result;
+// }
 
 // TEST(ExponentiationTest, SimpleTest) {
 //     type FieldT=gf64;
